@@ -21,6 +21,11 @@ class Inventory extends Model
         return $this->belongsTo(Branch::class);
     }
 
+    public function warehouse()
+    {
+        return $this->belongsTo(Branch::class, 'branch_id');
+    }
+
     public function transactions()
     {
         return $this->hasMany(InventoryTransaction::class);

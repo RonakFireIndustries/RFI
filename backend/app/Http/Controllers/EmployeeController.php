@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Employee;
 use App\Models\User;
+use App\Http\Resources\EmployeeResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -12,16 +13,25 @@ class EmployeeController extends Controller
 {
     public function index()
     {
-        return Employee::with('user.branch')->get()->map(function (Employee $employee) {
-            $role = $employee->user?->getRoleNames()->first();
-            $permissions = $employee->user?->getAllPermissions()->pluck('name') ?? collect();
+        $employees = Employee::with([
+            'user.branch',
+            'branch',
+            'department',
+            'designation',
+            'attendances',
+            'leaves',
+            'payroll',
+            'sites',
+            'dailyReports',
+        ])->get();
 
-            return array_merge($employee->toArray(), [
-                'role' => $role,
-                'permissions' => $permissions,
-            ]);
-        });
+        return EmployeeResource::collection($employees);
     }
+
+
+    // view employees function
+    
+
 
     public function store(Request $request)
     {
@@ -31,6 +41,8 @@ class EmployeeController extends Controller
             'password' => 'required|string|min:6',
             'branch_id' => 'required|exists:branches,id',
             'department' => 'nullable|string',
+            'department_id' => 'nullable|exists:departments,id',
+            'designation_id' => 'nullable|exists:designations,id',
             'salary' => 'nullable|numeric',
             'shift' => 'nullable|string',
             'joining_date' => 'nullable|date',
@@ -59,27 +71,41 @@ class EmployeeController extends Controller
             $employee = Employee::create([
                 'user_id' => $user->id,
                 'department' => $validated['department'] ?? null,
+                'department_id' => $validated['department_id'] ?? null,
+                'designation_id' => $validated['designation_id'] ?? null,
                 'salary' => $validated['salary'] ?? null,
                 'shift' => $validated['shift'] ?? null,
                 'joining_date' => $validated['joining_date'] ?? null,
                 'status' => $validated['status'] ?? 'active',
             ]);
 
-            return array_merge($employee->load('user.branch')->toArray(), [
-                'role' => $user->getRoleNames()->first(),
-                'permissions' => $user->getAllPermissions()->pluck('name'),
-            ]);
+            return new EmployeeResource($employee->load([
+                'user.branch',
+                'branch',
+                'department',
+                'designation',
+                'attendances',
+                'leaves',
+                'payroll',
+                'sites',
+                'dailyReports',
+            ]));
         });
     }
 
     public function show(Employee $employee)
     {
-        $employee->load('user.branch', 'attendances');
-
-        return array_merge($employee->toArray(), [
-            'role' => $employee->user?->getRoleNames()->first(),
-            'permissions' => $employee->user?->getAllPermissions()->pluck('name') ?? collect(),
-        ]);
+        return new EmployeeResource($employee->load([
+            'user.branch',
+            'branch',
+            'department',
+            'designation',
+            'attendances',
+            'leaves',
+            'payroll',
+            'sites',
+            'dailyReports',
+        ]));
     }
 
     public function update(Request $request, Employee $employee)
@@ -89,6 +115,8 @@ class EmployeeController extends Controller
             'email' => 'sometimes|email|unique:users,email,' . $employee->user_id,
             'branch_id' => 'sometimes|exists:branches,id',
             'department' => 'nullable|string',
+            'department_id' => 'nullable|exists:departments,id',
+            'designation_id' => 'nullable|exists:designations,id',
             'salary' => 'nullable|numeric',
             'shift' => 'nullable|string',
             'joining_date' => 'nullable|date',
@@ -124,6 +152,8 @@ class EmployeeController extends Controller
 
             $employee->update([
                 'department' => $validated['department'] ?? $employee->department,
+                'department_id' => $validated['department_id'] ?? $employee->department_id,
+                'designation_id' => $validated['designation_id'] ?? $employee->designation_id,
                 'salary' => $validated['salary'] ?? $employee->salary,
                 'shift' => $validated['shift'] ?? $employee->shift,
                 'joining_date' => $validated['joining_date'] ?? $employee->joining_date,
@@ -133,10 +163,17 @@ class EmployeeController extends Controller
 
         $employee->refresh();
 
-        return array_merge($employee->load('user.branch')->toArray(), [
-            'role' => $employee->user?->getRoleNames()->first(),
-            'permissions' => $employee->user?->getAllPermissions()->pluck('name') ?? collect(),
-        ]);
+        return new EmployeeResource($employee->load([
+            'user.branch',
+            'branch',
+            'department',
+            'designation',
+            'attendances',
+            'leaves',
+            'payroll',
+            'sites',
+            'dailyReports',
+        ]));
     }
 
     public function destroy(Employee $employee)

@@ -53,6 +53,11 @@ const handleResponse = async (response) => {
   }
   
   const data = await response.json();
+  // If backend uses the standardized wrapper { success, message, data }, unwrap it for callers
+  if (data && typeof data === 'object' && Object.prototype.hasOwnProperty.call(data, 'success') && Object.prototype.hasOwnProperty.call(data, 'data')) {
+    return { data: data.data, meta: { success: data.success, message: data.message } };
+  }
+
   return { data };
 };
 

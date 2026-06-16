@@ -20,6 +20,12 @@ use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\TestController;
 use App\Http\Controllers\Api\SearchController;
+use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\DesignationController;
+use App\Http\Controllers\PayrollController;
+use App\Http\Controllers\ReportsController;
+use App\Http\Controllers\RoleController;
+
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/test', [TestController::class, 'test']);
@@ -35,9 +41,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Core HR
     Route::apiResource('branches', BranchController::class);
-    Route::get('/permissions', [PermissionController::class, 'index'])->middleware('permission:manage settings,sanctum');
-    Route::get('/roles', [PermissionController::class, 'roles'])->middleware('permission:manage settings,sanctum');
-    Route::put('/roles/{role}/permissions', [PermissionController::class, 'updateRolePermissions'])->middleware('permission:manage settings,sanctum');
+    Route::get('/permissions', [PermissionController::class, 'index'])->middleware('permission:manage_permissions,sanctum');
+    Route::get('/roles', [RoleController::class, 'index'])->middleware('permission:manage_roles,sanctum');
+    Route::put('/roles/{role}/permissions', [PermissionController::class, 'updateRolePermissions'])->middleware('permission:manage_permissions,sanctum');
     Route::apiResource('employees', EmployeeController::class)->middleware('permission:manage employees,sanctum');
 
     // Attendance
@@ -45,12 +51,22 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/attendance/check-in', [AttendanceController::class, 'checkIn']);
     Route::post('/attendance/check-out', [AttendanceController::class, 'checkOut']);
 
+    // Sites / Construction
+    Route::apiResource('sites', \App\Http\Controllers\SiteController::class);
+    Route::apiResource('employee-sites', \App\Http\Controllers\EmployeeSiteController::class)->only(['index','store','destroy']);
+    Route::apiResource('daily-reports', \App\Http\Controllers\DailyReportController::class)->only(['index','store','show','destroy']);
+
     // Inventory
     Route::apiResource('categories', CategoryController::class);
     Route::apiResource('products', ProductController::class);
     Route::get('/inventory', [InventoryController::class, 'index']);
+    Route::post('/inventory', [InventoryController::class, 'store']);
     Route::post('/inventory/transaction', [InventoryController::class, 'transaction']);
     Route::get('/inventory/transactions', [InventoryController::class, 'transactions']);
+    Route::get('/inventory/{inventory}', [InventoryController::class, 'show']);
+    Route::put('/inventory/{inventory}', [InventoryController::class, 'update']);
+    Route::patch('/inventory/{inventory}', [InventoryController::class, 'update']);
+    Route::delete('/inventory/{inventory}', [InventoryController::class, 'destroy']);
     
     // Inventory Transfers
     Route::get('/inventory/transfers', [\App\Http\Controllers\InventoryTransferController::class, 'index'])->middleware('permission:manage transfers,sanctum');
@@ -96,6 +112,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/leaves', [HRController::class, 'leaves']);
     Route::post('/leaves', [HRController::class, 'requestLeave']);
     Route::get('/tasks', [HRController::class, 'tasks']);
+
+    // HR Organization Structure
+    Route::apiResource('departments', DepartmentController::class);
+    Route::apiResource('designations', DesignationController::class);
+    Route::apiResource('payroll', PayrollController::class);
+    Route::post('/payroll/process', [PayrollController::class, 'process']);
+
+    // Reports
+    Route::get('/reports/sales', [ReportsController::class, 'salesReport']);
+    Route::get('/reports/payments', [ReportsController::class, 'paymentReport']);
+    Route::get('/reports/attendance', [ReportsController::class, 'attendanceReport']);
+    Route::get('/reports/leaves', [ReportsController::class, 'leaveReport']);
+    Route::get('/reports/employees', [ReportsController::class, 'employeeReport']);
 
     // Super Admin Generic Routes
     Route::middleware('role:Super Admin,sanctum')->group(function () {

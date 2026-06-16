@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Customer;
+use App\Http\Resources\CustomerResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -10,7 +11,7 @@ class CustomerController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Customer::with(['salesOrders', 'payments']);
+        $query = Customer::with(['branch', 'salesOrders.products', 'payments']);
 
         // Search
         if ($request->has('search')) {
@@ -43,7 +44,7 @@ class CustomerController extends Controller
             return $customer;
         });
 
-        return response()->json($customers);
+        return CustomerResource::collection($customers);
     }
 
     public function store(Request $request)
@@ -58,12 +59,12 @@ class CustomerController extends Controller
         ]);
 
         $customer = Customer::create($validated);
-        return response()->json($customer, 201);
+        return (new CustomerResource($customer->load(['branch', 'salesOrders.products'])))->response()->setStatusCode(201);
     }
 
     public function show($id)
     {
-        $customer = Customer::with(['salesOrders', 'payments', 'notes.creator', 'documents.uploader'])->findOrFail($id);
+        $customer = Customer::with(['branch', 'salesOrders.products', 'payments', 'notes.creator', 'documents.uploader'])->findOrFail($id);
         
         $soSum = $customer->salesOrders->sum('total_amount');
         $paymentSum = $customer->payments->where('type', 'Receivable')->sum('amount');
@@ -73,7 +74,7 @@ class CustomerController extends Controller
         $customer->total_orders = $customer->salesOrders->count();
         $customer->status = 'Active';
         
-        return response()->json($customer);
+        return new CustomerResource($customer);
     }
 
     public function update(Request $request, $id)
@@ -89,7 +90,7 @@ class CustomerController extends Controller
         ]);
 
         $customer->update($validated);
-        return response()->json($customer);
+        return new CustomerResource($customer->load(['branch', 'salesOrders.products']));
     }
 
     public function destroy($id)

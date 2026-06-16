@@ -10,17 +10,20 @@ class PermissionController extends Controller
 {
     public function index()
     {
-        return Permission::orderBy('name')->pluck('name');
+        $perms = Permission::orderBy('name')->pluck('name');
+        return response()->json(['success' => true, 'message' => 'Success', 'data' => $perms]);
     }
 
     public function roles()
     {
-        return Role::with('permissions')->get()->map(function ($role) {
+        $roles = Role::with('permissions')->get()->map(function ($role) {
             return [
                 'name' => $role->name,
                 'permissions' => $role->permissions->pluck('name'),
             ];
         });
+
+        return response()->json(['success' => true, 'message' => 'Success', 'data' => $roles]);
     }
 
     public function updateRolePermissions(Request $request, Role $role)
@@ -32,12 +35,11 @@ class PermissionController extends Controller
 
         $role->syncPermissions($validated['permissions']);
 
-        return response()->json([
-            'message' => 'Role permissions updated successfully',
+        return response()->json(['success' => true, 'message' => 'Role permissions updated successfully', 'data' => [
             'role' => [
                 'name' => $role->name,
                 'permissions' => $role->permissions->pluck('name'),
             ],
-        ]);
+        ]]);
     }
 }

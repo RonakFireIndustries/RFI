@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Supplier;
+use App\Http\Resources\SupplierResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -10,7 +11,7 @@ class SupplierController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Supplier::with(['purchaseOrders', 'payments']);
+        $query = Supplier::with(['branch', 'products.category', 'purchaseOrders', 'payments']);
 
         // Search
         if ($request->has('search')) {
@@ -41,7 +42,7 @@ class SupplierController extends Controller
             return $supplier;
         });
 
-        return response()->json($suppliers);
+        return SupplierResource::collection($suppliers);
     }
 
     public function store(Request $request)
@@ -56,12 +57,12 @@ class SupplierController extends Controller
         ]);
 
         $supplier = Supplier::create($validated);
-        return response()->json($supplier, 201);
+        return (new SupplierResource($supplier->load(['branch', 'products.category', 'purchaseOrders'])))->response()->setStatusCode(201);
     }
 
     public function show($id)
     {
-        $supplier = Supplier::with(['purchaseOrders', 'payments', 'notes.creator', 'documents.uploader'])->findOrFail($id);
+        $supplier = Supplier::with(['branch', 'products.category', 'purchaseOrders', 'payments', 'notes.creator', 'documents.uploader'])->findOrFail($id);
         
         $poSum = $supplier->purchaseOrders->sum('total_amount');
         $paymentSum = $supplier->payments->where('type', 'Payable')->sum('amount');
@@ -70,7 +71,7 @@ class SupplierController extends Controller
         $supplier->balance = $poSum - $paymentSum;
         $supplier->active_orders_count = $supplier->purchaseOrders->whereNotIn('status', ['Delivered', 'Completed'])->count();
         
-        return response()->json($supplier);
+        return new SupplierResource($supplier);
     }
 
     public function update(Request $request, $id)
@@ -85,7 +86,7 @@ class SupplierController extends Controller
         ]);
 
         $supplier->update($validated);
-        return response()->json($supplier);
+        return new SupplierResource($supplier->load(['branch', 'products.category', 'purchaseOrders']));
     }
 
     public function destroy($id)

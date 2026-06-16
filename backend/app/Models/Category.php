@@ -35,6 +35,11 @@ class Category extends Model
 
     public function products()
     {
+        return $this->hasMany(Product::class);
+    }
+
+    public function linkedProducts()
+    {
         return $this->belongsToMany(Product::class, 'category_product');
     }
 }

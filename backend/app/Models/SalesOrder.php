@@ -14,4 +14,16 @@ class SalesOrder extends Model
     {
         return $this->hasMany(SalesOrderItem::class);
     }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
+    }
+
+    public function products()
+    {
+        return $this->belongsToMany(Product::class, 'sales_order_items')
+            ->withPivot(['quantity', 'unit_price', 'gst_amount'])
+            ->withTimestamps();
+    }
 }

@@ -4,15 +4,19 @@ import { useState, useEffect, useRef } from 'react';
 import api from '../../services/api';
 import { 
   LayoutDashboard, Users, Calendar, ClipboardList, 
-  Settings, LogOut, Package, Boxes, Layers, Warehouse, FileText, Bell, HelpCircle, Search, ShoppingCart, Shield, Briefcase, DollarSign, Menu, X
+  Settings, LogOut, Package, Boxes, Layers, Warehouse, FileText, Bell, HelpCircle, Search, ShoppingCart, Shield, Briefcase, DollarSign, Menu, X,
+  MapPin
 } from 'lucide-react';
 
 // Import all pages
 import DashboardOverview from '../../pages/Dashboard/DashboardOverview';
 import InventoryDashboard from '../../pages/Inventory/InventoryDashboard';
+import InventoryDetail from '../../pages/Inventory/InventoryDetail';
 import ProductCatalog from '../../pages/Products/ProductCatalog';
+import ProductDetail from '../../pages/Products/ProductDetail';
 import Warehouses from '../../pages/Warehouses/Warehouses';
 import EmployeesPage from '../../pages/Employees/EmployeesPage';
+import EmployeeDetail from '../../pages/Employees/EmployeeDetail';
 import PermissionManagement from '../../pages/Admin/PermissionManagement';
 import BranchSelector from './BranchSelector';
 import PurchaseOrdersPage from '../../pages/Purchases/PurchaseOrdersPage';
@@ -25,6 +29,10 @@ import CategoryDirectory from '../../pages/Categories/CategoryDirectory';
 import InvoiceList from '../../pages/Sales/InvoiceList';
 import InvoiceBuilder from '../../pages/Sales/InvoiceBuilder';
 import InvoicePreview from '../../pages/Sales/InvoicePreview';
+import Attendance from '../../pages/Attendance/Attendance';
+import Leaves from '../../pages/Leaves/Leaves';
+import Payroll from '@/pages/Payroll/Payroll';
+import Sites from '@/pages/Sites/Sites';
 
 const PlaceholderPage = ({ title }) => (
   <div className="bg-white rounded-lg shadow border border-gray-100 p-6">
@@ -96,17 +104,18 @@ export default function DashboardLayout() {
     { name: 'Attendance', path: '/dashboard/attendance', icon: Calendar, permission: 'view attendance' },
     { name: 'Leave', path: '/dashboard/leave', icon: Briefcase, permission: 'view leave' },
     { name: 'Payroll', path: '/dashboard/payroll', icon: DollarSign, permission: 'view payroll' },
-    // { name: 'Inventory', path: '/dashboard/inventory', icon: Package, permission: 'view inventory' },
-    // { name: 'Products', path: '/dashboard/products', icon: Boxes, permission: 'view products' },
-    // { name: 'Categories', path: '/dashboard/categories', icon: Layers, permission: 'view categories' },
-    // { name: 'Warehouses', path: '/dashboard/warehouses', icon: Warehouse, permission: 'view warehouses' },
-    // { name: 'Customers', path: '/dashboard/customers', icon: Users, permission: 'manage customers' },
-    // { name: 'Suppliers', path: '/dashboard/suppliers', icon: ShoppingCart, permission: 'manage suppliers' },
-    // { name: 'Purchases', path: '/dashboard/purchases', icon: ClipboardList, permission: 'manage purchases' },
-    // { name: 'Sales', path: '/dashboard/sales', icon: ClipboardList, permission: 'manage sales' },
-    // { name: 'Invoices', path: '/dashboard/invoices', icon: FileText, permission: 'view invoices' },
-    // { name: 'Reports', path: '/dashboard/reports', icon: ClipboardList, permission: 'view reports' },
-    // { name: 'Permissions', path: '/dashboard/permissions', icon: Shield, permission: 'manage settings' },
+    { name: 'Inventory', path: '/dashboard/inventory', icon: Package, permission: 'view inventory' },
+    { name: 'Products', path: '/dashboard/products', icon: Boxes, permission: 'view products' },
+    { name: 'Categories', path: '/dashboard/categories', icon: Layers, permission: 'view categories' },
+    { name: 'Sites', path: '/dashboard/sites', icon: MapPin, permission: 'view sites' },
+    { name: 'Warehouses', path: '/dashboard/warehouses', icon: Warehouse, permission: 'view warehouses' },
+    { name: 'Customers', path: '/dashboard/customers', icon: Users, permission: 'manage customers' },
+    { name: 'Suppliers', path: '/dashboard/suppliers', icon: ShoppingCart, permission: 'manage suppliers' },
+    { name: 'Purchases', path: '/dashboard/purchases', icon: ClipboardList, permission: 'manage purchases' },
+    { name: 'Sales', path: '/dashboard/sales', icon: ClipboardList, permission: 'manage sales' },
+    { name: 'Invoices', path: '/dashboard/invoices', icon: FileText, permission: 'view invoices' },
+    { name: 'Reports', path: '/dashboard/reports', icon: ClipboardList, permission: 'view reports' },
+    { name: 'Permissions', path: '/dashboard/permissions', icon: Shield, permission: 'manage settings' },
   ];
 
   return (
@@ -274,12 +283,15 @@ export default function DashboardLayout() {
             <Routes>
               <Route index element={<DashboardOverview />} />
               <Route path="inventory" element={<InventoryDashboard />} />
+              <Route path="inventory/:id" element={<InventoryDetail />} />
               <Route path="products" element={<ProductCatalog />} />
+              <Route path="products/:id" element={<ProductDetail />} />
               <Route path="warehouses" element={<Warehouses />} />
               <Route path="employees" element={<EmployeesPage />} />
-              <Route path="attendance" element={<PlaceholderPage title="Attendance" />} />
-              <Route path="leave" element={<PlaceholderPage title="Leave Management" />} />
-              <Route path="payroll" element={<PlaceholderPage title="Payroll" />} />
+              <Route path="employees/:id" element={<EmployeeDetail />} />
+              <Route path="attendance" element={<Attendance />} />
+              <Route path="leave" element={<Leaves />} />
+              <Route path="payroll" element={<Payroll />} />
               <Route path="branches" element={<PlaceholderPage title="Branches" />} />
               <Route path="categories" element={<CategoryDirectory />} />
               <Route path="customers" element={<CustomerDirectory />} />
@@ -294,6 +306,7 @@ export default function DashboardLayout() {
               <Route path="reports" element={<PlaceholderPage title="Reports" />} />
               <Route path="settings" element={<PlaceholderPage title="Settings" />} />
               <Route path="permissions" element={<PermissionManagement />} />
+              <Route path="sites" element={<Sites  />} />
             </Routes>
           </div>
         </main>

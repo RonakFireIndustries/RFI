@@ -19,7 +19,7 @@ class AuthController extends Controller
         $user = User::where('email', $request->email)->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
-            return response()->json(['message' => 'Invalid credentials'], 401);
+            return response()->json(['success' => false, 'message' => 'Invalid credentials', 'data' => null], 401);
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -27,27 +27,31 @@ class AuthController extends Controller
         $permissions = $user->getAllPermissions()->pluck('name');
 
         return response()->json([
-            'access_token' => $token,
-            'token_type' => 'Bearer',
-            'user' => $user->load('branch', 'employee'),
-            'roles' => $roles,
-            'permissions' => $permissions
-        ]);
+            'success' => true,
+            'message' => 'Authenticated',
+            'data' => [
+                'access_token' => $token,
+                'token_type' => 'Bearer',
+                'user' => $user->load('branch', 'employee'),
+                'roles' => $roles,
+                'permissions' => $permissions
+            ]
+        ], 200);
     }
 
     public function me(Request $request)
     {
         $user = $request->user();
-        return response()->json([
+        return response()->json(['success' => true, 'message' => 'Success', 'data' => [
             'user' => $user->load('branch', 'employee'),
             'roles' => $user->getRoleNames(),
             'permissions' => $user->getAllPermissions()->pluck('name')
-        ]);
+        ]]);
     }
 
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
-        return response()->json(['message' => 'Successfully logged out']);
+        return response()->json(['success' => true, 'message' => 'Successfully logged out', 'data' => null]);
     }
 }
