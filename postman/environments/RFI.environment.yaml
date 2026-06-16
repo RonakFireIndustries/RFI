@@ -1,4 +1,0 @@
-name: RFI
-values:
-  - key: BaseURL
-    value: 'https://localhost:8000/'

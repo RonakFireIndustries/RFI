@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
-import api from '../../services/api';
+import { authService } from '../../services/authService';
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -23,10 +23,10 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const response = await api.post('/login', { email, password });
+      const response = await authService.login({ email, password });
 
-      if (response.data.access_token && response.data.user) {
-        setAuth(response.data.user, response.data.access_token, response.data.roles || [], response.data.permissions || []);
+      if (response.data.token && response.data.user) {
+        setAuth(response.data.user, response.data.token, response.data.roles || [], response.data.permissions || []);
         navigate('/dashboard');
       } else {
         setError('Login failed: Invalid response format');

@@ -14,7 +14,13 @@ export const useAuthStore = create(
         set({ user, token, roles, permissions, isAuthenticated: true });
       },
       
-      logout: () => {
+      logout: async () => {
+        try {
+          const { authService } = await import('../services/authService');
+          await authService.logout();
+        } catch (e) {
+          console.error("Backend logout failed", e);
+        }
         set({ user: null, token: null, roles: [], permissions: [], isAuthenticated: false });
       },
     }),

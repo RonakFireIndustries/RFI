@@ -27,14 +27,19 @@ use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\RoleController;
 
 
-Route::post('/login', [AuthController::class, 'login']);
-Route::get('/test', [TestController::class, 'test']);
-
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/me', [AuthController::class, 'me']);
-    Route::post('/logout', [AuthController::class, 'logout']);
+Route::prefix('v1')->group(function () {
+    Route::post('/login', [\App\Http\Controllers\Api\V1\AuthController::class, 'login']);
+    Route::post('/forgot-password', [\App\Http\Controllers\Api\V1\PasswordResetController::class, 'sendResetLinkEmail']);
+    Route::post('/reset-password', [\App\Http\Controllers\Api\V1\PasswordResetController::class, 'reset']);
     
-    Route::get('/search', [SearchController::class, 'search']);
+    Route::get('/test', [TestController::class, 'test']);
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/user', [\App\Http\Controllers\Api\V1\AuthController::class, 'user']);
+        Route::post('/logout', [\App\Http\Controllers\Api\V1\AuthController::class, 'logout']);
+        Route::put('/profile', [\App\Http\Controllers\Api\V1\ProfileController::class, 'update']);
+        
+        Route::get('/search', [SearchController::class, 'search']);
 
     // Dashboard
     Route::get('/dashboard/summary', [DashboardController::class, 'summary']);
@@ -135,4 +140,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/admin/tables/{table}/{id}', [AdminController::class, 'updateRecord']);
         Route::delete('/admin/tables/{table}/{id}', [AdminController::class, 'deleteRecord']);
     });
+});
+
 });
