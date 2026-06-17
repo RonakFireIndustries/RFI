@@ -25,6 +25,7 @@ use App\Http\Controllers\DesignationController;
 use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\UserAccessController;
 
 
 Route::prefix('v1')->group(function () {
@@ -46,9 +47,19 @@ Route::prefix('v1')->group(function () {
 
     // Core HR
     Route::apiResource('branches', BranchController::class);
-    Route::get('/permissions', [PermissionController::class, 'index'])->middleware('permission:manage_permissions,sanctum');
-    Route::get('/roles', [RoleController::class, 'index'])->middleware('permission:manage_roles,sanctum');
-    Route::put('/roles/{role}/permissions', [PermissionController::class, 'updateRolePermissions'])->middleware('permission:manage_permissions,sanctum');
+    // Role & Permission Management
+    Route::apiResource('roles', RoleController::class);
+    Route::apiResource('permissions', PermissionController::class);
+
+    // User Access Management
+    Route::get('/users/{user}/roles', [UserAccessController::class, 'getRoles']);
+    Route::post('/users/{user}/roles', [UserAccessController::class, 'assignRole']);
+    Route::delete('/users/{user}/roles/{role}', [UserAccessController::class, 'removeRole']);
+    
+    Route::get('/users/{user}/permissions', [UserAccessController::class, 'getPermissions']);
+    Route::post('/users/{user}/permissions', [UserAccessController::class, 'assignPermission']);
+    Route::delete('/users/{user}/permissions/{permission}', [UserAccessController::class, 'removePermission']);
+
     Route::apiResource('employees', EmployeeController::class)->middleware('permission:manage employees,sanctum');
 
     // Attendance

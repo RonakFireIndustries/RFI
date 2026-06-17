@@ -2,44 +2,59 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
+use App\Models\Permission;
+use App\Http\Requests\PermissionStoreRequest;
+use App\Http\Requests\PermissionUpdateRequest;
+use Illuminate\Http\JsonResponse;
 
 class PermissionController extends Controller
 {
-    public function index()
+    public function index(): JsonResponse
     {
-        $perms = Permission::orderBy('name')->pluck('name');
-        return response()->json(['success' => true, 'message' => 'Success', 'data' => $perms]);
-    }
-
-    public function roles()
-    {
-        $roles = Role::with('permissions')->get()->map(function ($role) {
-            return [
-                'name' => $role->name,
-                'permissions' => $role->permissions->pluck('name'),
-            ];
-        });
-
-        return response()->json(['success' => true, 'message' => 'Success', 'data' => $roles]);
-    }
-
-    public function updateRolePermissions(Request $request, Role $role)
-    {
-        $validated = $request->validate([
-            'permissions' => 'required|array',
-            'permissions.*' => 'string|exists:permissions,name',
+        $permissions = Permission::all();
+        return response()->json([
+            'success' => true,
+            'data' => $permissions
         ]);
+    }
 
-        $role->syncPermissions($validated['permissions']);
+    public function store(PermissionStoreRequest $request): JsonResponse
+    {
+        $permission = Permission::create(['name' => $request->name, 'guard_name' => 'web']);
 
-        return response()->json(['success' => true, 'message' => 'Role permissions updated successfully', 'data' => [
-            'role' => [
-                'name' => $role->name,
-                'permissions' => $role->permissions->pluck('name'),
-            ],
-        ]]);
+        return response()->json([
+            'success' => true,
+            'message' => 'Permission created successfully',
+            'data' => $permission
+        ], 201);
+    }
+
+    public function show(Permission $permission): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'data' => $permission
+        ]);
+    }
+
+    public function update(PermissionUpdateRequest $request, Permission $permission): JsonResponse
+    {
+        $permission->update(['name' => $request->name]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Permission updated successfully',
+            'data' => $permission
+        ]);
+    }
+
+    public function destroy(Permission $permission): JsonResponse
+    {
+        $permission->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Permission deleted successfully'
+        ]);
     }
 }

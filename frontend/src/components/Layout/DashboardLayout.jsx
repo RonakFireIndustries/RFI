@@ -18,6 +18,11 @@ import Warehouses from '../../pages/Warehouses/Warehouses';
 import EmployeesPage from '../../pages/Employees/EmployeesPage';
 import EmployeeDetail from '../../pages/Employees/EmployeeDetail';
 import PermissionManagement from '../../pages/Admin/PermissionManagement';
+import RoleList from '../../pages/Admin/Roles/RoleList';
+import RoleForm from '../../pages/Admin/Roles/RoleForm';
+import PermissionList from '../../pages/Admin/Permissions/PermissionList';
+import PermissionForm from '../../pages/Admin/Permissions/PermissionForm';
+import UserAccess from '../../pages/Admin/UserAccess/UserAccess';
 import BranchSelector from './BranchSelector';
 import PurchaseOrdersPage from '../../pages/Purchases/PurchaseOrdersPage';
 import SalesOrdersPage from '../../pages/Sales/SalesOrdersPage';
@@ -115,7 +120,8 @@ export default function DashboardLayout() {
     { name: 'Sales', path: '/dashboard/sales', icon: ClipboardList, permission: 'manage sales' },
     { name: 'Invoices', path: '/dashboard/invoices', icon: FileText, permission: 'view invoices' },
     { name: 'Reports', path: '/dashboard/reports', icon: ClipboardList, permission: 'view reports' },
-    { name: 'Permissions', path: '/dashboard/permissions', icon: Shield, permission: 'manage settings' },
+    { name: 'Role & Permissions', path: '/dashboard/roles', icon: Shield, permission: 'manage settings' },
+    { name: 'User Access', path: '/dashboard/user-access', icon: Shield, permission: 'manage settings' },
   ];
 
   return (
@@ -306,6 +312,13 @@ export default function DashboardLayout() {
               <Route path="reports" element={<PlaceholderPage title="Reports" />} />
               <Route path="settings" element={<PlaceholderPage title="Settings" />} />
               <Route path="permissions" element={<PermissionManagement />} />
+              <Route path="roles" element={<RoleList />} />
+              <Route path="roles/create" element={<RoleForm />} />
+              <Route path="roles/:id/edit" element={<RoleForm />} />
+              <Route path="permissions-list" element={<PermissionList />} />
+              <Route path="permissions-list/create" element={<PermissionForm />} />
+              <Route path="permissions-list/:id/edit" element={<PermissionForm />} />
+              <Route path="user-access" element={<UserAccess />} />
               <Route path="sites" element={<Sites  />} />
             </Routes>
           </div>
