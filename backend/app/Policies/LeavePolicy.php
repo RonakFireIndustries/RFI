@@ -2,26 +2,58 @@
 
 namespace App\Policies;
 
-use App\Models\User;
 use App\Models\Leave;
-use Illuminate\Auth\Access\HandlesAuthorization;
+use App\Models\User;
 
 class LeavePolicy
 {
-    use HandlesAuthorization;
-
-    public function view(User $user, Leave $leave = null)
+    public function viewAny(User $user): bool
     {
-        return $user->hasPermissionTo('view_leaves');
+        return $user->hasPermissionTo('leave.view');
     }
 
-    public function create(User $user)
+    public function view(User $user, Leave $leave): bool
     {
-        return $user->hasPermissionTo('create_leaves');
+        if ($user->hasRole(['Super Admin', 'Admin', 'HR'])) {
+            return true;
+        }
+        return $user->employee && $leave->employee_id === $user->employee->id;
     }
 
-    public function approve(User $user, Leave $leave = null)
+    public function create(User $user): bool
     {
-        return $user->hasPermissionTo('approve_leaves');
+        return $user->hasPermissionTo('leave.create');
+    }
+
+    public function update(User $user, Leave $leave): bool
+    {
+        if ($user->hasRole(['Super Admin', 'Admin', 'HR'])) {
+            return true;
+        }
+        // Only allow update if draft or by owner
+        return $user->employee && $leave->employee_id === $user->employee->id && in_array($leave->status, ['Draft', 'Submitted']);
+    }
+
+    public function delete(User $user, Leave $leave): bool
+    {
+        if ($user->hasRole(['Super Admin', 'Admin', 'HR'])) {
+            return true;
+        }
+        return $user->employee && $leave->employee_id === $user->employee->id && $leave->status === 'Draft';
+    }
+
+    public function approve(User $user, Leave $leave): bool
+    {
+        return $user->hasPermissionTo('leave.approve');
+    }
+
+    public function reject(User $user, Leave $leave): bool
+    {
+        return $user->hasPermissionTo('leave.reject');
+    }
+
+    public function cancel(User $user, Leave $leave): bool
+    {
+        return $user->hasPermissionTo('leave.cancel');
     }
 }

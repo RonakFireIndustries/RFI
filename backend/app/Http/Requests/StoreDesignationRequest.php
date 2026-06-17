@@ -6,27 +6,17 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreDesignationRequest extends FormRequest
 {
-    public function authorize()
+    public function authorize(): bool
     {
-        return $this->user()->can('create', \App\Models\Designation::class);
+        return true;
     }
 
-    public function rules()
+    public function rules(): array
     {
         return [
-            'name' => 'required|string|unique:designations,name',
+            'name' => 'required|string|max:255',
+            'department_id' => 'required|exists:departments,id',
             'description' => 'nullable|string',
-            'branch_id' => 'required|exists:branches,id',
-            'status' => 'required|in:Active,Inactive',
-        ];
-    }
-
-    public function messages()
-    {
-        return [
-            'name.required' => 'Designation name is required',
-            'name.unique' => 'Designation name must be unique',
-            'branch_id.required' => 'Branch is required',
         ];
     }
 }

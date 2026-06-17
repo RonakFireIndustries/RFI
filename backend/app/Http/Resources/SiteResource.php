@@ -11,12 +11,24 @@ class SiteResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'code' => $this->code,
             'client_details' => $this->client_details,
+            'address' => $this->address,
+            'city' => $this->city,
+            'state' => $this->state,
+            'country' => $this->country,
+            'pincode' => $this->pincode,
+            'contact_person' => $this->contact_person,
+            'phone' => $this->phone,
+            'email' => $this->email,
+            'latitude' => $this->latitude,
+            'longitude' => $this->longitude,
             'status' => $this->status,
+            'site_manager_id' => $this->site_manager_id,
             'site_manager' => $this->whenLoaded('manager', function () {
                 return [
                     'id' => $this->manager?->id,
-                    'name' => $this->manager?->user?->name ?? null,
+                    'name' => $this->manager?->full_name ?? null,
                 ];
             }),
             'created_at' => $this->created_at,

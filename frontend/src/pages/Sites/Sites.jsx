@@ -1,169 +1,576 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useSiteStore } from '../../store/siteStore';
+import { useEmployeeStore } from '../../store/employeeStore';
 import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
-} from 'recharts';
-import { Plus, SlidersHorizontal, CheckCircle2, AlertCircle } from 'lucide-react';
-
-const siteStats = [
-  { name: 'Jan', manpower: 60, budget: 40 },
-  { name: 'Feb', manpower: 65, budget: 45 },
-  { name: 'Mar', manpower: 80, budget: 55 },
-  { name: 'Apr', manpower: 70, budget: 60 },
-  { name: 'May', manpower: 85, budget: 75 },
-];
-
-const sites = [
-  {
-    id: 1,
-    name: 'Metro Line 4 Phase 1',
-    location: 'Downtown Central Hub',
-    status: 'On-Track',
-    statusBg: 'bg-[#ED8936]', // Orange
-    workers: 452,
-    manager: 'Elena Rodriguez',
-    img: 'https://images.unsplash.com/photo-1541888086225-f64041e2612a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    id: 2,
-    name: 'Sky-Rise Apartments',
-    location: 'North Harbor District',
-    status: 'Delayed',
-    statusBg: 'bg-[#E53E3E]', // Red
-    borderColor: 'border-[#E53E3E]',
-    workers: 128,
-    manager: 'Marcus Chen',
-    img: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    id: 3,
-    name: 'East River Bridge',
-    location: 'Bridgeport Bypass',
-    status: 'On-Track',
-    statusBg: 'bg-[#ED8936]',
-    workers: 315,
-    manager: 'Sarah Jenkins',
-    img: 'https://images.unsplash.com/photo-1545465330-802c6b41cb02?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    id: 4,
-    name: 'Green Tech Facility',
-    location: 'Industrial Zone B',
-    status: 'On-Track',
-    statusBg: 'bg-[#ED8936]',
-    workers: 289,
-    manager: 'David Wilson',
-    img: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-  }
-];
+  Plus, Edit, Trash2, Search, MapPin, Phone, Mail, User, ShieldAlert,
+  Building, Compass, CheckCircle2, XCircle, Info, ChevronLeft, ChevronRight, X
+} from 'lucide-react';
 
 export default function Sites() {
+  const { 
+    items: sites, 
+    loading, 
+    fetchItems: fetchSites, 
+    createItem: createSite, 
+    updateItem: updateSite, 
+    deleteItem: deleteSite 
+  } = useSiteStore();
+
+  const { 
+    employees, 
+    fetchEmployees 
+  } = useEmployeeStore();
+
+  // Search & Filter
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [perPage] = useState(10);
+
+  // Modals
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingSite, setEditingSite] = useState(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    code: '',
+    client_details: '',
+    address: '',
+    city: '',
+    state: '',
+    country: 'India',
+    pincode: '',
+    contact_person: '',
+    phone: '',
+    email: '',
+    latitude: '',
+    longitude: '',
+    status: 'Active',
+    site_manager_id: ''
+  });
+
+  const [formErrors, setFormErrors] = useState({});
+
+  useEffect(() => {
+    fetchSites({ search, status: statusFilter, page: currentPage, per_page: perPage });
+    fetchEmployees({ per_page: 100 });
+  }, [search, statusFilter, currentPage]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    if (formErrors[name]) {
+      setFormErrors(prev => ({ ...prev, [name]: null }));
+    }
+  };
+
+  const openAddModal = () => {
+    setEditingSite(null);
+    setFormData({
+      name: '',
+      code: '',
+      client_details: '',
+      address: '',
+      city: '',
+      state: '',
+      country: 'India',
+      pincode: '',
+      contact_person: '',
+      phone: '',
+      email: '',
+      latitude: '',
+      longitude: '',
+      status: 'Active',
+      site_manager_id: ''
+    });
+    setFormErrors({});
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (site) => {
+    setEditingSite(site);
+    setFormData({
+      name: site.name || '',
+      code: site.code || '',
+      client_details: site.client_details || '',
+      address: site.address || '',
+      city: site.city || '',
+      state: site.state || '',
+      country: site.country || 'India',
+      pincode: site.pincode || '',
+      contact_person: site.contact_person || '',
+      phone: site.phone || '',
+      email: site.email || '',
+      latitude: site.latitude || '',
+      longitude: site.longitude || '',
+      status: site.status || 'Active',
+      site_manager_id: site.site_manager_id || ''
+    });
+    setFormErrors({});
+    setIsModalOpen(true);
+  };
+
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+    setFormErrors({});
+
+    // Simple client-side validation
+    const errors = {};
+    if (!formData.name) errors.name = 'Site name is required';
+    if (!formData.status) errors.status = 'Status is required';
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+
+    try {
+      const payload = {
+        ...formData,
+        latitude: formData.latitude ? parseFloat(formData.latitude) : null,
+        longitude: formData.longitude ? parseFloat(formData.longitude) : null,
+        site_manager_id: formData.site_manager_id ? parseInt(formData.site_manager_id) : null
+      };
+
+      if (editingSite) {
+        await updateSite(editingSite.id, payload);
+      } else {
+        await createSite(payload);
+      }
+      setIsModalOpen(false);
+      fetchSites({ search, status: statusFilter, page: currentPage, per_page: perPage });
+    } catch (err) {
+      if (err.response?.data?.errors) {
+        setFormErrors(err.response.data.errors);
+      } else {
+        setFormErrors({ general: err.message || 'An error occurred.' });
+      }
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this site?')) {
+      try {
+        await deleteSite(id);
+        fetchSites({ search, status: statusFilter, page: currentPage, per_page: perPage });
+      } catch (err) {
+        alert(err.message || 'Failed to delete site.');
+      }
+    }
+  };
+
   return (
     <div className="w-full">
-      {/* Top Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* Chart */}
-        <div className="lg:col-span-2 bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex flex-col h-80">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-bold text-[#0B1B36]">Site Statistics: Manpower vs Budget</h2>
-            <div className="flex items-center gap-4 text-xs font-semibold text-[#4A5568]">
-              <div className="flex items-center"><div className="w-2.5 h-2.5 rounded-full bg-[#0B1B36] mr-2"/> Manpower</div>
-              <div className="flex items-center"><div className="w-2.5 h-2.5 rounded-full bg-[#ED8936] mr-2"/> Budget</div>
-            </div>
+      {/* Header section */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+          <h1 className="text-3xl font-extrabold text-[#0B1B36] tracking-tight">Construction Sites</h1>
+          <p className="text-gray-500 mt-1">Manage project locations, contact persons, geographic coordinates, and managers.</p>
+        </div>
+        <button 
+          onClick={openAddModal}
+          className="flex items-center px-5 py-3 bg-[#1a56db] text-white rounded-xl font-semibold hover:bg-[#1546b5] transition-all shadow-md shadow-blue-200"
+        >
+          <Plus className="w-5 h-5 mr-2" />
+          Add New Site
+        </button>
+      </div>
+
+      {/* Stats bar */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center">
+          <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center mr-4 text-blue-600">
+            <Building className="w-6 h-6" />
           </div>
-          <div className="flex-grow w-full -ml-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={siteStats} barSize={12} barGap={4}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#718096', fontSize: 12}} dy={10} />
-                <YAxis hide />
-                <Tooltip cursor={{fill: '#F7FAFC'}} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                <Bar dataKey="manpower" fill="#0B1B36" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="budget" fill="#ED8936" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+          <div>
+            <div className="text-2xl font-bold text-gray-900">{sites?.length || 0}</div>
+            <div className="text-sm text-gray-500 font-medium">Total Managed Sites</div>
           </div>
         </div>
-
-        {/* Right KPI Cards */}
-        <div className="flex flex-col gap-6 h-80">
-          <div className="bg-white border-t-4 border-[#0B1B36] rounded-2xl p-6 shadow-sm flex-1 flex flex-col justify-center">
-            <h3 className="text-xs font-bold text-[#718096] tracking-widest uppercase mb-3">Total Active Personnel</h3>
-            <div className="text-4xl font-extrabold text-[#0B1B36] mb-2">2,481</div>
-            <div className="text-sm font-bold text-[#DD6B20] flex items-center">
-              ↗ +12% from last month
-            </div>
+        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center">
+          <div className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center mr-4 text-green-600">
+            <CheckCircle2 className="w-6 h-6" />
           </div>
-          
-          <div className="bg-white border-l-4 border-[#ED8936] rounded-2xl p-6 shadow-sm flex-1 flex flex-col justify-center">
-            <h3 className="text-xs font-bold text-[#718096] tracking-widest uppercase mb-3">Active Project Sites</h3>
-            <div className="text-4xl font-extrabold text-[#0B1B36] mb-2">18</div>
-            <div className="text-sm font-semibold text-[#718096] flex items-center">
-              <CheckCircle2 className="w-4 h-4 mr-1.5" />
-              14 On-Track, 4 Delayed
+          <div>
+            <div className="text-2xl font-bold text-gray-900">
+              {sites?.filter(s => s.status === 'Active').length || 0}
             </div>
+            <div className="text-sm text-gray-500 font-medium">Active Sites</div>
+          </div>
+        </div>
+        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center">
+          <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center mr-4 text-red-600">
+            <XCircle className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-gray-900">
+              {sites?.filter(s => s.status === 'Inactive').length || 0}
+            </div>
+            <div className="text-sm text-gray-500 font-medium">Inactive Sites</div>
           </div>
         </div>
       </div>
 
-      {/* Sites Grid */}
-      <div className="mb-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          <div>
-            <h2 className="text-xl font-bold text-[#0B1B36]">Active Construction Sites</h2>
-            <p className="text-sm text-[#718096]">Overview of all ongoing infrastructure and residential projects</p>
-          </div>
-          <div className="flex gap-3">
-            <button className="flex items-center px-4 py-2 bg-[#0B1B36] text-white rounded-xl font-semibold hover:bg-[#081428] transition-colors shadow-sm">
-              <Plus className="w-4 h-4 mr-2" />
-              Add New Site
-            </button>
-            <button className="flex items-center px-4 py-2 bg-white border border-[#CBD5E0] text-[#4A5568] rounded-xl font-semibold hover:bg-gray-50 transition-colors">
-              <SlidersHorizontal className="w-4 h-4 mr-2" />
-              Filter
-            </button>
-          </div>
+      {/* Filters & search */}
+      <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm mb-6 flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div className="w-full md:w-96 relative">
+          <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+          <input 
+            type="text" 
+            placeholder="Search by name or code..."
+            className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
+        <div className="flex gap-3 w-full md:w-auto">
+          <select 
+            className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="">All Statuses</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </div>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Sites Grid */}
+      {loading ? (
+        <div className="flex justify-center items-center py-20">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+        </div>
+      ) : sites?.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center shadow-sm">
+          <Info className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-bold text-gray-900">No Sites Found</h3>
+          <p className="text-gray-500 mt-1">Try adjusting your filters or search criteria, or add a new site.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {sites.map(site => (
-            <div key={site.id} className={`bg-white rounded-2xl overflow-hidden shadow-sm border ${site.borderColor || 'border-[#0B1B36]'}`}>
-              {/* Image Header */}
-              <div className="h-48 relative overflow-hidden">
-                <img src={site.img} alt={site.name} className="w-full h-full object-cover" />
-                <div className={`absolute top-4 right-4 ${site.statusBg} text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center shadow-md`}>
-                  {site.status === 'Delayed' ? <AlertCircle className="w-3 h-3 mr-1.5" /> : <div className="w-1.5 h-1.5 bg-white rounded-full mr-1.5" />}
-                  {site.status}
+            <div key={site.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-all flex flex-col justify-between">
+              <div className="p-6">
+                {/* Header info */}
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <span className="inline-block text-[10px] font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md mb-2">
+                      {site.code || 'NO-CODE'}
+                    </span>
+                    <h3 className="text-lg font-bold text-gray-900 leading-tight">{site.name}</h3>
+                  </div>
+                  <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                    site.status === 'Active' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'
+                  }`}>
+                    {site.status}
+                  </span>
+                </div>
+
+                {/* Location */}
+                <div className="flex items-start text-sm text-gray-600 mb-3 gap-2">
+                  <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium text-gray-800">{site.address || 'No Address'}</p>
+                    <p className="text-xs text-gray-500">{site.city && `${site.city}, `}{site.state && `${site.state} `}{site.pincode}</p>
+                  </div>
+                </div>
+
+                {/* Contact person */}
+                <div className="border-t border-gray-50 pt-3 mt-3 space-y-2">
+                  <div className="flex items-center text-xs text-gray-600 gap-2">
+                    <User className="w-3.5 h-3.5 text-gray-400" />
+                    <span className="font-medium text-gray-700">Contact: {site.contact_person || 'N/A'}</span>
+                  </div>
+                  {site.phone && (
+                    <div className="flex items-center text-xs text-gray-500 gap-2">
+                      <Phone className="w-3.5 h-3.5 text-gray-400" />
+                      <span>{site.phone}</span>
+                    </div>
+                  )}
+                  {site.email && (
+                    <div className="flex items-center text-xs text-gray-500 gap-2">
+                      <Mail className="w-3.5 h-3.5 text-gray-400" />
+                      <span className="truncate">{site.email}</span>
+                    </div>
+                  )}
+                  {site.latitude && site.longitude && (
+                    <div className="flex items-center text-xs text-gray-500 gap-2">
+                      <Compass className="w-3.5 h-3.5 text-gray-400" />
+                      <span>GPS: {site.latitude}, {site.longitude}</span>
+                    </div>
+                  )}
                 </div>
               </div>
-              
-              {/* Content */}
-              <div className="p-6">
-                <div className="border-b border-gray-100 pb-4 mb-4">
-                  <h3 className="text-lg font-bold text-[#0B1B36] mb-1">{site.name}</h3>
-                  <div className="text-sm font-medium text-[#718096] flex items-center">
-                    <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    {site.location}
+
+              {/* Card Footer with Manager and Actions */}
+              <div className="bg-gray-50/50 px-6 py-4 border-t border-gray-100 flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center text-xs font-bold">
+                    {site.site_manager?.name ? site.site_manager.name.substring(0, 2).toUpperCase() : 'M'}
+                  </div>
+                  <div className="text-xs">
+                    <p className="text-gray-400 font-semibold">SITE MANAGER</p>
+                    <p className="font-bold text-gray-800 truncate max-w-[120px]">
+                      {site.site_manager?.name || 'Unassigned'}
+                    </p>
                   </div>
                 </div>
-                
-                <div className="flex justify-between">
-                  <div>
-                    <div className="text-xs font-bold text-[#718096] mb-1">Workers</div>
-                    <div className="text-sm font-bold text-[#0B1B36]">{site.workers} Assigned</div>
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-[#718096] mb-1">Manager</div>
-                    <div className="text-sm font-bold text-[#0B1B36]">{site.manager}</div>
-                  </div>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => openEditModal(site)}
+                    className="p-2 text-gray-600 hover:text-blue-600 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-gray-100"
+                    title="Edit Site"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={() => handleDelete(site.id)}
+                    className="p-2 text-gray-600 hover:text-red-600 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-gray-100"
+                    title="Delete Site"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             </div>
           ))}
         </div>
-      </div>
+      )}
+
+      {/* Modal - Add / Edit Site */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="flex justify-between items-center px-6 py-4 border-b border-gray-150">
+              <h2 className="text-xl font-bold text-gray-900">
+                {editingSite ? 'Edit Construction Site' : 'Add Construction Site'}
+              </h2>
+              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <form onSubmit={handleFormSubmit} className="p-6 space-y-6">
+              {formErrors.general && (
+                <div className="bg-red-50 text-red-700 p-3 rounded-lg text-sm flex items-center">
+                  <ShieldAlert className="w-5 h-5 mr-2" />
+                  {formErrors.general}
+                </div>
+              )}
+
+              {/* Basic Fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Site Name *</label>
+                  <input 
+                    type="text" 
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                  {formErrors.name && <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>}
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Site Code</label>
+                  <input 
+                    type="text" 
+                    name="code"
+                    value={formData.code}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  {formErrors.code && <p className="text-red-500 text-xs mt-1">{formErrors.code}</p>}
+                </div>
+              </div>
+
+              {/* Client & Status & Manager */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-1">
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Status *</label>
+                  <select
+                    name="status"
+                    value={formData.status}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+                </div>
+                <div className="md:col-span-1">
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Site Manager</label>
+                  <select
+                    name="site_manager_id"
+                    value={formData.site_manager_id}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select Manager</option>
+                    {employees?.map(emp => (
+                      <option key={emp.id} value={emp.id}>{emp.full_name || emp.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="md:col-span-1">
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Client Details</label>
+                  <input 
+                    type="text" 
+                    name="client_details"
+                    value={formData.client_details}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              {/* Contact Information */}
+              <div className="bg-gray-50/50 p-4 rounded-xl border border-gray-100 space-y-4">
+                <h3 className="text-sm font-bold text-gray-800">Contact Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Contact Person</label>
+                    <input 
+                      type="text" 
+                      name="contact_person"
+                      value={formData.contact_person}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Phone Number</label>
+                    <input 
+                      type="text" 
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Email</label>
+                    <input 
+                      type="email" 
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Geographic Coordinates */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Latitude</label>
+                  <input 
+                    type="number" 
+                    step="any"
+                    name="latitude"
+                    value={formData.latitude}
+                    onChange={handleInputChange}
+                    placeholder="e.g. 19.0760"
+                    className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  {formErrors.latitude && <p className="text-red-500 text-xs mt-1">{formErrors.latitude}</p>}
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Longitude</label>
+                  <input 
+                    type="number" 
+                    step="any"
+                    name="longitude"
+                    value={formData.longitude}
+                    onChange={handleInputChange}
+                    placeholder="e.g. 72.8777"
+                    className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  {formErrors.longitude && <p className="text-red-500 text-xs mt-1">{formErrors.longitude}</p>}
+                </div>
+              </div>
+
+              {/* Address Fields */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Address</label>
+                  <textarea 
+                    name="address"
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    rows="2"
+                    className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  ></textarea>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">City</label>
+                    <input 
+                      type="text" 
+                      name="city"
+                      value={formData.city}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">State</label>
+                    <input 
+                      type="text" 
+                      name="state"
+                      value={formData.state}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Country</label>
+                    <input 
+                      type="text" 
+                      name="country"
+                      value={formData.country}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Pincode</label>
+                    <input 
+                      type="text" 
+                      name="pincode"
+                      value={formData.pincode}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-150">
+                <button 
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  className="px-5 py-2 bg-[#1a56db] text-white rounded-lg text-sm hover:bg-[#1546b5] transition-colors font-semibold"
+                >
+                  {editingSite ? 'Save Changes' : 'Create Site'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

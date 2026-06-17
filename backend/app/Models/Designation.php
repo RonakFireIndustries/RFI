@@ -3,16 +3,19 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Designation extends Model
 {
-    protected $fillable = ['name', 'description', 'branch_id', 'status'];
+    use SoftDeletes;
 
-    public function branch(): BelongsTo
+    protected $fillable = ['name', 'department_id', 'description'];
+
+    public function department(): BelongsTo
     {
-        return $this->belongsTo(Branch::class);
+        return $this->belongsTo(Department::class);
     }
 
     public function employees(): HasMany

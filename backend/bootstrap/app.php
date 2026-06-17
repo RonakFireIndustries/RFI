@@ -24,5 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->reportable(function (\Illuminate\Validation\ValidationException $e) {
+            \Illuminate\Support\Facades\Log::error('Validation failed', $e->errors());
+        });
     })->create();

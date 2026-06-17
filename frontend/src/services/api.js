@@ -72,19 +72,38 @@ const api = {
   },
 
   post: async (endpoint, body) => {
+    const isFormData = body instanceof FormData;
+    const headers = buildHeaders();
+    if (isFormData) {
+      delete headers['Content-Type'];
+    }
     const response = await fetch(`${BASE_URL}${endpoint}`, {
       method: 'POST',
-      headers: buildHeaders(),
-      body: JSON.stringify(body),
+      headers,
+      body: isFormData ? body : JSON.stringify(body),
       credentials: 'include',
     });
     return handleResponse(response);
   },
 
   put: async (endpoint, body) => {
+    const isFormData = body instanceof FormData;
+    const headers = buildHeaders();
+    if (isFormData) {
+      delete headers['Content-Type'];
+      body.append('_method', 'PUT');
+      const response = await fetch(`${BASE_URL}${endpoint}`, {
+        method: 'POST',
+        headers,
+        body,
+        credentials: 'include',
+      });
+      return handleResponse(response);
+    }
+    
     const response = await fetch(`${BASE_URL}${endpoint}`, {
       method: 'PUT',
-      headers: buildHeaders(),
+      headers,
       body: JSON.stringify(body),
       credentials: 'include',
     });

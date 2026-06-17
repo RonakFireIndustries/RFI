@@ -10,23 +10,28 @@ class EmployeePolicy
 {
     use HandlesAuthorization;
 
+    public function viewAny(User $user)
+    {
+        return $user->hasPermissionTo('employee.view');
+    }
+
     public function view(User $user, Employee $employee = null)
     {
-        return $user->hasPermissionTo('view_employees');
+        return $user->hasPermissionTo('employee.view');
     }
 
     public function create(User $user)
     {
-        return $user->hasPermissionTo('create_employees');
+        return $user->hasPermissionTo('employee.create');
     }
 
     public function update(User $user, Employee $employee = null)
     {
-        return $user->hasPermissionTo('update_employees');
+        return $user->hasPermissionTo('employee.edit');
     }
 
     public function delete(User $user, Employee $employee = null)
     {
-        return $user->hasPermissionTo('delete_employees');
+        return $user->hasPermissionTo('employee.delete');
     }
 }

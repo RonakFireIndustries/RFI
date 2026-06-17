@@ -10,23 +10,28 @@ class DepartmentPolicy
 {
     use HandlesAuthorization;
 
+    public function viewAny(User $user)
+    {
+        return $user->hasPermissionTo('department.view');
+    }
+
     public function view(User $user, Department $dept = null)
     {
-        return $user->hasPermissionTo('view_departments');
+        return $user->hasPermissionTo('department.view');
     }
 
     public function create(User $user)
     {
-        return $user->hasPermissionTo('create_departments');
+        return $user->hasPermissionTo('department.create');
     }
 
     public function update(User $user, Department $dept = null)
     {
-        return $user->hasPermissionTo('update_departments');
+        return $user->hasPermissionTo('department.edit');
     }
 
     public function delete(User $user, Department $dept = null)
     {
-        return $user->hasPermissionTo('delete_departments');
+        return $user->hasPermissionTo('department.delete');
     }
 }

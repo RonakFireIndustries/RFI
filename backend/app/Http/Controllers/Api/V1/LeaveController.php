@@ -1,0 +1,141 @@
+<?php
+
+namespace App\Http\Controllers\Api\V1;
+
+use App\Http\Controllers\Controller;
+use App\Models\Leave;
+use App\Services\LeaveRequestService;
+use App\Http\Requests\StoreLeaveRequest;
+use App\Http\Requests\UpdateLeaveRequest;
+use App\Http\Resources\LeaveResource;
+use App\Traits\ApiResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use Exception;
+
+class LeaveController extends Controller
+{
+    use ApiResponse;
+
+    protected LeaveRequestService $service;
+
+    public function __construct(LeaveRequestService $service)
+    {
+        $this->service = $service;
+    }
+
+    public function index(Request $request): JsonResponse
+    {
+        $this->authorize('viewAny', Leave::class);
+
+        $filters = $request->only(['employee_id', 'status', 'leave_type_id']);
+        
+        // Ensure standard users only see their own leaves
+        if (!auth()->user()->hasRole(['Super Admin', 'Admin', 'HR'])) {
+            $employee = auth()->user()->employee;
+            if ($employee) {
+                $filters['employee_id'] = $employee->id;
+            }
+        }
+
+        $perPage = (int) $request->input('per_page', 15);
+        $leaves = $this->service->getLeaves($filters, $perPage);
+
+        return $this->success('Leave requests retrieved successfully', [
+            'leave_requests' => LeaveResource::collection($leaves),
+            'meta' => [
+                'current_page' => $leaves->currentPage(),
+                'last_page' => $leaves->lastPage(),
+                'per_page' => $leaves->perPage(),
+                'total' => $leaves->total(),
+            ]
+        ]);
+    }
+
+    public function store(StoreLeaveRequest $request): JsonResponse
+    {
+        $this->authorize('create', Leave::class);
+
+        try {
+            $leave = $this->service->createLeave($request->validated());
+            $leave->load(['employee', 'leaveType', 'approver']);
+
+            return $this->success('Leave request created successfully', [
+                'leave_request' => new LeaveResource($leave)
+            ], 201);
+        } catch (Exception $e) {
+            return $this->error($e->getMessage(), 422);
+        }
+    }
+
+    public function show(Leave $leave): JsonResponse
+    {
+        $this->authorize('view', $leave);
+        
+        $leave->load(['employee', 'leaveType', 'approver', 'histories.user']);
+
+        return $this->success('Leave request retrieved successfully', [
+            'leave_request' => new LeaveResource($leave)
+        ]);
+    }
+
+    public function update(UpdateLeaveRequest $request, Leave $leave): JsonResponse
+    {
+        $this->authorize('update', $leave);
+
+        try {
+            $updatedLeave = $this->service->updateLeave($leave, $request->validated());
+            $updatedLeave->load(['employee', 'leaveType', 'approver']);
+
+            return $this->success('Leave request updated successfully', [
+                'leave_request' => new LeaveResource($updatedLeave)
+            ]);
+        } catch (Exception $e) {
+            return $this->error($e->getMessage(), 422);
+        }
+    }
+
+    public function destroy(Leave $leave): JsonResponse
+    {
+        $this->authorize('delete', $leave);
+        $leave->delete();
+        return $this->success('Leave request deleted successfully');
+    }
+
+    public function approve(Request $request, Leave $leave): JsonResponse
+    {
+        $this->authorize('approve', $leave);
+        $request->validate(['comments' => 'nullable|string']);
+
+        try {
+            $updatedLeave = $this->service->approve($leave, $request->comments);
+            return $this->success('Leave approved successfully', [
+                'leave_request' => new LeaveResource($updatedLeave)
+            ]);
+        } catch (Exception $e) {
+            return $this->error($e->getMessage(), 422);
+        }
+    }
+
+    public function reject(Request $request, Leave $leave): JsonResponse
+    {
+        $this->authorize('reject', $leave);
+        $request->validate(['comments' => 'required|string']);
+
+        $updatedLeave = $this->service->reject($leave, $request->comments);
+        return $this->success('Leave rejected successfully', [
+            'leave_request' => new LeaveResource($updatedLeave)
+        ]);
+    }
+
+    public function cancel(Request $request, Leave $leave): JsonResponse
+    {
+        $this->authorize('cancel', $leave);
+        $request->validate(['comments' => 'required|string']);
+
+        $updatedLeave = $this->service->cancel($leave, $request->comments);
+        return $this->success('Leave cancelled successfully', [
+            'leave_request' => new LeaveResource($updatedLeave)
+        ]);
+    }
+}

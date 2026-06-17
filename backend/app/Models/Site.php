@@ -12,7 +12,9 @@ class Site extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name', 'client_details', 'status', 'site_manager_id'
+        'name', 'code', 'client_details', 'address', 'city', 'state', 
+        'country', 'pincode', 'contact_person', 'phone', 'email', 
+        'latitude', 'longitude', 'status', 'site_manager_id'
     ];
 
     public function manager(): BelongsTo

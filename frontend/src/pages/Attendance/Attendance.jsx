@@ -1,64 +1,133 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Users, CheckCircle, AlertTriangle, Clock, 
-  Calendar, Filter, Download, ChevronRight, SlidersHorizontal 
+  Calendar, Filter, Download, SlidersHorizontal 
 } from 'lucide-react';
-
-// Mock data for heatmap
-const generateHeatmapDays = () => {
-  const days = [];
-  for (let i = 1; i <= 31; i++) {
-    let status = 'present'; // default
-    if ([6, 7, 13, 14, 20, 21, 27, 28].includes(i)) status = 'weekend'; // light gray
-    else if ([12, 24].includes(i)) status = 'absent'; // red/orange
-    else if ([5, 18].includes(i)) status = 'leave'; // light blue
-    
-    days.push({ day: i, status });
-  }
-  return days;
-};
-
-const dailyLogs = [
-  {
-    id: 1,
-    name: 'James Dunn',
-    role: 'Lead Electrician',
-    checkIn: '08:55 AM',
-    checkOut: '06:30 PM',
-    hours: '9h 35m',
-    status: 'Present',
-    statusBg: 'bg-[#C6F6D5]',
-    statusText: 'text-[#22543D]',
-    img: '/static/images/avatar/1.jpg',
-  },
-  {
-    id: 2,
-    name: 'Michael Kalu',
-    role: 'Site Engineer',
-    checkIn: '09:15 AM',
-    checkOut: '--',
-    hours: '--',
-    status: 'Late',
-    statusBg: 'bg-[#FEEBC8]',
-    statusText: 'text-[#DD6B20]',
-    img: '/static/images/avatar/2.jpg',
-  },
-  {
-    id: 3,
-    name: 'Sarah Thompson',
-    role: 'Safety Officer',
-    checkIn: '--',
-    checkOut: '--',
-    hours: '--',
-    status: 'Absent',
-    statusBg: 'bg-[#FED7D7]',
-    statusText: 'text-[#C53030]',
-    img: '/static/images/avatar/3.jpg',
-  }
-];
+import { useAttendanceStore } from '../../store/attendanceStore';
+import { useDepartmentStore } from '../../store/departmentStore';
+import { useSiteStore } from '../../store/siteStore';
+import { useShiftsStore } from '../../store/shiftStore';
 
 export default function Attendance() {
-  const days = generateHeatmapDays();
+  const { logs, report, loading, fetchLogs } = useAttendanceStore();
+  
+  // Reference stores for filters
+  const { items: departments, fetchItems: fetchDepartments } = useDepartmentStore();
+  const { items: sites, fetchItems: fetchSites } = useSiteStore();
+  const { items: shifts, fetchItems: fetchShifts } = useShiftsStore();
+
+  const [currentDate, setCurrentDate] = useState(new Date());
+  
+  // Filter States
+  const [departmentId, setDepartmentId] = useState('');
+  const [siteId, setSiteId] = useState('');
+  const [shiftId, setShiftId] = useState('');
+
+  // Initial load for dropdown data
+  useEffect(() => {
+    fetchDepartments({ per_page: 100 });
+    fetchSites({ status: 'Active', per_page: 100 });
+    fetchShifts({ per_page: 100 });
+  }, [fetchDepartments, fetchSites, fetchShifts]);
+
+  // Fetch Attendance logs for the selected month and filters
+  const applyFilters = () => {
+    const year = currentDate.getFullYear();
+    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+    // Start of month to End of month
+    const start_date = `${year}-${month}-01`;
+    const end_date = new Date(year, currentDate.getMonth() + 1, 0).toISOString().split('T')[0];
+    
+    fetchLogs({ 
+      start_date, 
+      end_date, 
+      department_id: departmentId || undefined,
+      site_id: siteId || undefined,
+      shift_id: shiftId || undefined
+    });
+  };
+
+  useEffect(() => {
+    applyFilters();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentDate]);
+
+  const handleFilterSubmit = (e) => {
+    e.preventDefault();
+    applyFilters();
+  };
+
+  const selectedDateString = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`;
+
+  // Filter logs for the currently selected DAY for the table and KPIs
+  const todaysRecords = useMemo(() => {
+    return (report?.attendance_records || []).filter(r => r.date === selectedDateString);
+  }, [report, selectedDateString]);
+
+  const kpis = useMemo(() => {
+    const records = todaysRecords;
+    if (records.length === 0) return { present: 0, absent: 0, late: 0, total: 0, avg: 0 };
+    
+    const present = records.filter(r => r.status.toLowerCase() === 'present').length;
+    const late = records.filter(r => r.status.toLowerCase() === 'late').length;
+    const absent = records.filter(r => ['absent', 'leave', 'half day'].includes(r.status.toLowerCase())).length;
+    const total = records.length;
+    
+    return {
+      total,
+      present,
+      late,
+      absent,
+      avg: Math.round(((present + late) / total) * 100)
+    };
+  }, [todaysRecords]);
+
+  const days = useMemo(() => {
+    const records = report?.attendance_records || [];
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const now = new Date();
+    
+    const daysArray = [];
+    
+    for (let i = 1; i <= daysInMonth; i++) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+      const recordsForDay = records.filter(r => r.date === dateStr);
+      const d = new Date(dateStr);
+      let status = 'weekend';
+      
+      // Assume Sunday (0) is a default weekend. Can be configured later based on shifts.
+      if (d.getDay() !== 0) {
+        if (recordsForDay.length === 0) {
+           status = d > now ? 'off' : 'weekend'; // No records and not future => weekend or off
+        } else {
+           const absents = recordsForDay.filter(r => ['absent', 'leave'].includes(r.status.toLowerCase())).length;
+           status = absents > 0 ? 'absent' : 'present';
+        }
+      }
+      daysArray.push({ 
+        day: i, 
+        status, 
+        fullDate: d,
+        isSelected: dateStr === selectedDateString 
+      });
+    }
+    return daysArray;
+  }, [report, currentDate, selectedDateString]);
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '--';
+    return new Date(dateString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const calculateHours = (inStr, outStr) => {
+    if (!inStr || !outStr) return '--';
+    const diff = new Date(outStr) - new Date(inStr);
+    const hrs = Math.floor(diff / 3600000);
+    const mins = Math.floor((diff % 3600000) / 60000);
+    return `${hrs}h ${mins}m`;
+  };
 
   return (
     <div className="w-full">
@@ -69,14 +138,17 @@ export default function Attendance() {
             Attendance Dashboard
           </h1>
           <p className="text-[#718096]">
-            Real-time tracking for Oct 24, 2023
+            Real-time tracking for {currentDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
           </p>
         </div>
         <div className="flex gap-3">
           <div className="flex bg-[#EDF2F7] rounded-lg p-1">
-            <button className="px-4 py-1.5 bg-white shadow-sm rounded text-sm font-semibold text-[#1A202C]">Day</button>
-            <button className="px-4 py-1.5 text-sm font-semibold text-[#718096]">Month</button>
-            <button className="px-4 py-1.5 text-sm font-semibold text-[#718096]">Year</button>
+            <button 
+              onClick={() => setCurrentDate(new Date())} 
+              className="px-4 py-1.5 bg-white shadow-sm rounded text-sm font-semibold text-[#1A202C]"
+            >
+              Today
+            </button>
           </div>
           <button className="flex items-center justify-center px-3 py-2 bg-white border border-[#CBD5E0] text-[#4A5568] rounded-xl hover:bg-gray-50 transition-colors">
             <Download className="w-4 h-4" />
@@ -91,17 +163,17 @@ export default function Attendance() {
             <span className="text-[10px] font-bold text-[#718096] uppercase tracking-wider">Average Attendance</span>
             <Users className="w-4 h-4 text-[#A0AEC0]" />
           </div>
-          <div className="text-3xl font-extrabold text-[#0B1B36] mb-1">94.2%</div>
-          <div className="text-xs font-semibold text-[#38A169]">↑ +1.2% this week</div>
+          <div className="text-3xl font-extrabold text-[#0B1B36] mb-1">{kpis.avg}%</div>
+          <div className="text-xs font-semibold text-[#38A169]">Based on selected day</div>
         </div>
         
         <div className="bg-white border-l-4 border-[#38A169] rounded-2xl p-6 shadow-sm">
           <div className="flex justify-between items-start mb-2">
-            <span className="text-[10px] font-bold text-[#718096] uppercase tracking-wider">Present Today</span>
+            <span className="text-[10px] font-bold text-[#718096] uppercase tracking-wider">Present</span>
             <CheckCircle className="w-4 h-4 text-[#38A169]" />
           </div>
-          <div className="text-3xl font-extrabold text-[#0B1B36] mb-1">28</div>
-          <div className="text-xs font-semibold text-[#718096]">Out of 34 total</div>
+          <div className="text-3xl font-extrabold text-[#0B1B36] mb-1">{kpis.present + kpis.late}</div>
+          <div className="text-xs font-semibold text-[#718096]">Out of {kpis.total} total</div>
         </div>
 
         <div className="bg-white border-l-4 border-[#E53E3E] rounded-2xl p-6 shadow-sm">
@@ -109,7 +181,7 @@ export default function Attendance() {
             <span className="text-[10px] font-bold text-[#718096] uppercase tracking-wider">Absent / Leave</span>
             <AlertTriangle className="w-4 h-4 text-[#E53E3E]" />
           </div>
-          <div className="text-3xl font-extrabold text-[#0B1B36] mb-1">4 / 2</div>
+          <div className="text-3xl font-extrabold text-[#0B1B36] mb-1">{kpis.absent}</div>
           <div className="text-xs font-semibold text-[#E53E3E]">Requires attention</div>
         </div>
 
@@ -118,8 +190,8 @@ export default function Attendance() {
             <span className="text-[10px] font-bold text-[#718096] uppercase tracking-wider">Late Arrivals</span>
             <Clock className="w-4 h-4 text-[#DD6B20]" />
           </div>
-          <div className="text-3xl font-extrabold text-[#0B1B36] mb-1">12 / 12</div>
-          <div className="text-xs font-semibold text-[#718096]">Average delay: 14m</div>
+          <div className="text-3xl font-extrabold text-[#0B1B36] mb-1">{kpis.late}</div>
+          <div className="text-xs font-semibold text-[#718096]">Recorded</div>
         </div>
       </div>
 
@@ -129,7 +201,7 @@ export default function Attendance() {
           <div className="flex justify-between items-center mb-6">
             <div>
               <h2 className="text-lg font-bold text-[#0B1B36]">Monthly Attendance Heatmap</h2>
-              <p className="text-sm text-[#718096]">Overview of entire workforce for October 2023</p>
+              <p className="text-sm text-[#718096]">{currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })} Overview</p>
             </div>
             <div className="flex items-center gap-3 text-xs font-semibold">
               <div className="flex items-center"><div className="w-3 h-3 bg-[#2D3748] rounded mr-1.5"/> Present</div>
@@ -141,13 +213,21 @@ export default function Attendance() {
 
           <div className="grid grid-cols-7 gap-2 h-80">
             {days.map((d, i) => {
-              let bgClass = 'bg-[#2D3748]'; // present (dark blue)
+              let bgClass = 'bg-[#2D3748] text-white'; // present (dark blue)
               if (d.status === 'weekend') bgClass = 'bg-[#EDF2F7] text-[#A0AEC0] border border-dashed border-[#CBD5E0]';
               if (d.status === 'absent') bgClass = 'bg-[#E53E3E] text-white';
               if (d.status === 'leave') bgClass = 'bg-[#3182CE] text-white';
+              if (d.status === 'off') bgClass = 'bg-white border border-gray-200 text-gray-400';
+
+              const selectedRing = d.isSelected ? 'ring-2 ring-offset-2 ring-blue-500' : '';
 
               return (
-                <div key={i} className={`${bgClass} rounded flex items-center justify-center font-bold text-sm ${d.status === 'present' ? 'text-white hover:bg-[#1A202C]' : ''} transition-colors cursor-pointer`}>
+                <div 
+                  key={i} 
+                  onClick={() => setCurrentDate(d.fullDate)}
+                  className={`${bgClass} ${selectedRing} rounded flex items-center justify-center font-bold text-sm hover:opacity-80 transition-opacity cursor-pointer`}
+                  title={`View records for ${d.fullDate.toLocaleDateString()}`}
+                >
                   {d.day}
                 </div>
               );
@@ -162,44 +242,68 @@ export default function Attendance() {
             Attendance Filters
           </h2>
           
-          <div className="space-y-5">
+          <form onSubmit={handleFilterSubmit} className="space-y-5">
             <div>
-              <label className="block text-xs font-bold text-[#718096] mb-1.5">Date Range</label>
+              <label className="block text-xs font-bold text-[#718096] mb-1.5">View Month For</label>
               <div className="relative">
                 <Calendar className="w-4 h-4 absolute left-3 top-2.5 text-[#A0AEC0]" />
-                <input type="text" value="Oct 01 - Oct 31, 2023" readOnly className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm font-semibold bg-white text-[#1A202C]" />
+                <input 
+                  type="date" 
+                  value={selectedDateString} 
+                  onChange={(e) => {
+                    if (e.target.value) setCurrentDate(new Date(e.target.value));
+                  }}
+                  className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm font-semibold bg-white text-[#1A202C]" 
+                />
               </div>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-[#718096] mb-1.5">Department</label>
-              <select className="w-full p-2 border border-gray-300 rounded-lg text-sm font-semibold bg-white text-[#1A202C]">
-                <option>All Departments</option>
-                <option>Site Operations</option>
-                <option>Engineering</option>
+              <select 
+                value={departmentId}
+                onChange={(e) => setDepartmentId(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-lg text-sm font-semibold bg-white text-[#1A202C]"
+              >
+                <option value="">All Departments</option>
+                {departments.map(dept => (
+                  <option key={dept.id} value={dept.id}>{dept.name}</option>
+                ))}
               </select>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-[#718096] mb-1.5">Project Site</label>
-              <select className="w-full p-2 border border-gray-300 rounded-lg text-sm font-semibold bg-white text-[#1A202C]">
-                <option>Project Alpha, Site B</option>
-                <option>Metro Line 4</option>
+              <select 
+                value={siteId}
+                onChange={(e) => setSiteId(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-lg text-sm font-semibold bg-white text-[#1A202C]"
+              >
+                <option value="">All Sites</option>
+                {sites.map(site => (
+                  <option key={site.id} value={site.id}>{site.name} ({site.code})</option>
+                ))}
               </select>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-[#718096] mb-1.5">Shift</label>
-              <div className="flex gap-2">
-                <button className="flex-1 py-1.5 bg-[#0B1B36] text-white text-xs font-bold rounded">Day</button>
-                <button className="flex-1 py-1.5 bg-white border border-gray-300 text-[#4A5568] text-xs font-bold rounded">Night</button>
-              </div>
+              <select 
+                value={shiftId}
+                onChange={(e) => setShiftId(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-lg text-sm font-semibold bg-white text-[#1A202C]"
+              >
+                <option value="">All Shifts</option>
+                {shifts.map(shift => (
+                  <option key={shift.id} value={shift.id}>{shift.name} ({shift.start_time} - {shift.end_time})</option>
+                ))}
+              </select>
             </div>
 
-            <button className="w-full py-2.5 mt-2 bg-[#0B1B36] text-white font-bold rounded-lg hover:bg-[#081428] transition-colors">
-              Apply Filters
+            <button type="submit" className="w-full py-2.5 mt-2 bg-[#0B1B36] text-white font-bold rounded-lg hover:bg-[#081428] transition-colors flex items-center justify-center">
+              {loading ? 'Filtering...' : 'Apply Filters'}
             </button>
-          </div>
+          </form>
         </div>
       </div>
 
@@ -208,11 +312,8 @@ export default function Attendance() {
         <div className="p-6 border-b border-gray-200 flex justify-between items-center">
           <div>
             <h2 className="text-lg font-bold text-[#0B1B36]">Daily Attendance Log</h2>
-            <p className="text-sm text-[#718096]">Detailed check-in records for Oct 24, 2023</p>
+            <p className="text-sm text-[#718096]">Detailed check-in records for {currentDate.toLocaleDateString()}</p>
           </div>
-          <button className="flex items-center text-sm font-semibold text-[#4A5568] bg-white border border-gray-300 px-3 py-1.5 rounded-lg">
-            <SlidersHorizontal className="w-4 h-4 mr-2" /> View All
-          </button>
         </div>
         
         <div className="overflow-x-auto">
@@ -227,29 +328,53 @@ export default function Attendance() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {dailyLogs.map(log => (
+              {loading ? (
+                <tr><td colSpan="5" className="p-4 text-center text-sm text-gray-500 py-8">Loading records...</td></tr>
+              ) : todaysRecords.length === 0 ? (
+                <tr><td colSpan="5" className="p-4 text-center text-sm text-gray-500 py-8">No attendance records found for this date.</td></tr>
+              ) : todaysRecords.map(log => {
+                const name = log.employee?.full_name || 'Unknown';
+                const role = log.employee?.designation?.name || 'Employee';
+                const checkIn = formatDate(log.check_in);
+                const checkOut = formatDate(log.check_out);
+                const hours = calculateHours(log.check_in, log.check_out);
+                
+                let statusBg = 'bg-[#EDF2F7]';
+                let statusText = 'text-[#4A5568]';
+                if (log.status.toLowerCase() === 'present') {
+                  statusBg = 'bg-[#C6F6D5]';
+                  statusText = 'text-[#22543D]';
+                } else if (log.status.toLowerCase() === 'late') {
+                  statusBg = 'bg-[#FEEBC8]';
+                  statusText = 'text-[#DD6B20]';
+                } else if (['absent', 'leave'].includes(log.status.toLowerCase())) {
+                  statusBg = 'bg-[#FED7D7]';
+                  statusText = 'text-[#C53030]';
+                }
+
+                return (
                 <tr key={log.id} className="hover:bg-gray-50 transition-colors">
                   <td className="p-4 pl-6">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-[#EDF2F7] flex items-center justify-center font-bold text-xs text-[#1A202C]">
-                        {log.name.charAt(0)}
+                        {name.charAt(0)}
                       </div>
                       <div>
-                        <div className="font-bold text-[#1A202C] text-sm">{log.name}</div>
-                        <div className="text-xs text-[#718096]">{log.role}</div>
+                        <div className="font-bold text-[#1A202C] text-sm">{name}</div>
+                        <div className="text-xs text-[#718096]">{role}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="p-4 text-sm font-bold text-[#1A202C]">{log.checkIn}</td>
-                  <td className="p-4 text-sm font-bold text-[#1A202C]">{log.checkOut}</td>
-                  <td className="p-4 text-sm font-bold text-[#1A202C]">{log.hours}</td>
+                  <td className="p-4 text-sm font-bold text-[#1A202C]">{checkIn}</td>
+                  <td className="p-4 text-sm font-bold text-[#1A202C]">{checkOut}</td>
+                  <td className="p-4 text-sm font-bold text-[#1A202C]">{hours}</td>
                   <td className="p-4 text-right pr-6">
-                    <span className={`inline-block px-3 py-1 rounded text-xs font-bold ${log.statusBg} ${log.statusText}`}>
-                      {log.status}
+                    <span className={`inline-block px-3 py-1 rounded text-xs font-bold capitalize ${statusBg} ${statusText}`}>
+                      {log.status || 'unknown'}
                     </span>
                   </td>
                 </tr>
-              ))}
+              )})}
             </tbody>
           </table>
         </div>

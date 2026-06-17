@@ -6,28 +6,17 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateDesignationRequest extends FormRequest
 {
-    public function authorize()
+    public function authorize(): bool
     {
-        return $this->user()->can('update', $this->route('designation'));
+        return true;
     }
 
-    public function rules()
+    public function rules(): array
     {
-        $desgId = $this->route('designation')->id;
-        
         return [
-            'name' => 'required|string|unique:designations,name,' . $desgId,
+            'name' => 'required|string|max:255',
+            'department_id' => 'required|exists:departments,id',
             'description' => 'nullable|string',
-            'branch_id' => 'required|exists:branches,id',
-            'status' => 'required|in:Active,Inactive',
-        ];
-    }
-
-    public function messages()
-    {
-        return [
-            'name.required' => 'Designation name is required',
-            'name.unique' => 'Designation name must be unique',
         ];
     }
 }

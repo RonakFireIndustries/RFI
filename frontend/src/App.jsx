@@ -2,13 +2,11 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
 import Login from './pages/Auth/Login';
 
+
 // Layout
+import LeaveDashboardPage from './pages/LeaveManagement/LeaveDashboardPage';
 import DashboardLayout from './components/Layout/DashboardLayout';
 
-// Pages
-import DashboardOverview from './pages/Dashboard/DashboardOverview';
-import InventoryDashboard from './pages/Inventory/InventoryDashboard';
-import ProductCatalog from './pages/Products/ProductCatalog';
 import Warehouses from './pages/Warehouses/Warehouses';
 import EmployeesPage from './pages/Employees/EmployeesPage';
 import PermissionManagement from './pages/Admin/PermissionManagement';
@@ -65,27 +63,27 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/superadmin" element={<SuperAdminLogin />} />
-        
+
         {/* Protected Super Admin Route */}
-        <Route 
-          path="/superadmin/dashboard" 
+        <Route
+          path="/superadmin/dashboard"
           element={
             <ProtectedRoute requiredRole="Super Admin">
               <SuperAdminDashboard />
             </ProtectedRoute>
-          } 
+          }
         />
-        
+
         {/* Protected Routes */}
-        <Route 
-          path="/dashboard/*" 
+        <Route
+          path="/dashboard/*"
           element={
             <ProtectedRoute>
               <DashboardLayout />
             </ProtectedRoute>
-          } 
+          }
         />
-        
+
         {/* Default redirect */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

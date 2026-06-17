@@ -13,13 +13,11 @@ class DesignationResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
-            'branch' => $this->whenLoaded('branch', fn () => [
-                'id' => $this->branch->id,
-                'name' => $this->branch->name,
-            ]),
-            'employees_count' => $this->whenLoaded('employees', fn () => $this->employees->count()),
-            'status' => $this->status,
+            'department_id' => $this->department_id,
+            'department' => new DepartmentResource($this->whenLoaded('department')),
+            'employees_count' => $this->whenCounted('employees'),
             'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

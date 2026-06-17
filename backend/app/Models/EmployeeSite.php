@@ -14,6 +14,10 @@ class EmployeeSite extends Model
         'employee_id', 'site_id', 'assigned_at', 'role'
     ];
 
+    protected $casts = [
+        'assigned_at' => 'datetime',
+    ];
+
     public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class);

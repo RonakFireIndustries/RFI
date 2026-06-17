@@ -16,10 +16,12 @@ class StoreAttendanceRequest extends FormRequest
         return [
             'employee_id' => 'required|exists:employees,id',
             'date' => 'required|date',
-            'check_in' => 'nullable|date_format:H:i:s',
-            'check_out' => 'nullable|date_format:H:i:s',
-            'status' => 'required|in:Present,Absent,Late,Half Day',
-            'notes' => 'nullable|string',
+            'check_in' => 'nullable|date',
+            'check_out' => 'nullable|date|after_or_equal:check_in',
+            'status' => 'required|string',
+            'site_id' => 'nullable|exists:sites,id',
+            'shift_id' => 'nullable|exists:shifts,id',
+            'remarks' => 'nullable|string',
         ];
     }
 

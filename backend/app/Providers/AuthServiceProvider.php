@@ -25,6 +25,7 @@ use App\Models\Category;
 use App\Models\Attendance;
 use App\Models\Leave;
 use App\Models\Payroll;
+use App\Models\Shift;
 
 use App\Policies\EmployeePolicy;
 use App\Policies\ProductPolicy;
@@ -45,7 +46,10 @@ use App\Policies\DesignationPolicy;
 use App\Policies\CategoryPolicy;
 use App\Policies\AttendancePolicy;
 use App\Policies\LeavePolicy;
+use App\Policies\LeaveTypePolicy;
+use App\Policies\LeaveBalancePolicy;
 use App\Policies\PayrollPolicy;
+use App\Policies\ShiftPolicy;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -84,6 +88,7 @@ class AuthServiceProvider extends ServiceProvider
             Attendance::class => AttendancePolicy::class,
             Leave::class => LeavePolicy::class,
             Payroll::class => PayrollPolicy::class,
+            Shift::class => ShiftPolicy::class,
         ];
 
         foreach ($this->policies as $model => $policy) {

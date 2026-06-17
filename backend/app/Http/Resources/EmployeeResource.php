@@ -11,47 +11,47 @@ class EmployeeResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'name' => $this->user->name ?? null,
-            'email' => $this->user->email ?? null,
-            'user' => $this->whenLoaded('user', fn () => [
-                'id' => $this->user?->id,
-                'name' => $this->user?->name,
-                'email' => $this->user?->email,
-                'branch_id' => $this->user?->branch_id,
-                'branch' => $this->user?->relationLoaded('branch') && $this->user?->branch ? [
-                    'id' => $this->user->branch->id,
-                    'name' => $this->user->branch->name,
-                ] : null,
-            ]),
-            'branch' => $this->whenLoaded('branch', fn () => [
-                'id' => $this->branch->id,
-                'name' => $this->branch->name,
-            ]),
+            'user_id' => $this->user_id,
+            'emp_id' => $this->emp_id,
+            'full_name' => $this->full_name,
+            'photo_path' => $this->photo_path,
+            'interview_date' => $this->interview_date,
+            'joining_date' => $this->joining_date,
+            'probation_end_date' => $this->probation_end_date,
+            'dob' => $this->dob,
             'department_id' => $this->department_id,
             'designation_id' => $this->designation_id,
-            'department_name' => $this->relationLoaded('department')
-                ? $this->getRelation('department')?->name
-                : $this->getAttribute('department'),
-            'department' => $this->whenLoaded('department', fn () => [
-                'id' => $this->getRelation('department')?->id,
-                'name' => $this->getRelation('department')?->name,
+            'employment_type' => $this->employment_type,
+            'reporting_manager_id' => $this->reporting_manager_id,
+            'gender' => $this->gender,
+            'marital_status' => $this->marital_status,
+            'government_id_type' => $this->government_id_type,
+            'address' => $this->address,
+            'contact_number' => $this->contact_number,
+            'personal_number' => $this->personal_number,
+            'emergency_contact' => $this->emergency_contact,
+            'qualification' => $this->qualification,
+            'employment_bond_status' => (bool)$this->employment_bond_status,
+            'previous_termination_status' => (bool)$this->previous_termination_status,
+            'legal_proceedings_status' => (bool)$this->legal_proceedings_status,
+            'resume_path' => $this->resume_path,
+            'aadhaar_path' => $this->aadhaar_path,
+            'pan_path' => $this->pan_path,
+            'offer_letter_path' => $this->offer_letter_path,
+
+            // Relations
+            'department' => new DepartmentResource($this->whenLoaded('department')),
+            'designation' => new DesignationResource($this->whenLoaded('designation')),
+            'manager' => new EmployeeResource($this->whenLoaded('manager')),
+            'subordinates' => EmployeeResource::collection($this->whenLoaded('subordinates')),
+            'user' => $this->whenLoaded('user', fn () => [
+                'id' => $this->user->id,
+                'email' => $this->user->email,
+                'role' => $this->user->getRoleNames()->first(),
             ]),
-            'designation' => $this->whenLoaded('designation', fn () => [
-                'id' => $this->getRelation('designation')?->id,
-                'name' => $this->getRelation('designation')?->name,
-            ]),
-            'role' => $this->user?->getRoleNames()->first(),
-            'permissions' => $this->user?->getAllPermissions()->pluck('name') ?? [],
-            'salary' => $this->salary,
-            'shift' => $this->shift,
-            'joining_date' => $this->joining_date,
-            'status' => $this->status,
-            'attendances' => AttendanceResource::collection($this->whenLoaded('attendances')),
-            'leaves' => LeaveResource::collection($this->whenLoaded('leaves')),
-            'payroll' => PayrollResource::collection($this->whenLoaded('payroll')),
-            'sites' => SiteResource::collection($this->whenLoaded('sites')),
-            'daily_reports' => DailyReportResource::collection($this->whenLoaded('dailyReports')),
+
             'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

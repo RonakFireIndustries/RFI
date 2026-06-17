@@ -4,7 +4,7 @@ import DataTable from '../../components/Shared/DataTable';
 
 const valueAt = (item, path) => path.split('.').reduce((value, key) => value?.[key], item);
 
-export default function ModuleDetailPage({ title, store, backPath, fields, sections }) {
+export default function ModuleDetailPage({ title, store, backPath, fields, sections, children }) {
   const { id } = useParams();
   const { selected, loading, fetchItem, clearSelected } = store();
 
@@ -42,6 +42,8 @@ export default function ModuleDetailPage({ title, store, backPath, fields, secti
           </section>
         );
       })}
+
+      {children}
     </div>
   );
 }

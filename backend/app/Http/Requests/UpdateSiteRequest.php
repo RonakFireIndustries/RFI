@@ -17,7 +17,18 @@ class UpdateSiteRequest extends FormRequest
         
         return [
             'name' => 'required|string|unique:sites,name,' . $siteId,
+            'code' => 'nullable|string|max:50',
             'client_details' => 'nullable|string|max:255',
+            'address' => 'nullable|string',
+            'city' => 'nullable|string|max:255',
+            'state' => 'nullable|string|max:255',
+            'country' => 'nullable|string|max:255',
+            'pincode' => 'nullable|string|max:20',
+            'contact_person' => 'nullable|string|max:255',
+            'phone' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:255',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             'status' => 'required|in:Active,Inactive',
             'site_manager_id' => 'nullable|exists:employees,id',
         ];

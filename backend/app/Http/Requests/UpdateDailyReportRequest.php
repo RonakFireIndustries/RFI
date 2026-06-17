@@ -6,26 +6,24 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateDailyReportRequest extends FormRequest
 {
-    public function authorize()
+    public function authorize(): bool
     {
-        return $this->user()->can('update', $this->route('daily_report'));
+        return true;
     }
 
-    public function rules()
+    public function rules(): array
     {
         return [
-            'employee_id' => 'sometimes|exists:employees,id',
             'site_id' => 'nullable|exists:sites,id',
-            'report_date' => 'sometimes|date',
-            'content' => 'sometimes|string',
-        ];
-    }
-
-    public function messages()
-    {
-        return [
-            'employee_id.exists' => 'Selected employee does not exist',
-            'report_date.date' => 'Report date must be a valid date',
+            'date' => 'sometimes|date',
+            'work_description' => 'sometimes|string',
+            'tasks_completed' => 'nullable|string',
+            'hours_worked' => 'sometimes|numeric|min:0|max:24',
+            'issues_faced' => 'nullable|string',
+            'materials_used' => 'nullable|string',
+            'equipment_used' => 'nullable|string',
+            'remarks' => 'nullable|string',
+            'status' => 'nullable|in:Draft,Submitted',
         ];
     }
 }

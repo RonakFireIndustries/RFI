@@ -13,17 +13,10 @@ class DepartmentResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
-            'branch' => $this->whenLoaded('branch', fn () => [
-                'id' => $this->branch->id,
-                'name' => $this->branch->name,
-            ]),
-            'head' => $this->whenLoaded('head', fn () => [
-                'id' => $this->head->id,
-                'name' => $this->head->user->name ?? null,
-            ]),
-            'employees_count' => $this->whenLoaded('employees', fn () => $this->employees->count()),
-            'status' => $this->status,
+            'employees_count' => $this->whenCounted('employees'),
+            'designations_count' => $this->whenCounted('designations'),
             'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

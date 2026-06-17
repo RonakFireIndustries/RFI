@@ -4,11 +4,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BranchController;
-use App\Http\Controllers\EmployeeController;
-use App\Http\Controllers\AttendanceController;
-use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\InventoryController;
+// EmployeeController imported from Api\V1 below
+use App\Http\Controllers\Api\V1\DesignationController;
+use App\Http\Controllers\Api\V1\CategoryController;
+use App\Http\Controllers\Api\V1\ShiftController;
+use App\Http\Controllers\Api\V1\AttendanceController;
+use App\Http\Controllers\Api\V1\DailyReportController;
+use App\Http\Controllers\Api\V1\LeaveTypeController;
+use App\Http\Controllers\Api\V1\LeaveBalanceController;
+use App\Http\Controllers\Api\V1\LeaveController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\SalesController;
@@ -20,8 +24,7 @@ use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\TestController;
 use App\Http\Controllers\Api\SearchController;
-use App\Http\Controllers\DepartmentController;
-use App\Http\Controllers\DesignationController;
+// Removed old Department/Designation/Employee controller imports
 use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\RoleController;
@@ -60,28 +63,65 @@ Route::prefix('v1')->group(function () {
     Route::post('/users/{user}/permissions', [UserAccessController::class, 'assignPermission']);
     Route::delete('/users/{user}/permissions/{permission}', [UserAccessController::class, 'removePermission']);
 
-    Route::apiResource('employees', EmployeeController::class)->middleware('permission:manage employees,sanctum');
+    Route::apiResource('employees', \App\Http\Controllers\Api\V1\EmployeeController::class);
+    Route::get('employees/{employee}/subordinates', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'subordinates']);
+    Route::get('employees/{employee}/manager', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'manager']);
 
-    // Attendance
-    Route::get('/attendances', [AttendanceController::class, 'index']);
-    Route::post('/attendance/check-in', [AttendanceController::class, 'checkIn']);
-    Route::post('/attendance/check-out', [AttendanceController::class, 'checkOut']);
+    // Employee Documents
+    Route::get('documents/expiring', [\App\Http\Controllers\Api\V1\EmployeeDocumentController::class, 'expiring']);
+    Route::get('employees/{employee}/documents', [\App\Http\Controllers\Api\V1\EmployeeDocumentController::class, 'index']);
+    Route::post('employees/{employee}/documents', [\App\Http\Controllers\Api\V1\EmployeeDocumentController::class, 'store']);
+    Route::get('documents/{document}', [\App\Http\Controllers\Api\V1\EmployeeDocumentController::class, 'show']);
+    Route::put('documents/{document}', [\App\Http\Controllers\Api\V1\EmployeeDocumentController::class, 'update']);
+    Route::delete('documents/{document}', [\App\Http\Controllers\Api\V1\EmployeeDocumentController::class, 'destroy']);
+    Route::get('documents/{document}/download', [\App\Http\Controllers\Api\V1\EmployeeDocumentController::class, 'download']);
+    Route::get('documents/{document}/preview', [\App\Http\Controllers\Api\V1\EmployeeDocumentController::class, 'preview']);
+
+    // Attendance & Shifts
+    Route::apiResource('shifts', \App\Http\Controllers\Api\V1\ShiftController::class);
+    Route::get('/attendances', [\App\Http\Controllers\Api\V1\AttendanceController::class, 'index']);
+    Route::post('/attendances', [\App\Http\Controllers\Api\V1\AttendanceController::class, 'store']);
+    Route::get('/attendances/{attendance}', [\App\Http\Controllers\Api\V1\AttendanceController::class, 'show']);
+    Route::put('/attendances/{attendance}', [\App\Http\Controllers\Api\V1\AttendanceController::class, 'update']);
+    Route::delete('/attendances/{attendance}', [\App\Http\Controllers\Api\V1\AttendanceController::class, 'destroy']);
+    Route::post('/attendance/check-in', [\App\Http\Controllers\Api\V1\AttendanceController::class, 'checkIn']);
+    Route::post('/attendance/check-out', [\App\Http\Controllers\Api\V1\AttendanceController::class, 'checkOut']);
 
     // Sites / Construction
-    Route::apiResource('sites', \App\Http\Controllers\SiteController::class);
+    Route::apiResource('sites', \App\Http\Controllers\Api\V1\SiteController::class);
+    Route::get('employees/{employee}/sites', [\App\Http\Controllers\Api\V1\EmployeeSiteAssignmentController::class, 'index']);
+    Route::get('employees/{employee}/sites/history', [\App\Http\Controllers\Api\V1\EmployeeSiteAssignmentController::class, 'history']);
+    Route::post('employees/{employee}/sites', [\App\Http\Controllers\Api\V1\EmployeeSiteAssignmentController::class, 'assign']);
+    Route::post('employees/{employee}/sites/transfer', [\App\Http\Controllers\Api\V1\EmployeeSiteAssignmentController::class, 'transfer']);
+    Route::delete('employees/{employee}/sites/{site}', [\App\Http\Controllers\Api\V1\EmployeeSiteAssignmentController::class, 'remove']);
+    Route::get('employees/{employee}/current-site', [\App\Http\Controllers\Api\V1\EmployeeSiteAssignmentController::class, 'currentSite']);
+    Route::get('sites/{site}/employees', [\App\Http\Controllers\Api\V1\EmployeeSiteAssignmentController::class, 'siteEmployees']);
+
     Route::apiResource('employee-sites', \App\Http\Controllers\EmployeeSiteController::class)->only(['index','store','destroy']);
     Route::apiResource('daily-reports', \App\Http\Controllers\DailyReportController::class)->only(['index','store','show','destroy']);
+
+    // Shifts & Attendance
+    Route::apiResource('shifts', ShiftController::class);
+    Route::apiResource('attendances', AttendanceController::class);
+    Route::post('attendance/check-in', [AttendanceController::class, 'checkIn']);
+    Route::post('attendance/check-out', [AttendanceController::class, 'checkOut']);
+
+    // Daily Reports
+    Route::apiResource('daily-reports', DailyReportController::class);
+    Route::post('daily-reports/{daily_report}/approve', [DailyReportController::class, 'approve']);
+    Route::post('daily-reports/{daily_report}/reject', [DailyReportController::class, 'reject']);
+    Route::post('daily-reports/{daily_report}/rework', [DailyReportController::class, 'rework']);
+    Route::post('/inventory/transaction', [InventoryController::class, 'transaction']);
+    Route::get('/inventory/transactions', [InventoryController::class, 'transactions']);
+    Route::get('/inventory/{inventory}', [InventoryController::class, 'show']);
+    Route::put('/inventory/{inventory}', [InventoryController::class, 'update']);
+    Route::patch('/inventory/{inventory}', [InventoryController::class, 'update']);
 
     // Inventory
     Route::apiResource('categories', CategoryController::class);
     Route::apiResource('products', ProductController::class);
     Route::get('/inventory', [InventoryController::class, 'index']);
     Route::post('/inventory', [InventoryController::class, 'store']);
-    Route::post('/inventory/transaction', [InventoryController::class, 'transaction']);
-    Route::get('/inventory/transactions', [InventoryController::class, 'transactions']);
-    Route::get('/inventory/{inventory}', [InventoryController::class, 'show']);
-    Route::put('/inventory/{inventory}', [InventoryController::class, 'update']);
-    Route::patch('/inventory/{inventory}', [InventoryController::class, 'update']);
     Route::delete('/inventory/{inventory}', [InventoryController::class, 'destroy']);
     
     // Inventory Transfers
@@ -130,8 +170,8 @@ Route::prefix('v1')->group(function () {
     Route::get('/tasks', [HRController::class, 'tasks']);
 
     // HR Organization Structure
-    Route::apiResource('departments', DepartmentController::class);
-    Route::apiResource('designations', DesignationController::class);
+    Route::apiResource('departments', \App\Http\Controllers\Api\V1\DepartmentController::class);
+    Route::apiResource('designations', \App\Http\Controllers\Api\V1\DesignationController::class);
     Route::apiResource('payroll', PayrollController::class);
     Route::post('/payroll/process', [PayrollController::class, 'process']);
 
@@ -150,6 +190,18 @@ Route::prefix('v1')->group(function () {
         Route::post('/admin/tables/{table}', [AdminController::class, 'createRecord']);
         Route::put('/admin/tables/{table}/{id}', [AdminController::class, 'updateRecord']);
         Route::delete('/admin/tables/{table}/{id}', [AdminController::class, 'deleteRecord']);
+        // Leave Types
+        Route::apiResource('leave-types', LeaveTypeController::class);
+
+        // Leave Balances
+        Route::get('leave-balances', [LeaveBalanceController::class, 'index']);
+        Route::post('employees/{employee}/leave-balances/initialize', [LeaveBalanceController::class, 'initialize']);
+
+        // Leave Requests
+        Route::apiResource('leave-requests', LeaveController::class);
+        Route::post('leave-requests/{leave}/approve', [LeaveController::class, 'approve']);
+        Route::post('leave-requests/{leave}/reject', [LeaveController::class, 'reject']);
+        Route::post('leave-requests/{leave}/cancel', [LeaveController::class, 'cancel']);
     });
 });
 

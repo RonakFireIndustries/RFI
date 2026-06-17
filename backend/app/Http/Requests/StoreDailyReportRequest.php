@@ -6,27 +6,25 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreDailyReportRequest extends FormRequest
 {
-    public function authorize()
+    public function authorize(): bool
     {
-        return $this->user()->can('create', \App\Models\DailyReport::class);
+        return true;
     }
 
-    public function rules()
+    public function rules(): array
     {
         return [
             'employee_id' => 'required|exists:employees,id',
             'site_id' => 'nullable|exists:sites,id',
-            'report_date' => 'required|date',
-            'content' => 'required|string',
-        ];
-    }
-
-    public function messages()
-    {
-        return [
-            'employee_id.required' => 'Employee is required',
-            'report_date.required' => 'Report date is required',
-            'content.required' => 'Report content is required',
+            'date' => 'required|date',
+            'work_description' => 'required|string',
+            'tasks_completed' => 'nullable|string',
+            'hours_worked' => 'required|numeric|min:0|max:24',
+            'issues_faced' => 'nullable|string',
+            'materials_used' => 'nullable|string',
+            'equipment_used' => 'nullable|string',
+            'remarks' => 'nullable|string',
+            'status' => 'nullable|in:Draft,Submitted',
         ];
     }
 }

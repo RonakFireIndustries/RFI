@@ -3,9 +3,10 @@ import { Link } from 'react-router-dom';
 import { Edit2, Plus, Search, Trash2, X } from 'lucide-react';
 import DataTable from '../../components/Shared/DataTable';
 
-const getPathValue = (row, path) => path.split('.').reduce((value, key) => value?.[key], row);
+const getPathValue = (row, path) => typeof path === 'string' ? path.split('.').reduce((value, key) => value?.[key], row) : undefined;
 
 const coercePayload = (fields, formData) => fields.reduce((payload, field) => {
+  if (field.type === 'heading' || !field.name) return payload;
   const value = formData[field.name];
   if (value === '' && field.emptyAsNull) {
     payload[field.name] = null;
@@ -40,6 +41,7 @@ export default function ModuleListPage({
   const openModal = (item = null) => {
     setEditing(item);
     setFormData(fields.reduce((data, field) => {
+      if (field.type === 'heading' || !field.name) return data;
       data[field.name] = item ? (getPathValue(item, field.valuePath || field.name) ?? '') : (field.defaultValue ?? '');
       return data;
     }, {}));
@@ -54,13 +56,39 @@ export default function ModuleListPage({
   const handleSubmit = async (event) => {
     event.preventDefault();
     const payload = coercePayload(fields, formData);
-    if (editing) {
-      await updateItem(editing.id, payload);
-    } else {
-      await createItem(payload);
+    
+    const hasFiles = Object.values(payload).some((val) => val instanceof File);
+    let finalPayload = payload;
+    
+    if (hasFiles) {
+      finalPayload = new FormData();
+      Object.entries(payload).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          finalPayload.append(key, value instanceof File ? value : String(value));
+        }
+      });
     }
-    closeModal();
-    fetchItems();
+
+    try {
+      if (editing) {
+        await updateItem(editing.id, finalPayload);
+      } else {
+        await createItem(finalPayload);
+      }
+      closeModal();
+      fetchItems();
+    } catch (error) {
+      console.error(error);
+      const errors = error.response?.data?.errors;
+      if (errors) {
+        const errorMessages = Object.entries(errors)
+          .map(([field, msgs]) => `${field}: ${msgs.join(', ')}`)
+          .join('\n');
+        alert(`Validation Error:\n${errorMessages}`);
+      } else {
+        alert(error.response?.data?.message || error.message || 'An error occurred while saving.');
+      }
+    }
   };
 
   const tableColumns = useMemo(() => [
@@ -127,16 +155,23 @@ export default function ModuleListPage({
       )}
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-2xl rounded-lg bg-white shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6 sm:py-12">
+          <div className="flex w-full max-w-2xl flex-col max-h-full rounded-lg bg-white shadow-xl">
             <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
               <h2 className="text-lg font-semibold text-gray-900">{editing ? 'Edit' : 'Add'} {title.slice(0, -1)}</h2>
               <button type="button" onClick={closeModal} className="rounded-md p-1 text-gray-500 hover:bg-gray-100">
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="grid gap-4 p-5 sm:grid-cols-2">
-              {fields.map((field) => (
+            <form onSubmit={handleSubmit} className="flex flex-col overflow-hidden">
+              <div className="overflow-y-auto p-5">
+                <div className="grid gap-4 sm:grid-cols-2">
+              {fields.map((field) => 
+                field.type === 'heading' ? (
+                  <div key={field.label} className="col-span-full border-b border-gray-200 pb-2 pt-6">
+                    <h3 className="text-sm font-semibold uppercase tracking-wider text-[#1a56db]">{field.label}</h3>
+                  </div>
+                ) : (
                 <label key={field.name} className={field.fullWidth ? 'sm:col-span-2' : ''}>
                   <span className="mb-1 block text-sm font-medium text-gray-700">{field.label}</span>
                   {field.type === 'select' ? (
@@ -153,6 +188,14 @@ export default function ModuleListPage({
                         </option>
                       ))}
                     </select>
+                  ) : field.type === 'file' ? (
+                    <input
+                      required={field.required && !editing}
+                      type="file"
+                      accept={field.accept}
+                      onChange={(event) => setFormData((current) => ({ ...current, [field.name]: event.target.files[0] }))}
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[#1a56db] focus:outline-none focus:ring-1 focus:ring-[#1a56db]"
+                    />
                   ) : (
                     <input
                       required={field.required}
@@ -165,8 +208,10 @@ export default function ModuleListPage({
                   )}
                 </label>
               ))}
-              <div className="flex justify-end gap-3 border-t border-gray-100 pt-4 sm:col-span-2">
-                <button type="button" onClick={closeModal} className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
+                </div>
+              </div>
+              <div className="flex shrink-0 justify-end gap-3 border-t border-gray-100 bg-gray-50 p-4 rounded-b-lg">
+                <button type="button" onClick={closeModal} className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
                 <button type="submit" className="rounded-md bg-[#1a56db] px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">Save</button>
               </div>
             </form>
