@@ -23,6 +23,17 @@ class Attendance extends Model
         'status',
         'remarks',
         'branch_id',
+        'checkin_latitude',
+        'checkin_longitude',
+        'checkout_latitude',
+        'checkout_longitude',
+        'checkin_distance',
+        'checkout_distance',
+        'location_verified',
+        'accuracy',
+        'device_info',
+        'browser_info',
+        'ip_address',
     ];
 
     protected $casts = [
@@ -31,6 +42,14 @@ class Attendance extends Model
         'check_out' => 'datetime',
         'working_hours' => 'decimal:2',
         'overtime_hours' => 'decimal:2',
+        'checkin_latitude' => 'decimal:8',
+        'checkin_longitude' => 'decimal:8',
+        'checkout_latitude' => 'decimal:8',
+        'checkout_longitude' => 'decimal:8',
+        'checkin_distance' => 'decimal:2',
+        'checkout_distance' => 'decimal:2',
+        'location_verified' => 'boolean',
+        'accuracy' => 'decimal:2',
     ];
 
     public function employee(): BelongsTo

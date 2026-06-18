@@ -5,8 +5,13 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
 use App\Services\AttendanceService;
+use App\Services\GeoLocationService;
 use App\Http\Requests\StoreAttendanceRequest;
 use App\Http\Requests\UpdateAttendanceRequest;
+use App\Http\Requests\CheckInRequest;
+use App\Http\Requests\CheckOutRequest;
+use App\Http\Resources\AttendanceResource;
+use App\Http\Resources\AttendanceLocationLogResource;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -17,20 +22,22 @@ class AttendanceController extends Controller
     use ApiResponse;
 
     protected AttendanceService $attendanceService;
+    protected GeoLocationService $geoLocationService;
 
-    public function __construct(AttendanceService $attendanceService)
+    public function __construct(AttendanceService $attendanceService, GeoLocationService $geoLocationService)
     {
         $this->attendanceService = $attendanceService;
+        $this->geoLocationService = $geoLocationService;
     }
 
-    /**
-     * Display a listing of the attendances.
-     */
     public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Attendance::class);
 
-        $filters = $request->only(['employee_id', 'date', 'status', 'site_id', 'shift_id', 'department_id', 'start_date', 'end_date']);
+        $filters = $request->only([
+            'employee_id', 'date', 'status', 'site_id', 'shift_id',
+            'department_id', 'start_date', 'end_date', 'location_verified'
+        ]);
         $perPage = (int) $request->input('per_page', 15);
 
         $attendances = $this->attendanceService->getAttendances($filters, $perPage);
@@ -40,9 +47,6 @@ class AttendanceController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created attendance (manual entry).
-     */
     public function store(StoreAttendanceRequest $request): JsonResponse
     {
         $this->authorize('create', Attendance::class);
@@ -54,9 +58,6 @@ class AttendanceController extends Controller
         ], 201);
     }
 
-    /**
-     * Display the specified attendance.
-     */
     public function show(Attendance $attendance): JsonResponse
     {
         $this->authorize('view', $attendance);
@@ -64,13 +65,10 @@ class AttendanceController extends Controller
         $attendance->load(['employee', 'site', 'shift']);
 
         return $this->success('Attendance retrieved successfully', [
-            'attendance' => $attendance
+            'attendance' => new AttendanceResource($attendance)
         ]);
     }
 
-    /**
-     * Update the specified attendance.
-     */
     public function update(UpdateAttendanceRequest $request, Attendance $attendance): JsonResponse
     {
         $this->authorize('update', $attendance);
@@ -82,9 +80,6 @@ class AttendanceController extends Controller
         ]);
     }
 
-    /**
-     * Remove the specified attendance.
-     */
     public function destroy(Attendance $attendance): JsonResponse
     {
         $this->authorize('delete', $attendance);
@@ -94,10 +89,7 @@ class AttendanceController extends Controller
         return $this->success('Attendance deleted successfully');
     }
 
-    /**
-     * Check in an employee.
-     */
-    public function checkIn(Request $request): JsonResponse
+    public function checkIn(CheckInRequest $request): JsonResponse
     {
         $user = $request->user();
         $employee = $user->employee;
@@ -106,29 +98,32 @@ class AttendanceController extends Controller
             return $this->error('Only employees can check in', 403);
         }
 
-        $today = Carbon::today()->toDateString();
-        $now = Carbon::now();
-
-        $attendance = Attendance::firstOrCreate(
-            ['employee_id' => $employee->id, 'date' => $today],
-            ['check_in' => $now, 'status' => 'Present', 'site_id' => $request->site_id, 'shift_id' => $request->shift_id]
-        );
-
-        if (!$attendance->wasRecentlyCreated && $attendance->check_in) {
-            return $this->error('Already checked in today', 400);
+        if ($user->cannot('geoCheckin', Attendance::class)) {
+            return $this->error('You do not have permission to use geo check-in', 403);
         }
 
-        $attendance->update(['check_in' => $now]);
+        $prerequisites = $this->attendanceService->validateCheckInPrerequisites($employee);
 
-        return $this->success('Checked in successfully', [
-            'attendance' => $attendance
-        ]);
+        if (!$prerequisites['success']) {
+            return $this->error($prerequisites['message'], [], $prerequisites['status']);
+        }
+
+        $site = $prerequisites['site'];
+
+        $result = $this->attendanceService->processCheckIn(
+            $request->validated(),
+            $employee,
+            $site
+        );
+
+        if (!$result['success']) {
+            return $this->error($result['message'], $result['data'] ?? [], $result['status']);
+        }
+
+        return $this->success($result['message'], $result['data'], $result['status']);
     }
 
-    /**
-     * Check out an employee.
-     */
-    public function checkOut(Request $request): JsonResponse
+    public function checkOut(CheckOutRequest $request): JsonResponse
     {
         $user = $request->user();
         $employee = $user->employee;
@@ -137,21 +132,98 @@ class AttendanceController extends Controller
             return $this->error('Only employees can check out', 403);
         }
 
-        $today = Carbon::today()->toDateString();
-        $attendance = Attendance::where('employee_id', $employee->id)->where('date', $today)->first();
-
-        if (!$attendance || !$attendance->check_in) {
-            return $this->error('Must check in first', 400);
+        if ($user->cannot('geoCheckout', Attendance::class)) {
+            return $this->error('You do not have permission to use geo check-out', 403);
         }
 
-        if ($attendance->check_out) {
-            return $this->error('Already checked out today', 400);
+        $prerequisites = $this->attendanceService->validateCheckInPrerequisites($employee);
+
+        if (!$prerequisites['success']) {
+            return $this->error($prerequisites['message'], [], $prerequisites['status']);
         }
 
-        $this->attendanceService->updateAttendance($attendance, ['check_out' => Carbon::now()]);
+        $site = $prerequisites['site'];
 
-        return $this->success('Checked out successfully', [
-            'attendance' => $attendance->fresh()
+        $result = $this->attendanceService->processCheckOut(
+            $request->validated(),
+            $employee,
+            $site
+        );
+
+        if (!$result['success']) {
+            return $this->error($result['message'], $result['data'] ?? [], $result['status']);
+        }
+
+        return $this->success($result['message'], $result['data'], $result['status']);
+    }
+
+    public function myAttendance(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $employee = $user->employee;
+
+        if (!$employee) {
+            return $this->error('Employee profile not found', 404);
+        }
+
+        if ($user->cannot('locationView', Attendance::class)) {
+            return $this->error('You do not have permission to view location data', 403);
+        }
+
+        $filters = array_merge(
+            $request->only(['date', 'start_date', 'end_date', 'status']),
+            ['employee_id' => $employee->id]
+        );
+        $perPage = (int) $request->input('per_page', 15);
+
+        $attendances = $this->attendanceService->getAttendances($filters, $perPage);
+
+        return $this->success('My attendance retrieved successfully', [
+            'attendances' => AttendanceResource::collection($attendances)
+        ]);
+    }
+
+    public function locationAudit(Request $request): JsonResponse
+    {
+        $this->authorize('locationAudit', Attendance::class);
+
+        $filters = $request->only([
+            'employee_id', 'site_id', 'date', 'start_date', 'end_date',
+            'location_verified', 'status'
+        ]);
+        $perPage = (int) $request->input('per_page', 15);
+
+        $query = Attendance::with(['employee.user', 'site'])
+            ->whereNotNull('checkin_latitude');
+
+        if (!empty($filters['employee_id'])) {
+            $query->where('employee_id', $filters['employee_id']);
+        }
+
+        if (!empty($filters['site_id'])) {
+            $query->where('site_id', $filters['site_id']);
+        }
+
+        if (!empty($filters['date'])) {
+            $query->whereDate('date', $filters['date']);
+        }
+
+        if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
+            $query->whereBetween('date', [$filters['start_date'], $filters['end_date']]);
+        }
+
+        if (isset($filters['location_verified'])) {
+            $query->where('location_verified', filter_var($filters['location_verified'], FILTER_VALIDATE_BOOLEAN));
+        }
+
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        $logs = $query->orderBy('date', 'desc')->paginate($perPage);
+
+        return $this->success('Attendance location logs retrieved successfully', [
+            'logs' => AttendanceLocationLogResource::collection($logs)
         ]);
     }
 }

@@ -27,6 +27,7 @@ class StoreSiteRequest extends FormRequest
             'email' => 'nullable|email|max:255',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
+            'allowed_radius' => 'nullable|integer|min:1|max:10000',
             'status' => 'required|in:Active,Inactive',
             'site_manager_id' => 'nullable|exists:employees,id',
         ];

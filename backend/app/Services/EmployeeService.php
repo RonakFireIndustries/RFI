@@ -71,12 +71,19 @@ class EmployeeService
             if (isset($data['create_user_account']) && $data['create_user_account']) {
                 $user = User::create([
                     'name' => $data['full_name'],
-                    'email' => strtolower(str_replace(' ', '.', $data['full_name'])) . '@company.com',
+                    'email' => strtolower(str_replace(' ', '.', $data['full_name'])) . '@ronakfire.com',
                     'password' => Hash::make('password123'),
                 ]);
                 
-                // Phase 9: Assign role if passed
-                if (isset($data['role'])) {
+                // Phase 9: Assign role based on designation name, explicit role field, or default
+                if (!empty($data['designation_id'])) {
+                    $designation = \App\Models\Designation::find($data['designation_id']);
+                    if ($designation) {
+                        try {
+                            $user->assignRole($designation->name);
+                        } catch (\Exception $e) {}
+                    }
+                } elseif (!empty($data['role'])) {
                     $user->assignRole($data['role']);
                 } else {
                     $user->assignRole('Employee');

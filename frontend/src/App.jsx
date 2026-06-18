@@ -2,14 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
 import Login from './pages/Auth/Login';
 
-
-// Layout
-import LeaveDashboardPage from './pages/LeaveManagement/LeaveDashboardPage';
 import DashboardLayout from './components/Layout/DashboardLayout';
-
-import Warehouses from './pages/Warehouses/Warehouses';
-import EmployeesPage from './pages/Employees/EmployeesPage';
-import PermissionManagement from './pages/Admin/PermissionManagement';
 
 // Super Admin
 import SuperAdminLogin from './pages/SuperAdmin/SuperAdminLogin';

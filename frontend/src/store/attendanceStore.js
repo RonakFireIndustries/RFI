@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import { attendancesService } from '../services/attendancesService';
 
 export const useAttendanceStore = create((set, get) => ({
-  // Base resource store properties
   items: [],
   selected: null,
   loading: false,
@@ -51,7 +50,6 @@ export const useAttendanceStore = create((set, get) => ({
 
   clearSelected: () => set({ selected: null }),
 
-  // Custom properties for Attendance.jsx
   logs: [],
   report: null,
 
@@ -59,10 +57,10 @@ export const useAttendanceStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       const items = await attendancesService.list({ per_page: 1000, ...params });
-      set({ 
-        logs: items, 
+      set({
+        logs: items,
         report: { attendance_records: items },
-        loading: false 
+        loading: false,
       });
     } catch (error) {
       set({ error, loading: false });
@@ -77,5 +75,29 @@ export const useAttendanceStore = create((set, get) => ({
   checkOut: async (payload) => {
     const data = await attendancesService.checkOut(payload);
     return data;
-  }
+  },
+
+  myAttendance: async (params = {}) => {
+    set({ loading: true, error: null });
+    try {
+      const items = await attendancesService.myAttendance(params);
+      set({ items, loading: false });
+      return items;
+    } catch (error) {
+      set({ error, loading: false });
+      throw error;
+    }
+  },
+
+  locationAudit: async (params = {}) => {
+    set({ loading: true, error: null });
+    try {
+      const data = await attendancesService.locationAudit(params);
+      set({ logs: data?.logs || data || [], loading: false });
+      return data;
+    } catch (error) {
+      set({ error, loading: false });
+      throw error;
+    }
+  },
 }));

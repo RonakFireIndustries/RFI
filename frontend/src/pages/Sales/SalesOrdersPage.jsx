@@ -160,7 +160,7 @@ export default function SalesOrdersPage() {
           <h1 className="text-2xl font-bold text-gray-900">Sales Orders</h1>
           <p className="text-sm text-gray-500 mt-1">Manage and track your global enterprise sales pipeline.</p>
         </div>
-        <div className="flex space-x-3">
+        <div className="flex flex-wrap gap-2">
           <button className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-lg transition-colors shadow-sm">
             <Download className="w-4 h-4 mr-2" />
             Export
@@ -227,14 +227,14 @@ export default function SalesOrdersPage() {
               </button>
             ))}
           </div>
-          <div className="flex items-center space-x-3 p-3 sm:p-0 pr-4 w-full sm:w-auto justify-end">
+          <div className="flex items-center gap-2 p-3 sm:p-0 pr-4 w-full sm:w-auto justify-end">
             <button className="inline-flex items-center px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-md transition-colors">
               <Filter className="w-4 h-4 mr-2" />
-              Advanced Filters
+              <span className="hidden sm:inline">Advanced</span> Filters
             </button>
-            <div className="h-6 border-l border-gray-300 mx-2"></div>
+            <div className="h-6 border-l border-gray-300 mx-1"></div>
             <button className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-gray-900">
-              <span className="text-gray-400 mr-2 font-normal">SORT BY:</span> Latest First
+              <span className="text-gray-400 mr-2 font-normal hidden sm:inline">SORT BY:</span> Latest First
               <ChevronDown className="w-4 h-4 ml-1" />
             </button>
           </div>

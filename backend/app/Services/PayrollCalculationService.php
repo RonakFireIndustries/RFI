@@ -125,7 +125,6 @@ class PayrollCalculationService
 
         return [
             'employee_id' => $employee->id,
-            'branch_id' => $employee->user->branch_id,
             'payroll_period_id' => $period->id,
             'month' => $period->month,
             'year' => $period->year,

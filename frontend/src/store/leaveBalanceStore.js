@@ -1,6 +1,8 @@
-import { createResourceStore } from './createResourceStore';
 import { leaveBalancesService } from '../services/leaveBalancesService';
 import { create } from 'zustand';
+
+const payload = (response) => response?.data?.data || response?.data || response;
+const leaveBalances = (response) => payload(response)?.leave_balances || payload(response)?.data?.leave_balances || payload(response)?.data || [];
 
 export const useLeaveBalanceStore = create((set, get) => ({
   items: [],
@@ -10,7 +12,7 @@ export const useLeaveBalanceStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       const response = await leaveBalancesService.getAll(params);
-      set({ items: response.data?.leave_balances || [], loading: false });
+      set({ items: leaveBalances(response), loading: false });
     } catch (error) {
       set({ error: error.message, loading: false });
     }

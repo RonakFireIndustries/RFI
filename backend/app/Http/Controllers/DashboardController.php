@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\DashboardResource;
 use App\Models\Employee;
 use App\Models\Branch;
 use App\Models\Inventory;
 use App\Models\Invoice;
 use App\Models\Task;
+use App\Services\DashboardService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -14,179 +17,212 @@ use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    public function summary()
+    public function index(Request $request, DashboardService $dashboardService)
     {
         try {
-            return $this->buildSummaryResponse();
+            $data = $dashboardService->forUser($request->user())->getDashboard();
+            return new DashboardResource($data);
         } catch (\Exception $e) {
-            Log::error('Dashboard summary failed: ' . $e->getMessage());
-
-            return response()->json([
-                'revenue' => [
-                    'total' => 0,
-                    'growth' => 0,
-                ],
-                'employees' => [
-                    'total' => 0,
-                    'new_hires' => 0,
-                ],
-                'projects' => [
-                    'active' => 0,
-                    'nearing_completion' => 0,
-                ],
-                'inventory' => [
-                    'alerts' => 0,
-                    'action_required' => 0,
-                ],
-                'revenue_trend' => [],
-                'branch_performance' => [],
-                'monthly_targets' => [],
-                'recent_activity' => [],
-                'payroll' => [
-                    'cost' => 0,
-                    'processed_percent' => 0,
-                    'period' => 'Current'
-                ]
-            ]);
+            Log::error('Dashboard failed: ' . $e->getMessage());
+            return response()->json(['cards' => [], 'charts' => [], 'quick_actions' => [], 'alerts' => []]);
         }
     }
 
-    private function buildSummaryResponse()
+    public function summary(Request $request)
+    {
+        try {
+            return $this->buildSummaryResponse($request->user());
+        } catch (\Exception $e) {
+            Log::error('Dashboard summary failed: ' . $e->getMessage());
+
+            return response()->json([]);
+        }
+    }
+
+    private function buildSummaryResponse($user)
     {
         $branchId = request()->header('X-Branch-Id');
-        $totalEmployees = Schema::hasTable('employees') 
-            ? Employee::when($branchId, fn($q) => $q->where('branch_id', $branchId))->count() 
-            : 0;
-        $newHiresThisWeek = Schema::hasTable('employees')
-            ? Employee::when($branchId, fn($q) => $q->where('branch_id', $branchId))->where('created_at', '>=', Carbon::now()->startOfWeek())->count()
-            : 0;
+        $result = [];
 
-        $revenue = Schema::hasTable('invoices') 
-            ? Invoice::when($branchId, fn($q) => $q->where('branch_id', $branchId))->sum('total_amount') 
-            : 0;
+        if ($user->hasPermissionTo('invoice.view')) {
+            $revenue = Schema::hasTable('invoices')
+                ? Invoice::when($branchId, fn($q) => $q->where('branch_id', $branchId))->sum('total_amount')
+                : 0;
 
-        $activeProjects = Schema::hasTable('tasks')
-            ? Task::when($branchId, fn($q) => $q->where('branch_id', $branchId))->whereIn('status', ['Assigned', 'In Progress'])->count()
-            : 0;
+            $monthlyInvoiceSums = Schema::hasTable('invoices')
+                ? Invoice::when($branchId, fn($q) => $q->where('branch_id', $branchId))
+                    ->selectRaw('MONTH(issue_date) as month, YEAR(issue_date) as year, SUM(total_amount) as total')
+                    ->groupBy('year', 'month')
+                    ->orderBy('year')
+                    ->orderBy('month')
+                    ->get()
+                    ->keyBy(fn ($row) => sprintf('%02d-%d', $row->month, $row->year))
+                : collect();
 
-        $inventoryAlerts = Schema::hasTable('inventories')
-            ? Inventory::when($branchId, fn($q) => $q->where('branch_id', $branchId))->where('quantity', '<=', 10)->count()
-            : 0;
-
-        $monthlyInvoiceSums = Schema::hasTable('invoices')
-            ? Invoice::when($branchId, fn($q) => $q->where('branch_id', $branchId))
-                ->selectRaw('MONTH(issue_date) as month, YEAR(issue_date) as year, SUM(total_amount) as total')
-                ->groupBy('year', 'month')
-                ->orderBy('year')
-                ->orderBy('month')
-                ->get()
-                ->keyBy(fn ($row) => sprintf('%02d-%d', $row->month, $row->year))
-            : collect();
-
-        $revenueGrowth = collect();
-        for ($i = 11; $i >= 0; $i--) {
-            $date = Carbon::now()->subMonths($i);
-            $key = sprintf('%02d-%d', $date->month, $date->year);
-            $revenueGrowth->push([
-                'name' => strtoupper($date->format('M')),
-                'value' => round($monthlyInvoiceSums->get($key)->total ?? 0, 2),
-            ]);
-        }
-
-        if ($revenueGrowth->sum('value') === 0) {
-            $revenueGrowth = collect([
-                ['name' => 'JAN', 'value' => 2400],
-                ['name' => 'FEB', 'value' => 1398],
-                ['name' => 'MAR', 'value' => 9800],
-                ['name' => 'APR', 'value' => 3908],
-                ['name' => 'MAY', 'value' => 4800],
-                ['name' => 'JUN', 'value' => 3800],
-                ['name' => 'JUL', 'value' => 4300],
-                ['name' => 'AUG', 'value' => 5000],
-                ['name' => 'SEP', 'value' => 6000],
-                ['name' => 'OCT', 'value' => 7000],
-                ['name' => 'NOV', 'value' => 12000],
-                ['name' => 'DEC', 'value' => 12300],
-            ]);
-        }
-
-        if (Schema::hasTable('sales_orders') && Schema::hasTable('branches')) {
-            $branchPerformanceQuery = \App\Models\SalesOrder::query();
-            if ($branchId) {
-                $branchPerformanceQuery->where('branch_id', $branchId);
-            }
-            $branchPerformance = $branchPerformanceQuery->select('branch_id', DB::raw('SUM(total_amount) as revenue'))
-                ->groupBy('branch_id')
-                ->with('branch')
-                ->orderByDesc('revenue')
-                ->take(3)
-                ->get()
-                ->map(fn ($order) => [
-                    'id' => $order->branch->id ?? 'Unknown',
-                    'name' => $order->branch->name ?? 'Unknown',
-                    'type' => $order->branch->location ?: 'Branch',
-                    'revenue' => round($order->revenue, 2),
+            $revenueGrowth = collect();
+            for ($i = 11; $i >= 0; $i--) {
+                $date = Carbon::now()->subMonths($i);
+                $key = sprintf('%02d-%d', $date->month, $date->year);
+                $revenueGrowth->push([
+                    'name' => strtoupper($date->format('M')),
+                    'value' => round($monthlyInvoiceSums->get($key)->total ?? 0, 2),
                 ]);
-        } else {
-            $branchPerformance = collect();
+            }
+
+            if ($revenueGrowth->sum('value') === 0) {
+                $revenueGrowth = collect([
+                    ['name' => 'JAN', 'value' => 2400],
+                    ['name' => 'FEB', 'value' => 1398],
+                    ['name' => 'MAR', 'value' => 9800],
+                    ['name' => 'APR', 'value' => 3908],
+                    ['name' => 'MAY', 'value' => 4800],
+                    ['name' => 'JUN', 'value' => 3800],
+                    ['name' => 'JUL', 'value' => 4300],
+                    ['name' => 'AUG', 'value' => 5000],
+                    ['name' => 'SEP', 'value' => 6000],
+                    ['name' => 'OCT', 'value' => 7000],
+                    ['name' => 'NOV', 'value' => 12000],
+                    ['name' => 'DEC', 'value' => 12300],
+                ]);
+            }
+
+            $result['revenue'] = [
+                'total' => round($revenue, 2),
+                'growth' => $this->calculateRevenueGrowth($revenueGrowth),
+            ];
+            $result['revenue_trend'] = $revenueGrowth->toArray();
+            $result['monthly_targets'] = $this->buildMonthlyTargetData($revenueGrowth);
         }
 
-        if ($branchPerformance->isEmpty()) {
-            $branchPerformance = collect([
-                ['id' => 'SF', 'name' => 'San Francisco HQ', 'type' => 'Regional Head Office', 'revenue' => 42300],
-                ['id' => 'NY', 'name' => 'New York Center', 'type' => 'Distribution Hub', 'revenue' => 38150],
-                ['id' => 'LD', 'name' => 'London Branch', 'type' => 'EMEA Sales Office', 'revenue' => 29800],
-            ]);
+        if ($user->hasPermissionTo('employee.view')) {
+            $totalEmployees = Schema::hasTable('employees')
+                ? Employee::when($branchId, fn($q) => $q->where('branch_id', $branchId))->count()
+                : 0;
+            $newHiresThisWeek = Schema::hasTable('employees')
+                ? Employee::when($branchId, fn($q) => $q->where('branch_id', $branchId))->where('created_at', '>=', Carbon::now()->startOfWeek())->count()
+                : 0;
+
+            $result['employees'] = [
+                'total' => $totalEmployees,
+                'new_hires' => $newHiresThisWeek,
+            ];
         }
 
-        $latestPeriodId = Schema::hasTable('payroll_periods') 
-            ? DB::table('payroll_periods')->latest('id')->value('id') 
-            : null;
+        if ($user->hasPermissionTo('inventory.view')) {
+            $activeProjects = Schema::hasTable('tasks')
+                ? Task::when($branchId, fn($q) => $q->where('branch_id', $branchId))->whereIn('status', ['Assigned', 'In Progress'])->count()
+                : 0;
+            $nearingCompletion = Schema::hasTable('tasks')
+                ? Task::when($branchId, fn($q) => $q->where('branch_id', $branchId))->where('status', 'In Progress')->count()
+                : 0;
 
-        if ($latestPeriodId && Schema::hasTable('payrolls')) {
-            $payrollCost = \App\Models\Payroll::when($branchId, fn($q) => $q->where('branch_id', $branchId))
-                ->where('payroll_period_id', $latestPeriodId)->sum('net_salary');
-            $totalPayrolls = \App\Models\Payroll::when($branchId, fn($q) => $q->where('branch_id', $branchId))
-                ->where('payroll_period_id', $latestPeriodId)->count();
-            $processedPayrolls = \App\Models\Payroll::when($branchId, fn($q) => $q->where('branch_id', $branchId))
-                ->where('payroll_period_id', $latestPeriodId)
-                ->whereIn('status', ['Approved', 'Locked', 'Paid'])->count();
-            
-            $payrollPercent = $totalPayrolls > 0 ? round(($processedPayrolls / $totalPayrolls) * 100) : 0;
-            $periodRow = \App\Models\PayrollPeriod::find($latestPeriodId);
-            $payrollPeriodLabel = $periodRow ? $periodRow->month . '/' . $periodRow->year : 'Current';
-        } else {
-            $payrollCost = 0;
-            $payrollPercent = 0;
-            $payrollPeriodLabel = 'Current';
+            $result['projects'] = [
+                'active' => $activeProjects,
+                'nearing_completion' => $nearingCompletion,
+            ];
+
+            $inventoryAlerts = Schema::hasTable('inventories')
+                ? Inventory::when($branchId, fn($q) => $q->where('branch_id', $branchId))->where('quantity', '<=', 10)->count()
+                : 0;
+            $actionRequired = Schema::hasTable('inventories')
+                ? Inventory::when($branchId, fn($q) => $q->where('branch_id', $branchId))->where('quantity', '<=', 5)->count()
+                : 0;
+
+            $result['inventory'] = [
+                'alerts' => $inventoryAlerts,
+                'action_required' => $actionRequired,
+            ];
+        }
+
+        if ($user->hasPermissionTo('sales-order.view')) {
+            if (Schema::hasTable('sales_orders') && Schema::hasTable('branches')) {
+                $branchPerformanceQuery = \App\Models\SalesOrder::query();
+                if ($branchId) {
+                    $branchPerformanceQuery->where('branch_id', $branchId);
+                }
+                $branchPerformance = $branchPerformanceQuery->select('branch_id', DB::raw('SUM(total_amount) as revenue'))
+                    ->groupBy('branch_id')
+                    ->with('branch')
+                    ->orderByDesc('revenue')
+                    ->take(3)
+                    ->get()
+                    ->map(fn ($order) => [
+                        'id' => $order->branch->id ?? 'Unknown',
+                        'name' => $order->branch->name ?? 'Unknown',
+                        'type' => $order->branch->location ?: 'Branch',
+                        'revenue' => round($order->revenue, 2),
+                    ]);
+            } else {
+                $branchPerformance = collect();
+            }
+
+            if ($branchPerformance->isEmpty()) {
+                $branchPerformance = collect([
+                    ['id' => 'SF', 'name' => 'San Francisco HQ', 'type' => 'Regional Head Office', 'revenue' => 42300],
+                    ['id' => 'NY', 'name' => 'New York Center', 'type' => 'Distribution Hub', 'revenue' => 38150],
+                    ['id' => 'LD', 'name' => 'London Branch', 'type' => 'EMEA Sales Office', 'revenue' => 29800],
+                ]);
+            }
+
+            $result['branch_performance'] = $branchPerformance;
+        }
+
+        if ($user->hasPermissionTo('payroll.view')) {
+            $latestPeriodId = Schema::hasTable('payroll_periods')
+                ? DB::table('payroll_periods')->latest('id')->value('id')
+                : null;
+
+            if ($latestPeriodId && Schema::hasTable('payrolls')) {
+                $payrollCost = \App\Models\Payroll::when($branchId, fn($q) => $q->where('branch_id', $branchId))
+                    ->where('payroll_period_id', $latestPeriodId)->sum('net_salary');
+                $totalPayrolls = \App\Models\Payroll::when($branchId, fn($q) => $q->where('branch_id', $branchId))
+                    ->where('payroll_period_id', $latestPeriodId)->count();
+                $processedPayrolls = \App\Models\Payroll::when($branchId, fn($q) => $q->where('branch_id', $branchId))
+                    ->where('payroll_period_id', $latestPeriodId)
+                    ->whereIn('status', ['Approved', 'Locked', 'Paid'])->count();
+
+                $payrollPercent = $totalPayrolls > 0 ? round(($processedPayrolls / $totalPayrolls) * 100) : 0;
+                $periodRow = \App\Models\PayrollPeriod::find($latestPeriodId);
+                $payrollPeriodLabel = $periodRow ? $periodRow->month . '/' . $periodRow->year : 'Current';
+            } else {
+                $payrollCost = 0;
+                $payrollPercent = 0;
+                $payrollPeriodLabel = 'Current';
+            }
+
+            $result['payroll'] = [
+                'cost' => round($payrollCost, 2),
+                'processed_percent' => $payrollPercent,
+                'period' => $payrollPeriodLabel,
+            ];
         }
 
         $recentActivities = collect();
 
-        $recentTasks = Schema::hasTable('tasks') 
-            ? Task::when($branchId, fn($q) => $q->where('branch_id', $branchId))->latest()->take(2)->get() 
-            : collect();
-        foreach ($recentTasks as $task) {
-            $recentActivities->push([
-                'id' => 'task-' . $task->id,
-                'type' => 'employee',
-                'title' => "Task '{$task->title}' is {$task->status}",
-                'time' => $task->updated_at->diffForHumans(),
-                'department' => 'Operations',
-            ]);
+        if ($user->hasPermissionTo('employee.view') && Schema::hasTable('tasks')) {
+            $recentTasks = Task::when($branchId, fn($q) => $q->where('branch_id', $branchId))->latest()->take(2)->get();
+            foreach ($recentTasks as $task) {
+                $recentActivities->push([
+                    'id' => 'task-' . $task->id,
+                    'type' => 'employee',
+                    'title' => "Task '{$task->title}' is {$task->status}",
+                    'time' => $task->updated_at->diffForHumans(),
+                    'department' => 'Operations',
+                ]);
+            }
         }
 
-        $recentInvoices = Schema::hasTable('invoices') 
-            ? Invoice::when($branchId, fn($q) => $q->where('branch_id', $branchId))->latest()->take(2)->get() 
-            : collect();
-        foreach ($recentInvoices as $invoice) {
-            $recentActivities->push([
-                'id' => 'invoice-' . $invoice->id,
-                'type' => 'order',
-                'title' => "Invoice #{$invoice->id} issued",
-                'time' => $invoice->created_at->diffForHumans(),
-                'department' => 'Finance',
-            ]);
+        if ($user->hasPermissionTo('invoice.view') && Schema::hasTable('invoices')) {
+            $recentInvoices = Invoice::when($branchId, fn($q) => $q->where('branch_id', $branchId))->latest()->take(2)->get();
+            foreach ($recentInvoices as $invoice) {
+                $recentActivities->push([
+                    'id' => 'invoice-' . $invoice->id,
+                    'type' => 'order',
+                    'title' => "Invoice #{$invoice->id} issued",
+                    'time' => $invoice->created_at->diffForHumans(),
+                    'department' => 'Finance',
+                ]);
+            }
         }
 
         if ($recentActivities->isEmpty()) {
@@ -215,33 +251,9 @@ class DashboardController extends Controller
             ]);
         }
 
-        return response()->json([
-            'revenue' => [
-                'total' => round($revenue, 2),
-                'growth' => $this->calculateRevenueGrowth($revenueGrowth),
-            ],
-            'employees' => [
-                'total' => $totalEmployees,
-                'new_hires' => $newHiresThisWeek,
-            ],
-            'projects' => [
-                'active' => $activeProjects,
-                'nearing_completion' => Schema::hasTable('tasks') ? Task::when($branchId, fn($q) => $q->where('branch_id', $branchId))->where('status', 'In Progress')->count() : 0,
-            ],
-            'inventory' => [
-                'alerts' => $inventoryAlerts,
-                'action_required' => Schema::hasTable('inventories') ? Inventory::when($branchId, fn($q) => $q->where('branch_id', $branchId))->where('quantity', '<=', 5)->count() : 0,
-            ],
-            'revenue_trend' => $revenueGrowth->toArray(),
-            'branch_performance' => $branchPerformance,
-            'monthly_targets' => $this->buildMonthlyTargetData($revenueGrowth),
-            'recent_activity' => $recentActivities->take(5)->values()->toArray(),
-            'payroll' => [
-                'cost' => round($payrollCost, 2),
-                'processed_percent' => $payrollPercent,
-                'period' => $payrollPeriodLabel,
-            ],
-        ]);
+        $result['recent_activity'] = $recentActivities->take(5)->values()->toArray();
+
+        return response()->json($result);
     }
 
     private function calculateRevenueGrowth($trend)

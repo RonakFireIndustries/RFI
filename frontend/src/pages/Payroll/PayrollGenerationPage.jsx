@@ -1,16 +1,21 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { usePayrollStore } from '../../store/payrollStore';
 import { usePayrollPeriodStore } from '../../store/payrollPeriodStore';
+import { useEmployeesStore } from '../../store/employeesStore';
 import { Play, CheckCircle, Lock, RefreshCw, FileText } from 'lucide-react';
 
 const PayrollGenerationPage = () => {
+  const navigate = useNavigate();
   const { payrolls, loading, fetchPayrolls, generatePayroll, approvePayroll, lockPayroll, generatePayslip } = usePayrollStore();
   const { items: periods, fetchItems: fetchPeriods } = usePayrollPeriodStore();
+  const { items: employees, fetchItems: fetchEmployees } = useEmployeesStore();
   const [selectedPeriod, setSelectedPeriod] = useState('');
 
   useEffect(() => {
     fetchPeriods();
-  }, [fetchPeriods]);
+    fetchEmployees({ per_page: 1000 });
+  }, [fetchPeriods, fetchEmployees]);
 
   useEffect(() => {
     if (selectedPeriod) {
@@ -28,10 +33,10 @@ const PayrollGenerationPage = () => {
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <h1 className="text-2xl font-bold text-gray-900">Payroll Processing</h1>
-        
-        <div className="flex gap-4">
-          <select 
-            className="border-gray-300 rounded-lg shadow-sm focus:ring-orange-500 focus:border-orange-500"
+
+        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+          <select
+            className="w-full sm:w-auto border-gray-300 rounded-lg shadow-sm focus:ring-orange-500 focus:border-orange-500"
             value={selectedPeriod}
             onChange={(e) => setSelectedPeriod(e.target.value)}
           >
@@ -41,7 +46,7 @@ const PayrollGenerationPage = () => {
             ))}
           </select>
 
-          <button onClick={handleGenerate} disabled={loading || !selectedPeriod} className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center disabled:opacity-50">
+          <button onClick={handleGenerate} disabled={loading || !selectedPeriod} className="w-full sm:w-auto justify-center bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center disabled:opacity-50">
             <Play className="w-4 h-4 mr-2" /> Generate Payroll
           </button>
         </div>
@@ -69,7 +74,7 @@ const PayrollGenerationPage = () => {
                 return (
                   <tr key={p.id}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {p.employee ? `${p.employee.first_name} ${p.employee.last_name}` : `EMP-${p.employee_id}`}
+                      {p.employee ? `${p.employee.full_name}` : `EMP-${p.employee_id}`}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">₹{gross.toFixed(2)}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-red-500">₹{deductions.toFixed(2)}</td>
@@ -84,8 +89,21 @@ const PayrollGenerationPage = () => {
                       {p.status === 'Approved' && (
                         <button onClick={() => lockPayroll(p.id)} title="Lock" className="text-red-600 hover:text-red-900"><Lock className="w-4 h-4 inline" /></button>
                       )}
-                      {(p.status === 'Approved' || p.status === 'Locked' || p.status === 'Paid') && (
-                        <button onClick={() => generatePayslip(p.id)} title="Generate Payslip" className="text-blue-600 hover:text-blue-900"><FileText className="w-4 h-4 inline" /></button>
+                      {(p.status === 'Approved' || p.status === 'Locked' || p.status === 'Paid') && !p.payslip && (
+                        <button onClick={async () => {
+                          try {
+                            const res = await generatePayslip(p.id);
+                            fetchPayrolls({ payroll_period_id: selectedPeriod });
+                            if (res && res.payslip) {
+                              navigate(`/dashboard/payslip/${res.payslip.id}`);
+                            }
+                          } catch (e) {
+                            alert("Failed to generate payslip");
+                          }
+                        }} title="Generate Payslip" className="text-blue-600 hover:text-blue-900"><FileText className="w-4 h-4 inline" /></button>
+                      )}
+                      {p.payslip && (
+                        <button onClick={() => navigate(`/dashboard/payslip/${p.payslip.id}`)} title="View Payslip" className="text-purple-600 hover:text-purple-900"><FileText className="w-4 h-4 inline" /></button>
                       )}
                     </td>
                   </tr>

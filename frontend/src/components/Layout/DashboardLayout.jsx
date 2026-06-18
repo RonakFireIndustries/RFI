@@ -3,13 +3,12 @@ import { useAuthStore } from '../../store/authStore';
 import { useState, useEffect, useRef } from 'react';
 import api from '../../services/api';
 import {
-  LayoutDashboard, Users, Calendar, ClipboardList,
-  Settings, LogOut, Package, Boxes, Layers, Warehouse, FileText, Bell, HelpCircle, Search, ShoppingCart, Shield, Briefcase, DollarSign, Menu, X,
-  MapPin, Clock
+  Settings, LogOut, Bell, HelpCircle, Search, Menu, X,
 } from 'lucide-react';
+import { menuCategories } from '../../config/sidebarMenu';
 
 // Import all pages
-import DashboardOverview from '../../pages/Dashboard/DashboardOverview';
+import DashboardRenderer from '../Dashboard/DashboardRenderer';
 import InventoryDashboard from '../../pages/Inventory/InventoryDashboard';
 import InventoryDetail from '../../pages/Inventory/InventoryDetail';
 import ProductCatalog from '../../pages/Products/ProductCatalog';
@@ -37,6 +36,8 @@ import InvoiceList from '../../pages/Sales/InvoiceList';
 import InvoiceBuilder from '../../pages/Sales/InvoiceBuilder';
 import InvoicePreview from '../../pages/Sales/InvoicePreview';
 import Attendance from '../../pages/Attendance/Attendance';
+import EmployeeDashboard from '../../pages/Attendance/EmployeeDashboard';
+import EmployeeAttendanceHistory from '../../pages/Attendance/EmployeeAttendanceHistory';
 import SalaryStructuresPage from '../../pages/Payroll/SalaryStructuresPage';
 import PayrollPeriodsPage from '../../pages/Payroll/PayrollPeriodsPage';
 import PayrollGenerationPage from '../../pages/Payroll/PayrollGenerationPage';
@@ -47,7 +48,6 @@ import ShiftListPage from '../../pages/Attendance/ShiftListPage';
 import DailyReportsPage from '../../pages/DailyReports/DailyReportsPage';
 import DailyReportDetail from '../../pages/DailyReports/DailyReportDetail';
 import DailyReportForm from '../../pages/DailyReports/DailyReportForm';
-import Leaves from '../../pages/leaves/Leaves';
 import LeaveDashboardPage from '../../pages/LeaveManagement/LeaveDashboardPage';
 import LeaveTypesPage from '../../pages/LeaveManagement/LeaveTypesPage';
 import LeaveBalancesPage from '../../pages/LeaveManagement/LeaveBalancesPage';
@@ -66,6 +66,16 @@ export default function DashboardLayout() {
   const { user, roles, permissions, logout } = useAuthStore();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [isMobileMenuOpen]);
 
   const navigate = useNavigate();
   const searchRef = useRef(null);
@@ -113,45 +123,30 @@ export default function DashboardLayout() {
     if (!permission) return true;
     // If user is Super Admin or Admin, allow all
     if (roles?.includes('Super Admin') || roles?.includes('Admin')) return true;
-    // If permissions not yet loaded, show menu items
-    if (!permissions || permissions.length === 0) return true;
+    // If permissions not yet loaded or empty, deny access
+    if (!permissions || permissions.length === 0) return false;
     // Check if user has specific permission
     return permissions?.includes(permission);
   };
 
-  const menuItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, permission: 'view dashboard' },
-    { name: 'Employees', path: '/dashboard/employees', icon: Users, permission: 'employee.view' },
-    { name: 'Attendance', path: '/dashboard/attendance', icon: Calendar, permission: 'view attendance' },
-    { name: 'Shifts', path: '/dashboard/shifts', icon: Clock, permission: 'shift.view' },
-    { name: 'Daily Reports', path: '/dashboard/daily-reports', icon: FileText, permission: 'daily-report.view' },
-    { name: 'Leave', path: '/dashboard/leave-management', icon: Briefcase, permission: 'leave.view' },
-    { name: 'Payroll Dashboard', path: '/dashboard/payroll', icon: DollarSign, permission: 'payroll.view' },
-    { name: 'Salary Structures', path: '/dashboard/salary-structures', icon: DollarSign, permission: 'salary-structure.view' },
-    { name: 'Payroll Periods', path: '/dashboard/payroll-periods', icon: Calendar, permission: 'payroll.generate' },
-    { name: 'Process Payroll', path: '/dashboard/payroll-processing', icon: ClipboardList, permission: 'payroll.generate' },
-    { name: 'My Payroll', path: '/dashboard/my-payroll', icon: FileText, permission: null },
-    { name: 'Inventory', path: '/dashboard/inventory', icon: Package, permission: 'view inventory' },
-    { name: 'Products', path: '/dashboard/products', icon: Boxes, permission: 'view products' },
-    { name: 'Categories', path: '/dashboard/categories', icon: Layers, permission: 'view categories' },
-    { name: 'Departments', path: '/dashboard/departments', icon: Layers, permission: 'department.view' },
-    { name: 'Designations', path: '/dashboard/designations', icon: Briefcase, permission: 'designation.view' },
-    { name: 'Sites', path: '/dashboard/sites', icon: MapPin, permission: 'view sites' },
-    { name: 'Warehouses', path: '/dashboard/warehouses', icon: Warehouse, permission: 'view warehouses' },
-    { name: 'Customers', path: '/dashboard/customers', icon: Users, permission: 'manage customers' },
-    { name: 'Suppliers', path: '/dashboard/suppliers', icon: ShoppingCart, permission: 'manage suppliers' },
-    { name: 'Purchases', path: '/dashboard/purchases', icon: ClipboardList, permission: 'manage purchases' },
-    { name: 'Sales', path: '/dashboard/sales', icon: ClipboardList, permission: 'manage sales' },
-    { name: 'Invoices', path: '/dashboard/invoices', icon: FileText, permission: 'view invoices' },
-    { name: 'Reports', path: '/dashboard/reports', icon: ClipboardList, permission: 'view reports' },
-    { name: 'Role & Permissions', path: '/dashboard/roles', icon: Shield, permission: 'manage settings' },
-    { name: 'User Access', path: '/dashboard/user-access', icon: Shield, permission: 'manage settings' },
-  ];
-
-  return (
+    return (
     <div className="min-h-screen bg-gray-50 flex font-sans text-gray-800">
+      {/* Mobile backdrop */}
+      {isMobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sticky Sidebar */}
-      <div className={`fixed left-0 top-0 h-screen bg-white border-r border-gray-200 flex flex-col z-50 transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-20'}`}>
+      <div className={`
+        fixed left-0 top-0 h-screen bg-white border-r border-gray-200 flex flex-col z-50 transition-all duration-300
+        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
+        md:translate-x-0
+        ${isSidebarOpen ? 'w-64' : 'w-20'}
+        print:hidden
+      `}>
         <div className="h-16 flex items-center justify-between px-6 border-b border-gray-200">
           {isSidebarOpen ? (
             <div className="flex flex-col">
@@ -162,7 +157,13 @@ export default function DashboardLayout() {
             <div className="text-2xl font-bold text-[#1a56db]">R</div>
           )}
           <button
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            onClick={() => {
+              if (window.innerWidth < 768) {
+                setIsMobileMenuOpen(false);
+              } else {
+                setIsSidebarOpen(!isSidebarOpen);
+              }
+            }}
             className="text-gray-400 hover:text-gray-600"
           >
             {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -170,26 +171,43 @@ export default function DashboardLayout() {
         </div>
 
         <div className="flex-1 py-4 overflow-y-auto">
-          <ul className="space-y-1 px-3">
-            {menuItems.filter((item) => canAccess(item.permission)).map((item) => {
-              const isActive = location.pathname === item.path || (item.path !== '/dashboard' && location.pathname.startsWith(item.path));
+          <div className="px-3 space-y-6">
+            {menuCategories.map((category, index) => {
+              const visibleItems = category.items.filter((item) => canAccess(item.permission));
+
+              if (visibleItems.length === 0) return null;
+
               return (
-                <li key={item.name}>
-                  <Link
-                    to={item.path}
-                    title={!isSidebarOpen ? item.name : ''}
-                    className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive
-                      ? 'bg-[#1a56db] text-white'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                      }`}
-                  >
-                    <item.icon className={`w-5 h-5 flex-shrink-0 ${!isSidebarOpen ? '' : 'mr-3'} ${isActive ? 'text-white' : 'text-gray-400'}`} />
-                    {isSidebarOpen && <span>{item.name}</span>}
-                  </Link>
-                </li>
+                <div key={index} className="flex flex-col">
+                  {isSidebarOpen && (
+                    <h3 className="px-3 mb-2 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                      {category.title}
+                    </h3>
+                  )}
+                  <ul className="space-y-1">
+                    {visibleItems.map((item) => {
+                      const isActive = location.pathname === item.path || (item.path !== '/dashboard' && location.pathname.startsWith(item.path));
+                      return (
+                        <li key={item.name}>
+                          <Link
+                            to={item.path}
+                            title={!isSidebarOpen ? item.name : ''}
+                            className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive
+                              ? 'bg-[#1a56db] text-white'
+                              : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                              }`}
+                          >
+                            <item.icon className={`w-5 h-5 flex-shrink-0 ${!isSidebarOpen ? '' : 'mr-3'} ${isActive ? 'text-white' : 'text-gray-400'}`} />
+                            {isSidebarOpen && <span>{item.name}</span>}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
               );
             })}
-          </ul>
+          </div>
         </div>
 
         <div className="p-4 border-t border-gray-200">
@@ -223,11 +241,17 @@ export default function DashboardLayout() {
       </div>
 
       {/* Main Content Area with offset for sidebar */}
-      <div className={`flex-1 flex flex-col min-w-0 overflow-hidden transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-20'}`}>
+      <div className={`flex-1 flex flex-col min-w-0 overflow-hidden transition-all duration-300 ${isSidebarOpen ? 'md:ml-64' : 'md:ml-20'} print:ml-0 print:w-full`}>
         {/* Top Navbar */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 z-10 sticky top-0">
-          <div className="flex-1 flex">
-            <div className="w-full max-w-2xl relative" ref={searchRef}>
+        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-6 z-10 sticky top-0 print:hidden">
+          <div className="flex items-center flex-1 min-w-0">
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="md:hidden mr-2 text-gray-400 hover:text-gray-600 flex-shrink-0"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <div className="w-full max-w-md lg:max-w-2xl relative" ref={searchRef}>
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search className="h-4 w-4 text-gray-400" />
               </div>
@@ -283,8 +307,10 @@ export default function DashboardLayout() {
               )}
             </div>
           </div>
-          <div className="ml-4 flex items-center space-x-4">
-            <BranchSelector />
+          <div className="ml-2 md:ml-4 flex items-center space-x-2 md:space-x-4">
+            <div className="hidden md:block">
+              <BranchSelector />
+            </div>
             <button className="text-gray-400 hover:text-gray-500">
               <span className="sr-only">View notifications</span>
               <Bell className="h-5 w-5" />
@@ -306,10 +332,10 @@ export default function DashboardLayout() {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto bg-gray-50/50 p-6">
+        <main className="flex-1 overflow-y-auto bg-gray-50/50 p-4 md:p-6">
           <div className="max-w-7xl mx-auto">
             <Routes>
-              <Route index element={<DashboardOverview />} />
+              <Route index element={<DashboardRenderer />} />
               <Route path="inventory" element={<InventoryDashboard />} />
               <Route path="inventory/:id" element={<InventoryDetail />} />
               <Route path="products" element={<ProductCatalog />} />
@@ -320,6 +346,8 @@ export default function DashboardLayout() {
               <Route path="departments" element={<DepartmentsPage />} />
               <Route path="designations" element={<DesignationsPage />} />
               <Route path="attendance" element={<Attendance />} />
+              <Route path="my-attendance" element={<EmployeeDashboard />} />
+              <Route path="attendance/history" element={<EmployeeAttendanceHistory />} />
               <Route path="shifts" element={<ShiftListPage />} />
               <Route path="daily-reports" element={<DailyReportsPage />} />
               <Route path="daily-reports/new" element={<DailyReportForm />} />
@@ -334,8 +362,8 @@ export default function DashboardLayout() {
 
               <Route path="payroll" element={<PayrollGenerationPage />} />
               <Route path="salary-structures" element={<SalaryStructuresPage />} />
-              <Route path="payroll-periods" element={<PayrollPeriodsPage />} />
-              <Route path="payroll-processing" element={<PayrollGenerationPage />} />
+              <Route path="period-payroll" element={<PayrollPeriodsPage />} />
+              <Route path="process-payroll" element={<PayrollGenerationPage />} />
               <Route path="my-payroll" element={<EmployeePayrollPage />} />
               <Route path="payslip/:id" element={<PayslipPage />} />
               <Route path="branches" element={<PlaceholderPage title="Branches" />} />

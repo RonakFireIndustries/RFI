@@ -33,7 +33,7 @@ class LeaveTypeController extends Controller
         $types = $this->service->getLeaveTypes($filters, $perPage);
 
         return $this->success('Leave types retrieved successfully', [
-            'leave_types' => LeaveTypeResource::collection($types),
+            'leave_types' => LeaveTypeResource::collection($types)->resolve($request),
             'meta' => [
                 'current_page' => $types->currentPage(),
                 'last_page' => $types->lastPage(),
@@ -50,7 +50,7 @@ class LeaveTypeController extends Controller
         $type = $this->service->createLeaveType($request->validated());
 
         return $this->success('Leave type created successfully', [
-            'leave_type' => new LeaveTypeResource($type)
+            'leave_type' => (new LeaveTypeResource($type))->resolve($request)
         ], 201);
     }
 
@@ -59,7 +59,7 @@ class LeaveTypeController extends Controller
         $this->authorize('view', $leaveType);
 
         return $this->success('Leave type retrieved successfully', [
-            'leave_type' => new LeaveTypeResource($leaveType)
+            'leave_type' => (new LeaveTypeResource($leaveType))->resolve(request())
         ]);
     }
 
@@ -70,7 +70,7 @@ class LeaveTypeController extends Controller
         $type = $this->service->updateLeaveType($leaveType, $request->validated());
 
         return $this->success('Leave type updated successfully', [
-            'leave_type' => new LeaveTypeResource($type)
+            'leave_type' => (new LeaveTypeResource($type))->resolve($request)
         ]);
     }
 

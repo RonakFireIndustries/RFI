@@ -1,6 +1,10 @@
 import { leaveRequestsService } from '../services/leaveRequestsService';
 import { create } from 'zustand';
 
+const payload = (response) => response?.data?.data || response?.data || response;
+const leaveRequests = (response) => payload(response)?.leave_requests || payload(response)?.data?.leave_requests || payload(response)?.data || [];
+const leaveRequest = (response) => payload(response)?.leave_request || payload(response)?.data?.leave_request || payload(response);
+
 export const useLeaveRequestStore = create((set, get) => ({
   items: [],
   selected: null,
@@ -11,7 +15,7 @@ export const useLeaveRequestStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       const response = await leaveRequestsService.getAll(params);
-      const items = response.data || response;
+      const items = leaveRequests(response);
       set({ items, loading: false });
       return items;
     } catch (error) {
@@ -24,7 +28,7 @@ export const useLeaveRequestStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       const response = await leaveRequestsService.getById(id);
-      const selected = response.data || response;
+      const selected = leaveRequest(response);
       set({ selected, loading: false });
       return selected;
     } catch (error) {
@@ -37,7 +41,7 @@ export const useLeaveRequestStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       const response = await leaveRequestsService.create(payload);
-      const item = response.data || response;
+      const item = leaveRequest(response);
       set({ items: [item, ...get().items], loading: false });
       return item;
     } catch (error) {
@@ -50,7 +54,7 @@ export const useLeaveRequestStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       const response = await leaveRequestsService.update(id, payload);
-      const item = response.data || response;
+      const item = leaveRequest(response);
       set({ items: get().items.map((current) => current.id === id ? item : current), loading: false });
       return item;
     } catch (error) {

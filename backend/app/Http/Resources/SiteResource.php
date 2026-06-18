@@ -23,6 +23,7 @@ class SiteResource extends JsonResource
             'email' => $this->email,
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,
+            'allowed_radius' => $this->allowed_radius ?? 100,
             'status' => $this->status,
             'site_manager_id' => $this->site_manager_id,
             'site_manager' => $this->whenLoaded('manager', function () {

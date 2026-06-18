@@ -54,7 +54,7 @@ class PayrollController extends Controller
             return response()->json(['message' => 'Cannot generate payroll for a locked or paid period.'], 403);
         }
 
-        $query = Employee::query()->where('status', 'active');
+        $query = Employee::query();
 
         if ($request->has('employee_id')) {
             $query->where('id', $request->employee_id);

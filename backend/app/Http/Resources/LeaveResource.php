@@ -22,9 +22,24 @@ class LeaveResource extends JsonResource
             'attachment_path' => $this->attachment_path ? asset('storage/' . $this->attachment_path) : null,
             'comments' => $this->comments,
             'applied_at' => $this->applied_at,
-            'employee' => new EmployeeResource($this->whenLoaded('employee')),
+            'employee' => $this->whenLoaded('employee', fn () => [
+                'id' => $this->employee?->id,
+                'name' => $this->employee?->user?->name,
+                'full_name' => $this->employee?->user?->name,
+                'first_name' => $this->employee?->user?->name,
+                'last_name' => '',
+                'email' => $this->employee?->user?->email,
+                'department' => $this->employee?->relationLoaded('department') && $this->employee?->getRelation('department') ? [
+                    'id' => $this->employee->getRelation('department')->id,
+                    'name' => $this->employee->getRelation('department')->name,
+                ] : null,
+            ]),
             'leave_type' => new LeaveTypeResource($this->whenLoaded('leaveType')),
-            'approver' => new UserResource($this->whenLoaded('approver')),
+            'approver' => $this->whenLoaded('approver', fn () => [
+                'id' => $this->approver->id,
+                'name' => $this->approver->name,
+                'email' => $this->approver->email,
+            ]),
             'histories' => $this->whenLoaded('histories'),
         ];
     }

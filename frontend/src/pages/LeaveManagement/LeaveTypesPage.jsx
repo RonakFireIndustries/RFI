@@ -14,14 +14,14 @@ export default function LeaveTypesPage() {
     { header: 'Name', accessorKey: 'name' },
     { header: 'Code', accessorKey: 'code' },
     { header: 'Annual Allocation', accessorKey: 'annual_allocation' },
-    { header: 'Carry Forward', accessorKey: 'carry_forward', cell: (row) => row.carry_forward ? 'Yes' : 'No' },
-    { header: 'Requires Approval', accessorKey: 'requires_approval', cell: (row) => row.requires_approval ? 'Yes' : 'No' },
+    { header: 'Carry Forward', accessorKey: 'carry_forward', cell: ({ row }) => row.original.carry_forward ? 'Yes' : 'No' },
+    { header: 'Requires Approval', accessorKey: 'requires_approval', cell: ({ row }) => row.original.requires_approval ? 'Yes' : 'No' },
     { 
       header: 'Status', 
       accessorKey: 'status',
-      cell: (row) => (
-        <span className={`px-2 py-1 text-xs rounded-full ${row.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-          {row.status}
+      cell: ({ row }) => (
+        <span className={`px-2 py-1 text-xs rounded-full ${row.original.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+          {row.original.status}
         </span>
       )
     }

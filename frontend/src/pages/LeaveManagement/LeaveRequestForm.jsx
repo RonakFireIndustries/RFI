@@ -40,7 +40,7 @@ export default function LeaveRequestForm() {
       <h1 className="text-2xl font-bold text-gray-800 mb-6">Apply for Leave</h1>
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Employee</label>
             <select
@@ -51,7 +51,7 @@ export default function LeaveRequestForm() {
             >
               <option value="">Select Employee...</option>
               {employees.map(emp => (
-                <option key={emp.id} value={emp.id}>{emp.first_name} {emp.last_name}</option>
+                <option key={emp.id} value={emp.id}>{emp.full_name}</option>
               ))}
             </select>
           </div>

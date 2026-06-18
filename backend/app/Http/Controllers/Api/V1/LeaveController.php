@@ -42,7 +42,7 @@ class LeaveController extends Controller
         $leaves = $this->service->getLeaves($filters, $perPage);
 
         return $this->success('Leave requests retrieved successfully', [
-            'leave_requests' => LeaveResource::collection($leaves),
+            'leave_requests' => LeaveResource::collection($leaves)->resolve($request),
             'meta' => [
                 'current_page' => $leaves->currentPage(),
                 'last_page' => $leaves->lastPage(),
@@ -58,10 +58,10 @@ class LeaveController extends Controller
 
         try {
             $leave = $this->service->createLeave($request->validated());
-            $leave->load(['employee', 'leaveType', 'approver']);
+            $leave->load(['employee.user', 'employee.department', 'leaveType', 'approver']);
 
             return $this->success('Leave request created successfully', [
-                'leave_request' => new LeaveResource($leave)
+                'leave_request' => (new LeaveResource($leave))->resolve($request)
             ], 201);
         } catch (Exception $e) {
             return $this->error($e->getMessage(), 422);
@@ -72,10 +72,10 @@ class LeaveController extends Controller
     {
         $this->authorize('view', $leave);
         
-        $leave->load(['employee', 'leaveType', 'approver', 'histories.user']);
+        $leave->load(['employee.user', 'employee.department', 'leaveType', 'approver', 'histories.user']);
 
         return $this->success('Leave request retrieved successfully', [
-            'leave_request' => new LeaveResource($leave)
+            'leave_request' => (new LeaveResource($leave))->resolve(request())
         ]);
     }
 
@@ -85,10 +85,10 @@ class LeaveController extends Controller
 
         try {
             $updatedLeave = $this->service->updateLeave($leave, $request->validated());
-            $updatedLeave->load(['employee', 'leaveType', 'approver']);
+            $updatedLeave->load(['employee.user', 'employee.department', 'leaveType', 'approver']);
 
             return $this->success('Leave request updated successfully', [
-                'leave_request' => new LeaveResource($updatedLeave)
+                'leave_request' => (new LeaveResource($updatedLeave))->resolve($request)
             ]);
         } catch (Exception $e) {
             return $this->error($e->getMessage(), 422);
@@ -109,8 +109,9 @@ class LeaveController extends Controller
 
         try {
             $updatedLeave = $this->service->approve($leave, $request->comments);
+            $updatedLeave->load(['employee.user', 'employee.department', 'leaveType', 'approver']);
             return $this->success('Leave approved successfully', [
-                'leave_request' => new LeaveResource($updatedLeave)
+                'leave_request' => (new LeaveResource($updatedLeave))->resolve($request)
             ]);
         } catch (Exception $e) {
             return $this->error($e->getMessage(), 422);
@@ -123,8 +124,9 @@ class LeaveController extends Controller
         $request->validate(['comments' => 'required|string']);
 
         $updatedLeave = $this->service->reject($leave, $request->comments);
+        $updatedLeave->load(['employee.user', 'employee.department', 'leaveType', 'approver']);
         return $this->success('Leave rejected successfully', [
-            'leave_request' => new LeaveResource($updatedLeave)
+            'leave_request' => (new LeaveResource($updatedLeave))->resolve($request)
         ]);
     }
 
@@ -134,8 +136,9 @@ class LeaveController extends Controller
         $request->validate(['comments' => 'required|string']);
 
         $updatedLeave = $this->service->cancel($leave, $request->comments);
+        $updatedLeave->load(['employee.user', 'employee.department', 'leaveType', 'approver']);
         return $this->success('Leave cancelled successfully', [
-            'leave_request' => new LeaveResource($updatedLeave)
+            'leave_request' => (new LeaveResource($updatedLeave))->resolve($request)
         ]);
     }
 }

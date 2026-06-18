@@ -26,7 +26,10 @@ export default function Login() {
       const response = await authService.login({ email, password });
 
       if (response.data.token && response.data.user) {
-        setAuth(response.data.user, response.data.token, response.data.roles || [], response.data.permissions || []);
+        const user = response.data.user;
+        const roles = (user.roles || []).map(r => typeof r === 'string' ? r : r.name);
+        const permissions = (user.permissions || []).map(p => typeof p === 'string' ? p : p.name);
+        setAuth(user, response.data.token, roles, permissions);
         navigate('/dashboard');
       } else {
         setError('Login failed: Invalid response format');

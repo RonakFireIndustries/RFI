@@ -10,7 +10,7 @@ export default function LeaveBalancesPage() {
   }, [fetchItems]);
 
   const columns = [
-    { header: 'Employee', accessorKey: 'employee.first_name', cell: (row) => `${row.employee?.first_name} ${row.employee?.last_name}` },
+    { header: 'Employee', accessorKey: 'employee.full_name', cell: ({ row }) => row.original.employee?.full_name || row.original.employee?.name || 'N/A' },
     { header: 'Leave Type', accessorKey: 'leave_type.name' },
     { header: 'Year', accessorKey: 'year' },
     { header: 'Allocated', accessorKey: 'allocated' },

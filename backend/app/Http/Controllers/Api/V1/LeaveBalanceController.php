@@ -32,7 +32,7 @@ class LeaveBalanceController extends Controller
         $balances = $this->service->getBalances($filters, $perPage);
 
         return $this->success('Leave balances retrieved successfully', [
-            'leave_balances' => LeaveBalanceResource::collection($balances),
+            'leave_balances' => LeaveBalanceResource::collection($balances)->resolve($request),
             'meta' => [
                 'current_page' => $balances->currentPage(),
                 'last_page' => $balances->lastPage(),

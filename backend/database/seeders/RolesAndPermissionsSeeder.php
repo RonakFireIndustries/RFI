@@ -53,6 +53,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'daily-report.submit', 'daily-report.approve', 'daily-report.reject', 'daily-report.rework', 'daily-report.report.view',
             'leave.view', 'leave.create', 'leave.edit', 'leave.delete', 'leave.approve', 'leave.reject', 'leave.cancel', 'leave.balance.view',
             'leave-type.view', 'leave-type.create', 'leave-type.edit', 'leave-type.delete',
+            'attendance.geo.checkin', 'attendance.geo.checkout', 'attendance.location.view', 'attendance.location.audit',
         ];
 
         $permissions = array_values(array_unique(array_merge($legacyPermissions, $policyPermissions)));
@@ -115,6 +116,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'view_payments', 'create_payments',
             'view_customers', 'view_suppliers',
             'view_sales_orders', 'view_purchase_orders',
+            'view_payroll', 'manage_payroll', 'payroll.view', 'payroll.generate', 'salary-structure.view',
         ]);
 
         Role::findByName('Inventory Staff')->syncPermissions([

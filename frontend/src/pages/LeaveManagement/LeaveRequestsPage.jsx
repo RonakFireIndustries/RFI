@@ -12,22 +12,21 @@ export default function LeaveRequestsPage() {
   }, [fetchItems]);
 
   const columns = [
-    { header: 'Employee', accessorKey: 'employee.first_name', cell: (row) => `${row.employee?.first_name} ${row.employee?.last_name}` },
+    { header: 'Employee', accessorKey: 'employee.full_name', cell: ({ row }) => row.original.employee?.full_name || row.original.employee?.name || 'N/A' },
     { header: 'Type', accessorKey: 'leave_type.name' },
     { header: 'Start Date', accessorKey: 'start_date' },
     { header: 'End Date', accessorKey: 'end_date' },
     { header: 'Days', accessorKey: 'total_days' },
-    { 
-      header: 'Status', 
+    {
+      header: 'Status',
       accessorKey: 'status',
-      cell: (row) => (
-        <span className={`px-2 py-1 text-xs rounded-full ${
-          row.status === 'Approved' ? 'bg-green-100 text-green-800' : 
-          row.status === 'Rejected' ? 'bg-red-100 text-red-800' :
-          row.status === 'Submitted' ? 'bg-blue-100 text-blue-800' :
-          'bg-gray-100 text-gray-800'
-        }`}>
-          {row.status}
+      cell: ({ row }) => (
+        <span className={`px-2 py-1 text-xs rounded-full ${row.original.status === 'Approved' ? 'bg-green-100 text-green-800' :
+            row.original.status === 'Rejected' ? 'bg-red-100 text-red-800' :
+              row.original.status === 'Submitted' ? 'bg-blue-100 text-blue-800' :
+                'bg-gray-100 text-gray-800'
+          }`}>
+          {row.original.status}
         </span>
       )
     },
@@ -44,14 +43,14 @@ export default function LeaveRequestsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Leave Requests</h1>
           <p className="text-gray-500 text-sm mt-1">Manage and track employee leave applications.</p>
         </div>
-        <Link 
+        <Link
           to="/dashboard/leave-management/requests/new"
-          className="flex items-center bg-[#1a56db] text-white px-4 py-2 rounded-lg hover:bg-[#1546b5] transition-colors"
+          className="inline-flex items-center justify-center sm:w-auto bg-[#1a56db] text-white px-4 py-2 rounded-lg hover:bg-[#1546b5] transition-colors"
         >
           <Plus className="w-4 h-4 mr-2" />
           Apply Leave
@@ -62,10 +61,10 @@ export default function LeaveRequestsPage() {
         {loading ? (
           <div className="text-center py-10 text-gray-500">Loading requests...</div>
         ) : (
-          <DataTable 
-            columns={columns} 
-            data={items} 
-            emptyText="No leave requests found." 
+          <DataTable
+            columns={columns}
+            data={items}
+            emptyText="No leave requests found."
           />
         )}
       </div>

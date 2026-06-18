@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useSalaryStructureStore } from '../../store/salaryStructureStore';
-import { useEmployeeStore } from '../../store/employeeStore';
+import { useEmployeesStore } from '../../store/employeesStore';
 import { Plus, Edit2, Trash2, X } from 'lucide-react';
 
 const SalaryStructuresPage = () => {
   const { items: structures, loading, error, fetchItems, createItem, updateItem, removeItem } = useSalaryStructureStore();
-  const { employees, fetchEmployees } = useEmployeeStore();
+  const { items: employees, fetchItems: fetchEmployees } = useEmployeesStore();
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
@@ -63,10 +63,28 @@ const SalaryStructuresPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Map empty strings to 0 and rename other_allowance to other_earnings
+    const payload = {
+      ...formData,
+      basic_salary: formData.basic_salary || 0,
+      hra: formData.hra || 0,
+      conveyance: formData.conveyance || 0,
+      medical_allowance: formData.medical_allowance || 0,
+      special_allowance: formData.special_allowance || 0,
+      site_allowance: formData.site_allowance || 0,
+      travel_allowance: formData.travel_allowance || 0,
+      food_allowance: formData.food_allowance || 0,
+      other_earnings: formData.other_allowance || 0,
+    };
+    
+    // Remove the old other_allowance key so it doesn't get sent unnecessarily
+    delete payload.other_allowance;
+
     if (editingId) {
-      await updateItem(editingId, formData);
+      await updateItem(editingId, payload);
     } else {
-      await createItem(formData);
+      await createItem(payload);
     }
     fetchItems();
     handleCloseModal();

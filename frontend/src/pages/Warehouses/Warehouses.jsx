@@ -119,8 +119,8 @@ export default function Warehouses() {
           <h1 className="text-2xl font-bold text-gray-900">Warehouses</h1>
           <p className="text-sm text-gray-500">Managing {data.length} regional distribution centers and hubs.</p>
         </div>
-        <div className="flex space-x-3 items-center">
-          <div className="relative">
+        <div className="flex flex-wrap gap-2 items-center">
+          <div className="relative flex-1 min-w-[180px] md:min-w-0">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Search className="h-4 w-4 text-gray-400" />
             </div>
@@ -152,7 +152,7 @@ export default function Warehouses() {
               <MapIcon className="w-4 h-4 mr-1.5" /> Map
             </button>
           </div>
-          <button onClick={openAddModal} className="flex items-center px-4 py-2 bg-[#1a56db] text-white rounded-md text-sm font-medium hover:bg-blue-700 h-[36px]">
+          <button onClick={openAddModal} className="inline-flex items-center justify-center px-4 py-2 bg-[#1a56db] text-white rounded-md text-sm font-medium hover:bg-blue-700 h-[36px]">
             <Plus className="w-4 h-4 mr-2" />
             Add Warehouse
           </button>

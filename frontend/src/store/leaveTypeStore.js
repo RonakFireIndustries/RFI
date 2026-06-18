@@ -1,6 +1,10 @@
 import { leaveTypesService } from '../services/leaveTypesService';
 import { create } from 'zustand';
 
+const payload = (response) => response?.data?.data || response?.data || response;
+const leaveTypes = (response) => payload(response)?.leave_types || payload(response)?.data?.leave_types || payload(response)?.data || [];
+const leaveType = (response) => payload(response)?.leave_type || payload(response)?.data?.leave_type || payload(response);
+
 export const useLeaveTypeStore = create((set, get) => ({
   items: [],
   selected: null,
@@ -11,7 +15,7 @@ export const useLeaveTypeStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       const response = await leaveTypesService.getAll(params);
-      const items = response.data || response;
+      const items = leaveTypes(response);
       set({ items, loading: false });
       return items;
     } catch (error) {
@@ -24,7 +28,7 @@ export const useLeaveTypeStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       const response = await leaveTypesService.getById(id);
-      const selected = response.data || response;
+      const selected = leaveType(response);
       set({ selected, loading: false });
       return selected;
     } catch (error) {
@@ -37,7 +41,7 @@ export const useLeaveTypeStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       const response = await leaveTypesService.create(payload);
-      const item = response.data || response;
+      const item = leaveType(response);
       set({ items: [item, ...get().items], loading: false });
       return item;
     } catch (error) {
@@ -50,7 +54,7 @@ export const useLeaveTypeStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       const response = await leaveTypesService.update(id, payload);
-      const item = response.data || response;
+      const item = leaveType(response);
       set({ items: get().items.map((current) => current.id === id ? item : current), loading: false });
       return item;
     } catch (error) {

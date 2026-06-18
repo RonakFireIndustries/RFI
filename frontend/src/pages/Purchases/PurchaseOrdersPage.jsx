@@ -141,7 +141,7 @@ export default function PurchaseOrdersPage() {
           <h1 className="text-2xl font-bold text-gray-900">Purchase Orders</h1>
           <p className="text-sm text-gray-500 mt-1">Manage and track your global enterprise procurement pipeline.</p>
         </div>
-        <div className="flex space-x-3">
+        <div className="flex flex-wrap gap-2">
           <button className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-lg transition-colors shadow-sm">
             <Download className="w-4 h-4 mr-2" />
             Export

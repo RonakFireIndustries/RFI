@@ -6,7 +6,6 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BranchController;
 // EmployeeController imported from Api\V1 below
 use App\Http\Controllers\Api\V1\DesignationController;
-use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\Api\V1\ShiftController;
 use App\Http\Controllers\Api\V1\AttendanceController;
 use App\Http\Controllers\Api\V1\DailyReportController;
@@ -26,6 +25,8 @@ use App\Http\Controllers\TestController;
 use App\Http\Controllers\Api\SearchController;
 // Removed old Department/Designation/Employee controller imports
 use App\Http\Controllers\PayrollController;
+use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserAccessController;
@@ -50,6 +51,7 @@ Route::prefix('v1')->group(function () {
 
     // Dashboard
     Route::get('/dashboard/summary', [DashboardController::class, 'summary']);
+    Route::get('/dashboard', [DashboardController::class, 'index']);
 
     // Core HR
     Route::apiResource('branches', BranchController::class);
@@ -89,6 +91,8 @@ Route::prefix('v1')->group(function () {
     Route::delete('/attendances/{attendance}', [\App\Http\Controllers\Api\V1\AttendanceController::class, 'destroy']);
     Route::post('/attendance/check-in', [\App\Http\Controllers\Api\V1\AttendanceController::class, 'checkIn']);
     Route::post('/attendance/check-out', [\App\Http\Controllers\Api\V1\AttendanceController::class, 'checkOut']);
+    Route::get('/my-attendance', [\App\Http\Controllers\Api\V1\AttendanceController::class, 'myAttendance']);
+    Route::get('/attendance/location-audit', [\App\Http\Controllers\Api\V1\AttendanceController::class, 'locationAudit']);
 
     // Sites / Construction
     Route::apiResource('sites', \App\Http\Controllers\Api\V1\SiteController::class);
@@ -121,7 +125,7 @@ Route::prefix('v1')->group(function () {
     Route::patch('/inventory/{inventory}', [InventoryController::class, 'update']);
 
     // Inventory
-    Route::apiResource('categories', CategoryController::class);
+    Route::apiResource('categories', \App\Http\Controllers\CategoryController::class);
     Route::apiResource('products', ProductController::class);
     Route::get('/inventory', [InventoryController::class, 'index']);
     Route::post('/inventory', [InventoryController::class, 'store']);
@@ -206,19 +210,21 @@ Route::prefix('v1')->group(function () {
         Route::post('/admin/tables/{table}', [AdminController::class, 'createRecord']);
         Route::put('/admin/tables/{table}/{id}', [AdminController::class, 'updateRecord']);
         Route::delete('/admin/tables/{table}/{id}', [AdminController::class, 'deleteRecord']);
-        // Leave Types
-        Route::apiResource('leave-types', LeaveTypeController::class);
+    });
+
+    // Leave Types
+    Route::apiResource('leave-types', LeaveTypeController::class);
 
         // Leave Balances
         Route::get('leave-balances', [LeaveBalanceController::class, 'index']);
         Route::post('employees/{employee}/leave-balances/initialize', [LeaveBalanceController::class, 'initialize']);
 
-        // Leave Requests
-        Route::apiResource('leave-requests', LeaveController::class);
-        Route::post('leave-requests/{leave}/approve', [LeaveController::class, 'approve']);
-        Route::post('leave-requests/{leave}/reject', [LeaveController::class, 'reject']);
-        Route::post('leave-requests/{leave}/cancel', [LeaveController::class, 'cancel']);
-    });
+    // Leave Requests
+    Route::apiResource('leave-requests', LeaveController::class);
+    Route::get('leave-requests/request/{leave}', [LeaveController::class, 'request']);
+    Route::post('leave-requests/{leave}/approve', [LeaveController::class, 'approve']);
+    Route::post('leave-requests/{leave}/reject', [LeaveController::class, 'reject']);
+    Route::post('leave-requests/{leave}/cancel', [LeaveController::class, 'cancel']);
 });
 
 });

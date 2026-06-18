@@ -72,7 +72,7 @@ export default function InvoiceList() {
           <h1 className="text-2xl font-bold text-gray-900">Invoices</h1>
           <p className="text-sm text-gray-500 mt-1">Manage billing, track payments, and generate GST compliant invoices.</p>
         </div>
-        <div className="flex space-x-3">
+        <div className="flex flex-wrap gap-2">
           <Link
             to="/dashboard/invoices/create"
             className="inline-flex items-center px-4 py-2 bg-[#1a56db] hover:bg-[#1e40af] text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
@@ -129,7 +129,7 @@ export default function InvoiceList() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <div className="flex items-center space-x-3 w-full sm:w-auto">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <button className="inline-flex items-center px-3 py-1.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-md transition-colors w-full sm:w-auto justify-center">
               <Filter className="w-4 h-4 mr-2" />
               Filters

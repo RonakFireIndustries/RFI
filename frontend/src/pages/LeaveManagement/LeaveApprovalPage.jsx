@@ -50,26 +50,26 @@ export default function LeaveApprovalPage() {
         <div className="grid grid-cols-2 gap-6">
           <div className="space-y-1">
             <label className="text-sm text-gray-500 flex items-center"><User className="w-4 h-4 mr-2" /> Employee</label>
-            <p className="font-medium">{selected.employee?.first_name} {selected.employee?.last_name}</p>
+            <p className="font-medium">{selected.employee?.full_name || selected.employee?.name || 'N/A'}</p>
           </div>
           <div className="space-y-1">
             <label className="text-sm text-gray-500 flex items-center"><FileText className="w-4 h-4 mr-2" /> Leave Type</label>
-            <p className="font-medium">{selected.leave_type?.name}</p>
+            <p className="font-medium">{selected.leave_type?.name || 'N/A'}</p>
           </div>
           <div className="space-y-1">
             <label className="text-sm text-gray-500 flex items-center"><Calendar className="w-4 h-4 mr-2" /> Duration</label>
-            <p className="font-medium">{selected.start_date} to {selected.end_date}</p>
+            <p className="font-medium">{selected.start_date || '-'} to {selected.end_date || '-'}</p>
           </div>
           <div className="space-y-1">
             <label className="text-sm text-gray-500 flex items-center">Total Days</label>
-            <p className="font-medium">{selected.total_days} {selected.is_half_day ? '(Half Day)' : ''}</p>
+            <p className="font-medium">{selected.total_days ?? '-'} {selected.is_half_day ? '(Half Day)' : ''}</p>
           </div>
         </div>
 
         <div className="space-y-2">
           <label className="text-sm text-gray-500">Reason</label>
           <div className="bg-gray-50 p-4 rounded-lg text-sm text-gray-700">
-            {selected.reason}
+            {selected.reason || '-'}
           </div>
         </div>
 

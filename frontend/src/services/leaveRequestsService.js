@@ -1,7 +1,8 @@
 import api from './api';
+import { normalizeQuery } from './resourceHelpers';
 
 export const leaveRequestsService = {
-  getAll: (params) => api.get('/leave-requests', { params }),
+  getAll: (params) => api.get(`/leave-requests${normalizeQuery(params)}`),
   getById: (id) => api.get(`/leave-requests/${id}`),
   create: (data) => api.post('/leave-requests', data),
   update: (id, data) => api.put(`/leave-requests/${id}`, data),

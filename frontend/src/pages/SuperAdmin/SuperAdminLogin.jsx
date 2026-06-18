@@ -19,11 +19,13 @@ export default function SuperAdminLogin() {
 
     try {
       const response = await api.post('/login', { email, password });
-      const { user, access_token, roles, permissions } = response.data;
-      console.log(response.data);
+      const user = response.data.user;
+      const token = response.data.token;
+      const roles = (user.roles || []).map(r => typeof r === 'string' ? r : r.name);
+      const permissions = (user.permissions || []).map(p => typeof p === 'string' ? p : p.name);
             
       if (roles.includes('Super Admin') || user.email === 'superadmin@example.com') {
-        setAuth(user, access_token, roles || [], permissions || []);
+        setAuth(user, token, roles, permissions);
         navigate('/superadmin/dashboard');
       } else {
         setError('Access Denied. You are not a Super Admin.');

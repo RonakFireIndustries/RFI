@@ -7,6 +7,8 @@ export const attendancesService = {
   create: async (payload) => unwrapItem((await api.post('/attendances', payload)).data),
   update: async (id, payload) => unwrapItem((await api.put(`/attendances/${id}`, payload)).data),
   remove: async (id) => api.delete(`/attendances/${id}`),
-  checkIn: async (payload) => unwrapItem((await api.post('/attendance/check-in', payload)).data),
-  checkOut: async (payload) => unwrapItem((await api.post('/attendance/check-out', payload)).data),
+  checkIn: async (payload) => (await api.post('/attendance/check-in', payload)).data,
+  checkOut: async (payload) => (await api.post('/attendance/check-out', payload)).data,
+  myAttendance: async (params = {}) => unwrapList((await api.get(`/my-attendance${normalizeQuery(params)}`)).data),
+  locationAudit: async (params = {}) => (await api.get(`/attendance/location-audit${normalizeQuery(params)}`)).data,
 };

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Users, CheckCircle, AlertTriangle, Clock, 
-  Calendar, Filter, Download, SlidersHorizontal 
+  Calendar, Filter, Download, MapPin, ArrowRight
 } from 'lucide-react';
 import { useAttendanceStore } from '../../store/attendanceStore';
 import { useDepartmentStore } from '../../store/departmentStore';
@@ -9,6 +10,7 @@ import { useSiteStore } from '../../store/siteStore';
 import { useShiftsStore } from '../../store/shiftStore';
 
 export default function Attendance() {
+  const navigate = useNavigate();
   const { logs, report, loading, fetchLogs } = useAttendanceStore();
   
   // Reference stores for filters
@@ -141,16 +143,24 @@ export default function Attendance() {
             Real-time tracking for {currentDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => navigate('/dashboard/my-attendance')}
+            className="inline-flex items-center px-3 py-2 bg-[#0B1B36] text-white rounded-xl hover:bg-[#081428] transition-colors text-sm font-bold gap-1.5"
+          >
+            <MapPin className="w-4 h-4" />
+            <span className="hidden sm:inline">My Attendance</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
           <div className="flex bg-[#EDF2F7] rounded-lg p-1">
             <button 
               onClick={() => setCurrentDate(new Date())} 
-              className="px-4 py-1.5 bg-white shadow-sm rounded text-sm font-semibold text-[#1A202C]"
+              className="px-3 py-1.5 bg-white shadow-sm rounded text-sm font-semibold text-[#1A202C]"
             >
               Today
             </button>
           </div>
-          <button className="flex items-center justify-center px-3 py-2 bg-white border border-[#CBD5E0] text-[#4A5568] rounded-xl hover:bg-gray-50 transition-colors">
+          <button className="inline-flex items-center justify-center px-3 py-2 bg-white border border-[#CBD5E0] text-[#4A5568] rounded-xl hover:bg-gray-50 transition-colors">
             <Download className="w-4 h-4" />
           </button>
         </div>
@@ -211,7 +221,7 @@ export default function Attendance() {
             </div>
           </div>
 
-          <div className="grid grid-cols-7 gap-2 h-80">
+          <div className="grid grid-cols-7 gap-1.5 md:gap-2 h-auto min-h-[200px] md:min-h-80">
             {days.map((d, i) => {
               let bgClass = 'bg-[#2D3748] text-white'; // present (dark blue)
               if (d.status === 'weekend') bgClass = 'bg-[#EDF2F7] text-[#A0AEC0] border border-dashed border-[#CBD5E0]';
@@ -225,7 +235,7 @@ export default function Attendance() {
                 <div 
                   key={i} 
                   onClick={() => setCurrentDate(d.fullDate)}
-                  className={`${bgClass} ${selectedRing} rounded flex items-center justify-center font-bold text-sm hover:opacity-80 transition-opacity cursor-pointer`}
+                  className={`${bgClass} ${selectedRing} rounded flex items-center justify-center font-bold text-xs md:text-sm hover:opacity-80 transition-opacity cursor-pointer aspect-square md:aspect-auto md:min-h-[36px]`}
                   title={`View records for ${d.fullDate.toLocaleDateString()}`}
                 >
                   {d.day}

@@ -5,6 +5,7 @@ import {
   Plus, Edit, Trash2, Search, MapPin, Phone, Mail, User, ShieldAlert,
   Building, Compass, CheckCircle2, XCircle, Info, ChevronLeft, ChevronRight, X
 } from 'lucide-react';
+import LocationPicker from '../../components/Map/LocationPicker';
 
 export default function Sites() {
   const { 
@@ -44,6 +45,8 @@ export default function Sites() {
     email: '',
     latitude: '',
     longitude: '',
+    allowed_radius: 100,
+    geo_fencing_enabled: false,
     status: 'Active',
     site_manager_id: ''
   });
@@ -82,6 +85,8 @@ export default function Sites() {
       email: '',
       latitude: '',
       longitude: '',
+      allowed_radius: 100,
+      geo_fencing_enabled: false,
       status: 'Active',
       site_manager_id: ''
     });
@@ -105,6 +110,8 @@ export default function Sites() {
       email: site.email || '',
       latitude: site.latitude || '',
       longitude: site.longitude || '',
+      allowed_radius: site.allowed_radius || 100,
+      geo_fencing_enabled: !!site.geo_fencing_enabled,
       status: site.status || 'Active',
       site_manager_id: site.site_manager_id || ''
     });
@@ -131,6 +138,8 @@ export default function Sites() {
         ...formData,
         latitude: formData.latitude ? parseFloat(formData.latitude) : null,
         longitude: formData.longitude ? parseFloat(formData.longitude) : null,
+        allowed_radius: formData.allowed_radius ? parseInt(formData.allowed_radius) : 100,
+        geo_fencing_enabled: !!formData.geo_fencing_enabled,
         site_manager_id: formData.site_manager_id ? parseInt(formData.site_manager_id) : null
       };
 
@@ -171,7 +180,7 @@ export default function Sites() {
         </div>
         <button 
           onClick={openAddModal}
-          className="flex items-center px-5 py-3 bg-[#1a56db] text-white rounded-xl font-semibold hover:bg-[#1546b5] transition-all shadow-md shadow-blue-200"
+          className="inline-flex items-center justify-center w-full sm:w-auto px-5 py-3 bg-[#1a56db] text-white rounded-xl font-semibold hover:bg-[#1546b5] transition-all shadow-md shadow-blue-200"
         >
           <Plus className="w-5 h-5 mr-2" />
           Add New Site
@@ -227,7 +236,7 @@ export default function Sites() {
         </div>
         <div className="flex gap-3 w-full md:w-auto">
           <select 
-            className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full md:w-auto px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
@@ -302,6 +311,18 @@ export default function Sites() {
                       <span>GPS: {site.latitude}, {site.longitude}</span>
                     </div>
                   )}
+                  {site.allowed_radius && (
+                    <div className="flex items-center text-xs text-gray-500 gap-2">
+                      <span className="w-3.5 h-3.5 inline-flex items-center justify-center text-gray-400 font-bold text-[10px]">R</span>
+                      <span>Radius: {site.allowed_radius}m</span>
+                    </div>
+                  )}
+                  <div className="flex items-center text-xs gap-2">
+                    <ShieldAlert className={`w-3.5 h-3.5 ${site.geo_fencing_enabled ? 'text-green-500' : 'text-gray-400'}`} />
+                    <span className={site.geo_fencing_enabled ? 'text-green-600 font-medium' : 'text-gray-500'}>
+                      {site.geo_fencing_enabled ? 'Geo-Fencing Active' : 'Geo-Fencing Disabled'}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -466,32 +487,74 @@ export default function Sites() {
               </div>
 
               {/* Geographic Coordinates */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Latitude</label>
-                  <input 
-                    type="number" 
-                    step="any"
-                    name="latitude"
-                    value={formData.latitude}
-                    onChange={handleInputChange}
-                    placeholder="e.g. 19.0760"
-                    className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  {formErrors.latitude && <p className="text-red-500 text-xs mt-1">{formErrors.latitude}</p>}
+              <div className="bg-gray-50/50 p-4 rounded-xl border border-gray-100 space-y-4">
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-sm font-bold text-gray-800">Geographic & Fencing Settings</h3>
+                  <label className="flex items-center cursor-pointer">
+                    <div className="relative">
+                      <input 
+                        type="checkbox" 
+                        name="geo_fencing_enabled"
+                        checked={formData.geo_fencing_enabled}
+                        onChange={(e) => setFormData(prev => ({ ...prev, geo_fencing_enabled: e.target.checked }))}
+                        className="sr-only" 
+                      />
+                      <div className={`block w-10 h-6 rounded-full transition-colors ${formData.geo_fencing_enabled ? 'bg-blue-600' : 'bg-gray-300'}`}></div>
+                      <div className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${formData.geo_fencing_enabled ? 'transform translate-x-4' : ''}`}></div>
+                    </div>
+                    <div className="ml-3 text-xs font-bold text-gray-700">Enable Geo-Fencing</div>
+                  </label>
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Longitude</label>
-                  <input 
-                    type="number" 
-                    step="any"
-                    name="longitude"
-                    value={formData.longitude}
-                    onChange={handleInputChange}
-                    placeholder="e.g. 72.8777"
-                    className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                
+                <div className="mb-4">
+                  <p className="text-xs text-gray-500 mb-2">Click on the map to set the exact coordinates of the site.</p>
+                  <LocationPicker 
+                    latitude={formData.latitude} 
+                    longitude={formData.longitude} 
+                    onLocationChange={(lat, lng) => setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }))}
                   />
-                  {formErrors.longitude && <p className="text-red-500 text-xs mt-1">{formErrors.longitude}</p>}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Latitude</label>
+                    <input 
+                      type="number" 
+                      step="any"
+                      name="latitude"
+                      value={formData.latitude}
+                      onChange={handleInputChange}
+                      placeholder="e.g. 19.0760"
+                      className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    />
+                    {formErrors.latitude && <p className="text-red-500 text-xs mt-1">{formErrors.latitude}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Longitude</label>
+                    <input 
+                      type="number" 
+                      step="any"
+                      name="longitude"
+                      value={formData.longitude}
+                      onChange={handleInputChange}
+                      placeholder="e.g. 72.8777"
+                      className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    />
+                    {formErrors.longitude && <p className="text-red-500 text-xs mt-1">{formErrors.longitude}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Allowed Radius (m)</label>
+                    <input 
+                      type="number" 
+                      name="allowed_radius"
+                      value={formData.allowed_radius}
+                      onChange={handleInputChange}
+                      placeholder="e.g. 100"
+                      className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    />
+                    <p className="text-[10px] text-gray-400 mt-1">Default: 100m.</p>
+                    {formErrors.allowed_radius && <p className="text-red-500 text-xs mt-1">{formErrors.allowed_radius}</p>}
+                  </div>
                 </div>
               </div>
 
