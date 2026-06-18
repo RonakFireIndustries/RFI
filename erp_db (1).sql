@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 17, 2026 at 02:55 PM
+-- Generation Time: Jun 18, 2026 at 02:29 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -36,6 +36,17 @@ CREATE TABLE `attendances` (
   `date` date NOT NULL,
   `check_in` datetime DEFAULT NULL,
   `check_out` datetime DEFAULT NULL,
+  `checkin_latitude` decimal(10,8) DEFAULT NULL,
+  `checkin_longitude` decimal(11,8) DEFAULT NULL,
+  `checkout_latitude` decimal(10,8) DEFAULT NULL,
+  `checkout_longitude` decimal(11,8) DEFAULT NULL,
+  `checkin_distance` decimal(8,2) DEFAULT NULL,
+  `checkout_distance` decimal(8,2) DEFAULT NULL,
+  `location_verified` tinyint(1) NOT NULL DEFAULT 0,
+  `accuracy` decimal(8,2) DEFAULT NULL,
+  `device_info` varchar(255) DEFAULT NULL,
+  `browser_info` varchar(255) DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
   `working_hours` decimal(5,2) NOT NULL DEFAULT 0.00,
   `overtime` decimal(5,2) NOT NULL DEFAULT 0.00,
   `status` varchar(255) NOT NULL DEFAULT 'Present',
@@ -86,7 +97,7 @@ CREATE TABLE `cache` (
 --
 
 INSERT INTO `cache` (`key`, `value`, `expiration`) VALUES
-('laravel-cache-spatie.permission.cache', 'a:3:{s:5:\"alias\";a:4:{s:1:\"a\";s:2:\"id\";s:1:\"b\";s:4:\"name\";s:1:\"c\";s:10:\"guard_name\";s:1:\"r\";s:5:\"roles\";}s:11:\"permissions\";a:111:{i:0;a:4:{s:1:\"a\";i:1;s:1:\"b\";s:12:\"create sales\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:3;i:1;i:5;i:2;i:1;i:3;i:2;i:4;i:9;}}i:1;a:4:{s:1:\"a\";i:2;s:1:\"b\";s:16:\"manage employees\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:3;i:1;i:1;i:2;i:2;i:3;i:7;i:4;i:4;}}i:2;a:4:{s:1:\"a\";i:3;s:1:\"b\";s:16:\"manage inventory\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:3;i:1;i:5;i:2;i:1;i:3;i:2;i:4;i:7;i:5;i:8;}}i:3;a:4:{s:1:\"a\";i:4;s:1:\"b\";s:14:\"manage payroll\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:3;i:1;i:1;i:2;i:2;i:3;i:4;}}i:4;a:4:{s:1:\"a\";i:5;s:1:\"b\";s:16:\"manage purchases\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:3;i:1;i:1;i:2;i:2;i:3;i:6;}}i:5;a:4:{s:1:\"a\";i:6;s:1:\"b\";s:12:\"manage sales\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:6;}}i:6;a:4:{s:1:\"a\";i:7;s:1:\"b\";s:15:\"manage settings\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:7;a:4:{s:1:\"a\";i:8;s:1:\"b\";s:16:\"manage suppliers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:8;a:4:{s:1:\"a\";i:9;s:1:\"b\";s:16:\"manage transfers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:8;}}i:9;a:4:{s:1:\"a\";i:10;s:1:\"b\";s:15:\"view attendance\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:3;i:1;i:5;i:2;i:1;i:3;i:2;i:4;i:4;}}i:10;a:4:{s:1:\"a\";i:11;s:1:\"b\";s:15:\"view categories\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:11;a:4:{s:1:\"a\";i:12;s:1:\"b\";s:14:\"view dashboard\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:7:{i:0;i:1;i:1;i:2;i:2;i:7;i:3;i:4;i:4;i:6;i:5;i:8;i:6;i:9;}}i:12;a:4:{s:1:\"a\";i:13;s:1:\"b\";s:14:\"view inventory\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:1;i:1;i:2;i:2;i:7;i:3;i:8;}}i:13;a:4:{s:1:\"a\";i:14;s:1:\"b\";s:13:\"view invoices\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:1;i:1;i:2;i:2;i:6;i:3;i:9;}}i:14;a:4:{s:1:\"a\";i:15;s:1:\"b\";s:13:\"view products\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:1;i:1;i:2;i:2;i:7;i:3;i:8;}}i:15;a:4:{s:1:\"a\";i:16;s:1:\"b\";s:12:\"view reports\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:1;i:1;i:2;i:2;i:7;i:3;i:4;i:4;i:6;}}i:16;a:4:{s:1:\"a\";i:17;s:1:\"b\";s:15:\"view warehouses\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:17;a:4:{s:1:\"a\";i:18;s:1:\"b\";s:14:\"view_employees\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:18;a:4:{s:1:\"a\";i:19;s:1:\"b\";s:16:\"create_employees\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:19;a:4:{s:1:\"a\";i:20;s:1:\"b\";s:16:\"update_employees\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:20;a:4:{s:1:\"a\";i:21;s:1:\"b\";s:16:\"delete_employees\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:21;a:4:{s:1:\"a\";i:22;s:1:\"b\";s:13:\"view_products\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:1;i:1;i:2;i:2;i:7;i:3;i:8;}}i:22;a:4:{s:1:\"a\";i:23;s:1:\"b\";s:15:\"create_products\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:7;}}i:23;a:4:{s:1:\"a\";i:24;s:1:\"b\";s:15:\"update_products\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:7;}}i:24;a:4:{s:1:\"a\";i:25;s:1:\"b\";s:15:\"delete_products\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:25;a:4:{s:1:\"a\";i:26;s:1:\"b\";s:14:\"view_customers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:1;i:1;i:2;i:2;i:6;i:3;i:9;}}i:26;a:4:{s:1:\"a\";i:27;s:1:\"b\";s:16:\"create_customers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:9;}}i:27;a:4:{s:1:\"a\";i:28;s:1:\"b\";s:16:\"update_customers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:9;}}i:28;a:4:{s:1:\"a\";i:29;s:1:\"b\";s:16:\"delete_customers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:29;a:4:{s:1:\"a\";i:30;s:1:\"b\";s:14:\"view_suppliers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:6;}}i:30;a:4:{s:1:\"a\";i:31;s:1:\"b\";s:16:\"create_suppliers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:31;a:4:{s:1:\"a\";i:32;s:1:\"b\";s:16:\"update_suppliers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:32;a:4:{s:1:\"a\";i:33;s:1:\"b\";s:16:\"delete_suppliers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:33;a:4:{s:1:\"a\";i:34;s:1:\"b\";s:10:\"view_sites\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:34;a:4:{s:1:\"a\";i:35;s:1:\"b\";s:12:\"create_sites\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:35;a:4:{s:1:\"a\";i:36;s:1:\"b\";s:12:\"update_sites\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:36;a:4:{s:1:\"a\";i:37;s:1:\"b\";s:12:\"delete_sites\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:37;a:4:{s:1:\"a\";i:38;s:1:\"b\";s:15:\"department.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:38;a:4:{s:1:\"a\";i:39;s:1:\"b\";s:17:\"department.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:39;a:4:{s:1:\"a\";i:40;s:1:\"b\";s:15:\"department.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:40;a:4:{s:1:\"a\";i:41;s:1:\"b\";s:17:\"department.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:41;a:4:{s:1:\"a\";i:42;s:1:\"b\";s:16:\"designation.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:42;a:4:{s:1:\"a\";i:43;s:1:\"b\";s:18:\"designation.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:43;a:4:{s:1:\"a\";i:44;s:1:\"b\";s:16:\"designation.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:44;a:4:{s:1:\"a\";i:45;s:1:\"b\";s:18:\"designation.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:45;a:4:{s:1:\"a\";i:46;s:1:\"b\";s:13:\"employee.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:1;i:1;i:2;i:2;i:7;i:3;i:4;}}i:46;a:4:{s:1:\"a\";i:47;s:1:\"b\";s:15:\"employee.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:47;a:4:{s:1:\"a\";i:48;s:1:\"b\";s:13:\"employee.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:48;a:4:{s:1:\"a\";i:49;s:1:\"b\";s:15:\"employee.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:49;a:4:{s:1:\"a\";i:50;s:1:\"b\";s:23:\"employee.assign-manager\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:50;a:4:{s:1:\"a\";i:51;s:1:\"b\";s:20:\"employee.assign-role\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:51;a:4:{s:1:\"a\";i:52;s:1:\"b\";s:15:\"view_categories\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:8;}}i:52;a:4:{s:1:\"a\";i:53;s:1:\"b\";s:17:\"create_categories\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:53;a:4:{s:1:\"a\";i:54;s:1:\"b\";s:17:\"update_categories\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:54;a:4:{s:1:\"a\";i:55;s:1:\"b\";s:17:\"delete_categories\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:55;a:4:{s:1:\"a\";i:56;s:1:\"b\";s:15:\"view_attendance\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:56;a:4:{s:1:\"a\";i:57;s:1:\"b\";s:17:\"create_attendance\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:57;a:4:{s:1:\"a\";i:58;s:1:\"b\";s:17:\"update_attendance\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:58;a:4:{s:1:\"a\";i:59;s:1:\"b\";s:14:\"view_inventory\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:1;i:1;i:2;i:2;i:7;i:3;i:8;}}i:59;a:4:{s:1:\"a\";i:60;s:1:\"b\";s:16:\"manage_inventory\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:1;i:1;i:2;i:2;i:7;i:3;i:8;}}i:60;a:4:{s:1:\"a\";i:61;s:1:\"b\";s:13:\"view_invoices\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:1;i:1;i:2;i:2;i:6;i:3;i:9;}}i:61;a:4:{s:1:\"a\";i:62;s:1:\"b\";s:15:\"create_invoices\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:1;i:1;i:2;i:2;i:6;i:3;i:9;}}i:62;a:4:{s:1:\"a\";i:63;s:1:\"b\";s:15:\"update_invoices\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:6;}}i:63;a:4:{s:1:\"a\";i:64;s:1:\"b\";s:15:\"delete_invoices\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:64;a:4:{s:1:\"a\";i:65;s:1:\"b\";s:13:\"view_payments\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:6;}}i:65;a:4:{s:1:\"a\";i:66;s:1:\"b\";s:15:\"create_payments\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:6;}}i:66;a:4:{s:1:\"a\";i:67;s:1:\"b\";s:12:\"view_payroll\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:67;a:4:{s:1:\"a\";i:68;s:1:\"b\";s:14:\"manage_payroll\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:68;a:4:{s:1:\"a\";i:69;s:1:\"b\";s:11:\"view_leaves\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:69;a:4:{s:1:\"a\";i:70;s:1:\"b\";s:13:\"create_leaves\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:70;a:4:{s:1:\"a\";i:71;s:1:\"b\";s:17:\"view_sales_orders\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:1;i:1;i:2;i:2;i:6;i:3;i:9;}}i:71;a:4:{s:1:\"a\";i:72;s:1:\"b\";s:19:\"create_sales_orders\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:9;}}i:72;a:4:{s:1:\"a\";i:73;s:1:\"b\";s:20:\"view_purchase_orders\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:6;}}i:73;a:4:{s:1:\"a\";i:74;s:1:\"b\";s:22:\"create_purchase_orders\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:74;a:4:{s:1:\"a\";i:75;s:1:\"b\";s:12:\"manage_roles\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:75;a:4:{s:1:\"a\";i:76;s:1:\"b\";s:18:\"manage_permissions\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:76;a:4:{s:1:\"a\";i:77;s:1:\"b\";s:12:\"manage_users\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:77;a:4:{s:1:\"a\";i:78;s:1:\"b\";s:13:\"document.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:78;a:4:{s:1:\"a\";i:79;s:1:\"b\";s:15:\"document.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:79;a:4:{s:1:\"a\";i:80;s:1:\"b\";s:13:\"document.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:80;a:4:{s:1:\"a\";i:81;s:1:\"b\";s:15:\"document.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:81;a:4:{s:1:\"a\";i:82;s:1:\"b\";s:17:\"document.download\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:82;a:4:{s:1:\"a\";i:83;s:1:\"b\";s:16:\"document.preview\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:83;a:4:{s:1:\"a\";i:84;s:1:\"b\";s:22:\"document.manage-expiry\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:84;a:4:{s:1:\"a\";i:85;s:1:\"b\";s:9:\"site.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:85;a:4:{s:1:\"a\";i:86;s:1:\"b\";s:11:\"site.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:86;a:4:{s:1:\"a\";i:87;s:1:\"b\";s:9:\"site.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:87;a:4:{s:1:\"a\";i:88;s:1:\"b\";s:11:\"site.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:88;a:4:{s:1:\"a\";i:89;s:1:\"b\";s:11:\"site.assign\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:89;a:4:{s:1:\"a\";i:90;s:1:\"b\";s:13:\"site.transfer\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:90;a:4:{s:1:\"a\";i:91;s:1:\"b\";s:17:\"site.history.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:91;a:4:{s:1:\"a\";i:92;s:1:\"b\";s:17:\"delete_attendance\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:92;a:4:{s:1:\"a\";i:93;s:1:\"b\";s:15:\"attendance.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:93;a:4:{s:1:\"a\";i:94;s:1:\"b\";s:17:\"attendance.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:94;a:4:{s:1:\"a\";i:95;s:1:\"b\";s:15:\"attendance.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:95;a:4:{s:1:\"a\";i:96;s:1:\"b\";s:17:\"attendance.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:96;a:4:{s:1:\"a\";i:97;s:1:\"b\";s:18:\"attendance.checkin\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:97;a:4:{s:1:\"a\";i:98;s:1:\"b\";s:19:\"attendance.checkout\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:98;a:4:{s:1:\"a\";i:99;s:1:\"b\";s:10:\"shift.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:99;a:4:{s:1:\"a\";i:100;s:1:\"b\";s:12:\"shift.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:100;a:4:{s:1:\"a\";i:101;s:1:\"b\";s:10:\"shift.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:101;a:4:{s:1:\"a\";i:102;s:1:\"b\";s:12:\"shift.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:102;a:4:{s:1:\"a\";i:103;s:1:\"b\";s:17:\"daily-report.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:103;a:4:{s:1:\"a\";i:104;s:1:\"b\";s:19:\"daily-report.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:104;a:4:{s:1:\"a\";i:105;s:1:\"b\";s:17:\"daily-report.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:105;a:4:{s:1:\"a\";i:106;s:1:\"b\";s:19:\"daily-report.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:106;a:4:{s:1:\"a\";i:107;s:1:\"b\";s:19:\"daily-report.submit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:107;a:4:{s:1:\"a\";i:108;s:1:\"b\";s:20:\"daily-report.approve\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:108;a:4:{s:1:\"a\";i:109;s:1:\"b\";s:19:\"daily-report.reject\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:109;a:4:{s:1:\"a\";i:110;s:1:\"b\";s:19:\"daily-report.rework\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}i:110;a:4:{s:1:\"a\";i:111;s:1:\"b\";s:24:\"daily-report.report.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:1;i:1;i:2;i:2;i:4;}}}s:5:\"roles\";a:9:{i:0;a:3:{s:1:\"a\";i:3;s:1:\"b\";s:7:\"Manager\";s:1:\"c\";s:3:\"web\";}i:1;a:3:{s:1:\"a\";i:5;s:1:\"b\";s:8:\"Employee\";s:1:\"c\";s:3:\"web\";}i:2;a:3:{s:1:\"a\";i:1;s:1:\"b\";s:11:\"Super Admin\";s:1:\"c\";s:3:\"web\";}i:3;a:3:{s:1:\"a\";i:2;s:1:\"b\";s:5:\"Admin\";s:1:\"c\";s:3:\"web\";}i:4;a:3:{s:1:\"a\";i:9;s:1:\"b\";s:15:\"Sales Executive\";s:1:\"c\";s:3:\"web\";}i:5;a:3:{s:1:\"a\";i:7;s:1:\"b\";s:17:\"Warehouse Manager\";s:1:\"c\";s:3:\"web\";}i:6;a:3:{s:1:\"a\";i:4;s:1:\"b\";s:2:\"HR\";s:1:\"c\";s:3:\"web\";}i:7;a:3:{s:1:\"a\";i:8;s:1:\"b\";s:15:\"Inventory Staff\";s:1:\"c\";s:3:\"web\";}i:8;a:3:{s:1:\"a\";i:6;s:1:\"b\";s:10:\"Accountant\";s:1:\"c\";s:3:\"web\";}}}', 1781787039);
+('laravel-cache-spatie.permission.cache', 'a:3:{s:5:\"alias\";a:4:{s:1:\"a\";s:2:\"id\";s:1:\"b\";s:4:\"name\";s:1:\"c\";s:10:\"guard_name\";s:1:\"r\";s:5:\"roles\";}s:11:\"permissions\";a:191:{i:0;a:4:{s:1:\"a\";i:1;s:1:\"b\";s:12:\"create sales\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:7:{i:0;i:3;i:1;i:5;i:2;i:10;i:3;i:11;i:4;i:1;i:5;i:2;i:6;i:9;}}i:1;a:4:{s:1:\"a\";i:2;s:1:\"b\";s:16:\"manage employees\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:7:{i:0;i:3;i:1;i:10;i:2;i:11;i:3;i:1;i:4;i:2;i:5;i:7;i:6;i:4;}}i:2;a:4:{s:1:\"a\";i:3;s:1:\"b\";s:16:\"manage inventory\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:8:{i:0;i:3;i:1;i:5;i:2;i:10;i:3;i:11;i:4;i:1;i:5;i:2;i:6;i:7;i:7;i:8;}}i:3;a:4:{s:1:\"a\";i:4;s:1:\"b\";s:14:\"manage payroll\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:3;i:1;i:10;i:2;i:11;i:3;i:1;i:4;i:2;i:5;i:4;}}i:4;a:4:{s:1:\"a\";i:5;s:1:\"b\";s:16:\"manage purchases\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:3;i:1;i:10;i:2;i:11;i:3;i:1;i:4;i:2;i:5;i:6;}}i:5;a:4:{s:1:\"a\";i:6;s:1:\"b\";s:12:\"manage sales\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:6;}}i:6;a:4:{s:1:\"a\";i:7;s:1:\"b\";s:15:\"manage settings\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:7;a:4:{s:1:\"a\";i:8;s:1:\"b\";s:16:\"manage suppliers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:8;a:4:{s:1:\"a\";i:9;s:1:\"b\";s:16:\"manage transfers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:8;}}i:9;a:4:{s:1:\"a\";i:10;s:1:\"b\";s:15:\"view attendance\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:7:{i:0;i:3;i:1;i:5;i:2;i:10;i:3;i:11;i:4;i:1;i:5;i:2;i:6;i:4;}}i:10;a:4:{s:1:\"a\";i:11;s:1:\"b\";s:15:\"view categories\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:11;a:4:{s:1:\"a\";i:12;s:1:\"b\";s:14:\"view dashboard\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:9:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:7;i:5;i:4;i:6;i:6;i:7;i:8;i:8;i:9;}}i:12;a:4:{s:1:\"a\";i:13;s:1:\"b\";s:14:\"view inventory\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:7;i:5;i:8;}}i:13;a:4:{s:1:\"a\";i:14;s:1:\"b\";s:13:\"view invoices\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:6;i:5;i:9;}}i:14;a:4:{s:1:\"a\";i:15;s:1:\"b\";s:13:\"view products\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:7;i:5;i:8;}}i:15;a:4:{s:1:\"a\";i:16;s:1:\"b\";s:12:\"view reports\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:7:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:7;i:5;i:4;i:6;i:6;}}i:16;a:4:{s:1:\"a\";i:17;s:1:\"b\";s:15:\"view warehouses\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:17;a:4:{s:1:\"a\";i:18;s:1:\"b\";s:14:\"view_employees\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:18;a:4:{s:1:\"a\";i:19;s:1:\"b\";s:16:\"create_employees\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:19;a:4:{s:1:\"a\";i:20;s:1:\"b\";s:16:\"update_employees\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:20;a:4:{s:1:\"a\";i:21;s:1:\"b\";s:16:\"delete_employees\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:21;a:4:{s:1:\"a\";i:22;s:1:\"b\";s:13:\"view_products\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:7;i:5;i:8;}}i:22;a:4:{s:1:\"a\";i:23;s:1:\"b\";s:15:\"create_products\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:7;}}i:23;a:4:{s:1:\"a\";i:24;s:1:\"b\";s:15:\"update_products\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:7;}}i:24;a:4:{s:1:\"a\";i:25;s:1:\"b\";s:15:\"delete_products\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:25;a:4:{s:1:\"a\";i:26;s:1:\"b\";s:14:\"view_customers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:6;i:5;i:9;}}i:26;a:4:{s:1:\"a\";i:27;s:1:\"b\";s:16:\"create_customers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:9;}}i:27;a:4:{s:1:\"a\";i:28;s:1:\"b\";s:16:\"update_customers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:9;}}i:28;a:4:{s:1:\"a\";i:29;s:1:\"b\";s:16:\"delete_customers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:29;a:4:{s:1:\"a\";i:30;s:1:\"b\";s:14:\"view_suppliers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:6;}}i:30;a:4:{s:1:\"a\";i:31;s:1:\"b\";s:16:\"create_suppliers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:31;a:4:{s:1:\"a\";i:32;s:1:\"b\";s:16:\"update_suppliers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:32;a:4:{s:1:\"a\";i:33;s:1:\"b\";s:16:\"delete_suppliers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:33;a:4:{s:1:\"a\";i:34;s:1:\"b\";s:10:\"view_sites\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:34;a:4:{s:1:\"a\";i:35;s:1:\"b\";s:12:\"create_sites\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:35;a:4:{s:1:\"a\";i:36;s:1:\"b\";s:12:\"update_sites\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:36;a:4:{s:1:\"a\";i:37;s:1:\"b\";s:12:\"delete_sites\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:37;a:4:{s:1:\"a\";i:38;s:1:\"b\";s:15:\"department.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;i:5;i:4;}}i:38;a:4:{s:1:\"a\";i:39;s:1:\"b\";s:17:\"department.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;i:5;i:4;}}i:39;a:4:{s:1:\"a\";i:40;s:1:\"b\";s:15:\"department.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;i:5;i:4;}}i:40;a:4:{s:1:\"a\";i:41;s:1:\"b\";s:17:\"department.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;}}i:41;a:4:{s:1:\"a\";i:42;s:1:\"b\";s:16:\"designation.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;i:5;i:4;}}i:42;a:4:{s:1:\"a\";i:43;s:1:\"b\";s:18:\"designation.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;i:5;i:4;}}i:43;a:4:{s:1:\"a\";i:44;s:1:\"b\";s:16:\"designation.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;i:5;i:4;}}i:44;a:4:{s:1:\"a\";i:45;s:1:\"b\";s:18:\"designation.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;}}i:45;a:4:{s:1:\"a\";i:46;s:1:\"b\";s:13:\"employee.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:7:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;i:5;i:7;i:6;i:4;}}i:46;a:4:{s:1:\"a\";i:47;s:1:\"b\";s:15:\"employee.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;i:5;i:4;}}i:47;a:4:{s:1:\"a\";i:48;s:1:\"b\";s:13:\"employee.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;i:5;i:4;}}i:48;a:4:{s:1:\"a\";i:49;s:1:\"b\";s:15:\"employee.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;}}i:49;a:4:{s:1:\"a\";i:50;s:1:\"b\";s:23:\"employee.assign-manager\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:50;a:4:{s:1:\"a\";i:51;s:1:\"b\";s:20:\"employee.assign-role\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:51;a:4:{s:1:\"a\";i:52;s:1:\"b\";s:15:\"view_categories\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:8;}}i:52;a:4:{s:1:\"a\";i:53;s:1:\"b\";s:17:\"create_categories\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:53;a:4:{s:1:\"a\";i:54;s:1:\"b\";s:17:\"update_categories\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:54;a:4:{s:1:\"a\";i:55;s:1:\"b\";s:17:\"delete_categories\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:55;a:4:{s:1:\"a\";i:56;s:1:\"b\";s:15:\"view_attendance\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:56;a:4:{s:1:\"a\";i:57;s:1:\"b\";s:17:\"create_attendance\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:57;a:4:{s:1:\"a\";i:58;s:1:\"b\";s:17:\"update_attendance\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:58;a:4:{s:1:\"a\";i:59;s:1:\"b\";s:14:\"view_inventory\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:7;i:5;i:8;}}i:59;a:4:{s:1:\"a\";i:60;s:1:\"b\";s:16:\"manage_inventory\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:7;i:5;i:8;}}i:60;a:4:{s:1:\"a\";i:61;s:1:\"b\";s:13:\"view_invoices\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:6;i:5;i:9;}}i:61;a:4:{s:1:\"a\";i:62;s:1:\"b\";s:15:\"create_invoices\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:6;i:5;i:9;}}i:62;a:4:{s:1:\"a\";i:63;s:1:\"b\";s:15:\"update_invoices\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:6;}}i:63;a:4:{s:1:\"a\";i:64;s:1:\"b\";s:15:\"delete_invoices\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:64;a:4:{s:1:\"a\";i:65;s:1:\"b\";s:13:\"view_payments\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:6;}}i:65;a:4:{s:1:\"a\";i:66;s:1:\"b\";s:15:\"create_payments\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:6;}}i:66;a:4:{s:1:\"a\";i:67;s:1:\"b\";s:12:\"view_payroll\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;i:5;i:6;}}i:67;a:4:{s:1:\"a\";i:68;s:1:\"b\";s:14:\"manage_payroll\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;i:5;i:6;}}i:68;a:4:{s:1:\"a\";i:69;s:1:\"b\";s:11:\"view_leaves\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:69;a:4:{s:1:\"a\";i:70;s:1:\"b\";s:13:\"create_leaves\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:70;a:4:{s:1:\"a\";i:71;s:1:\"b\";s:17:\"view_sales_orders\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:6;i:5;i:9;}}i:71;a:4:{s:1:\"a\";i:72;s:1:\"b\";s:19:\"create_sales_orders\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:9;}}i:72;a:4:{s:1:\"a\";i:73;s:1:\"b\";s:20:\"view_purchase_orders\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:6;}}i:73;a:4:{s:1:\"a\";i:74;s:1:\"b\";s:22:\"create_purchase_orders\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:74;a:4:{s:1:\"a\";i:75;s:1:\"b\";s:12:\"manage_roles\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:75;a:4:{s:1:\"a\";i:76;s:1:\"b\";s:18:\"manage_permissions\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:76;a:4:{s:1:\"a\";i:77;s:1:\"b\";s:12:\"manage_users\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:77;a:4:{s:1:\"a\";i:78;s:1:\"b\";s:13:\"document.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:78;a:4:{s:1:\"a\";i:79;s:1:\"b\";s:15:\"document.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:79;a:4:{s:1:\"a\";i:80;s:1:\"b\";s:13:\"document.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:80;a:4:{s:1:\"a\";i:81;s:1:\"b\";s:15:\"document.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:81;a:4:{s:1:\"a\";i:82;s:1:\"b\";s:17:\"document.download\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:82;a:4:{s:1:\"a\";i:83;s:1:\"b\";s:16:\"document.preview\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:83;a:4:{s:1:\"a\";i:84;s:1:\"b\";s:22:\"document.manage-expiry\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:84;a:4:{s:1:\"a\";i:85;s:1:\"b\";s:9:\"site.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:12;i:3;i:1;i:4;i:2;}}i:85;a:4:{s:1:\"a\";i:86;s:1:\"b\";s:11:\"site.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:86;a:4:{s:1:\"a\";i:87;s:1:\"b\";s:9:\"site.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:87;a:4:{s:1:\"a\";i:88;s:1:\"b\";s:11:\"site.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:88;a:4:{s:1:\"a\";i:89;s:1:\"b\";s:11:\"site.assign\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:89;a:4:{s:1:\"a\";i:90;s:1:\"b\";s:13:\"site.transfer\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:90;a:4:{s:1:\"a\";i:91;s:1:\"b\";s:17:\"site.history.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:91;a:4:{s:1:\"a\";i:92;s:1:\"b\";s:17:\"delete_attendance\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:92;a:4:{s:1:\"a\";i:93;s:1:\"b\";s:15:\"attendance.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:14:{i:0;i:10;i:1;i:11;i:2;i:12;i:3;i:13;i:4;i:14;i:5;i:15;i:6;i:16;i:7;i:17;i:8;i:19;i:9;i:20;i:10;i:22;i:11;i:1;i:12;i:2;i:13;i:4;}}i:93;a:4:{s:1:\"a\";i:94;s:1:\"b\";s:17:\"attendance.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:10:{i:0;i:10;i:1;i:11;i:2;i:14;i:3;i:15;i:4;i:16;i:5;i:17;i:6;i:22;i:7;i:1;i:8;i:2;i:9;i:4;}}i:94;a:4:{s:1:\"a\";i:95;s:1:\"b\";s:15:\"attendance.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;i:5;i:4;}}i:95;a:4:{s:1:\"a\";i:96;s:1:\"b\";s:17:\"attendance.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;i:5;i:4;}}i:96;a:4:{s:1:\"a\";i:97;s:1:\"b\";s:18:\"attendance.checkin\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:97;a:4:{s:1:\"a\";i:98;s:1:\"b\";s:19:\"attendance.checkout\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:98;a:4:{s:1:\"a\";i:99;s:1:\"b\";s:10:\"shift.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:8:{i:0;i:10;i:1;i:11;i:2;i:12;i:3;i:13;i:4;i:22;i:5;i:1;i:6;i:2;i:7;i:4;}}i:99;a:4:{s:1:\"a\";i:100;s:1:\"b\";s:12:\"shift.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;i:5;i:4;}}i:100;a:4:{s:1:\"a\";i:101;s:1:\"b\";s:10:\"shift.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;i:5;i:4;}}i:101;a:4:{s:1:\"a\";i:102;s:1:\"b\";s:12:\"shift.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;i:5;i:4;}}i:102;a:4:{s:1:\"a\";i:103;s:1:\"b\";s:17:\"daily-report.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:12:{i:0;i:10;i:1;i:11;i:2;i:12;i:3;i:13;i:4;i:14;i:5;i:15;i:6;i:16;i:7;i:17;i:8;i:22;i:9;i:1;i:10;i:2;i:11;i:4;}}i:103;a:4:{s:1:\"a\";i:104;s:1:\"b\";s:19:\"daily-report.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:7:{i:0;i:10;i:1;i:11;i:2;i:12;i:3;i:22;i:4;i:1;i:5;i:2;i:6;i:4;}}i:104;a:4:{s:1:\"a\";i:105;s:1:\"b\";s:17:\"daily-report.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;i:5;i:4;}}i:105;a:4:{s:1:\"a\";i:106;s:1:\"b\";s:19:\"daily-report.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;i:5;i:4;}}i:106;a:4:{s:1:\"a\";i:107;s:1:\"b\";s:19:\"daily-report.submit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:107;a:4:{s:1:\"a\";i:108;s:1:\"b\";s:20:\"daily-report.approve\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:108;a:4:{s:1:\"a\";i:109;s:1:\"b\";s:19:\"daily-report.reject\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:109;a:4:{s:1:\"a\";i:110;s:1:\"b\";s:19:\"daily-report.rework\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:110;a:4:{s:1:\"a\";i:111;s:1:\"b\";s:24:\"daily-report.report.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:111;a:4:{s:1:\"a\";i:112;s:1:\"b\";s:10:\"leave.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;}}i:112;a:4:{s:1:\"a\";i:113;s:1:\"b\";s:12:\"leave.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;}}i:113;a:4:{s:1:\"a\";i:114;s:1:\"b\";s:10:\"leave.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;}}i:114;a:4:{s:1:\"a\";i:115;s:1:\"b\";s:12:\"leave.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;}}i:115;a:4:{s:1:\"a\";i:116;s:1:\"b\";s:13:\"leave.approve\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:116;a:4:{s:1:\"a\";i:117;s:1:\"b\";s:12:\"leave.reject\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:117;a:4:{s:1:\"a\";i:118;s:1:\"b\";s:12:\"leave.cancel\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:118;a:4:{s:1:\"a\";i:119;s:1:\"b\";s:18:\"leave.balance.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:119;a:4:{s:1:\"a\";i:120;s:1:\"b\";s:15:\"leave-type.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:120;a:4:{s:1:\"a\";i:121;s:1:\"b\";s:17:\"leave-type.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:121;a:4:{s:1:\"a\";i:122;s:1:\"b\";s:15:\"leave-type.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:122;a:4:{s:1:\"a\";i:123;s:1:\"b\";s:17:\"leave-type.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:123;a:4:{s:1:\"a\";i:124;s:1:\"b\";s:9:\"user.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:23;}}i:124;a:4:{s:1:\"a\";i:125;s:1:\"b\";s:11:\"user.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:23;}}i:125;a:4:{s:1:\"a\";i:126;s:1:\"b\";s:9:\"user.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:23;}}i:126;a:4:{s:1:\"a\";i:127;s:1:\"b\";s:11:\"user.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:10;i:1;i:23;}}i:127;a:4:{s:1:\"a\";i:128;s:1:\"b\";s:9:\"role.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:23;}}i:128;a:4:{s:1:\"a\";i:129;s:1:\"b\";s:11:\"role.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:23;}}i:129;a:4:{s:1:\"a\";i:130;s:1:\"b\";s:9:\"role.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:23;}}i:130;a:4:{s:1:\"a\";i:131;s:1:\"b\";s:11:\"role.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:23;}}i:131;a:4:{s:1:\"a\";i:132;s:1:\"b\";s:15:\"permission.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:23;}}i:132;a:4:{s:1:\"a\";i:133;s:1:\"b\";s:17:\"permission.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:23;}}i:133;a:4:{s:1:\"a\";i:134;s:1:\"b\";s:15:\"permission.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:23;}}i:134;a:4:{s:1:\"a\";i:135;s:1:\"b\";s:17:\"permission.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:23;}}i:135;a:4:{s:1:\"a\";i:136;s:1:\"b\";s:14:\"inventory.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:12;i:3;i:21;}}i:136;a:4:{s:1:\"a\";i:137;s:1:\"b\";s:16:\"inventory.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:21;}}i:137;a:4:{s:1:\"a\";i:138;s:1:\"b\";s:14:\"inventory.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:21;}}i:138;a:4:{s:1:\"a\";i:139;s:1:\"b\";s:16:\"inventory.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:21;}}i:139;a:4:{s:1:\"a\";i:140;s:1:\"b\";s:14:\"warehouse.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:21;}}i:140;a:4:{s:1:\"a\";i:141;s:1:\"b\";s:16:\"warehouse.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:21;}}i:141;a:4:{s:1:\"a\";i:142;s:1:\"b\";s:14:\"warehouse.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:21;}}i:142;a:4:{s:1:\"a\";i:143;s:1:\"b\";s:16:\"warehouse.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:21;}}i:143;a:4:{s:1:\"a\";i:144;s:1:\"b\";s:12:\"product.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:12;i:3;i:19;i:4;i:20;i:5;i:21;}}i:144;a:4:{s:1:\"a\";i:145;s:1:\"b\";s:14:\"product.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:10;i:1;i:11;}}i:145;a:4:{s:1:\"a\";i:146;s:1:\"b\";s:12:\"product.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:10;i:1;i:11;}}i:146;a:4:{s:1:\"a\";i:147;s:1:\"b\";s:14:\"product.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:10;i:1;i:11;}}i:147;a:4:{s:1:\"a\";i:148;s:1:\"b\";s:13:\"customer.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:18;}}i:148;a:4:{s:1:\"a\";i:149;s:1:\"b\";s:15:\"customer.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:10;i:1;i:11;}}i:149;a:4:{s:1:\"a\";i:150;s:1:\"b\";s:13:\"customer.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:10;i:1;i:11;}}i:150;a:4:{s:1:\"a\";i:151;s:1:\"b\";s:15:\"customer.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:10;i:1;i:11;}}i:151;a:4:{s:1:\"a\";i:152;s:1:\"b\";s:16:\"sales-order.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:18;}}i:152;a:4:{s:1:\"a\";i:153;s:1:\"b\";s:18:\"sales-order.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:10;i:1;i:11;}}i:153;a:4:{s:1:\"a\";i:154;s:1:\"b\";s:16:\"sales-order.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:10;i:1;i:11;}}i:154;a:4:{s:1:\"a\";i:155;s:1:\"b\";s:18:\"sales-order.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:10;i:1;i:11;}}i:155;a:4:{s:1:\"a\";i:156;s:1:\"b\";s:12:\"invoice.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:18;}}i:156;a:4:{s:1:\"a\";i:157;s:1:\"b\";s:14:\"invoice.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:18;}}i:157;a:4:{s:1:\"a\";i:158;s:1:\"b\";s:12:\"invoice.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:18;}}i:158;a:4:{s:1:\"a\";i:159;s:1:\"b\";s:14:\"invoice.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:18;}}i:159;a:4:{s:1:\"a\";i:160;s:1:\"b\";s:19:\"purchase-order.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:18;}}i:160;a:4:{s:1:\"a\";i:161;s:1:\"b\";s:21:\"purchase-order.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:10;i:1;i:11;}}i:161;a:4:{s:1:\"a\";i:162;s:1:\"b\";s:19:\"purchase-order.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:10;i:1;i:11;}}i:162;a:4:{s:1:\"a\";i:163;s:1:\"b\";s:21:\"purchase-order.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:10;i:1;i:11;}}i:163;a:4:{s:1:\"a\";i:164;s:1:\"b\";s:11:\"report.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:18;i:3;i:22;}}i:164;a:4:{s:1:\"a\";i:165;s:1:\"b\";s:13:\"report.export\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:18;}}i:165;a:4:{s:1:\"a\";i:166;s:1:\"b\";s:14:\"dashboard.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:14:{i:0;i:10;i:1;i:11;i:2;i:12;i:3;i:13;i:4;i:14;i:5;i:15;i:6;i:16;i:7;i:17;i:8;i:18;i:9;i:19;i:10;i:20;i:11;i:21;i:12;i:22;i:13;i:23;}}i:166;a:4:{s:1:\"a\";i:167;s:1:\"b\";s:12:\"payroll.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:18;i:3;i:22;i:4;i:6;}}i:167;a:4:{s:1:\"a\";i:168;s:1:\"b\";s:14:\"payroll.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:22;}}i:168;a:4:{s:1:\"a\";i:169;s:1:\"b\";s:16:\"payroll.generate\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:6;}}i:169;a:4:{s:1:\"a\";i:170;s:1:\"b\";s:15:\"payroll.approve\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:18;}}i:170;a:4:{s:1:\"a\";i:171;s:1:\"b\";s:12:\"payroll.lock\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:18;}}i:171;a:4:{s:1:\"a\";i:172;s:1:\"b\";s:11:\"payroll.pay\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:18;}}i:172;a:4:{s:1:\"a\";i:173;s:1:\"b\";s:14:\"payroll.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:22;}}i:173;a:4:{s:1:\"a\";i:174;s:1:\"b\";s:12:\"payslip.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:22;}}i:174;a:4:{s:1:\"a\";i:175;s:1:\"b\";s:16:\"payslip.download\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:22;}}i:175;a:4:{s:1:\"a\";i:176;s:1:\"b\";s:21:\"salary-structure.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:6;}}i:176;a:4:{s:1:\"a\";i:177;s:1:\"b\";s:23:\"salary-structure.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:22;}}i:177;a:4:{s:1:\"a\";i:178;s:1:\"b\";s:21:\"salary-structure.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:22;}}i:178;a:4:{s:1:\"a\";i:179;s:1:\"b\";s:23:\"salary-structure.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:22;}}i:179;a:4:{s:1:\"a\";i:180;s:1:\"b\";s:13:\"category.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:21;}}i:180;a:4:{s:1:\"a\";i:181;s:1:\"b\";s:15:\"category.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:21;}}i:181;a:4:{s:1:\"a\";i:182;s:1:\"b\";s:13:\"category.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:21;}}i:182;a:4:{s:1:\"a\";i:183;s:1:\"b\";s:15:\"category.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:21;}}i:183;a:4:{s:1:\"a\";i:184;s:1:\"b\";s:13:\"supplier.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:18;}}i:184;a:4:{s:1:\"a\";i:185;s:1:\"b\";s:15:\"supplier.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:10;i:1;i:11;}}i:185;a:4:{s:1:\"a\";i:186;s:1:\"b\";s:13:\"supplier.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:10;i:1;i:11;}}i:186;a:4:{s:1:\"a\";i:187;s:1:\"b\";s:15:\"supplier.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:10;i:1;i:11;}}i:187;a:4:{s:1:\"a\";i:188;s:1:\"b\";s:22:\"attendance.geo.checkin\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:188;a:4:{s:1:\"a\";i:189;s:1:\"b\";s:23:\"attendance.geo.checkout\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:189;a:4:{s:1:\"a\";i:190;s:1:\"b\";s:24:\"attendance.location.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:190;a:4:{s:1:\"a\";i:191;s:1:\"b\";s:25:\"attendance.location.audit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}}s:5:\"roles\";a:23:{i:0;a:3:{s:1:\"a\";i:3;s:1:\"b\";s:7:\"Manager\";s:1:\"c\";s:3:\"web\";}i:1;a:3:{s:1:\"a\";i:5;s:1:\"b\";s:8:\"Employee\";s:1:\"c\";s:3:\"web\";}i:2;a:3:{s:1:\"a\";i:10;s:1:\"b\";s:12:\"System Admin\";s:1:\"c\";s:3:\"web\";}i:3;a:3:{s:1:\"a\";i:11;s:1:\"b\";s:15:\"General Manager\";s:1:\"c\";s:3:\"web\";}i:4;a:3:{s:1:\"a\";i:1;s:1:\"b\";s:11:\"Super Admin\";s:1:\"c\";s:3:\"web\";}i:5;a:3:{s:1:\"a\";i:2;s:1:\"b\";s:5:\"Admin\";s:1:\"c\";s:3:\"web\";}i:6;a:3:{s:1:\"a\";i:9;s:1:\"b\";s:15:\"Sales Executive\";s:1:\"c\";s:3:\"web\";}i:7;a:3:{s:1:\"a\";i:7;s:1:\"b\";s:17:\"Warehouse Manager\";s:1:\"c\";s:3:\"web\";}i:8;a:3:{s:1:\"a\";i:4;s:1:\"b\";s:2:\"HR\";s:1:\"c\";s:3:\"web\";}i:9;a:3:{s:1:\"a\";i:8;s:1:\"b\";s:15:\"Inventory Staff\";s:1:\"c\";s:3:\"web\";}i:10;a:3:{s:1:\"a\";i:6;s:1:\"b\";s:10:\"Accountant\";s:1:\"c\";s:3:\"web\";}i:11;a:3:{s:1:\"a\";i:22;s:1:\"b\";s:10:\"HR Manager\";s:1:\"c\";s:3:\"web\";}i:12;a:3:{s:1:\"a\";i:12;s:1:\"b\";s:18:\"Production Manager\";s:1:\"c\";s:3:\"web\";}i:13;a:3:{s:1:\"a\";i:13;s:1:\"b\";s:19:\"Workshop Supervisor\";s:1:\"c\";s:3:\"web\";}i:14;a:3:{s:1:\"a\";i:14;s:1:\"b\";s:6:\"Fitter\";s:1:\"c\";s:3:\"web\";}i:15;a:3:{s:1:\"a\";i:15;s:1:\"b\";s:6:\"Welder\";s:1:\"c\";s:3:\"web\";}i:16;a:3:{s:1:\"a\";i:16;s:1:\"b\";s:11:\"Electrician\";s:1:\"c\";s:3:\"web\";}i:17;a:3:{s:1:\"a\";i:17;s:1:\"b\";s:6:\"Helper\";s:1:\"c\";s:3:\"web\";}i:18;a:3:{s:1:\"a\";i:19;s:1:\"b\";s:14:\"Design Manager\";s:1:\"c\";s:3:\"web\";}i:19;a:3:{s:1:\"a\";i:20;s:1:\"b\";s:8:\"Designer\";s:1:\"c\";s:3:\"web\";}i:20;a:3:{s:1:\"a\";i:23;s:1:\"b\";s:10:\"IT Manager\";s:1:\"c\";s:3:\"web\";}i:21;a:3:{s:1:\"a\";i:21;s:1:\"b\";s:13:\"Store Manager\";s:1:\"c\";s:3:\"web\";}i:22;a:3:{s:1:\"a\";i:18;s:1:\"b\";s:15:\"Finance Manager\";s:1:\"c\";s:3:\"web\";}}}', 1781857702);
 
 -- --------------------------------------------------------
 
@@ -245,6 +256,609 @@ CREATE TABLE `daily_report_histories` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `dashboard_widgets`
+--
+
+CREATE TABLE `dashboard_widgets` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `widget_key` varchar(255) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `type` varchar(255) NOT NULL,
+  `icon` varchar(255) DEFAULT NULL,
+  `chart_type` varchar(255) DEFAULT NULL,
+  `config` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`config`)),
+  `permission` varchar(255) DEFAULT NULL,
+  `order` int(11) NOT NULL DEFAULT 0,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `dashboard_widgets`
+--
+
+INSERT INTO `dashboard_widgets` (`id`, `widget_key`, `name`, `type`, `icon`, `chart_type`, `config`, `permission`, `order`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 'total_employees', 'Total Employees', 'card', 'Users', NULL, NULL, 'employee.view', 1, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(2, 'present_today', 'Present Today', 'card', 'UserCheck', NULL, NULL, 'attendance.view', 2, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(3, 'absent_today', 'Absent Today', 'card', 'UserX', NULL, NULL, 'attendance.view', 3, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(4, 'employees_on_leave', 'On Leave', 'card', 'UserMinus', NULL, NULL, 'attendance.view', 4, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(5, 'active_sites', 'Active Sites', 'card', 'Building2', NULL, NULL, 'site.view', 5, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(6, 'inventory_value', 'Inventory Value', 'card', 'Package', NULL, NULL, 'inventory.view', 6, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(7, 'low_stock', 'Low Stock Items', 'card', 'AlertTriangle', NULL, NULL, 'inventory.view', 7, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(8, 'out_of_stock', 'Out of Stock', 'card', 'XCircle', NULL, NULL, 'inventory.view', 8, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(9, 'revenue', 'Revenue', 'card', 'TrendingUp', NULL, NULL, 'invoice.view', 9, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(10, 'expenses', 'Expenses', 'card', 'TrendingDown', NULL, NULL, 'purchase-order.view', 10, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(11, 'payroll_cost', 'Payroll Cost', 'card', 'DollarSign', NULL, NULL, 'payroll.view', 11, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(12, 'pending_approvals', 'Pending Approvals', 'card', 'ClipboardList', NULL, NULL, NULL, 12, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(13, 'new_joiners', 'New Joiners', 'card', 'UserPlus', NULL, NULL, 'employee.view', 13, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(14, 'pending_leave_requests', 'Pending Leave Requests', 'card', 'CalendarClock', NULL, NULL, 'leave.view', 14, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(15, 'pending_dpr_approvals', 'Pending DPR Approvals', 'card', 'FileText', NULL, NULL, 'daily-report.approve', 15, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(16, 'document_expiry', 'Document Expiry', 'card', 'FileWarning', NULL, NULL, NULL, 16, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(17, 'salary_processed', 'Salary Processed', 'card', 'Percent', NULL, NULL, 'payroll.view', 17, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(18, 'pending_payroll', 'Draft Payrolls', 'card', 'Clock', NULL, NULL, 'payroll.view', 18, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(19, 'approved_payroll', 'Approved Payroll', 'card', 'CheckCircle', NULL, NULL, 'payroll.approve', 19, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(20, 'paid_payroll', 'Paid Payroll', 'card', 'CreditCard', NULL, NULL, 'payroll.view', 20, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(21, 'payroll_records', 'Payroll Records', 'card', 'Database', NULL, NULL, 'payroll.view', 21, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(22, 'payslips', 'Payslips', 'card', 'FileText', NULL, NULL, 'payslip.view', 22, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(23, 'pending_payments', 'Pending Payments', 'card', 'Wallet', NULL, NULL, 'invoice.view', 23, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(24, 'production_workforce', 'Production Workforce', 'card', 'HardHat', NULL, NULL, NULL, 24, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(25, 'site_productivity', 'Site Productivity', 'card', 'TrendingUp', NULL, NULL, NULL, 25, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(26, 'assigned_employees', 'Assigned Employees', 'card', 'Users', NULL, NULL, NULL, 26, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(27, 'attendance_today', 'Attendance Today', 'card', 'ClipboardCheck', NULL, NULL, NULL, 27, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(28, 'completed_work_reports', 'Completed Reports', 'card', 'CheckSquare', NULL, NULL, NULL, 28, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(29, 'pending_work_reports', 'Pending Reports', 'card', 'Square', NULL, NULL, NULL, 29, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(30, 'design_projects', 'Design Projects', 'card', 'Palette', NULL, NULL, NULL, 30, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(31, 'assigned_designers', 'Design Team', 'card', 'Users', NULL, NULL, NULL, 31, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(32, 'project_progress', 'Project Progress', 'card', 'BarChart3', NULL, NULL, NULL, 32, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(33, 'my_tasks', 'Today\'s Tasks', 'card', 'ListChecks', NULL, NULL, NULL, 33, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(34, 'my_projects', 'My Sites', 'card', 'Building2', NULL, NULL, NULL, 34, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(35, 'my_attendance', 'My Attendance', 'card', 'Calendar', NULL, NULL, NULL, 35, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(36, 'my_dpr', 'My DPRs', 'card', 'FileText', NULL, NULL, NULL, 36, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(37, 'leave_balance', 'Leave Balance', 'card', 'CalendarDays', NULL, NULL, NULL, 37, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(38, 'today_attendance', 'Today\'s Attendance', 'card', 'Fingerprint', NULL, NULL, NULL, 38, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(39, 'current_site', 'Current Site', 'card', 'MapPin', NULL, NULL, NULL, 39, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(40, 'pending_leave_requests_mine', 'My Leave Requests', 'card', 'Clock', NULL, NULL, NULL, 40, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(41, 'active_users', 'Active Users', 'card', 'Users', NULL, NULL, NULL, 41, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(42, 'system_health', 'System Health', 'card', 'Activity', NULL, NULL, NULL, 42, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(43, 'login_statistics', 'Login Statistics', 'card', 'LogIn', NULL, NULL, NULL, 43, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(44, 'audit_logs', 'Audit Logs', 'card', 'ScrollText', NULL, NULL, NULL, 44, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(45, 'failed_logins', 'Failed Logins', 'card', 'ShieldAlert', NULL, NULL, NULL, 45, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(46, 'permission_changes', 'Permission Changes', 'card', 'Shield', NULL, NULL, NULL, 46, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(47, 'server_status', 'Server Status', 'card', 'Server', NULL, NULL, NULL, 47, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(48, 'recent_activity', 'Recent Activity', 'card', 'RefreshCw', NULL, NULL, NULL, 48, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(49, 'employee_summary', 'Employee Summary', 'card', 'Users', NULL, NULL, 'employee.view', 49, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(50, 'attendance_summary', 'Attendance Summary', 'card', 'ClipboardCheck', NULL, NULL, 'attendance.view', 50, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(51, 'leave_summary', 'Leave Summary', 'card', 'CalendarClock', NULL, NULL, 'leave.view', 51, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(52, 'dpr_summary', 'DPR Summary', 'card', 'FileText', NULL, NULL, NULL, 52, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(53, 'payroll_summary', 'Payroll Summary', 'card', 'DollarSign', NULL, NULL, 'payroll.view', 53, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(54, 'company_overview', 'Company Overview', 'card', 'Briefcase', NULL, NULL, NULL, 54, 1, '2026-06-18 06:14:11', '2026-06-18 06:14:11'),
+(55, 'site_performance', 'Site Performance', 'card', 'BarChart3', NULL, NULL, NULL, 55, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(56, 'department_performance', 'Department Performance', 'card', 'Building', NULL, NULL, NULL, 56, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(57, 'pending_transfers', 'Pending Transfers', 'card', 'ArrowLeftRight', NULL, NULL, NULL, 57, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(58, 'incoming_stock', 'Incoming Stock', 'card', 'Truck', NULL, NULL, NULL, 58, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(59, 'user_activity', 'User Activity', 'card', 'Activity', NULL, NULL, NULL, 59, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(60, 'attendance_trend', 'Attendance Trend', 'chart', 'BarChart3', 'area', NULL, 'attendance.view', 1, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(61, 'payroll_trend', 'Payroll Trend', 'chart', 'TrendingUp', 'area', NULL, 'payroll.view', 2, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(62, 'inventory_trend', 'Inventory Trend', 'chart', 'Package', 'area', NULL, 'inventory.view', 3, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(63, 'sales_trend', 'Sales Trend', 'chart', 'TrendingUp', 'area', NULL, 'sales-order.view', 4, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(64, 'revenue_vs_expenses', 'Revenue vs Expenses', 'chart', 'BarChart3', 'bar', NULL, NULL, 5, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(65, 'leave_trend', 'Leave Trend', 'chart', 'CalendarClock', 'line', NULL, 'leave.view', 6, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(66, 'employee_growth', 'Employee Growth', 'chart', 'UserPlus', 'area', NULL, 'employee.view', 7, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(67, 'department_headcount', 'Department Headcount', 'chart', 'Building2', 'bar', NULL, NULL, 8, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(68, 'department_salary_cost', 'Salary Cost by Dept', 'chart', 'DollarSign', 'bar', NULL, 'payroll.view', 9, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(69, 'expense_trend', 'Expense Trend', 'chart', 'TrendingDown', 'area', NULL, NULL, 10, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(70, 'attendance_by_site', 'Attendance by Site', 'chart', 'Building2', 'bar', NULL, NULL, 11, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(71, 'dpr_trend', 'DPR Trend', 'chart', 'FileText', 'line', NULL, NULL, 12, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(72, 'workforce_utilization', 'Workforce Utilization', 'chart', 'PieChart', 'pie', NULL, NULL, 13, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(73, 'project_completion', 'Project Completion', 'chart', 'PieChart', 'pie', NULL, NULL, 14, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(74, 'designer_productivity', 'Designer Productivity', 'chart', 'BarChart3', 'bar', NULL, NULL, 15, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(75, 'inventory_movement', 'Inventory Movement', 'chart', 'ArrowLeftRight', 'bar', NULL, NULL, 16, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(76, 'warehouse_utilization', 'Warehouse Utilization', 'chart', 'PieChart', 'pie', NULL, NULL, 17, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(77, 'category_distribution', 'Category Distribution', 'chart', 'PieChart', 'pie', NULL, NULL, 18, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(78, 'add_employee', 'Add Employee', 'quick_action', 'UserPlus', NULL, NULL, 'employee.create', 1, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(79, 'approve_leave', 'Approve Leave', 'quick_action', 'CheckCircle', NULL, NULL, 'leave.approve', 2, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(80, 'generate_payroll', 'Generate Payroll', 'quick_action', 'DollarSign', NULL, NULL, 'payroll.generate', 3, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(81, 'create_purchase_order', 'Create Purchase Order', 'quick_action', 'ShoppingCart', NULL, NULL, 'purchase-order.create', 4, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(82, 'create_sales_order', 'Create Sales Order', 'quick_action', 'Receipt', NULL, NULL, 'sales-order.create', 5, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(83, 'manage_users', 'Manage Users', 'quick_action', 'Users', NULL, NULL, 'user.view', 6, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(84, 'manage_roles', 'Manage Roles', 'quick_action', 'Shield', NULL, NULL, 'role.view', 7, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(85, 'manage_permissions', 'Manage Permissions', 'quick_action', 'Key', NULL, NULL, 'permission.view', 8, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(86, 'system_settings', 'System Settings', 'quick_action', 'Settings', NULL, NULL, NULL, 9, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(87, 'assign_site', 'Assign Site', 'quick_action', 'MapPin', NULL, NULL, 'site.assign', 10, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(88, 'upload_documents', 'Upload Documents', 'quick_action', 'Upload', NULL, NULL, NULL, 11, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(89, 'lock_payroll', 'Lock Payroll', 'quick_action', 'Lock', NULL, NULL, 'payroll.lock', 12, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(90, 'export_payslips', 'Export Payslips', 'quick_action', 'Download', NULL, NULL, NULL, 13, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(91, 'generate_payslip', 'Generate Payslip', 'quick_action', 'FileText', NULL, NULL, 'payslip.view', 14, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(92, 'export_payroll', 'Export Payroll', 'quick_action', 'DownloadCloud', NULL, NULL, NULL, 15, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(93, 'approve_dpr', 'Approve DPR', 'quick_action', 'ClipboardCheck', NULL, NULL, 'daily-report.approve', 16, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(94, 'view_team_attendance', 'View Team Attendance', 'quick_action', 'Users', NULL, NULL, NULL, 17, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(95, 'transfer_employee', 'Transfer Employee', 'quick_action', 'ArrowLeftRight', NULL, NULL, 'site.transfer', 18, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(96, 'review_attendance', 'Review Attendance', 'quick_action', 'ClipboardList', NULL, NULL, NULL, 19, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(97, 'submit_dpr', 'Submit DPR', 'quick_action', 'FilePlus', NULL, NULL, NULL, 20, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(98, 'apply_leave', 'Apply Leave', 'quick_action', 'CalendarPlus', NULL, NULL, NULL, 21, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(99, 'check_attendance', 'Check Attendance', 'quick_action', 'Fingerprint', NULL, NULL, NULL, 22, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(100, 'add_product', 'Add Product', 'quick_action', 'PackagePlus', NULL, NULL, 'product.create', 23, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(101, 'transfer_stock', 'Transfer Stock', 'quick_action', 'ArrowLeftRight', NULL, NULL, NULL, 24, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(102, 'stock_adjustment', 'Stock Adjustment', 'quick_action', 'ClipboardList', NULL, NULL, NULL, 25, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(103, 'manage_access', 'Manage Access', 'quick_action', 'Shield', NULL, NULL, NULL, 26, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(104, 'view_logs', 'View Logs', 'quick_action', 'ScrollText', NULL, NULL, NULL, 27, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(105, 'check_in', 'Check In', 'quick_action', 'LogIn', NULL, NULL, NULL, 28, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(106, 'check_out', 'Check Out', 'quick_action', 'LogOut', NULL, NULL, NULL, 29, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(107, 'download_payslip', 'Download Payslip', 'quick_action', 'Download', NULL, NULL, NULL, 30, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(108, 'low_stock_alert', 'Low Stock Alert', 'alert', 'AlertTriangle', NULL, '{\"severity\":\"warning\"}', 'inventory.view', 1, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(109, 'document_expiry_alert', 'Document Expiry Alert', 'alert', 'FileWarning', NULL, '{\"severity\":\"warning\"}', NULL, 2, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(110, 'pending_payroll_alert', 'Pending Payroll Alert', 'alert', 'Clock', NULL, '{\"severity\":\"info\"}', 'payroll.view', 3, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(111, 'absenteeism_alert', 'High Absenteeism Alert', 'alert', 'UserX', NULL, '{\"severity\":\"warning\"}', 'attendance.view', 4, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(112, 'attendance_reminder', 'Attendance Reminder', 'alert', 'Bell', NULL, '{\"severity\":\"info\"}', NULL, 5, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(113, 'dpr_reminder', 'DPR Submission Reminder', 'alert', 'Bell', NULL, '{\"severity\":\"info\"}', NULL, 6, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(114, 'leave_expiry_alert', 'Leave Balance Expiry', 'alert', 'CalendarClock', NULL, '{\"severity\":\"info\"}', NULL, 7, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(115, 'site_delays_alert', 'Site Delays', 'alert', 'Clock', NULL, '{\"severity\":\"warning\"}', NULL, 8, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(116, 'server_alert', 'Server Alert', 'alert', 'AlertCircle', NULL, '{\"severity\":\"critical\"}', NULL, 9, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `dashboard_widget_designation`
+--
+
+CREATE TABLE `dashboard_widget_designation` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `dashboard_widget_id` bigint(20) UNSIGNED NOT NULL,
+  `designation_id` bigint(20) UNSIGNED NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `dashboard_widget_designation`
+--
+
+INSERT INTO `dashboard_widget_designation` (`id`, `dashboard_widget_id`, `designation_id`, `created_at`, `updated_at`) VALUES
+(1, 1, 1, NULL, NULL),
+(2, 1, 2, NULL, NULL),
+(3, 1, 3, NULL, NULL),
+(4, 1, 4, NULL, NULL),
+(5, 1, 16, NULL, NULL),
+(6, 2, 1, NULL, NULL),
+(7, 2, 2, NULL, NULL),
+(8, 2, 3, NULL, NULL),
+(9, 2, 4, NULL, NULL),
+(10, 2, 5, NULL, NULL),
+(11, 2, 16, NULL, NULL),
+(12, 3, 1, NULL, NULL),
+(13, 3, 2, NULL, NULL),
+(14, 3, 3, NULL, NULL),
+(15, 3, 4, NULL, NULL),
+(16, 3, 5, NULL, NULL),
+(17, 3, 16, NULL, NULL),
+(18, 4, 1, NULL, NULL),
+(19, 4, 2, NULL, NULL),
+(20, 4, 3, NULL, NULL),
+(21, 4, 4, NULL, NULL),
+(22, 4, 16, NULL, NULL),
+(23, 5, 1, NULL, NULL),
+(24, 5, 2, NULL, NULL),
+(25, 5, 3, NULL, NULL),
+(26, 5, 4, NULL, NULL),
+(27, 5, 5, NULL, NULL),
+(28, 5, 6, NULL, NULL),
+(29, 5, 13, NULL, NULL),
+(30, 6, 1, NULL, NULL),
+(31, 6, 2, NULL, NULL),
+(32, 6, 3, NULL, NULL),
+(33, 6, 15, NULL, NULL),
+(34, 7, 15, NULL, NULL),
+(35, 7, 5, NULL, NULL),
+(36, 7, 3, NULL, NULL),
+(37, 7, 1, NULL, NULL),
+(38, 8, 15, NULL, NULL),
+(39, 8, 5, NULL, NULL),
+(40, 9, 1, NULL, NULL),
+(41, 9, 2, NULL, NULL),
+(42, 9, 3, NULL, NULL),
+(43, 9, 4, NULL, NULL),
+(44, 9, 11, NULL, NULL),
+(45, 10, 1, NULL, NULL),
+(46, 10, 2, NULL, NULL),
+(47, 10, 3, NULL, NULL),
+(48, 10, 4, NULL, NULL),
+(49, 10, 11, NULL, NULL),
+(50, 10, 12, NULL, NULL),
+(51, 11, 1, NULL, NULL),
+(52, 11, 2, NULL, NULL),
+(53, 11, 3, NULL, NULL),
+(54, 11, 11, NULL, NULL),
+(55, 11, 16, NULL, NULL),
+(56, 12, 1, NULL, NULL),
+(57, 12, 3, NULL, NULL),
+(58, 12, 4, NULL, NULL),
+(59, 12, 5, NULL, NULL),
+(60, 12, 11, NULL, NULL),
+(61, 12, 16, NULL, NULL),
+(62, 12, 13, NULL, NULL),
+(63, 13, 16, NULL, NULL),
+(64, 13, 1, NULL, NULL),
+(65, 13, 3, NULL, NULL),
+(66, 14, 16, NULL, NULL),
+(67, 14, 1, NULL, NULL),
+(68, 14, 3, NULL, NULL),
+(69, 14, 4, NULL, NULL),
+(70, 14, 5, NULL, NULL),
+(71, 15, 5, NULL, NULL),
+(72, 15, 6, NULL, NULL),
+(73, 15, 1, NULL, NULL),
+(74, 15, 3, NULL, NULL),
+(75, 15, 4, NULL, NULL),
+(76, 16, 16, NULL, NULL),
+(77, 16, 3, NULL, NULL),
+(78, 16, 1, NULL, NULL),
+(79, 17, 11, NULL, NULL),
+(80, 17, 12, NULL, NULL),
+(81, 17, 3, NULL, NULL),
+(82, 17, 1, NULL, NULL),
+(83, 18, 11, NULL, NULL),
+(84, 18, 12, NULL, NULL),
+(85, 18, 3, NULL, NULL),
+(86, 18, 1, NULL, NULL),
+(87, 19, 11, NULL, NULL),
+(88, 19, 3, NULL, NULL),
+(89, 19, 1, NULL, NULL),
+(90, 20, 11, NULL, NULL),
+(91, 20, 3, NULL, NULL),
+(92, 20, 1, NULL, NULL),
+(93, 21, 11, NULL, NULL),
+(94, 21, 12, NULL, NULL),
+(95, 21, 16, NULL, NULL),
+(96, 22, 11, NULL, NULL),
+(97, 22, 12, NULL, NULL),
+(98, 23, 11, NULL, NULL),
+(99, 23, 12, NULL, NULL),
+(100, 24, 5, NULL, NULL),
+(101, 24, 6, NULL, NULL),
+(102, 24, 4, NULL, NULL),
+(103, 25, 5, NULL, NULL),
+(104, 25, 6, NULL, NULL),
+(105, 25, 4, NULL, NULL),
+(106, 26, 6, NULL, NULL),
+(107, 26, 5, NULL, NULL),
+(108, 27, 7, NULL, NULL),
+(109, 27, 8, NULL, NULL),
+(110, 27, 9, NULL, NULL),
+(111, 27, 10, NULL, NULL),
+(112, 27, 6, NULL, NULL),
+(113, 27, 14, NULL, NULL),
+(114, 28, 7, NULL, NULL),
+(115, 28, 8, NULL, NULL),
+(116, 28, 9, NULL, NULL),
+(117, 28, 10, NULL, NULL),
+(118, 28, 6, NULL, NULL),
+(119, 28, 14, NULL, NULL),
+(120, 29, 7, NULL, NULL),
+(121, 29, 8, NULL, NULL),
+(122, 29, 9, NULL, NULL),
+(123, 29, 10, NULL, NULL),
+(124, 29, 6, NULL, NULL),
+(125, 29, 14, NULL, NULL),
+(126, 30, 13, NULL, NULL),
+(127, 30, 14, NULL, NULL),
+(128, 31, 13, NULL, NULL),
+(129, 32, 13, NULL, NULL),
+(130, 32, 14, NULL, NULL),
+(131, 33, 7, NULL, NULL),
+(132, 33, 8, NULL, NULL),
+(133, 33, 9, NULL, NULL),
+(134, 33, 10, NULL, NULL),
+(135, 33, 6, NULL, NULL),
+(136, 33, 14, NULL, NULL),
+(137, 34, 7, NULL, NULL),
+(138, 34, 8, NULL, NULL),
+(139, 34, 9, NULL, NULL),
+(140, 34, 10, NULL, NULL),
+(141, 34, 6, NULL, NULL),
+(142, 35, 7, NULL, NULL),
+(143, 35, 8, NULL, NULL),
+(144, 35, 9, NULL, NULL),
+(145, 35, 10, NULL, NULL),
+(146, 35, 6, NULL, NULL),
+(147, 35, 14, NULL, NULL),
+(148, 36, 7, NULL, NULL),
+(149, 36, 8, NULL, NULL),
+(150, 36, 9, NULL, NULL),
+(151, 36, 10, NULL, NULL),
+(152, 36, 6, NULL, NULL),
+(153, 36, 14, NULL, NULL),
+(154, 37, 7, NULL, NULL),
+(155, 37, 8, NULL, NULL),
+(156, 37, 9, NULL, NULL),
+(157, 37, 10, NULL, NULL),
+(158, 37, 6, NULL, NULL),
+(159, 37, 14, NULL, NULL),
+(160, 38, 7, NULL, NULL),
+(161, 38, 8, NULL, NULL),
+(162, 38, 9, NULL, NULL),
+(163, 38, 10, NULL, NULL),
+(164, 38, 6, NULL, NULL),
+(165, 38, 14, NULL, NULL),
+(166, 39, 7, NULL, NULL),
+(167, 39, 8, NULL, NULL),
+(168, 39, 9, NULL, NULL),
+(169, 39, 10, NULL, NULL),
+(170, 39, 6, NULL, NULL),
+(171, 40, 7, NULL, NULL),
+(172, 40, 8, NULL, NULL),
+(173, 40, 9, NULL, NULL),
+(174, 40, 10, NULL, NULL),
+(175, 40, 6, NULL, NULL),
+(176, 40, 14, NULL, NULL),
+(177, 41, 17, NULL, NULL),
+(178, 41, 2, NULL, NULL),
+(179, 41, 1, NULL, NULL),
+(180, 42, 17, NULL, NULL),
+(181, 42, 2, NULL, NULL),
+(182, 42, 1, NULL, NULL),
+(183, 43, 17, NULL, NULL),
+(184, 43, 2, NULL, NULL),
+(185, 43, 1, NULL, NULL),
+(186, 44, 17, NULL, NULL),
+(187, 44, 2, NULL, NULL),
+(188, 44, 1, NULL, NULL),
+(189, 45, 17, NULL, NULL),
+(190, 45, 2, NULL, NULL),
+(191, 45, 1, NULL, NULL),
+(192, 46, 17, NULL, NULL),
+(193, 46, 2, NULL, NULL),
+(194, 46, 1, NULL, NULL),
+(195, 47, 17, NULL, NULL),
+(196, 47, 2, NULL, NULL),
+(197, 47, 1, NULL, NULL),
+(198, 48, 17, NULL, NULL),
+(199, 48, 2, NULL, NULL),
+(200, 48, 1, NULL, NULL),
+(201, 49, 16, NULL, NULL),
+(202, 49, 3, NULL, NULL),
+(203, 49, 1, NULL, NULL),
+(204, 50, 16, NULL, NULL),
+(205, 50, 3, NULL, NULL),
+(206, 50, 4, NULL, NULL),
+(207, 50, 5, NULL, NULL),
+(208, 51, 16, NULL, NULL),
+(209, 51, 3, NULL, NULL),
+(210, 51, 4, NULL, NULL),
+(211, 52, 5, NULL, NULL),
+(212, 52, 6, NULL, NULL),
+(213, 52, 3, NULL, NULL),
+(214, 53, 11, NULL, NULL),
+(215, 53, 3, NULL, NULL),
+(216, 53, 1, NULL, NULL),
+(217, 54, 1, NULL, NULL),
+(218, 54, 3, NULL, NULL),
+(219, 54, 4, NULL, NULL),
+(220, 55, 5, NULL, NULL),
+(221, 55, 6, NULL, NULL),
+(222, 55, 4, NULL, NULL),
+(223, 56, 1, NULL, NULL),
+(224, 56, 3, NULL, NULL),
+(225, 56, 4, NULL, NULL),
+(226, 57, 15, NULL, NULL),
+(227, 57, 3, NULL, NULL),
+(228, 58, 15, NULL, NULL),
+(229, 58, 5, NULL, NULL),
+(230, 59, 17, NULL, NULL),
+(231, 59, 2, NULL, NULL),
+(232, 60, 16, NULL, NULL),
+(233, 60, 3, NULL, NULL),
+(234, 60, 1, NULL, NULL),
+(235, 60, 4, NULL, NULL),
+(236, 61, 11, NULL, NULL),
+(237, 61, 3, NULL, NULL),
+(238, 61, 1, NULL, NULL),
+(239, 62, 15, NULL, NULL),
+(240, 62, 3, NULL, NULL),
+(241, 62, 1, NULL, NULL),
+(242, 63, 11, NULL, NULL),
+(243, 63, 3, NULL, NULL),
+(244, 63, 1, NULL, NULL),
+(245, 63, 4, NULL, NULL),
+(246, 64, 11, NULL, NULL),
+(247, 64, 3, NULL, NULL),
+(248, 64, 1, NULL, NULL),
+(249, 64, 4, NULL, NULL),
+(250, 65, 16, NULL, NULL),
+(251, 65, 3, NULL, NULL),
+(252, 65, 1, NULL, NULL),
+(253, 66, 16, NULL, NULL),
+(254, 66, 3, NULL, NULL),
+(255, 66, 1, NULL, NULL),
+(256, 66, 4, NULL, NULL),
+(257, 67, 16, NULL, NULL),
+(258, 67, 3, NULL, NULL),
+(259, 67, 1, NULL, NULL),
+(260, 67, 4, NULL, NULL),
+(261, 68, 11, NULL, NULL),
+(262, 68, 3, NULL, NULL),
+(263, 68, 1, NULL, NULL),
+(264, 69, 11, NULL, NULL),
+(265, 69, 12, NULL, NULL),
+(266, 69, 3, NULL, NULL),
+(267, 69, 1, NULL, NULL),
+(268, 70, 5, NULL, NULL),
+(269, 70, 6, NULL, NULL),
+(270, 70, 3, NULL, NULL),
+(271, 71, 5, NULL, NULL),
+(272, 71, 6, NULL, NULL),
+(273, 71, 3, NULL, NULL),
+(274, 72, 5, NULL, NULL),
+(275, 72, 4, NULL, NULL),
+(276, 72, 3, NULL, NULL),
+(277, 72, 1, NULL, NULL),
+(278, 73, 13, NULL, NULL),
+(279, 73, 14, NULL, NULL),
+(280, 73, 3, NULL, NULL),
+(281, 74, 13, NULL, NULL),
+(282, 74, 14, NULL, NULL),
+(283, 74, 3, NULL, NULL),
+(284, 75, 15, NULL, NULL),
+(285, 75, 3, NULL, NULL),
+(286, 76, 15, NULL, NULL),
+(287, 76, 3, NULL, NULL),
+(288, 77, 15, NULL, NULL),
+(289, 77, 3, NULL, NULL),
+(290, 78, 1, NULL, NULL),
+(291, 78, 2, NULL, NULL),
+(292, 78, 3, NULL, NULL),
+(293, 78, 16, NULL, NULL),
+(294, 79, 1, NULL, NULL),
+(295, 79, 3, NULL, NULL),
+(296, 79, 4, NULL, NULL),
+(297, 79, 16, NULL, NULL),
+(298, 79, 5, NULL, NULL),
+(299, 80, 11, NULL, NULL),
+(300, 80, 12, NULL, NULL),
+(301, 80, 3, NULL, NULL),
+(302, 80, 1, NULL, NULL),
+(303, 81, 15, NULL, NULL),
+(304, 81, 3, NULL, NULL),
+(305, 81, 5, NULL, NULL),
+(306, 82, 3, NULL, NULL),
+(307, 82, 4, NULL, NULL),
+(308, 83, 17, NULL, NULL),
+(309, 83, 2, NULL, NULL),
+(310, 83, 1, NULL, NULL),
+(311, 84, 17, NULL, NULL),
+(312, 84, 2, NULL, NULL),
+(313, 84, 1, NULL, NULL),
+(314, 85, 17, NULL, NULL),
+(315, 85, 2, NULL, NULL),
+(316, 85, 1, NULL, NULL),
+(317, 86, 17, NULL, NULL),
+(318, 86, 2, NULL, NULL),
+(319, 86, 1, NULL, NULL),
+(320, 87, 5, NULL, NULL),
+(321, 87, 6, NULL, NULL),
+(322, 87, 3, NULL, NULL),
+(323, 87, 1, NULL, NULL),
+(324, 88, 7, NULL, NULL),
+(325, 88, 8, NULL, NULL),
+(326, 88, 9, NULL, NULL),
+(327, 88, 10, NULL, NULL),
+(328, 88, 6, NULL, NULL),
+(329, 88, 14, NULL, NULL),
+(330, 89, 11, NULL, NULL),
+(331, 89, 3, NULL, NULL),
+(332, 89, 1, NULL, NULL),
+(333, 90, 11, NULL, NULL),
+(334, 90, 12, NULL, NULL),
+(335, 91, 11, NULL, NULL),
+(336, 91, 12, NULL, NULL),
+(337, 92, 11, NULL, NULL),
+(338, 92, 12, NULL, NULL),
+(339, 93, 5, NULL, NULL),
+(340, 93, 6, NULL, NULL),
+(341, 93, 3, NULL, NULL),
+(342, 93, 4, NULL, NULL),
+(343, 94, 5, NULL, NULL),
+(344, 94, 6, NULL, NULL),
+(345, 94, 16, NULL, NULL),
+(346, 94, 4, NULL, NULL),
+(347, 95, 5, NULL, NULL),
+(348, 95, 6, NULL, NULL),
+(349, 95, 3, NULL, NULL),
+(350, 95, 1, NULL, NULL),
+(351, 96, 16, NULL, NULL),
+(352, 96, 3, NULL, NULL),
+(353, 96, 4, NULL, NULL),
+(354, 97, 7, NULL, NULL),
+(355, 97, 8, NULL, NULL),
+(356, 97, 9, NULL, NULL),
+(357, 97, 10, NULL, NULL),
+(358, 97, 6, NULL, NULL),
+(359, 97, 14, NULL, NULL),
+(360, 98, 7, NULL, NULL),
+(361, 98, 8, NULL, NULL),
+(362, 98, 9, NULL, NULL),
+(363, 98, 10, NULL, NULL),
+(364, 98, 6, NULL, NULL),
+(365, 98, 14, NULL, NULL),
+(366, 99, 7, NULL, NULL),
+(367, 99, 8, NULL, NULL),
+(368, 99, 9, NULL, NULL),
+(369, 99, 10, NULL, NULL),
+(370, 99, 6, NULL, NULL),
+(371, 99, 14, NULL, NULL),
+(372, 100, 3, NULL, NULL),
+(373, 100, 15, NULL, NULL),
+(374, 101, 15, NULL, NULL),
+(375, 101, 3, NULL, NULL),
+(376, 102, 15, NULL, NULL),
+(377, 102, 3, NULL, NULL),
+(378, 103, 17, NULL, NULL),
+(379, 103, 2, NULL, NULL),
+(380, 103, 1, NULL, NULL),
+(381, 104, 17, NULL, NULL),
+(382, 104, 2, NULL, NULL),
+(383, 104, 1, NULL, NULL),
+(384, 105, 7, NULL, NULL),
+(385, 105, 8, NULL, NULL),
+(386, 105, 9, NULL, NULL),
+(387, 105, 10, NULL, NULL),
+(388, 105, 6, NULL, NULL),
+(389, 105, 14, NULL, NULL),
+(390, 106, 7, NULL, NULL),
+(391, 106, 8, NULL, NULL),
+(392, 106, 9, NULL, NULL),
+(393, 106, 10, NULL, NULL),
+(394, 106, 6, NULL, NULL),
+(395, 106, 14, NULL, NULL),
+(396, 107, 7, NULL, NULL),
+(397, 107, 8, NULL, NULL),
+(398, 107, 9, NULL, NULL),
+(399, 107, 10, NULL, NULL),
+(400, 107, 6, NULL, NULL),
+(401, 107, 14, NULL, NULL),
+(402, 108, 15, NULL, NULL),
+(403, 108, 5, NULL, NULL),
+(404, 108, 3, NULL, NULL),
+(405, 108, 1, NULL, NULL),
+(406, 109, 16, NULL, NULL),
+(407, 109, 3, NULL, NULL),
+(408, 109, 1, NULL, NULL),
+(409, 110, 11, NULL, NULL),
+(410, 110, 12, NULL, NULL),
+(411, 110, 3, NULL, NULL),
+(412, 110, 1, NULL, NULL),
+(413, 111, 16, NULL, NULL),
+(414, 111, 5, NULL, NULL),
+(415, 111, 3, NULL, NULL),
+(416, 111, 4, NULL, NULL),
+(417, 112, 7, NULL, NULL),
+(418, 112, 8, NULL, NULL),
+(419, 112, 9, NULL, NULL),
+(420, 112, 10, NULL, NULL),
+(421, 112, 6, NULL, NULL),
+(422, 112, 14, NULL, NULL),
+(423, 113, 7, NULL, NULL),
+(424, 113, 8, NULL, NULL),
+(425, 113, 9, NULL, NULL),
+(426, 113, 10, NULL, NULL),
+(427, 113, 6, NULL, NULL),
+(428, 113, 14, NULL, NULL),
+(429, 114, 7, NULL, NULL),
+(430, 114, 8, NULL, NULL),
+(431, 114, 9, NULL, NULL),
+(432, 114, 10, NULL, NULL),
+(433, 114, 6, NULL, NULL),
+(434, 114, 14, NULL, NULL),
+(435, 115, 5, NULL, NULL),
+(436, 115, 6, NULL, NULL),
+(437, 115, 4, NULL, NULL),
+(438, 116, 17, NULL, NULL),
+(439, 116, 2, NULL, NULL),
+(440, 116, 1, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -506,7 +1120,10 @@ CREATE TABLE `employee_sites` (
 --
 
 INSERT INTO `employee_sites` (`id`, `employee_id`, `site_id`, `assigned_at`, `role`, `created_at`, `updated_at`) VALUES
-(3, 14, 2, '2026-06-17', NULL, '2026-06-17 04:00:17', '2026-06-17 04:00:17');
+(3, 14, 2, '2026-06-17', NULL, '2026-06-17 04:00:17', '2026-06-17 04:00:17'),
+(5, 9, 3, '2026-06-17', NULL, '2026-06-17 07:37:51', '2026-06-17 07:37:51'),
+(6, 56, 2, '2026-06-18', NULL, '2026-06-18 00:25:31', '2026-06-18 00:25:31'),
+(7, 10, 2, '2026-06-18', NULL, '2026-06-18 00:26:15', '2026-06-18 00:26:15');
 
 -- --------------------------------------------------------
 
@@ -534,7 +1151,12 @@ CREATE TABLE `employee_site_histories` (
 INSERT INTO `employee_site_histories` (`id`, `employee_id`, `assigned_by_id`, `previous_site_id`, `new_site_id`, `assigned_at`, `transfer_date`, `remarks`, `created_at`, `updated_at`) VALUES
 (3, 14, 3, NULL, 2, '2026-06-17 03:59:43', NULL, 'Assigned to site', '2026-06-17 03:59:43', '2026-06-17 03:59:43'),
 (4, 14, 3, 2, NULL, '2026-06-17 03:59:58', NULL, 'abc', '2026-06-17 03:59:58', '2026-06-17 03:59:58'),
-(5, 14, 3, NULL, 2, '2026-06-17 04:00:17', NULL, 'Assigned to site', '2026-06-17 04:00:17', '2026-06-17 04:00:17');
+(5, 14, 3, NULL, 2, '2026-06-17 04:00:17', NULL, 'Assigned to site', '2026-06-17 04:00:17', '2026-06-17 04:00:17'),
+(6, 9, 3, NULL, 2, '2026-06-17 07:37:01', NULL, 'Assigned to site', '2026-06-17 07:37:01', '2026-06-17 07:37:01'),
+(7, 9, 3, NULL, 3, '2026-06-17 07:37:51', NULL, 'Assigned to site', '2026-06-17 07:37:51', '2026-06-17 07:37:51'),
+(8, 9, 3, 2, NULL, '2026-06-17 07:38:24', NULL, 'aqbc sa as das', '2026-06-17 07:38:24', '2026-06-17 07:38:24'),
+(9, 56, 3, NULL, 2, '2026-06-18 00:25:31', NULL, 'Assigned to site', '2026-06-18 00:25:31', '2026-06-18 00:25:31'),
+(10, 10, 3, NULL, 2, '2026-06-18 00:26:15', NULL, 'Assigned to site', '2026-06-18 00:26:15', '2026-06-18 00:26:15');
 
 -- --------------------------------------------------------
 
@@ -812,6 +1434,14 @@ CREATE TABLE `leaves` (
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `leaves`
+--
+
+INSERT INTO `leaves` (`id`, `employee_id`, `leave_type_id`, `start_date`, `end_date`, `total_days`, `is_half_day`, `status`, `approved_by`, `reason`, `attachment_path`, `comments`, `applied_at`, `created_at`, `updated_at`) VALUES
+(1, 10, 3, '2026-06-18', '2026-06-18', 1.00, 0, 'Submitted', NULL, 'abc xyz', NULL, NULL, '2026-06-18 04:04:39', '2026-06-18 04:04:39', '2026-06-18 04:04:39'),
+(2, 10, 3, '2026-06-18', '2026-06-18', 1.00, 0, 'Submitted', NULL, 'abc xyz', NULL, NULL, '2026-06-18 04:07:18', '2026-06-18 04:07:18', '2026-06-18 04:07:18');
+
 -- --------------------------------------------------------
 
 --
@@ -827,6 +1457,14 @@ CREATE TABLE `leave_histories` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `leave_histories`
+--
+
+INSERT INTO `leave_histories` (`id`, `leave_id`, `action_by`, `action`, `comments`, `created_at`, `updated_at`) VALUES
+(1, 1, 3, 'Submitted', NULL, '2026-06-18 04:04:39', '2026-06-18 04:04:39'),
+(2, 2, 3, 'Submitted', NULL, '2026-06-18 04:07:18', '2026-06-18 04:07:18');
 
 -- --------------------------------------------------------
 
@@ -846,6 +1484,16 @@ CREATE TABLE `leave_types` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `leave_types`
+--
+
+INSERT INTO `leave_types` (`id`, `name`, `code`, `annual_allocation`, `carry_forward`, `max_consecutive_days`, `requires_approval`, `status`, `created_at`, `updated_at`) VALUES
+(1, 'Annual Leave', 'AL', 21.00, 1, 14, 1, 'active', '2026-06-18 09:32:36', '2026-06-18 09:32:36'),
+(2, 'Sick Leave', 'SL', 10.00, 0, 3, 0, 'active', '2026-06-18 09:32:36', '2026-06-18 09:32:36'),
+(3, 'Casual Leave', 'CL', 7.00, 0, 2, 1, 'active', '2026-06-18 09:32:36', '2026-06-18 09:32:36'),
+(4, 'Maternity Leave', 'ML', 90.00, 0, 90, 1, 'active', '2026-06-18 09:32:36', '2026-06-18 09:32:36');
 
 -- --------------------------------------------------------
 
@@ -932,7 +1580,15 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (76, '2026_06_17_125210_create_employee_leave_balances_table', 21),
 (77, '2026_06_17_125211_alter_leaves_table_for_leave_management', 21),
 (78, '2026_06_17_125212_create_leave_histories_table', 21),
-(79, '2026_06_17_125213_create_holidays_table', 21);
+(79, '2026_06_17_125213_create_holidays_table', 21),
+(80, '2026_06_17_170337_create_salary_structures_table', 22),
+(81, '2026_06_17_170537_create_payroll_periods_table', 22),
+(82, '2026_06_17_170710_add_details_to_payrolls_table', 22),
+(83, '2026_06_17_170915_create_payslips_table', 22),
+(84, '2026_06_18_000001_add_allowed_radius_to_sites_table', 23),
+(85, '2026_06_18_000002_add_gps_fields_to_attendances_table', 23),
+(86, '2026_06_18_070751_add_geo_fields_to_tables', 24),
+(87, '2026_06_18_080000_create_dashboard_widgets_table', 25);
 
 -- --------------------------------------------------------
 
@@ -1075,7 +1731,8 @@ INSERT INTO `model_has_roles` (`role_id`, `model_type`, `model_id`) VALUES
 (5, 'App\\Models\\User', 51),
 (5, 'App\\Models\\User', 52),
 (5, 'App\\Models\\User', 53),
-(5, 'App\\Models\\User', 54);
+(5, 'App\\Models\\User', 54),
+(1, 'App\\Models\\User', 1);
 
 -- --------------------------------------------------------
 
@@ -1151,8 +1808,79 @@ CREATE TABLE `payrolls` (
   `net_salary` decimal(10,2) NOT NULL DEFAULT 0.00,
   `status` varchar(255) NOT NULL DEFAULT 'Draft',
   `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `payroll_period_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `present_days` decimal(5,2) NOT NULL DEFAULT 0.00,
+  `absent_days` decimal(5,2) NOT NULL DEFAULT 0.00,
+  `paid_leaves` decimal(5,2) NOT NULL DEFAULT 0.00,
+  `unpaid_leaves` decimal(5,2) NOT NULL DEFAULT 0.00,
+  `working_days` decimal(5,2) NOT NULL DEFAULT 0.00,
+  `conveyance` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `medical_allowance` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `special_allowance` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `site_allowance` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `travel_allowance` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `food_allowance` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `esic` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `tds` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `other_deductions` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `late_penalty` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `bonuses` decimal(10,2) NOT NULL DEFAULT 0.00
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `payrolls`
+--
+
+INSERT INTO `payrolls` (`id`, `employee_id`, `month`, `year`, `basic_salary`, `hra`, `other_allowance`, `overtime_pay`, `pf`, `pt`, `salary_advance`, `loss_of_pay`, `net_salary`, `status`, `created_at`, `updated_at`, `payroll_period_id`, `present_days`, `absent_days`, `paid_leaves`, `unpaid_leaves`, `working_days`, `conveyance`, `medical_allowance`, `special_allowance`, `site_allowance`, `travel_allowance`, `food_allowance`, `esic`, `tds`, `other_deductions`, `late_penalty`, `bonuses`) VALUES
+(1, 56, 6, 2026, 22000.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 22000.00, 'Locked', '2026-06-17 23:52:20', '2026-06-17 23:55:52', 1, 0.00, 0.00, 0.00, 0.00, 30.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payroll_periods`
+--
+
+CREATE TABLE `payroll_periods` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `month` int(11) NOT NULL,
+  `year` int(11) NOT NULL,
+  `start_date` date NOT NULL,
+  `end_date` date NOT NULL,
+  `status` varchar(255) NOT NULL DEFAULT 'Draft',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `payroll_periods`
+--
+
+INSERT INTO `payroll_periods` (`id`, `month`, `year`, `start_date`, `end_date`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES
+(1, 6, 2026, '2026-06-01', '2026-06-30', 'Approved', '2026-06-17 23:29:15', '2026-06-17 23:52:15', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payslips`
+--
+
+CREATE TABLE `payslips` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `payroll_id` bigint(20) UNSIGNED NOT NULL,
+  `file_path` varchar(255) DEFAULT NULL,
+  `generated_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `payslips`
+--
+
+INSERT INTO `payslips` (`id`, `payroll_id`, `file_path`, `generated_at`, `created_at`, `updated_at`) VALUES
+(1, 1, NULL, '2026-06-17 23:54:13', '2026-06-17 23:54:13', '2026-06-17 23:54:13');
 
 -- --------------------------------------------------------
 
@@ -1284,7 +2012,87 @@ INSERT INTO `permissions` (`id`, `name`, `guard_name`, `created_at`, `updated_at
 (108, 'daily-report.approve', 'web', '2026-06-17 07:15:10', '2026-06-17 07:15:10', NULL),
 (109, 'daily-report.reject', 'web', '2026-06-17 07:15:10', '2026-06-17 07:15:10', NULL),
 (110, 'daily-report.rework', 'web', '2026-06-17 07:15:10', '2026-06-17 07:15:10', NULL),
-(111, 'daily-report.report.view', 'web', '2026-06-17 07:15:10', '2026-06-17 07:15:10', NULL);
+(111, 'daily-report.report.view', 'web', '2026-06-17 07:15:10', '2026-06-17 07:15:10', NULL),
+(112, 'leave.view', 'web', '2026-06-17 07:26:17', '2026-06-17 07:26:17', NULL),
+(113, 'leave.create', 'web', '2026-06-17 07:26:17', '2026-06-17 07:26:17', NULL),
+(114, 'leave.edit', 'web', '2026-06-17 07:26:17', '2026-06-17 07:26:17', NULL),
+(115, 'leave.delete', 'web', '2026-06-17 07:26:17', '2026-06-17 07:26:17', NULL),
+(116, 'leave.approve', 'web', '2026-06-17 07:26:17', '2026-06-17 07:26:17', NULL),
+(117, 'leave.reject', 'web', '2026-06-17 07:26:17', '2026-06-17 07:26:17', NULL),
+(118, 'leave.cancel', 'web', '2026-06-17 07:26:17', '2026-06-17 07:26:17', NULL),
+(119, 'leave.balance.view', 'web', '2026-06-17 07:26:17', '2026-06-17 07:26:17', NULL),
+(120, 'leave-type.view', 'web', '2026-06-17 07:26:17', '2026-06-17 07:26:17', NULL),
+(121, 'leave-type.create', 'web', '2026-06-17 07:26:17', '2026-06-17 07:26:17', NULL),
+(122, 'leave-type.edit', 'web', '2026-06-17 07:26:17', '2026-06-17 07:26:17', NULL),
+(123, 'leave-type.delete', 'web', '2026-06-17 07:26:17', '2026-06-17 07:26:17', NULL),
+(124, 'user.view', 'web', '2026-06-18 00:47:32', '2026-06-18 00:47:32', NULL),
+(125, 'user.create', 'web', '2026-06-18 00:47:32', '2026-06-18 00:47:32', NULL),
+(126, 'user.edit', 'web', '2026-06-18 00:47:32', '2026-06-18 00:47:32', NULL),
+(127, 'user.delete', 'web', '2026-06-18 00:47:32', '2026-06-18 00:47:32', NULL),
+(128, 'role.view', 'web', '2026-06-18 00:47:32', '2026-06-18 00:47:32', NULL),
+(129, 'role.create', 'web', '2026-06-18 00:47:32', '2026-06-18 00:47:32', NULL),
+(130, 'role.edit', 'web', '2026-06-18 00:47:32', '2026-06-18 00:47:32', NULL),
+(131, 'role.delete', 'web', '2026-06-18 00:47:32', '2026-06-18 00:47:32', NULL),
+(132, 'permission.view', 'web', '2026-06-18 00:47:32', '2026-06-18 00:47:32', NULL),
+(133, 'permission.create', 'web', '2026-06-18 00:47:32', '2026-06-18 00:47:32', NULL),
+(134, 'permission.edit', 'web', '2026-06-18 00:47:32', '2026-06-18 00:47:32', NULL),
+(135, 'permission.delete', 'web', '2026-06-18 00:47:32', '2026-06-18 00:47:32', NULL),
+(136, 'inventory.view', 'web', '2026-06-18 00:47:32', '2026-06-18 00:47:32', NULL),
+(137, 'inventory.create', 'web', '2026-06-18 00:47:32', '2026-06-18 00:47:32', NULL),
+(138, 'inventory.edit', 'web', '2026-06-18 00:47:32', '2026-06-18 00:47:32', NULL),
+(139, 'inventory.delete', 'web', '2026-06-18 00:47:33', '2026-06-18 00:47:33', NULL),
+(140, 'warehouse.view', 'web', '2026-06-18 00:47:33', '2026-06-18 00:47:33', NULL),
+(141, 'warehouse.create', 'web', '2026-06-18 00:47:33', '2026-06-18 00:47:33', NULL),
+(142, 'warehouse.edit', 'web', '2026-06-18 00:47:33', '2026-06-18 00:47:33', NULL),
+(143, 'warehouse.delete', 'web', '2026-06-18 00:47:33', '2026-06-18 00:47:33', NULL),
+(144, 'product.view', 'web', '2026-06-18 00:47:33', '2026-06-18 00:47:33', NULL),
+(145, 'product.create', 'web', '2026-06-18 00:47:33', '2026-06-18 00:47:33', NULL),
+(146, 'product.edit', 'web', '2026-06-18 00:47:33', '2026-06-18 00:47:33', NULL),
+(147, 'product.delete', 'web', '2026-06-18 00:47:33', '2026-06-18 00:47:33', NULL),
+(148, 'customer.view', 'web', '2026-06-18 00:47:33', '2026-06-18 00:47:33', NULL),
+(149, 'customer.create', 'web', '2026-06-18 00:47:33', '2026-06-18 00:47:33', NULL),
+(150, 'customer.edit', 'web', '2026-06-18 00:47:33', '2026-06-18 00:47:33', NULL),
+(151, 'customer.delete', 'web', '2026-06-18 00:47:33', '2026-06-18 00:47:33', NULL),
+(152, 'sales-order.view', 'web', '2026-06-18 00:47:33', '2026-06-18 00:47:33', NULL),
+(153, 'sales-order.create', 'web', '2026-06-18 00:47:33', '2026-06-18 00:47:33', NULL),
+(154, 'sales-order.edit', 'web', '2026-06-18 00:47:33', '2026-06-18 00:47:33', NULL),
+(155, 'sales-order.delete', 'web', '2026-06-18 00:47:33', '2026-06-18 00:47:33', NULL),
+(156, 'invoice.view', 'web', '2026-06-18 00:47:33', '2026-06-18 00:47:33', NULL),
+(157, 'invoice.create', 'web', '2026-06-18 00:47:33', '2026-06-18 00:47:33', NULL),
+(158, 'invoice.edit', 'web', '2026-06-18 00:47:33', '2026-06-18 00:47:33', NULL),
+(159, 'invoice.delete', 'web', '2026-06-18 00:47:33', '2026-06-18 00:47:33', NULL),
+(160, 'purchase-order.view', 'web', '2026-06-18 00:47:33', '2026-06-18 00:47:33', NULL),
+(161, 'purchase-order.create', 'web', '2026-06-18 00:47:33', '2026-06-18 00:47:33', NULL),
+(162, 'purchase-order.edit', 'web', '2026-06-18 00:47:33', '2026-06-18 00:47:33', NULL),
+(163, 'purchase-order.delete', 'web', '2026-06-18 00:47:33', '2026-06-18 00:47:33', NULL),
+(164, 'report.view', 'web', '2026-06-18 00:47:33', '2026-06-18 00:47:33', NULL),
+(165, 'report.export', 'web', '2026-06-18 00:47:33', '2026-06-18 00:47:33', NULL),
+(166, 'dashboard.view', 'web', '2026-06-18 00:47:33', '2026-06-18 00:47:33', NULL),
+(167, 'payroll.view', 'web', '2026-06-18 00:47:33', '2026-06-18 00:47:33', NULL),
+(168, 'payroll.create', 'web', '2026-06-18 00:47:33', '2026-06-18 00:47:33', NULL),
+(169, 'payroll.generate', 'web', '2026-06-18 00:47:33', '2026-06-18 00:47:33', NULL),
+(170, 'payroll.approve', 'web', '2026-06-18 00:47:33', '2026-06-18 00:47:33', NULL),
+(171, 'payroll.lock', 'web', '2026-06-18 00:47:33', '2026-06-18 00:47:33', NULL),
+(172, 'payroll.pay', 'web', '2026-06-18 00:47:33', '2026-06-18 00:47:33', NULL),
+(173, 'payroll.delete', 'web', '2026-06-18 00:47:33', '2026-06-18 00:47:33', NULL),
+(174, 'payslip.view', 'web', '2026-06-18 00:47:34', '2026-06-18 00:47:34', NULL),
+(175, 'payslip.download', 'web', '2026-06-18 00:47:34', '2026-06-18 00:47:34', NULL),
+(176, 'salary-structure.view', 'web', '2026-06-18 00:47:34', '2026-06-18 00:47:34', NULL),
+(177, 'salary-structure.create', 'web', '2026-06-18 00:47:34', '2026-06-18 00:47:34', NULL),
+(178, 'salary-structure.edit', 'web', '2026-06-18 00:47:34', '2026-06-18 00:47:34', NULL),
+(179, 'salary-structure.delete', 'web', '2026-06-18 00:47:34', '2026-06-18 00:47:34', NULL),
+(180, 'category.view', 'web', '2026-06-18 00:47:34', '2026-06-18 00:47:34', NULL),
+(181, 'category.create', 'web', '2026-06-18 00:47:34', '2026-06-18 00:47:34', NULL),
+(182, 'category.edit', 'web', '2026-06-18 00:47:34', '2026-06-18 00:47:34', NULL),
+(183, 'category.delete', 'web', '2026-06-18 00:47:34', '2026-06-18 00:47:34', NULL),
+(184, 'supplier.view', 'web', '2026-06-18 00:47:34', '2026-06-18 00:47:34', NULL),
+(185, 'supplier.create', 'web', '2026-06-18 00:47:34', '2026-06-18 00:47:34', NULL),
+(186, 'supplier.edit', 'web', '2026-06-18 00:47:34', '2026-06-18 00:47:34', NULL),
+(187, 'supplier.delete', 'web', '2026-06-18 00:47:34', '2026-06-18 00:47:34', NULL),
+(188, 'attendance.geo.checkin', 'web', '2026-06-18 02:15:37', '2026-06-18 02:15:37', NULL),
+(189, 'attendance.geo.checkout', 'web', '2026-06-18 02:15:37', '2026-06-18 02:15:37', NULL),
+(190, 'attendance.location.view', 'web', '2026-06-18 02:15:37', '2026-06-18 02:15:37', NULL),
+(191, 'attendance.location.audit', 'web', '2026-06-18 02:15:37', '2026-06-18 02:15:37', NULL);
 
 -- --------------------------------------------------------
 
@@ -1325,8 +2133,10 @@ INSERT INTO `personal_access_tokens` (`id`, `tokenable_type`, `tokenable_id`, `n
 (16, 'App\\Models\\User', 1, 'auth_token', '3c914e9af32b16ced56e8e4ee85cc8605102b2c365f94196b1d3930386771d5c', '[\"*\"]', '2026-06-16 23:42:47', NULL, '2026-06-16 23:42:04', '2026-06-16 23:42:47'),
 (20, 'App\\Models\\User', 3, 'test', 'f354592d9e0f3829ffd79d99e0420bc176daf10566e976a6def6099eccc0af99', '[\"*\"]', '2026-06-17 00:08:46', NULL, '2026-06-17 00:08:46', '2026-06-17 00:08:46'),
 (21, 'App\\Models\\User', 3, 'test', '1496821f07425458d44880dce4aeb4d5e123d2f8185a2266a1431ef4869bbfb0', '[\"*\"]', '2026-06-17 00:09:00', NULL, '2026-06-17 00:09:00', '2026-06-17 00:09:00'),
-(23, 'App\\Models\\User', 3, 'auth_token', '4e6b0d2f1b1790c57a41fd38927d1dd0d165ae1abf08bb6d1b01c3b2dc4a4bba', '[\"*\"]', '2026-06-17 07:24:51', NULL, '2026-06-17 05:16:05', '2026-06-17 07:24:51'),
-(24, 'App\\Models\\User', 3, 'test', '258518818e6ec9f616291e1bafbf9364ba3463ebe17822daa8d1ac0da1e528b8', '[\"*\"]', '2026-06-17 05:19:50', NULL, '2026-06-17 05:18:34', '2026-06-17 05:19:50');
+(24, 'App\\Models\\User', 3, 'test', '258518818e6ec9f616291e1bafbf9364ba3463ebe17822daa8d1ac0da1e528b8', '[\"*\"]', '2026-06-17 05:19:50', NULL, '2026-06-17 05:18:34', '2026-06-17 05:19:50'),
+(34, 'App\\Models\\User', 3, 'auth_token', '67276d3172411c6a1c610870dc55c8afabef4734b56e67720b475578964e928e', '[\"*\"]', '2026-06-18 06:39:42', NULL, '2026-06-18 02:59:54', '2026-06-18 06:39:42'),
+(35, 'App\\Models\\User', 10, 'auth_token', '9b49549166bdc038e049b9427807491e0cb18b60cabaeed8c4b2120c19501beb', '[\"*\"]', '2026-06-18 03:00:37', NULL, '2026-06-18 03:00:33', '2026-06-18 03:00:37'),
+(36, 'App\\Models\\User', 10, 'auth_token', '581abc7e1068865502ccb03e3ddf6ee8f2b05c1eca62a88580650c5bcffec760', '[\"*\"]', '2026-06-18 06:24:14', NULL, '2026-06-18 05:53:43', '2026-06-18 06:24:14');
 
 -- --------------------------------------------------------
 
@@ -1477,7 +2287,21 @@ INSERT INTO `roles` (`id`, `name`, `guard_name`, `created_at`, `updated_at`, `de
 (6, 'Accountant', 'web', '2026-06-12 20:26:24', '2026-06-12 20:26:24', NULL),
 (7, 'Warehouse Manager', 'web', '2026-06-12 20:59:16', '2026-06-12 20:59:16', NULL),
 (8, 'Inventory Staff', 'web', '2026-06-12 20:59:16', '2026-06-12 20:59:16', NULL),
-(9, 'Sales Executive', 'web', '2026-06-12 20:59:16', '2026-06-12 20:59:16', NULL);
+(9, 'Sales Executive', 'web', '2026-06-12 20:59:16', '2026-06-12 20:59:16', NULL),
+(10, 'System Admin', 'web', '2026-06-18 00:47:34', '2026-06-18 00:47:34', NULL),
+(11, 'General Manager', 'web', '2026-06-18 00:47:34', '2026-06-18 00:47:34', NULL),
+(12, 'Production Manager', 'web', '2026-06-18 00:47:34', '2026-06-18 00:47:34', NULL),
+(13, 'Workshop Supervisor', 'web', '2026-06-18 00:47:34', '2026-06-18 00:47:34', NULL),
+(14, 'Fitter', 'web', '2026-06-18 00:47:34', '2026-06-18 00:47:34', NULL),
+(15, 'Welder', 'web', '2026-06-18 00:47:34', '2026-06-18 00:47:34', NULL),
+(16, 'Electrician', 'web', '2026-06-18 00:47:34', '2026-06-18 00:47:34', NULL),
+(17, 'Helper', 'web', '2026-06-18 00:47:34', '2026-06-18 00:47:34', NULL),
+(18, 'Finance Manager', 'web', '2026-06-18 00:47:34', '2026-06-18 00:47:34', NULL),
+(19, 'Design Manager', 'web', '2026-06-18 00:47:34', '2026-06-18 00:47:34', NULL),
+(20, 'Designer', 'web', '2026-06-18 00:47:34', '2026-06-18 00:47:34', NULL),
+(21, 'Store Manager', 'web', '2026-06-18 00:47:35', '2026-06-18 00:47:35', NULL),
+(22, 'HR Manager', 'web', '2026-06-18 00:47:35', '2026-06-18 00:47:35', NULL),
+(23, 'IT Manager', 'web', '2026-06-18 00:47:35', '2026-06-18 00:47:35', NULL);
 
 -- --------------------------------------------------------
 
@@ -1504,6 +2328,495 @@ INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES
 (5, 3),
 (10, 3),
 (10, 5),
+(1, 10),
+(2, 10),
+(3, 10),
+(4, 10),
+(5, 10),
+(6, 10),
+(7, 10),
+(8, 10),
+(9, 10),
+(10, 10),
+(11, 10),
+(12, 10),
+(13, 10),
+(14, 10),
+(15, 10),
+(16, 10),
+(17, 10),
+(18, 10),
+(19, 10),
+(20, 10),
+(21, 10),
+(22, 10),
+(23, 10),
+(24, 10),
+(25, 10),
+(26, 10),
+(27, 10),
+(28, 10),
+(29, 10),
+(30, 10),
+(31, 10),
+(32, 10),
+(33, 10),
+(34, 10),
+(35, 10),
+(36, 10),
+(37, 10),
+(38, 10),
+(39, 10),
+(40, 10),
+(41, 10),
+(42, 10),
+(43, 10),
+(44, 10),
+(45, 10),
+(46, 10),
+(47, 10),
+(48, 10),
+(49, 10),
+(50, 10),
+(51, 10),
+(52, 10),
+(53, 10),
+(54, 10),
+(55, 10),
+(56, 10),
+(57, 10),
+(58, 10),
+(59, 10),
+(60, 10),
+(61, 10),
+(62, 10),
+(63, 10),
+(64, 10),
+(65, 10),
+(66, 10),
+(67, 10),
+(68, 10),
+(69, 10),
+(70, 10),
+(71, 10),
+(72, 10),
+(73, 10),
+(74, 10),
+(75, 10),
+(76, 10),
+(77, 10),
+(78, 10),
+(79, 10),
+(80, 10),
+(81, 10),
+(82, 10),
+(83, 10),
+(84, 10),
+(85, 10),
+(86, 10),
+(87, 10),
+(88, 10),
+(89, 10),
+(90, 10),
+(91, 10),
+(92, 10),
+(93, 10),
+(94, 10),
+(95, 10),
+(96, 10),
+(97, 10),
+(98, 10),
+(99, 10),
+(100, 10),
+(101, 10),
+(102, 10),
+(103, 10),
+(104, 10),
+(105, 10),
+(106, 10),
+(107, 10),
+(108, 10),
+(109, 10),
+(110, 10),
+(111, 10),
+(112, 10),
+(113, 10),
+(114, 10),
+(115, 10),
+(116, 10),
+(117, 10),
+(118, 10),
+(119, 10),
+(120, 10),
+(121, 10),
+(122, 10),
+(123, 10),
+(124, 10),
+(125, 10),
+(126, 10),
+(127, 10),
+(128, 10),
+(129, 10),
+(130, 10),
+(131, 10),
+(132, 10),
+(133, 10),
+(134, 10),
+(135, 10),
+(136, 10),
+(137, 10),
+(138, 10),
+(139, 10),
+(140, 10),
+(141, 10),
+(142, 10),
+(143, 10),
+(144, 10),
+(145, 10),
+(146, 10),
+(147, 10),
+(148, 10),
+(149, 10),
+(150, 10),
+(151, 10),
+(152, 10),
+(153, 10),
+(154, 10),
+(155, 10),
+(156, 10),
+(157, 10),
+(158, 10),
+(159, 10),
+(160, 10),
+(161, 10),
+(162, 10),
+(163, 10),
+(164, 10),
+(165, 10),
+(166, 10),
+(167, 10),
+(168, 10),
+(169, 10),
+(170, 10),
+(171, 10),
+(172, 10),
+(173, 10),
+(174, 10),
+(175, 10),
+(176, 10),
+(177, 10),
+(178, 10),
+(179, 10),
+(180, 10),
+(181, 10),
+(182, 10),
+(183, 10),
+(184, 10),
+(185, 10),
+(186, 10),
+(187, 10),
+(1, 11),
+(2, 11),
+(3, 11),
+(4, 11),
+(5, 11),
+(6, 11),
+(7, 11),
+(8, 11),
+(9, 11),
+(10, 11),
+(11, 11),
+(12, 11),
+(13, 11),
+(14, 11),
+(15, 11),
+(16, 11),
+(17, 11),
+(18, 11),
+(19, 11),
+(20, 11),
+(21, 11),
+(22, 11),
+(23, 11),
+(24, 11),
+(25, 11),
+(26, 11),
+(27, 11),
+(28, 11),
+(29, 11),
+(30, 11),
+(31, 11),
+(32, 11),
+(33, 11),
+(34, 11),
+(35, 11),
+(36, 11),
+(37, 11),
+(38, 11),
+(39, 11),
+(40, 11),
+(41, 11),
+(42, 11),
+(43, 11),
+(44, 11),
+(45, 11),
+(46, 11),
+(47, 11),
+(48, 11),
+(49, 11),
+(50, 11),
+(51, 11),
+(52, 11),
+(53, 11),
+(54, 11),
+(55, 11),
+(56, 11),
+(57, 11),
+(58, 11),
+(59, 11),
+(60, 11),
+(61, 11),
+(62, 11),
+(63, 11),
+(64, 11),
+(65, 11),
+(66, 11),
+(67, 11),
+(68, 11),
+(69, 11),
+(70, 11),
+(71, 11),
+(72, 11),
+(73, 11),
+(74, 11),
+(75, 11),
+(76, 11),
+(77, 11),
+(78, 11),
+(79, 11),
+(80, 11),
+(81, 11),
+(82, 11),
+(83, 11),
+(84, 11),
+(85, 11),
+(86, 11),
+(87, 11),
+(88, 11),
+(89, 11),
+(90, 11),
+(91, 11),
+(92, 11),
+(93, 11),
+(94, 11),
+(95, 11),
+(96, 11),
+(97, 11),
+(98, 11),
+(99, 11),
+(100, 11),
+(101, 11),
+(102, 11),
+(103, 11),
+(104, 11),
+(105, 11),
+(106, 11),
+(107, 11),
+(108, 11),
+(109, 11),
+(110, 11),
+(111, 11),
+(112, 11),
+(113, 11),
+(114, 11),
+(115, 11),
+(116, 11),
+(117, 11),
+(118, 11),
+(119, 11),
+(120, 11),
+(121, 11),
+(122, 11),
+(123, 11),
+(124, 11),
+(125, 11),
+(126, 11),
+(128, 11),
+(129, 11),
+(130, 11),
+(131, 11),
+(132, 11),
+(133, 11),
+(134, 11),
+(135, 11),
+(136, 11),
+(137, 11),
+(138, 11),
+(139, 11),
+(140, 11),
+(141, 11),
+(142, 11),
+(143, 11),
+(144, 11),
+(145, 11),
+(146, 11),
+(147, 11),
+(148, 11),
+(149, 11),
+(150, 11),
+(151, 11),
+(152, 11),
+(153, 11),
+(154, 11),
+(155, 11),
+(156, 11),
+(157, 11),
+(158, 11),
+(159, 11),
+(160, 11),
+(161, 11),
+(162, 11),
+(163, 11),
+(164, 11),
+(165, 11),
+(166, 11),
+(167, 11),
+(168, 11),
+(169, 11),
+(170, 11),
+(171, 11),
+(172, 11),
+(173, 11),
+(174, 11),
+(175, 11),
+(176, 11),
+(177, 11),
+(178, 11),
+(179, 11),
+(180, 11),
+(181, 11),
+(182, 11),
+(183, 11),
+(184, 11),
+(185, 11),
+(186, 11),
+(187, 11),
+(166, 12),
+(93, 12),
+(136, 12),
+(144, 12),
+(103, 12),
+(104, 12),
+(99, 12),
+(85, 12),
+(166, 13),
+(93, 13),
+(103, 13),
+(99, 13),
+(166, 14),
+(93, 14),
+(94, 14),
+(103, 14),
+(166, 15),
+(93, 15),
+(94, 15),
+(103, 15),
+(166, 16),
+(93, 16),
+(94, 16),
+(103, 16),
+(166, 17),
+(93, 17),
+(94, 17),
+(103, 17),
+(166, 18),
+(156, 18),
+(157, 18),
+(158, 18),
+(159, 18),
+(164, 18),
+(165, 18),
+(152, 18),
+(160, 18),
+(167, 18),
+(170, 18),
+(171, 18),
+(172, 18),
+(184, 18),
+(148, 18),
+(166, 19),
+(93, 19),
+(144, 19),
+(166, 20),
+(93, 20),
+(144, 20),
+(166, 21),
+(140, 21),
+(141, 21),
+(142, 21),
+(143, 21),
+(136, 21),
+(137, 21),
+(138, 21),
+(139, 21),
+(144, 21),
+(180, 21),
+(181, 21),
+(182, 21),
+(183, 21),
+(166, 22),
+(46, 22),
+(47, 22),
+(48, 22),
+(49, 22),
+(93, 22),
+(94, 22),
+(95, 22),
+(96, 22),
+(164, 22),
+(167, 22),
+(168, 22),
+(169, 22),
+(173, 22),
+(174, 22),
+(175, 22),
+(176, 22),
+(177, 22),
+(178, 22),
+(179, 22),
+(99, 22),
+(100, 22),
+(101, 22),
+(102, 22),
+(103, 22),
+(104, 22),
+(105, 22),
+(106, 22),
+(112, 22),
+(113, 22),
+(114, 22),
+(115, 22),
+(38, 22),
+(39, 22),
+(40, 22),
+(41, 22),
+(42, 22),
+(43, 22),
+(44, 22),
+(45, 22),
+(166, 23),
+(128, 23),
+(129, 23),
+(130, 23),
+(131, 23),
+(132, 23),
+(133, 23),
+(134, 23),
+(135, 23),
+(124, 23),
+(125, 23),
+(126, 23),
+(127, 23),
 (12, 1),
 (2, 1),
 (10, 1),
@@ -1615,6 +2928,22 @@ INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES
 (109, 1),
 (110, 1),
 (111, 1),
+(112, 1),
+(113, 1),
+(114, 1),
+(115, 1),
+(116, 1),
+(117, 1),
+(118, 1),
+(119, 1),
+(120, 1),
+(121, 1),
+(122, 1),
+(123, 1),
+(188, 1),
+(189, 1),
+(190, 1),
+(191, 1),
 (12, 2),
 (2, 2),
 (10, 2),
@@ -1726,6 +3055,22 @@ INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES
 (109, 2),
 (110, 2),
 (111, 2),
+(112, 2),
+(113, 2),
+(114, 2),
+(115, 2),
+(116, 2),
+(117, 2),
+(118, 2),
+(119, 2),
+(120, 2),
+(121, 2),
+(122, 2),
+(123, 2),
+(188, 2),
+(189, 2),
+(190, 2),
+(191, 2),
 (12, 7),
 (2, 7),
 (13, 7),
@@ -1803,6 +3148,11 @@ INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES
 (30, 6),
 (71, 6),
 (73, 6),
+(67, 6),
+(68, 6),
+(167, 6),
+(169, 6),
+(176, 6),
 (12, 8),
 (13, 8),
 (3, 8),
@@ -1822,6 +3172,44 @@ INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES
 (72, 9),
 (61, 9),
 (62, 9);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `salary_structures`
+--
+
+CREATE TABLE `salary_structures` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `employee_id` bigint(20) UNSIGNED NOT NULL,
+  `basic_salary` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `hra` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `conveyance` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `medical_allowance` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `special_allowance` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `site_allowance` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `travel_allowance` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `food_allowance` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `other_earnings` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `pf_deduction` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `esic_deduction` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `professional_tax` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `tds` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `other_deductions` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `effective_from` date NOT NULL,
+  `effective_to` date DEFAULT NULL,
+  `status` varchar(255) NOT NULL DEFAULT 'active',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `salary_structures`
+--
+
+INSERT INTO `salary_structures` (`id`, `employee_id`, `basic_salary`, `hra`, `conveyance`, `medical_allowance`, `special_allowance`, `site_allowance`, `travel_allowance`, `food_allowance`, `other_earnings`, `pf_deduction`, `esic_deduction`, `professional_tax`, `tds`, `other_deductions`, `effective_from`, `effective_to`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES
+(1, 56, 22000.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, '2026-06-01', NULL, 'active', '2026-06-17 23:46:10', '2026-06-17 23:52:15', NULL);
 
 -- --------------------------------------------------------
 
@@ -1994,6 +3382,8 @@ CREATE TABLE `sites` (
   `status` varchar(255) NOT NULL DEFAULT 'Active',
   `latitude` decimal(10,8) DEFAULT NULL,
   `longitude` decimal(11,8) DEFAULT NULL,
+  `allowed_radius` int(11) NOT NULL DEFAULT 100,
+  `geo_fencing_enabled` tinyint(1) NOT NULL DEFAULT 0,
   `site_manager_id` bigint(20) UNSIGNED DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
@@ -2003,8 +3393,9 @@ CREATE TABLE `sites` (
 -- Dumping data for table `sites`
 --
 
-INSERT INTO `sites` (`id`, `name`, `code`, `client_details`, `address`, `city`, `state`, `country`, `pincode`, `contact_person`, `phone`, `email`, `status`, `latitude`, `longitude`, `site_manager_id`, `created_at`, `updated_at`) VALUES
-(2, 'Site A', '101', NULL, NULL, NULL, NULL, 'India', NULL, NULL, NULL, NULL, 'Active', NULL, NULL, NULL, '2026-06-17 03:59:08', '2026-06-17 03:59:08');
+INSERT INTO `sites` (`id`, `name`, `code`, `client_details`, `address`, `city`, `state`, `country`, `pincode`, `contact_person`, `phone`, `email`, `status`, `latitude`, `longitude`, `allowed_radius`, `geo_fencing_enabled`, `site_manager_id`, `created_at`, `updated_at`) VALUES
+(2, 'Site A', '101', NULL, 'Kasturi Vandana Complex, Bhayandar, Sonam Sagar, Indira Nagar, Bhayandar East, Mira Bhayandar, Maharashtra 401105', 'Bhayandar East', 'maharashtra', 'India', '401105', 'Prasad', '9022428111', 'prasad.kalvikatti@company.com', 'Active', 19.29951800, 72.85806400, 100, 0, NULL, '2026-06-17 03:59:08', '2026-06-18 00:21:27'),
+(3, 'Site B', '102', '123456', NULL, NULL, NULL, 'India', NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 100, 0, NULL, '2026-06-17 07:37:34', '2026-06-17 07:37:34');
 
 -- --------------------------------------------------------
 
@@ -2211,6 +3602,21 @@ ALTER TABLE `daily_report_histories`
   ADD KEY `daily_report_histories_action_by_foreign` (`action_by`);
 
 --
+-- Indexes for table `dashboard_widgets`
+--
+ALTER TABLE `dashboard_widgets`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `dashboard_widgets_widget_key_unique` (`widget_key`);
+
+--
+-- Indexes for table `dashboard_widget_designation`
+--
+ALTER TABLE `dashboard_widget_designation`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `dashboard_widget_designation_dashboard_widget_id_foreign` (`dashboard_widget_id`),
+  ADD KEY `dashboard_widget_designation_designation_id_foreign` (`designation_id`);
+
+--
 -- Indexes for table `departments`
 --
 ALTER TABLE `departments`
@@ -2330,7 +3736,27 @@ ALTER TABLE `password_reset_tokens`
 --
 ALTER TABLE `payrolls`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `payrolls_employee_id_foreign` (`employee_id`);
+  ADD KEY `payrolls_employee_id_foreign` (`employee_id`),
+  ADD KEY `payrolls_payroll_period_id_foreign` (`payroll_period_id`);
+
+--
+-- Indexes for table `payroll_periods`
+--
+ALTER TABLE `payroll_periods`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `payslips`
+--
+ALTER TABLE `payslips`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `payslips_payroll_id_foreign` (`payroll_id`);
+
+--
+-- Indexes for table `permissions`
+--
+ALTER TABLE `permissions`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `personal_access_tokens`
@@ -2340,6 +3766,19 @@ ALTER TABLE `personal_access_tokens`
   ADD UNIQUE KEY `personal_access_tokens_token_unique` (`token`),
   ADD KEY `personal_access_tokens_tokenable_type_tokenable_id_index` (`tokenable_type`,`tokenable_id`),
   ADD KEY `personal_access_tokens_expires_at_index` (`expires_at`);
+
+--
+-- Indexes for table `roles`
+--
+ALTER TABLE `roles`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `salary_structures`
+--
+ALTER TABLE `salary_structures`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `salary_structures_employee_id_foreign` (`employee_id`);
 
 --
 -- Indexes for table `sessions`
@@ -2394,6 +3833,18 @@ ALTER TABLE `daily_report_histories`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `dashboard_widgets`
+--
+ALTER TABLE `dashboard_widgets`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=118;
+
+--
+-- AUTO_INCREMENT for table `dashboard_widget_designation`
+--
+ALTER TABLE `dashboard_widget_designation`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=441;
+
+--
 -- AUTO_INCREMENT for table `departments`
 --
 ALTER TABLE `departments`
@@ -2421,13 +3872,13 @@ ALTER TABLE `employee_leave_balances`
 -- AUTO_INCREMENT for table `employee_sites`
 --
 ALTER TABLE `employee_sites`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `employee_site_histories`
 --
 ALTER TABLE `employee_site_histories`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `failed_jobs`
@@ -2451,37 +3902,67 @@ ALTER TABLE `jobs`
 -- AUTO_INCREMENT for table `leaves`
 --
 ALTER TABLE `leaves`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `leave_histories`
 --
 ALTER TABLE `leave_histories`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `leave_types`
 --
 ALTER TABLE `leave_types`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=80;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=88;
 
 --
 -- AUTO_INCREMENT for table `payrolls`
 --
 ALTER TABLE `payrolls`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `payroll_periods`
+--
+ALTER TABLE `payroll_periods`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `payslips`
+--
+ALTER TABLE `payslips`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `permissions`
+--
+ALTER TABLE `permissions`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=192;
 
 --
 -- AUTO_INCREMENT for table `personal_access_tokens`
 --
 ALTER TABLE `personal_access_tokens`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
+
+--
+-- AUTO_INCREMENT for table `roles`
+--
+ALTER TABLE `roles`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
+
+--
+-- AUTO_INCREMENT for table `salary_structures`
+--
+ALTER TABLE `salary_structures`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `shifts`
@@ -2493,7 +3974,7 @@ ALTER TABLE `shifts`
 -- AUTO_INCREMENT for table `sites`
 --
 ALTER TABLE `sites`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `users`
@@ -2527,6 +4008,13 @@ ALTER TABLE `daily_reports`
 ALTER TABLE `daily_report_histories`
   ADD CONSTRAINT `daily_report_histories_action_by_foreign` FOREIGN KEY (`action_by`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `daily_report_histories_daily_report_id_foreign` FOREIGN KEY (`daily_report_id`) REFERENCES `daily_reports` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `dashboard_widget_designation`
+--
+ALTER TABLE `dashboard_widget_designation`
+  ADD CONSTRAINT `dashboard_widget_designation_dashboard_widget_id_foreign` FOREIGN KEY (`dashboard_widget_id`) REFERENCES `dashboard_widgets` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `dashboard_widget_designation_designation_id_foreign` FOREIGN KEY (`designation_id`) REFERENCES `designations` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `designations`
@@ -2585,7 +4073,20 @@ ALTER TABLE `leave_histories`
 -- Constraints for table `payrolls`
 --
 ALTER TABLE `payrolls`
-  ADD CONSTRAINT `payrolls_employee_id_foreign` FOREIGN KEY (`employee_id`) REFERENCES `employees` (`id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `payrolls_employee_id_foreign` FOREIGN KEY (`employee_id`) REFERENCES `employees` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `payrolls_payroll_period_id_foreign` FOREIGN KEY (`payroll_period_id`) REFERENCES `payroll_periods` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `payslips`
+--
+ALTER TABLE `payslips`
+  ADD CONSTRAINT `payslips_payroll_id_foreign` FOREIGN KEY (`payroll_id`) REFERENCES `payrolls` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `salary_structures`
+--
+ALTER TABLE `salary_structures`
+  ADD CONSTRAINT `salary_structures_employee_id_foreign` FOREIGN KEY (`employee_id`) REFERENCES `employees` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `sites`
