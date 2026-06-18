@@ -42,6 +42,11 @@ class DashboardController extends Controller
                 'branch_performance' => [],
                 'monthly_targets' => [],
                 'recent_activity' => [],
+                'payroll' => [
+                    'cost' => 0,
+                    'processed_percent' => 0,
+                    'period' => 'Current'
+                ]
             ]);
         }
     }
@@ -134,6 +139,28 @@ class DashboardController extends Controller
             ]);
         }
 
+        $latestPeriodId = Schema::hasTable('payroll_periods') 
+            ? DB::table('payroll_periods')->latest('id')->value('id') 
+            : null;
+
+        if ($latestPeriodId && Schema::hasTable('payrolls')) {
+            $payrollCost = \App\Models\Payroll::when($branchId, fn($q) => $q->where('branch_id', $branchId))
+                ->where('payroll_period_id', $latestPeriodId)->sum('net_salary');
+            $totalPayrolls = \App\Models\Payroll::when($branchId, fn($q) => $q->where('branch_id', $branchId))
+                ->where('payroll_period_id', $latestPeriodId)->count();
+            $processedPayrolls = \App\Models\Payroll::when($branchId, fn($q) => $q->where('branch_id', $branchId))
+                ->where('payroll_period_id', $latestPeriodId)
+                ->whereIn('status', ['Approved', 'Locked', 'Paid'])->count();
+            
+            $payrollPercent = $totalPayrolls > 0 ? round(($processedPayrolls / $totalPayrolls) * 100) : 0;
+            $periodRow = \App\Models\PayrollPeriod::find($latestPeriodId);
+            $payrollPeriodLabel = $periodRow ? $periodRow->month . '/' . $periodRow->year : 'Current';
+        } else {
+            $payrollCost = 0;
+            $payrollPercent = 0;
+            $payrollPeriodLabel = 'Current';
+        }
+
         $recentActivities = collect();
 
         $recentTasks = Schema::hasTable('tasks') 
@@ -209,6 +236,11 @@ class DashboardController extends Controller
             'branch_performance' => $branchPerformance,
             'monthly_targets' => $this->buildMonthlyTargetData($revenueGrowth),
             'recent_activity' => $recentActivities->take(5)->values()->toArray(),
+            'payroll' => [
+                'cost' => round($payrollCost, 2),
+                'processed_percent' => $payrollPercent,
+                'period' => $payrollPeriodLabel,
+            ],
         ]);
     }
 

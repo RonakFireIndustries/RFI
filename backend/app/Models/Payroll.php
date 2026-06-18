@@ -13,16 +13,47 @@ class Payroll extends Model
     protected $fillable = [
         'employee_id',
         'branch_id',
-        'salary',
-        'basic_pay',
-        'allowances',
-        'deductions',
-        'net_pay',
+        'payroll_period_id',
         'month',
         'year',
+        'basic_salary',
+        'hra',
+        'conveyance',
+        'medical_allowance',
+        'special_allowance',
+        'site_allowance',
+        'travel_allowance',
+        'food_allowance',
+        'other_allowance',
+        'pf',
+        'esic',
+        'pt',
+        'tds',
+        'other_deductions',
+        'salary_advance',
+        'loss_of_pay',
+        'late_penalty',
+        'bonuses',
+        'overtime_pay',
+        'net_salary',
+        'present_days',
+        'absent_days',
+        'paid_leaves',
+        'unpaid_leaves',
+        'working_days',
         'status',
         'processed_at',
     ];
+
+    public function payrollPeriod(): BelongsTo
+    {
+        return $this->belongsTo(PayrollPeriod::class);
+    }
+
+    public function payslip()
+    {
+        return $this->hasOne(Payslip::class);
+    }
 
     protected $dates = ['processed_at'];
 

@@ -12,10 +12,17 @@ export const useEmployeeStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       const response = await api.get('/employees', { params });
-      set({ 
-        employees: response.data.data.employees,
+      
+      const payload = response.data || {};
+      const payloadData = payload.data || payload;
+      const employeesData = payloadData.employees || payloadData.data || payloadData || [];
+      const parsedEmployees = Array.isArray(employeesData) ? employeesData : (Array.isArray(employeesData.data) ? employeesData.data : []);
+
+
+      set({
+        employees: parsedEmployees,
         pagination: response.data.data.pagination,
-        loading: false 
+        loading: false
       });
     } catch (error) {
       set({ error: error.message, loading: false });
@@ -39,9 +46,9 @@ export const useEmployeeStore = create((set, get) => ({
     try {
       const response = await api.post('/employees', data);
       const newEmployee = response.data.data.employee;
-      set(state => ({ 
+      set(state => ({
         employees: [newEmployee, ...state.employees],
-        loading: false 
+        loading: false
       }));
       return newEmployee;
     } catch (error) {

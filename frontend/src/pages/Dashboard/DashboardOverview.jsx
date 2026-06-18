@@ -140,6 +140,22 @@ export default function DashboardOverview() {
             <span className="text-gray-500 ml-1">for {data.inventory.action_required} SKUs</span>
           </div>
         </div>
+        
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Payroll Cost ({data.payroll?.period || 'Current'})</p>
+              <h3 className="text-2xl font-bold text-gray-900">₹{data.payroll ? numberWithCommas(data.payroll.cost) : '0'}</h3>
+            </div>
+            <div className="p-2 bg-green-50 rounded-lg text-green-600">
+              <Banknote className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="flex items-center text-sm">
+            <span className="text-gray-500 font-medium">{data.payroll?.processed_percent || 0}% Processed</span>
+            <span className="text-gray-400 ml-2">this cycle</span>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -263,6 +279,10 @@ export default function DashboardOverview() {
         <button onClick={() => navigate('/dashboard/settings')} className="py-4 bg-gray-100 hover:bg-gray-200 rounded-xl flex flex-col items-center justify-center text-gray-700 transition-colors">
           <Settings className="w-6 h-6 mb-2" />
           <span className="text-sm font-medium">Preferences</span>
+        </button>
+        <button onClick={() => navigate('/dashboard/payroll-processing')} className="py-4 bg-gray-100 hover:bg-gray-200 rounded-xl flex flex-col items-center justify-center text-gray-700 transition-colors">
+          <Banknote className="w-6 h-6 mb-2 text-orange-600" />
+          <span className="text-sm font-medium text-orange-700">Process Payroll</span>
         </button>
       </div>
       

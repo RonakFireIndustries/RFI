@@ -60,7 +60,15 @@ class EmployeeController extends Controller
                 'branch_id' => $validated['branch_id'],
             ]);
 
-            if (!empty($validated['role'])) {
+            if (!empty($validated['designation_id'])) {
+                $designation = \App\Models\Designation::find($validated['designation_id']);
+                if ($designation) {
+                    // Ensure the role exists, or silently ignore if it doesn't map 1-to-1 perfectly yet
+                    try {
+                        $user->assignRole($designation->name);
+                    } catch (\Exception $e) {}
+                }
+            } elseif (!empty($validated['role'])) {
                 $user->assignRole($validated['role']);
             }
 
@@ -142,7 +150,14 @@ class EmployeeController extends Controller
                 $employee->user->update($userUpdates);
             }
 
-            if (isset($validated['role'])) {
+            if (array_key_exists('designation_id', $validated) && !empty($validated['designation_id'])) {
+                $designation = \App\Models\Designation::find($validated['designation_id']);
+                if ($designation) {
+                    try {
+                        $employee->user->syncRoles([$designation->name]);
+                    } catch (\Exception $e) {}
+                }
+            } elseif (isset($validated['role'])) {
                 $employee->user->syncRoles([$validated['role']]);
             }
 

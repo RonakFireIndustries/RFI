@@ -37,7 +37,11 @@ import InvoiceList from '../../pages/Sales/InvoiceList';
 import InvoiceBuilder from '../../pages/Sales/InvoiceBuilder';
 import InvoicePreview from '../../pages/Sales/InvoicePreview';
 import Attendance from '../../pages/Attendance/Attendance';
-import Payroll from '../../pages/Payroll/Payroll';
+import SalaryStructuresPage from '../../pages/Payroll/SalaryStructuresPage';
+import PayrollPeriodsPage from '../../pages/Payroll/PayrollPeriodsPage';
+import PayrollGenerationPage from '../../pages/Payroll/PayrollGenerationPage';
+import EmployeePayrollPage from '../../pages/Payroll/EmployeePayrollPage';
+import PayslipPage from '../../pages/Payroll/PayslipPage';
 import Sites from '@/pages/Sites/Sites';
 import ShiftListPage from '../../pages/Attendance/ShiftListPage';
 import DailyReportsPage from '../../pages/DailyReports/DailyReportsPage';
@@ -122,7 +126,11 @@ export default function DashboardLayout() {
     { name: 'Shifts', path: '/dashboard/shifts', icon: Clock, permission: 'shift.view' },
     { name: 'Daily Reports', path: '/dashboard/daily-reports', icon: FileText, permission: 'daily-report.view' },
     { name: 'Leave', path: '/dashboard/leave-management', icon: Briefcase, permission: 'leave.view' },
-    { name: 'Payroll', path: '/dashboard/payroll', icon: DollarSign, permission: 'view payroll' },
+    { name: 'Payroll Dashboard', path: '/dashboard/payroll', icon: DollarSign, permission: 'payroll.view' },
+    { name: 'Salary Structures', path: '/dashboard/salary-structures', icon: DollarSign, permission: 'salary-structure.view' },
+    { name: 'Payroll Periods', path: '/dashboard/payroll-periods', icon: Calendar, permission: 'payroll.generate' },
+    { name: 'Process Payroll', path: '/dashboard/payroll-processing', icon: ClipboardList, permission: 'payroll.generate' },
+    { name: 'My Payroll', path: '/dashboard/my-payroll', icon: FileText, permission: null },
     { name: 'Inventory', path: '/dashboard/inventory', icon: Package, permission: 'view inventory' },
     { name: 'Products', path: '/dashboard/products', icon: Boxes, permission: 'view products' },
     { name: 'Categories', path: '/dashboard/categories', icon: Layers, permission: 'view categories' },
@@ -324,7 +332,12 @@ export default function DashboardLayout() {
               <Route path="leave-management/requests/new" element={<LeaveRequestForm />} />
               <Route path="leave-management/requests/:id" element={<LeaveApprovalPage />} />
 
-              <Route path="payroll" element={<Payroll />} />
+              <Route path="payroll" element={<PayrollGenerationPage />} />
+              <Route path="salary-structures" element={<SalaryStructuresPage />} />
+              <Route path="payroll-periods" element={<PayrollPeriodsPage />} />
+              <Route path="payroll-processing" element={<PayrollGenerationPage />} />
+              <Route path="my-payroll" element={<EmployeePayrollPage />} />
+              <Route path="payslip/:id" element={<PayslipPage />} />
               <Route path="branches" element={<PlaceholderPage title="Branches" />} />
               <Route path="categories" element={<CategoryDirectory />} />
               <Route path="customers" element={<CustomerDirectory />} />

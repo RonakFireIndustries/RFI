@@ -29,6 +29,9 @@ use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserAccessController;
+use App\Http\Controllers\SalaryStructureController;
+use App\Http\Controllers\PayrollPeriodController;
+use App\Http\Controllers\PayslipController;
 
 
 Route::prefix('v1')->group(function () {
@@ -172,8 +175,21 @@ Route::prefix('v1')->group(function () {
     // HR Organization Structure
     Route::apiResource('departments', \App\Http\Controllers\Api\V1\DepartmentController::class);
     Route::apiResource('designations', \App\Http\Controllers\Api\V1\DesignationController::class);
-    Route::apiResource('payroll', PayrollController::class);
-    Route::post('/payroll/process', [PayrollController::class, 'process']);
+    // Payroll Management System
+    Route::apiResource('salary-structures', SalaryStructureController::class);
+    Route::apiResource('payroll-periods', PayrollPeriodController::class);
+    
+    Route::get('/payroll', [PayrollController::class, 'index']);
+    Route::get('/payroll/{payroll}', [PayrollController::class, 'show']);
+    Route::post('/payroll/generate', [PayrollController::class, 'generate']);
+    Route::post('/payroll/regenerate', [PayrollController::class, 'regenerate']);
+    Route::post('/payroll/{payroll}/approve', [PayrollController::class, 'approve']);
+    Route::post('/payroll/{payroll}/lock', [PayrollController::class, 'lock']);
+
+    Route::get('/payslips', [PayslipController::class, 'index']);
+    Route::get('/payslips/{payslip}', [PayslipController::class, 'show']);
+    Route::post('/payrolls/{payroll}/payslips/generate', [PayslipController::class, 'generate']);
+    Route::get('/payslips/{payslip}/download', [PayslipController::class, 'download']);
 
     // Reports
     Route::get('/reports/sales', [ReportsController::class, 'salesReport']);
