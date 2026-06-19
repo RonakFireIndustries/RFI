@@ -1,7 +1,7 @@
-import { Package, FileText, FileSpreadsheet, CreditCard } from 'lucide-react';
+import { Package, FileText, FileSpreadsheet, CreditCard, Calendar } from 'lucide-react';
 
 const iconMap = {
-  Package, FileText, FileSpreadsheet, CreditCard,
+  Package, FileText, FileSpreadsheet, CreditCard, Calendar,
 };
 
 export default function DashboardWidgets({ widgets }) {

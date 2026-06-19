@@ -3,7 +3,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useState, useEffect, useRef } from 'react';
 import api from '../../services/api';
 import {
-  Settings, LogOut, Bell, HelpCircle, Search, Menu, X,
+  Settings, LogOut, Bell, HelpCircle, Search, Menu, X, Download,
 } from 'lucide-react';
 import { menuCategories } from '../../config/sidebarMenu';
 
@@ -24,7 +24,7 @@ import RoleForm from '../../pages/Admin/Roles/RoleForm';
 import PermissionList from '../../pages/Admin/Permissions/PermissionList';
 import PermissionForm from '../../pages/Admin/Permissions/PermissionForm';
 import UserAccess from '../../pages/Admin/UserAccess/UserAccess';
-import BranchSelector from './BranchSelector';
+import { usePwaInstall } from '@/hooks/usePwaInstall';
 import PurchaseOrdersPage from '../../pages/Purchases/PurchaseOrdersPage';
 import SalesOrdersPage from '../../pages/Sales/SalesOrdersPage';
 import SupplierDirectory from '../../pages/Suppliers/SupplierDirectory';
@@ -88,6 +88,7 @@ export default function DashboardLayout() {
     return () => { document.body.style.overflow = ''; };
   }, [isMobileMenuOpen]);
 
+  const { isInstallable, handleInstall } = usePwaInstall();
   const navigate = useNavigate();
   const searchRef = useRef(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -155,12 +156,12 @@ export default function DashboardLayout() {
       `}>
         <div className="h-16 flex items-center justify-between px-6 border-b border-gray-200">
           {isSidebarOpen ? (
-            <div className="flex flex-col">
-              <span className="text-2xl font-bold text-[#1a56db]">RFI</span>
-              <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Management Suite</span>
+            <div className="flex items-center gap-3 min-w-0">
+              <img src="/logo.png" alt="RFI" className="h-10 w-auto max-w-full object-contain shrink-0" />
+              <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wider leading-tight">Management Suite</span>
             </div>
           ) : (
-            <div className="text-2xl font-bold text-[#1a56db]">R</div>
+            <img src="/logo.png" alt="RFI" className="max-h-8 max-w-full w-auto h-auto object-contain" />
           )}
           <button
             onClick={() => {
@@ -228,6 +229,16 @@ export default function DashboardLayout() {
             <Settings className="w-5 h-5 flex-shrink-0" />
             {isSidebarOpen && <span className="ml-3">Settings</span>}
           </Link>
+          {isInstallable && (
+            <button
+              onClick={handleInstall}
+              title={!isSidebarOpen ? 'Install App' : ''}
+              className="mt-2 flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors w-full"
+            >
+              <Download className="w-5 h-5 flex-shrink-0" />
+              {isSidebarOpen && <span className="ml-3">Install App</span>}
+            </button>
+          )}
         </div>
         <div className="p-4 border-t border-gray-200 bg-gray-50 flex items-center justify-center">
           <div className="w-8 h-8 rounded-full bg-[#e1effe] text-[#1a56db] flex items-center justify-center font-bold flex-shrink-0">
@@ -314,9 +325,7 @@ export default function DashboardLayout() {
             </div>
           </div>
           <div className="ml-2 md:ml-4 flex items-center space-x-2 md:space-x-4">
-            <div className="hidden md:block">
-              <BranchSelector />
-            </div>
+
             <button className="text-gray-400 hover:text-gray-500">
               <span className="sr-only">View notifications</span>
               <Bell className="h-5 w-5" />

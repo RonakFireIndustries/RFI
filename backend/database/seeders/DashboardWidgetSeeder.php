@@ -18,6 +18,7 @@ class DashboardWidgetSeeder extends Seeder
         $this->seedCharts();
         $this->seedQuickActions();
         $this->seedAlerts();
+        $this->seedWidgets();
     }
 
     protected function widget(array $data, array $designationNames): void
@@ -672,5 +673,22 @@ class DashboardWidgetSeeder extends Seeder
             'widget_key' => 'server_alert', 'name' => 'Server Alert', 'type' => 'alert', 'icon' => 'AlertCircle',
             'config' => ['severity' => 'critical'], 'permission' => null, 'order' => ++$order,
         ], ['IT Manager', 'System Admin', 'Super Admin']);
+    }
+
+    // ─── WIDGETS ────────────────────────────────────────────────────
+
+    protected function seedWidgets(): void
+    {
+        $order = 0;
+
+        $this->widget([
+            'widget_key' => 'my_documents', 'name' => 'My Documents', 'type' => 'widget', 'icon' => 'FileText',
+            'permission' => null, 'order' => ++$order,
+        ], $this->allWorkers());
+
+        $this->widget([
+            'widget_key' => 'my_payslips', 'name' => 'My Payslips', 'type' => 'widget', 'icon' => 'CreditCard',
+            'permission' => null, 'order' => ++$order,
+        ], $this->allWorkers());
     }
 }
