@@ -26,8 +26,6 @@ class EmployeeSiteAssignmentController extends Controller
      */
     public function index(Employee $employee): JsonResponse
     {
-        $this->authorize('view', Site::class);
-
         $assignments = $this->assignmentService->getEmployeeSites($employee);
 
         return $this->success('Employee site assignments retrieved successfully', [
@@ -40,8 +38,6 @@ class EmployeeSiteAssignmentController extends Controller
      */
     public function history(Employee $employee): JsonResponse
     {
-        $this->authorize('view', Site::class);
-
         $history = $this->assignmentService->getEmployeeSiteHistory($employee);
 
         return $this->success('Employee site history retrieved successfully', [
@@ -54,8 +50,6 @@ class EmployeeSiteAssignmentController extends Controller
      */
     public function assign(Request $request, Employee $employee): JsonResponse
     {
-        $this->authorize('update', Site::class); // or a specific permission like site.assign if mapped
-
         $validated = $request->validate([
             'site_id' => 'required|exists:sites,id',
             'role' => 'nullable|string|max:255',
@@ -79,8 +73,6 @@ class EmployeeSiteAssignmentController extends Controller
      */
     public function transfer(Request $request, Employee $employee): JsonResponse
     {
-        $this->authorize('update', Site::class); // or a specific permission
-
         $validated = $request->validate([
             'current_site_id' => 'required|exists:sites,id',
             'new_site_id' => 'required|exists:sites,id|different:current_site_id',
@@ -106,8 +98,6 @@ class EmployeeSiteAssignmentController extends Controller
      */
     public function remove(Request $request, Employee $employee, Site $site): JsonResponse
     {
-        $this->authorize('update', Site::class); // or a specific permission
-
         $remarks = $request->input('remarks');
 
         $this->assignmentService->removeEmployeeFromSite($employee, $site->id, $remarks);
@@ -120,8 +110,6 @@ class EmployeeSiteAssignmentController extends Controller
      */
     public function currentSite(Employee $employee): JsonResponse
     {
-        $this->authorize('view', Site::class);
-
         $assignment = $employee->employeeSites()->with('site')->first();
 
         return $this->success('Current site retrieved successfully', [
@@ -135,8 +123,6 @@ class EmployeeSiteAssignmentController extends Controller
      */
     public function siteEmployees(Site $site): JsonResponse
     {
-        $this->authorize('view', Site::class);
-
         $employees = $this->assignmentService->getSiteEmployees($site);
 
         return $this->success('Site employees retrieved successfully', [

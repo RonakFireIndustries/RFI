@@ -8,7 +8,7 @@ class UpdateSiteRequest extends FormRequest
 {
     public function authorize()
     {
-        return $this->user()->can('update', $this->route('site'));
+        return true;
     }
 
     public function rules()

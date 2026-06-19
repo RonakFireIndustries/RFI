@@ -54,11 +54,6 @@ class PurchaseOrderController extends Controller
     {
         $po = PurchaseOrder::findOrFail($id);
         
-        $user = Auth::user();
-        if (!$user->hasRole(['Super Admin', 'Admin', 'Warehouse Manager'])) {
-            return response()->json(['message' => 'Unauthorized to approve'], 403);
-        }
-
         $po->status = 'Approved';
         $po->approved_by = Auth::id();
         $po->save();

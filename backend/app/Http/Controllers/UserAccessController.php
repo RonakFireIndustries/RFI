@@ -25,7 +25,8 @@ class UserAccessController extends Controller
             'roles.*' => 'exists:roles,name',
         ]);
 
-        $user->assignRole($request->roles);
+        $roleIds = Role::whereIn('name', $request->roles)->pluck('id')->toArray();
+        $user->roles()->sync($roleIds);
 
         return response()->json([
             'success' => true,
@@ -45,7 +46,7 @@ class UserAccessController extends Controller
             ], 403);
         }
 
-        $user->removeRole($role);
+        $user->roles()->detach($role->id);
 
         return response()->json([
             'success' => true,
@@ -55,8 +56,7 @@ class UserAccessController extends Controller
 
     public function getPermissions(User $user): JsonResponse
     {
-        // Get direct permissions and permissions via roles
-        $permissions = $user->getAllPermissions();
+        $permissions = $user->roles->flatMap->permissions->unique('id');
         
         return response()->json([
             'success' => true,
@@ -71,19 +71,25 @@ class UserAccessController extends Controller
             'permissions.*' => 'exists:permissions,name',
         ]);
 
-        $user->givePermissionTo($request->permissions);
+        $perms = Permission::whereIn('name', $request->permissions)->get();
+        $roles = $user->roles;
+        foreach ($roles as $role) {
+            $role->permissions()->syncWithoutDetaching($perms->pluck('id')->toArray());
+        }
 
         return response()->json([
             'success' => true,
             'message' => 'Permissions assigned successfully',
-            'data' => $user->getAllPermissions()
+            'data' => $user->fresh()->roles->flatMap->permissions->unique('id')
         ]);
     }
 
     public function removePermission(User $user, $permissionId): JsonResponse
     {
         $permission = Permission::findOrFail($permissionId);
-        $user->revokePermissionTo($permission);
+        foreach ($user->roles as $role) {
+            $role->permissions()->detach($permission->id);
+        }
 
         return response()->json([
             'success' => true,

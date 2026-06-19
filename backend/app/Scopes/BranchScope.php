@@ -13,17 +13,14 @@ class BranchScope implements Scope
     {
         if (Auth::hasUser()) {
             $user = Auth::user();
-
-            if ($user->hasRole(['Super Admin', 'Admin'])) {
-                $headerBranchId = request()->header('X-Branch-Id');
-                if ($headerBranchId && $headerBranchId !== 'null' && $headerBranchId !== 'undefined') {
-                    $builder->where($model->getTable() . '.branch_id', $headerBranchId);
-                }
+            $headerBranchId = request()->header('X-Branch-Id');
+            if ($headerBranchId && $headerBranchId !== 'null' && $headerBranchId !== 'undefined') {
+                $builder->where($model->getTable() . '.branch_id', $headerBranchId);
             } else {
                 if ($user->branch_id) {
                     $builder->where($model->getTable() . '.branch_id', $user->branch_id);
                 } else {
-                    $builder->whereRaw('1 = 0'); // User has no branch, should see nothing
+                    $builder->whereRaw('1 = 0');
                 }
             }
         }

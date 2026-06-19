@@ -54,11 +54,6 @@ class SalesOrderController extends Controller
     {
         $so = SalesOrder::findOrFail($id);
         
-        $user = Auth::user();
-        if (!$user->hasRole(['Super Admin', 'Admin', 'Warehouse Manager'])) {
-            return response()->json(['message' => 'Unauthorized to approve'], 403);
-        }
-
         $so->status = 'Approved';
         $so->approved_by = Auth::id();
         $so->save();

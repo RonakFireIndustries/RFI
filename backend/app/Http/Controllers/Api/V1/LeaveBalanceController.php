@@ -24,8 +24,6 @@ class LeaveBalanceController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $this->authorize('viewAny', LeaveBalance::class);
-
         $filters = $request->only(['employee_id', 'year']);
         $perPage = (int) $request->input('per_page', 50);
 
@@ -44,8 +42,6 @@ class LeaveBalanceController extends Controller
 
     public function initialize(Request $request, Employee $employee): JsonResponse
     {
-        $this->authorize('create', LeaveBalance::class);
-
         $year = $request->input('year', date('Y'));
         
         $this->service->initializeBalances($employee, $year);

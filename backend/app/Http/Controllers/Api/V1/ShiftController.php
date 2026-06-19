@@ -27,8 +27,6 @@ class ShiftController extends Controller
      */
     public function index(): JsonResponse
     {
-        $this->authorize('viewAny', Shift::class);
-
         $shifts = $this->shiftService->getAllShifts();
 
         return $this->success('Shifts retrieved successfully', [
@@ -41,8 +39,6 @@ class ShiftController extends Controller
      */
     public function store(StoreShiftRequest $request): JsonResponse
     {
-        $this->authorize('create', Shift::class);
-
         $shift = $this->shiftService->createShift($request->validated());
 
         return $this->success('Shift created successfully', [
@@ -55,8 +51,6 @@ class ShiftController extends Controller
      */
     public function show(Shift $shift): JsonResponse
     {
-        $this->authorize('view', $shift);
-
         return $this->success('Shift retrieved successfully', [
             'shift' => $shift
         ]);
@@ -67,8 +61,6 @@ class ShiftController extends Controller
      */
     public function update(UpdateShiftRequest $request, Shift $shift): JsonResponse
     {
-        $this->authorize('update', $shift);
-
         $shift = $this->shiftService->updateShift($shift, $request->validated());
 
         return $this->success('Shift updated successfully', [
@@ -81,8 +73,6 @@ class ShiftController extends Controller
      */
     public function destroy(Shift $shift): JsonResponse
     {
-        $this->authorize('delete', $shift);
-
         $this->shiftService->deleteShift($shift);
 
         return $this->success('Shift deleted successfully');

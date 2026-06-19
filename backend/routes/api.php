@@ -33,6 +33,13 @@ use App\Http\Controllers\UserAccessController;
 use App\Http\Controllers\SalaryStructureController;
 use App\Http\Controllers\PayrollPeriodController;
 use App\Http\Controllers\PayslipController;
+use App\Http\Controllers\InventoryLocationController;
+use App\Http\Controllers\UnitController;
+use App\Http\Controllers\UnitConversionController;
+use App\Http\Controllers\ProductStockController;
+use App\Http\Controllers\TransactionLedgerController;
+use App\Http\Controllers\StockRequestController;
+use App\Http\Controllers\InventoryDashboardController;
 
 
 Route::prefix('v1')->group(function () {
@@ -105,7 +112,6 @@ Route::prefix('v1')->group(function () {
     Route::get('sites/{site}/employees', [\App\Http\Controllers\Api\V1\EmployeeSiteAssignmentController::class, 'siteEmployees']);
 
     Route::apiResource('employee-sites', \App\Http\Controllers\EmployeeSiteController::class)->only(['index','store','destroy']);
-    Route::apiResource('daily-reports', \App\Http\Controllers\DailyReportController::class)->only(['index','store','show','destroy']);
 
     // Shifts & Attendance
     Route::apiResource('shifts', ShiftController::class);
@@ -118,34 +124,68 @@ Route::prefix('v1')->group(function () {
     Route::post('daily-reports/{daily_report}/approve', [DailyReportController::class, 'approve']);
     Route::post('daily-reports/{daily_report}/reject', [DailyReportController::class, 'reject']);
     Route::post('daily-reports/{daily_report}/rework', [DailyReportController::class, 'rework']);
+
+    // Inventory Dashboard (MUST be before /inventory/{inventory} wildcard)
+    Route::get('/inventory/dashboard', [InventoryDashboardController::class, 'index']);
     Route::post('/inventory/transaction', [InventoryController::class, 'transaction']);
     Route::get('/inventory/transactions', [InventoryController::class, 'transactions']);
+    Route::get('/inventory/transfers', [\App\Http\Controllers\InventoryTransferController::class, 'index']);
+    Route::post('/inventory/transfers', [\App\Http\Controllers\InventoryTransferController::class, 'store']);
+    Route::put('/inventory/transfers/{transfer}/status', [\App\Http\Controllers\InventoryTransferController::class, 'updateStatus']);
+    Route::get('/inventory', [InventoryController::class, 'index']);
+    Route::post('/inventory', [InventoryController::class, 'store']);
     Route::get('/inventory/{inventory}', [InventoryController::class, 'show']);
     Route::put('/inventory/{inventory}', [InventoryController::class, 'update']);
     Route::patch('/inventory/{inventory}', [InventoryController::class, 'update']);
+    Route::delete('/inventory/{inventory}', [InventoryController::class, 'destroy']);
 
-    // Inventory
+    // Inventory Categories & Products
     Route::apiResource('categories', \App\Http\Controllers\CategoryController::class);
     Route::apiResource('products', ProductController::class);
-    Route::get('/inventory', [InventoryController::class, 'index']);
-    Route::post('/inventory', [InventoryController::class, 'store']);
-    Route::delete('/inventory/{inventory}', [InventoryController::class, 'destroy']);
-    
-    // Inventory Transfers
-    Route::get('/inventory/transfers', [\App\Http\Controllers\InventoryTransferController::class, 'index'])->middleware('permission:manage transfers,sanctum');
-    Route::post('/inventory/transfers', [\App\Http\Controllers\InventoryTransferController::class, 'store'])->middleware('permission:manage transfers,sanctum');
-    Route::put('/inventory/transfers/{transfer}/status', [\App\Http\Controllers\InventoryTransferController::class, 'updateStatus'])->middleware('permission:manage transfers,sanctum');
+
+    // Inventory Locations (using branches & sites - polymorphic)
+    Route::get('/locations', [InventoryLocationController::class, 'index']);
+    Route::post('/locations', [InventoryLocationController::class, 'store']);
+
+    // Units
+    Route::apiResource('units', UnitController::class);
+
+    // Unit Conversions
+    Route::apiResource('unit-conversions', UnitConversionController::class);
+    Route::get('/unit-conversions/convert/{from}/{to}/{quantity}', [UnitConversionController::class, 'convert']);
+
+    // Product Stock (named routes before wildcard {stock})
+    Route::get('/stock/by-product/{product}', [ProductStockController::class, 'byProduct']);
+    Route::get('/stock/by-location/{locationType}/{locationId}', [ProductStockController::class, 'byLocation']);
+    Route::get('/stock', [ProductStockController::class, 'index']);
+    Route::get('/stock/{stock}', [ProductStockController::class, 'show']);
+
+    // Transaction Ledger
+    Route::get('/stock/transactions', [TransactionLedgerController::class, 'index']);
+    Route::post('/stock/transactions', [TransactionLedgerController::class, 'store']);
+    Route::get('/stock/transactions/{transactionLedger}', [TransactionLedgerController::class, 'show']);
+    Route::get('/stock/transactions-summary', [TransactionLedgerController::class, 'summary']);
+
+    // Stock Requests
+    Route::get('/stock/requests', [StockRequestController::class, 'index']);
+    Route::post('/stock/requests', [StockRequestController::class, 'store']);
+    Route::get('/stock/requests/{stockRequest}', [StockRequestController::class, 'show']);
+    Route::post('/stock/requests/{stockRequest}/approve', [StockRequestController::class, 'approve']);
+    Route::post('/stock/requests/{stockRequest}/issue', [StockRequestController::class, 'issue']);
+    Route::post('/stock/requests/{stockRequest}/receive', [StockRequestController::class, 'receive']);
 
     // CRM & Sales
     // Purchases Management
-    Route::apiResource('purchases/quotations', \App\Http\Controllers\PurchaseQuotationController::class);
-    Route::post('purchases/quotations/{id}/convert', [\App\Http\Controllers\PurchaseQuotationController::class, 'convertToPo']);
-    
-    Route::apiResource('purchases/orders', \App\Http\Controllers\PurchaseOrderController::class);
-    Route::post('purchases/orders/{id}/approve', [\App\Http\Controllers\PurchaseOrderController::class, 'approve']);
-    
-    Route::apiResource('purchases/grns', \App\Http\Controllers\GoodsReceiptNoteController::class);
-    Route::apiResource('purchases/returns', \App\Http\Controllers\PurchaseReturnController::class);
+    Route::name('purchases.')->group(function () {
+        Route::apiResource('purchases/quotations', \App\Http\Controllers\PurchaseQuotationController::class);
+        Route::post('purchases/quotations/{id}/convert', [\App\Http\Controllers\PurchaseQuotationController::class, 'convertToPo'])->name('quotations.convert');
+        
+        Route::apiResource('purchases/orders', \App\Http\Controllers\PurchaseOrderController::class);
+        Route::post('purchases/orders/{id}/approve', [\App\Http\Controllers\PurchaseOrderController::class, 'approve'])->name('orders.approve');
+        
+        Route::apiResource('purchases/grns', \App\Http\Controllers\GoodsReceiptNoteController::class);
+        Route::apiResource('purchases/returns', \App\Http\Controllers\PurchaseReturnController::class);
+    });
 
     // Payments
     Route::apiResource('payments', \App\Http\Controllers\PaymentController::class);
@@ -153,18 +193,18 @@ Route::prefix('v1')->group(function () {
     // Notes and Documents
     Route::apiResource('notes', \App\Http\Controllers\NoteController::class)->only(['store', 'destroy']);
     Route::post('documents', [\App\Http\Controllers\DocumentController::class, 'store']);
-    Route::get('documents/{id}/download', [\App\Http\Controllers\DocumentController::class, 'download']);
-    Route::delete('documents/{id}', [\App\Http\Controllers\DocumentController::class, 'destroy']);
 
     // Sales Management
-    Route::apiResource('sales/quotations', \App\Http\Controllers\SalesQuotationController::class);
-    Route::post('sales/quotations/{id}/convert', [\App\Http\Controllers\SalesQuotationController::class, 'convertToSo']);
+    Route::name('sales.')->group(function () {
+        Route::apiResource('sales/quotations', \App\Http\Controllers\SalesQuotationController::class);
+        Route::post('sales/quotations/{id}/convert', [\App\Http\Controllers\SalesQuotationController::class, 'convertToSo'])->name('quotations.convert');
 
-    Route::apiResource('sales/orders', \App\Http\Controllers\SalesOrderController::class);
-    Route::post('sales/orders/{id}/approve', [\App\Http\Controllers\SalesOrderController::class, 'approve']);
+        Route::apiResource('sales/orders', \App\Http\Controllers\SalesOrderController::class);
+        Route::post('sales/orders/{id}/approve', [\App\Http\Controllers\SalesOrderController::class, 'approve'])->name('orders.approve');
 
-    Route::apiResource('sales/deliveries', \App\Http\Controllers\DeliveryNoteController::class);
-    Route::apiResource('sales/returns', \App\Http\Controllers\SalesReturnController::class);
+        Route::apiResource('sales/deliveries', \App\Http\Controllers\DeliveryNoteController::class);
+        Route::apiResource('sales/returns', \App\Http\Controllers\SalesReturnController::class);
+    });
 
     Route::apiResource('suppliers', SupplierController::class);
     Route::apiResource('customers', CustomerController::class);
@@ -202,8 +242,8 @@ Route::prefix('v1')->group(function () {
     Route::get('/reports/leaves', [ReportsController::class, 'leaveReport']);
     Route::get('/reports/employees', [ReportsController::class, 'employeeReport']);
 
-    // Super Admin Generic Routes
-    Route::middleware('role:Super Admin,sanctum')->group(function () {
+    // Generic Admin Routes
+    Route::group([], function () {
         Route::get('/admin/tables', [AdminController::class, 'getTables']);
         Route::get('/admin/tables/{table}/schema', [AdminController::class, 'getTableSchema']);
         Route::get('/admin/tables/{table}', [AdminController::class, 'getTableData']);

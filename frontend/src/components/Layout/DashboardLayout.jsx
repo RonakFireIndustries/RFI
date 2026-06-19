@@ -55,6 +55,17 @@ import LeaveRequestsPage from '../../pages/LeaveManagement/LeaveRequestsPage';
 import LeaveRequestForm from '../../pages/LeaveManagement/LeaveRequestForm';
 import LeaveApprovalPage from '../../pages/LeaveManagement/LeaveApprovalPage';
 
+// Inventory Management Pages
+import LocationsPage from '../../pages/Inventory/Locations/LocationsPage';
+import UnitsPage from '../../pages/Inventory/Units/UnitsPage';
+import ConversionsPage from '../../pages/Inventory/Conversions/ConversionsPage';
+import StockPage from '../../pages/Inventory/Stock/StockPage';
+import TransactionsPage from '../../pages/Inventory/Transactions/TransactionsPage';
+import RecordTransactionPage from '../../pages/Inventory/Transactions/RecordTransactionPage';
+import TransfersPage from '../../pages/Inventory/Transfers/TransfersPage';
+import StockRequestsPage from '../../pages/Inventory/Requests/StockRequestsPage';
+import StockRequestDetail from '../../pages/Inventory/Requests/StockRequestDetail';
+
 const PlaceholderPage = ({ title }) => (
   <div className="bg-white rounded-lg shadow border border-gray-100 p-6">
     <h2 className="text-xl font-semibold mb-4">{title}</h2>
@@ -63,7 +74,7 @@ const PlaceholderPage = ({ title }) => (
 );
 
 export default function DashboardLayout() {
-  const { user, roles, permissions, logout } = useAuthStore();
+  const { user, roles, logout } = useAuthStore();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -118,12 +129,10 @@ export default function DashboardLayout() {
     return () => clearTimeout(debounceTimer);
   }, [searchQuery]);
 
-  const canAccess = (permission) => {
-    if (!permission) return true;
-    const adminRoles = roles?.map(r => r.toLowerCase()) || [];
-    if (adminRoles.some(r => ['super admin', 'admin', 'system admin', 'superadmin'].includes(r))) return true;
-    if (!permissions || permissions.length === 0) return false;
-    return permissions?.includes(permission);
+  const canAccess = (itemRoles) => {
+    if (!itemRoles || roles.includes('Super Admin') || roles.includes('Admin')) return true;
+    if (itemRoles.includes('*')) return true;
+    return roles.some(r => itemRoles.includes(r));
   };
 
     return (
@@ -170,7 +179,7 @@ export default function DashboardLayout() {
         <div className="flex-1 py-4 overflow-y-auto">
           <div className="px-3 space-y-6">
             {menuCategories.map((category, index) => {
-              const visibleItems = category.items.filter((item) => canAccess(item.permission));
+              const visibleItems = category.items.filter((item) => canAccess(item.roles));
 
               if (visibleItems.length === 0) return null;
 
@@ -230,7 +239,7 @@ export default function DashboardLayout() {
                 {user?.name || 'John Doe'}
               </p>
               <p className="text-xs text-gray-500 truncate">
-                {roles?.[0] || 'Administrator'}
+                {roles?.[0] || 'User'}
               </p>
             </div>
           )}
@@ -335,6 +344,16 @@ export default function DashboardLayout() {
               <Route index element={<DashboardRenderer />} />
               <Route path="inventory" element={<InventoryDashboard />} />
               <Route path="inventory/:id" element={<InventoryDetail />} />
+              <Route path="inventory/dashboard" element={<InventoryDashboard />} />
+              <Route path="inventory/locations" element={<LocationsPage />} />
+              <Route path="inventory/units" element={<UnitsPage />} />
+              <Route path="inventory/conversions" element={<ConversionsPage />} />
+              <Route path="inventory/stock" element={<StockPage />} />
+              <Route path="inventory/transactions" element={<TransactionsPage />} />
+              <Route path="inventory/record-transaction" element={<RecordTransactionPage />} />
+              <Route path="inventory/transfers" element={<TransfersPage />} />
+              <Route path="inventory/requests" element={<StockRequestsPage />} />
+              <Route path="inventory/requests/:id" element={<StockRequestDetail />} />
               <Route path="products" element={<ProductCatalog />} />
               <Route path="products/:id" element={<ProductDetail />} />
               <Route path="warehouses" element={<Warehouses />} />

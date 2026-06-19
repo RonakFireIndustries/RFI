@@ -54,6 +54,14 @@ class RolesAndPermissionsSeeder extends Seeder
             'leave.view', 'leave.create', 'leave.edit', 'leave.delete', 'leave.approve', 'leave.reject', 'leave.cancel', 'leave.balance.view',
             'leave-type.view', 'leave-type.create', 'leave-type.edit', 'leave-type.delete',
             'attendance.geo.checkin', 'attendance.geo.checkout', 'attendance.location.view', 'attendance.location.audit',
+            'inventory.locations.view', 'inventory.locations.create', 'inventory.locations.edit', 'inventory.locations.delete',
+            'inventory.units.view', 'inventory.units.create', 'inventory.units.edit', 'inventory.units.delete',
+            'inventory.conversions.view', 'inventory.conversions.create', 'inventory.conversions.edit', 'inventory.conversions.delete',
+            'inventory.stock.view', 'inventory.stock.create',
+            'inventory.transactions.view', 'inventory.transactions.create',
+            'inventory.requests.view', 'inventory.requests.create', 'inventory.requests.approve',
+            'inventory.transfers.view', 'inventory.transfers.create', 'inventory.transfers.approve',
+            'inventory.dashboard.view',
         ];
 
         $permissions = array_values(array_unique(array_merge($legacyPermissions, $policyPermissions)));
@@ -89,6 +97,14 @@ class RolesAndPermissionsSeeder extends Seeder
             'manage inventory', 'view products', 'view reports',
             'employee.view', 'view_inventory', 'manage_inventory',
             'view_products', 'create_products', 'update_products',
+            'inventory.locations.view', 'inventory.locations.create', 'inventory.locations.edit', 'inventory.locations.delete',
+            'inventory.units.view', 'inventory.units.create', 'inventory.units.edit', 'inventory.units.delete',
+            'inventory.conversions.view', 'inventory.conversions.create', 'inventory.conversions.edit', 'inventory.conversions.delete',
+            'inventory.stock.view', 'inventory.stock.create',
+            'inventory.transactions.view', 'inventory.transactions.create',
+            'inventory.requests.view', 'inventory.requests.create', 'inventory.requests.approve',
+            'inventory.transfers.view', 'inventory.transfers.create', 'inventory.transfers.approve',
+            'inventory.dashboard.view',
         ]);
         
         Role::findByName('HR')->syncPermissions([
@@ -124,6 +140,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'view products', 'manage transfers',
             'view_inventory', 'manage_inventory',
             'view_products', 'view_categories',
+            'inventory.locations.view', 'inventory.units.view',
+            'inventory.stock.view',
+            'inventory.transactions.view', 'inventory.transactions.create',
+            'inventory.requests.view', 'inventory.requests.create',
+            'inventory.transfers.view', 'inventory.transfers.create',
+            'inventory.dashboard.view',
         ]);
 
         Role::findByName('Sales Executive')->syncPermissions([

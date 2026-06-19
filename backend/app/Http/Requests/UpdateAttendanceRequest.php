@@ -8,7 +8,7 @@ class UpdateAttendanceRequest extends FormRequest
 {
     public function authorize()
     {
-        return $this->user()->can('update', $this->route('attendance'));
+        return true;
     }
 
     public function rules()

@@ -8,7 +8,7 @@ class StoreEmployeeSiteRequest extends FormRequest
 {
     public function authorize()
     {
-        return $this->user()->can('create', \App\Models\EmployeeSite::class);
+        return true;
     }
 
     public function rules()

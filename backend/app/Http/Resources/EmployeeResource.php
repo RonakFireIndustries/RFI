@@ -47,7 +47,7 @@ class EmployeeResource extends JsonResource
             'user' => $this->whenLoaded('user', fn () => [
                 'id' => $this->user->id,
                 'email' => $this->user->email,
-                'role' => $this->user->getRoleNames()->first(),
+                'role' => $this->user->roles->pluck('name')->first(),
             ]),
 
             'created_at' => $this->created_at,

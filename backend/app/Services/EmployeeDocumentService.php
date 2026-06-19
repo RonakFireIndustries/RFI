@@ -81,19 +81,15 @@ class EmployeeDocumentService
     }
 
     /**
-     * Soft delete document.
+     * Hard delete document and remove the physical file.
      */
     public function deleteDocument(EmployeeDocument $document)
     {
-        return $document->delete();
-    }
+        if (Storage::disk('local')->exists($document->file_path)) {
+            Storage::disk('local')->delete($document->file_path);
+        }
 
-    /**
-     * Restore document.
-     */
-    public function restoreDocument(EmployeeDocument $document)
-    {
-        return $document->restore();
+        return $document->forceDelete();
     }
 
     /**

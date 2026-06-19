@@ -32,8 +32,6 @@ class AttendanceController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $this->authorize('viewAny', Attendance::class);
-
         $filters = $request->only([
             'employee_id', 'date', 'status', 'site_id', 'shift_id',
             'department_id', 'start_date', 'end_date', 'location_verified'
@@ -49,8 +47,6 @@ class AttendanceController extends Controller
 
     public function store(StoreAttendanceRequest $request): JsonResponse
     {
-        $this->authorize('create', Attendance::class);
-
         $attendance = $this->attendanceService->createAttendance($request->validated());
 
         return $this->success('Attendance created successfully', [
@@ -60,8 +56,6 @@ class AttendanceController extends Controller
 
     public function show(Attendance $attendance): JsonResponse
     {
-        $this->authorize('view', $attendance);
-
         $attendance->load(['employee', 'site', 'shift']);
 
         return $this->success('Attendance retrieved successfully', [
@@ -71,8 +65,6 @@ class AttendanceController extends Controller
 
     public function update(UpdateAttendanceRequest $request, Attendance $attendance): JsonResponse
     {
-        $this->authorize('update', $attendance);
-
         $attendance = $this->attendanceService->updateAttendance($attendance, $request->validated());
 
         return $this->success('Attendance updated successfully', [
@@ -82,8 +74,6 @@ class AttendanceController extends Controller
 
     public function destroy(Attendance $attendance): JsonResponse
     {
-        $this->authorize('delete', $attendance);
-
         $this->attendanceService->deleteAttendance($attendance);
 
         return $this->success('Attendance deleted successfully');
@@ -95,11 +85,7 @@ class AttendanceController extends Controller
         $employee = $user->employee;
 
         if (!$employee) {
-            return $this->error('Only employees can check in', 403);
-        }
-
-        if ($user->cannot('geoCheckin', Attendance::class)) {
-            return $this->error('You do not have permission to use geo check-in', 403);
+            return $this->error('Only employees can check in', [], 403);
         }
 
         $prerequisites = $this->attendanceService->validateCheckInPrerequisites($employee);
@@ -129,11 +115,7 @@ class AttendanceController extends Controller
         $employee = $user->employee;
 
         if (!$employee) {
-            return $this->error('Only employees can check out', 403);
-        }
-
-        if ($user->cannot('geoCheckout', Attendance::class)) {
-            return $this->error('You do not have permission to use geo check-out', 403);
+            return $this->error('Only employees can check out', [], 403);
         }
 
         $prerequisites = $this->attendanceService->validateCheckInPrerequisites($employee);
@@ -163,11 +145,7 @@ class AttendanceController extends Controller
         $employee = $user->employee;
 
         if (!$employee) {
-            return $this->error('Employee profile not found', 404);
-        }
-
-        if ($user->cannot('locationView', Attendance::class)) {
-            return $this->error('You do not have permission to view location data', 403);
+            return $this->error('Employee profile not found', [], 404);
         }
 
         $filters = array_merge(
@@ -185,8 +163,6 @@ class AttendanceController extends Controller
 
     public function locationAudit(Request $request): JsonResponse
     {
-        $this->authorize('locationAudit', Attendance::class);
-
         $filters = $request->only([
             'employee_id', 'site_id', 'date', 'start_date', 'end_date',
             'location_verified', 'status'

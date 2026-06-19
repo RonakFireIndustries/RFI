@@ -9,11 +9,8 @@ import SuperAdminLogin from './pages/SuperAdmin/SuperAdminLogin';
 import SuperAdminDashboard from './pages/SuperAdmin/SuperAdminDashboard';
 
 // Protected Route Wrapper
-const ProtectedRoute = ({ children, permission, requiredRole }) => {
+const ProtectedRoute = ({ children }) => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const permissions = useAuthStore((state) => state.permissions);
-  const roles = useAuthStore((state) => state.roles);
-  const user = useAuthStore((state) => state.user);
   const token = useAuthStore((state) => state.token);
 
   const storedAuth = typeof window !== 'undefined'
@@ -21,22 +18,12 @@ const ProtectedRoute = ({ children, permission, requiredRole }) => {
     : null;
   const hasPersistedToken = Boolean(token || storedAuth?.state?.token);
 
-  const hasRequiredRole = !requiredRole
-    || roles.includes(requiredRole)
-    || (requiredRole === 'Super Admin' && user?.email === 'superadmin@example.com');
-
-  const canAccess = hasRequiredRole && (!permission || roles.includes('Super Admin') || roles.includes('Admin') || permissions.includes(permission));
-
   if (!isAuthenticated && hasPersistedToken) {
     return null;
   }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
-  }
-
-  if (!canAccess) {
-    return <Navigate to="/dashboard" replace />;
   }
 
   return children;
@@ -61,7 +48,7 @@ function App() {
         <Route
           path="/superadmin/dashboard"
           element={
-            <ProtectedRoute requiredRole="Super Admin">
+            <ProtectedRoute>
               <SuperAdminDashboard />
             </ProtectedRoute>
           }

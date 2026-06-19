@@ -14,7 +14,7 @@ class StoreDailyReportRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'employee_id' => 'required|exists:employees,id',
+            'employee_id' => 'sometimes|exists:employees,id',
             'site_id' => 'nullable|exists:sites,id',
             'date' => 'required|date',
             'work_description' => 'required|string',

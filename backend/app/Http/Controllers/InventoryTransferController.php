@@ -14,13 +14,6 @@ class InventoryTransferController extends Controller
         $user = $request->user();
         $query = InventoryTransfer::with(['sourceBranch', 'destinationBranch', 'product', 'requester', 'approver']);
 
-        if (!$user->hasRole(['Super Admin', 'Admin'])) {
-            $query->where(function($q) use ($user) {
-                $q->where('source_branch_id', $user->branch_id)
-                  ->orWhere('destination_branch_id', $user->branch_id);
-            });
-        }
-
         return $query->latest()->get();
     }
 
@@ -33,9 +26,7 @@ class InventoryTransferController extends Controller
             'notes' => 'nullable|string'
         ]);
 
-        $sourceBranchId = $request->user()->hasRole(['Super Admin', 'Admin']) 
-            ? ($request->header('X-Branch-Id') ?? $request->source_branch_id ?? $request->user()->branch_id)
-            : $request->user()->branch_id;
+        $sourceBranchId = $request->header('X-Branch-Id') ?? $request->source_branch_id ?? $request->user()->branch_id;
 
         if (!$sourceBranchId) {
             return response()->json(['message' => 'Source branch is required'], 400);
@@ -70,11 +61,9 @@ class InventoryTransferController extends Controller
         ]);
 
         $user = $request->user();
-        if (!$user->hasRole(['Super Admin', 'Admin'])) {
             if ($user->branch_id !== $transfer->destination_branch_id && $user->branch_id !== $transfer->source_branch_id) {
                 return response()->json(['message' => 'Unauthorized'], 403);
             }
-        }
 
         if ($transfer->status !== 'pending' && $request->status === 'approved') {
             return response()->json(['message' => 'Transfer is already processed'], 400);

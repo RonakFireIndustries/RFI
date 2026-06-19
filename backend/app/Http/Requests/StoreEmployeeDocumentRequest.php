@@ -8,7 +8,7 @@ class StoreEmployeeDocumentRequest extends FormRequest
 {
     public function authorize()
     {
-        return $this->user()->can('document.create');
+        return true;
     }
 
     public function rules()

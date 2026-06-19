@@ -25,8 +25,6 @@ class DesignationController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $this->authorize('viewAny', Designation::class);
-
         $filters = $request->only(['search', 'department_id']);
         $perPage = (int) $request->input('per_page', 15);
 
@@ -45,8 +43,6 @@ class DesignationController extends Controller
 
     public function store(StoreDesignationRequest $request): JsonResponse
     {
-        $this->authorize('create', Designation::class);
-
         $designation = $this->designationService->createDesignation($request->validated());
 
         return $this->success('Designation created successfully', [
@@ -56,8 +52,6 @@ class DesignationController extends Controller
 
     public function show(Designation $designation): JsonResponse
     {
-        $this->authorize('view', $designation);
-
         $designation->load(['department']);
         $designation->loadCount(['employees']);
 
@@ -68,8 +62,6 @@ class DesignationController extends Controller
 
     public function update(UpdateDesignationRequest $request, Designation $designation): JsonResponse
     {
-        $this->authorize('update', $designation);
-
         $designation = $this->designationService->updateDesignation($designation, $request->validated());
 
         return $this->success('Designation updated successfully', [
@@ -79,8 +71,6 @@ class DesignationController extends Controller
 
     public function destroy(Designation $designation): JsonResponse
     {
-        $this->authorize('delete', $designation);
-
         $this->designationService->deleteDesignation($designation);
 
         return $this->success('Designation deleted successfully');

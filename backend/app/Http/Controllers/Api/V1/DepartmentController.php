@@ -25,8 +25,6 @@ class DepartmentController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $this->authorize('viewAny', Department::class);
-
         $filters = $request->only(['search']);
         $perPage = (int) $request->input('per_page', 15);
 
@@ -45,8 +43,6 @@ class DepartmentController extends Controller
 
     public function store(StoreDepartmentRequest $request): JsonResponse
     {
-        $this->authorize('create', Department::class);
-
         $department = $this->departmentService->createDepartment($request->validated());
 
         return $this->success('Department created successfully', [
@@ -56,8 +52,6 @@ class DepartmentController extends Controller
 
     public function show(Department $department): JsonResponse
     {
-        $this->authorize('view', $department);
-
         $department->loadCount(['employees', 'designations']);
 
         return $this->success('Department retrieved successfully', [
@@ -67,8 +61,6 @@ class DepartmentController extends Controller
 
     public function update(UpdateDepartmentRequest $request, Department $department): JsonResponse
     {
-        $this->authorize('update', $department);
-
         $department = $this->departmentService->updateDepartment($department, $request->validated());
 
         return $this->success('Department updated successfully', [
@@ -78,8 +70,6 @@ class DepartmentController extends Controller
 
     public function destroy(Department $department): JsonResponse
     {
-        $this->authorize('delete', $department);
-
         $this->departmentService->deleteDepartment($department);
 
         return $this->success('Department deleted successfully');

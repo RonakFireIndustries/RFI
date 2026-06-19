@@ -10,6 +10,8 @@ class DashboardResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
+            'dashboard_type' => $this->resource['dashboard_type'] ?? 'employee',
+
             'cards' => collect($this->resource['cards'] ?? [])->map(fn($card) => [
                 'key' => $card['key'],
                 'name' => $card['name'],
@@ -44,6 +46,15 @@ class DashboardResource extends JsonResource
                 'value' => $alert['value'],
                 'subtitle' => $alert['subtitle'] ?? null,
                 'severity' => $alert['severity'] ?? 'info',
+            ])->values()->toArray(),
+
+            'widgets' => collect($this->resource['widgets'] ?? [])->map(fn($widget) => [
+                'key' => $widget['key'],
+                'name' => $widget['name'],
+                'icon' => $widget['icon'],
+                'type' => $widget['type'] ?? 'mini_card',
+                'value' => $widget['value'] ?? null,
+                'subtitle' => $widget['subtitle'] ?? null,
             ])->values()->toArray(),
         ];
     }

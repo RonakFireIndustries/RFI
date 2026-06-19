@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDailyReportsStore } from '../../store/dailyReportStore';
 import { useSiteStore } from '../../store/siteStore';
-// For demo purposes, assuming the logged in user's employee_id is 1. In a real app this comes from auth context.
-const LOGGED_IN_EMPLOYEE_ID = 1; 
 
 export default function DailyReportForm() {
   const navigate = useNavigate();
@@ -12,7 +10,6 @@ export default function DailyReportForm() {
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
-    employee_id: LOGGED_IN_EMPLOYEE_ID,
     site_id: '',
     date: new Date().toISOString().split('T')[0],
     hours_worked: 8,
@@ -32,7 +29,12 @@ export default function DailyReportForm() {
     e.preventDefault();
     setLoading(true);
     try {
-      const payload = { ...formData, status: isSubmit ? 'Submitted' : 'Draft' };
+      const payload = {
+        ...formData,
+        site_id: formData.site_id || null,
+        hours_worked: Number(formData.hours_worked),
+        status: isSubmit ? 'Submitted' : 'Draft',
+      };
       await createItem(payload);
       alert(`Report successfully ${isSubmit ? 'submitted' : 'saved as draft'}!`);
       navigate('/dashboard/daily-reports');

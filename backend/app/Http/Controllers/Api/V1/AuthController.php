@@ -27,7 +27,7 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth_token')->plainTextToken;
         $user->load('roles');
-        $user->setRelation('permissions', $user->getAllPermissions());
+        $user->setRelation('permissions', $user->roles->flatMap->permissions->unique('id'));
 
         return $this->success('Login successful', [
             'user' => $user,
@@ -51,7 +51,7 @@ class AuthController extends Controller
     public function user(Request $request): JsonResponse
     {
         $user = $request->user()->load('roles');
-        $user->setRelation('permissions', $user->getAllPermissions());
+        $user->setRelation('permissions', $user->roles->flatMap->permissions->unique('id'));
 
         return $this->success('User fetched successfully', [
             'user' => $user

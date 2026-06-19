@@ -25,8 +25,6 @@ class EmployeeController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $this->authorize('viewAny', Employee::class);
-
         $filters = $request->only([
             'search', 'department_id', 'designation_id', 'status', 'manager_id'
         ]);
@@ -47,8 +45,6 @@ class EmployeeController extends Controller
 
     public function store(StoreEmployeeRequest $request): JsonResponse
     {
-        $this->authorize('create', Employee::class);
-
         $employee = $this->employeeService->createEmployee($request->validated());
 
         return $this->success('Employee created successfully', [
@@ -58,8 +54,6 @@ class EmployeeController extends Controller
 
     public function show(Employee $employee): JsonResponse
     {
-        $this->authorize('view', $employee);
-
         $employee->load(['department', 'designation', 'manager', 'user']);
 
         return $this->success('Employee retrieved successfully', [
@@ -69,8 +63,6 @@ class EmployeeController extends Controller
 
     public function update(UpdateEmployeeRequest $request, Employee $employee): JsonResponse
     {
-        $this->authorize('update', $employee);
-
         $employee = $this->employeeService->updateEmployee($employee, $request->validated());
 
         return $this->success('Employee updated successfully', [
@@ -80,8 +72,6 @@ class EmployeeController extends Controller
 
     public function destroy(Employee $employee): JsonResponse
     {
-        $this->authorize('delete', $employee);
-
         $this->employeeService->deleteEmployee($employee);
 
         return $this->success('Employee deleted successfully');
@@ -89,8 +79,6 @@ class EmployeeController extends Controller
 
     public function subordinates(Employee $employee): JsonResponse
     {
-        $this->authorize('view', $employee);
-
         $subordinates = $employee->subordinates()->with(['department', 'designation'])->get();
 
         return $this->success('Subordinates retrieved successfully', [
@@ -100,8 +88,6 @@ class EmployeeController extends Controller
 
     public function manager(Employee $employee): JsonResponse
     {
-        $this->authorize('view', $employee);
-
         $manager = $employee->manager()->with(['department', 'designation'])->first();
 
         return $this->success('Manager retrieved successfully', [

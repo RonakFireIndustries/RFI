@@ -78,13 +78,13 @@ define(['./workbox-290dd570'], (function (workbox) { 'use strict';
    */
   workbox.precacheAndRoute([{
     "url": "index.html",
-    "revision": "0.2stqhogv7ns"
+    "revision": "0.luop0n5ciek"
   }], {});
   workbox.cleanupOutdatedCaches();
   workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("index.html"), {
     allowlist: [/^\/$/]
   }));
-  workbox.registerRoute(/^https:\/\/rfibackend\.ronakfire\.com\/api\/.*/i, new workbox.NetworkFirst({
+  workbox.registerRoute(/\/api\/.*/i, new workbox.NetworkFirst({
     "cacheName": "api-cache",
     "networkTimeoutSeconds": 10,
     plugins: [new workbox.ExpirationPlugin({

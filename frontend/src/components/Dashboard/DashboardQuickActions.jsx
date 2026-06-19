@@ -1,6 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../../store/authStore';
-import { PermissionGuard } from '../Guards/PermissionGuard';
 import {
   UserPlus, CheckCircle, DollarSign, ShoppingCart, Receipt, Users, Shield, Key, Settings,
   MapPin, Upload, Lock, Download, FileText, DownloadCloud, ClipboardCheck, ArrowLeftRight,
@@ -37,13 +35,6 @@ export default function DashboardQuickActions({ quickActions }) {
             </button>
           );
 
-          if (action.permission) {
-            return (
-              <PermissionGuard key={action.key} requiredPermission={action.permission} fallback={null}>
-                {button}
-              </PermissionGuard>
-            );
-          }
           return <div key={action.key}>{button}</div>;
         })}
       </div>

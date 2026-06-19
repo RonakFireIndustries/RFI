@@ -28,8 +28,6 @@ class SiteController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $this->authorize('view', Site::class);
-
         $filters = $request->only(['search', 'status']);
         $perPage = (int) $request->input('per_page', 15);
 
@@ -64,8 +62,6 @@ class SiteController extends Controller
      */
     public function show(Site $site): JsonResponse
     {
-        $this->authorize('view', $site);
-
         $site->load('manager');
 
         return $this->success('Site retrieved successfully', [
@@ -91,8 +87,6 @@ class SiteController extends Controller
      */
     public function destroy(Site $site): JsonResponse
     {
-        $this->authorize('delete', $site);
-
         $this->siteService->deleteSite($site);
 
         return $this->success('Site deleted successfully');

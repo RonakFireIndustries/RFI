@@ -1,5 +1,5 @@
 const API_HOST = 'https://rfibackend.ronakfire.com';
-const BASE_URL = import.meta.env.DEV ? `/api/v1` : `${API_HOST}/api/v1`;
+export const BASE_URL = import.meta.env.DEV ? `/api/v1` : `${API_HOST}/api/v1`;
 export const STORAGE_URL = `${API_HOST}/storage`;
 
 const getAuthToken = () => {
@@ -63,6 +63,15 @@ const handleResponse = async (response) => {
   return { data };
 };
 
+const buildBlobHeaders = () => {
+  const headers = {};
+  const token = getAuthToken();
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  return headers;
+};
+
 const api = {
   get: async (endpoint) => {
     const response = await fetch(`${BASE_URL}${endpoint}`, {
@@ -110,6 +119,20 @@ const api = {
       credentials: 'include',
     });
     return handleResponse(response);
+  },
+
+  getBlob: async (endpoint) => {
+    const response = await fetch(`${BASE_URL}${endpoint}`, {
+      method: 'GET',
+      headers: buildBlobHeaders(),
+      credentials: 'include',
+    });
+    if (!response.ok) {
+      const error = new Error('API Error');
+      error.response = { status: response.status, statusText: response.statusText };
+      throw error;
+    }
+    return response.blob();
   },
 
   delete: async (endpoint) => {

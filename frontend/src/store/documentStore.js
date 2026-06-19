@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import api from '../services/api';
+import api, { BASE_URL } from '../services/api';
 
 export const useDocumentStore = create((set, get) => ({
   documents: [],
@@ -11,7 +11,8 @@ export const useDocumentStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       const response = await api.get(`/employees/${employeeId}/documents`);
-      set({ documents: response.data.data, loading: false });
+      const raw = response.data.data;
+      set({ documents: Array.isArray(raw) ? raw : (raw?.data ?? []), loading: false });
     } catch (error) {
       set({ error: error.message, loading: false });
     }
@@ -23,8 +24,9 @@ export const useDocumentStore = create((set, get) => ({
       const response = await api.post(`/employees/${employeeId}/documents`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      set((state) => ({ documents: [response.data.data, ...state.documents], loading: false }));
-      return response.data.data;
+      const doc = response.data.data?.data ?? response.data.data;
+      set((state) => ({ documents: [doc, ...state.documents].filter(Boolean), loading: false }));
+      return doc;
     } catch (error) {
       set({ error: error.response?.data?.message || error.message, loading: false });
       throw error;
@@ -34,16 +36,16 @@ export const useDocumentStore = create((set, get) => ({
   updateDocument: async (id, formData) => {
     set({ loading: true, error: null });
     try {
-      // For PUT with files, Laravel usually needs POST with _method=PUT, but wait, we are using fetch API, let's use POST with _method=PUT in the FormData
       formData.append('_method', 'PUT');
       const response = await api.post(`/documents/${id}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
+      const doc = response.data.data?.data ?? response.data.data;
       set((state) => ({
-        documents: state.documents.map((doc) => (doc.id === id ? response.data.data : doc)),
+        documents: state.documents.map((d) => (d.id === id ? doc : d)),
         loading: false,
       }));
-      return response.data.data;
+      return doc;
     } catch (error) {
       set({ error: error.response?.data?.message || error.message, loading: false });
       throw error;
@@ -76,18 +78,11 @@ export const useDocumentStore = create((set, get) => ({
 
   downloadDocument: async (id) => {
     try {
-      const response = await api.get(`/documents/${id}/download`, { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const blob = await api.getBlob(`/documents/${id}/download`);
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      // Get filename from header if possible, else default
-      const contentDisposition = response.headers['content-disposition'];
-      let filename = 'document';
-      if (contentDisposition) {
-        const match = contentDisposition.match(/filename="?([^"]+)"?/);
-        if (match && match[1]) filename = match[1];
-      }
-      link.setAttribute('download', filename);
+      link.setAttribute('download', 'document');
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -98,6 +93,6 @@ export const useDocumentStore = create((set, get) => ({
   },
   
   previewDocument: (id) => {
-    return `${api.defaults.baseURL}/documents/${id}/preview`; // Helper for setting src on iframe/img
+    return `${BASE_URL}/documents/${id}/preview`;
   }
 }));

@@ -1,20 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { Eye, Download, Trash2, Edit2, FileText, Plus } from 'lucide-react';
 import { useDocumentStore } from '../../../store/documentStore';
-import { useAuthStore } from '../../../store/authStore';
 import DocumentUploadModal from './DocumentUploadModal';
 import DocumentPreviewModal from './DocumentPreviewModal';
 
 export default function EmployeeDocumentsPage({ employeeId }) {
   const { documents, loading, error, fetchDocuments, deleteDocument } = useDocumentStore();
-  const permissions = useAuthStore(state => state.permissions);
-  const roles = useAuthStore(state => state.roles);
 
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [previewDoc, setPreviewDoc] = useState(null);
   const [editingDoc, setEditingDoc] = useState(null);
-
-  const can = (perm) => roles.includes('Super Admin') || roles.includes('Admin') || permissions.includes(perm);
 
   useEffect(() => {
     if (employeeId) fetchDocuments(employeeId);
@@ -35,14 +30,12 @@ export default function EmployeeDocumentsPage({ employeeId }) {
           <h3 className="text-lg font-semibold text-gray-900">Employee Documents</h3>
           <p className="text-sm text-gray-500">Manage sensitive files and employment records</p>
         </div>
-        {can('document.create') && (
           <button
             onClick={() => setUploadModalOpen(true)}
             className="flex items-center gap-2 bg-[#1a56db] text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium"
           >
             <Plus className="w-4 h-4" /> Upload Document
           </button>
-        )}
       </div>
 
       {error && <div className="p-4 bg-red-50 text-red-700 rounded-lg text-sm">{error}</div>}
@@ -88,26 +81,18 @@ export default function EmployeeDocumentsPage({ employeeId }) {
                     ) : '-'}
                   </td>
                   <td className="px-6 py-4 text-right space-x-2">
-                    {can('document.preview') && (
                       <button onClick={() => setPreviewDoc(doc)} className="text-blue-600 hover:text-blue-800 p-1" title="Preview">
                         <Eye className="w-4 h-4" />
                       </button>
-                    )}
-                    {can('document.download') && (
                       <button onClick={() => useDocumentStore.getState().downloadDocument(doc.id)} className="text-green-600 hover:text-green-800 p-1" title="Download">
                         <Download className="w-4 h-4" />
                       </button>
-                    )}
-                    {can('document.edit') && (
                       <button onClick={() => setEditingDoc(doc)} className="text-gray-600 hover:text-gray-800 p-1" title="Edit/Replace">
                         <Edit2 className="w-4 h-4" />
                       </button>
-                    )}
-                    {can('document.delete') && (
                       <button onClick={() => handleDelete(doc.id, doc.original_file_name)} className="text-red-600 hover:text-red-800 p-1" title="Delete">
                         <Trash2 className="w-4 h-4" />
                       </button>
-                    )}
                   </td>
                 </tr>
               ))

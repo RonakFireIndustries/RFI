@@ -24,7 +24,8 @@ class RoleController extends Controller
         $role = Role::create(['name' => $request->name, 'guard_name' => 'web']);
 
         if ($request->has('permissions')) {
-            $role->syncPermissions($request->permissions);
+            $perms = Permission::whereIn('name', $request->permissions)->pluck('id')->toArray();
+            $role->permissions()->sync($perms);
         }
 
         return response()->json([
@@ -47,7 +48,8 @@ class RoleController extends Controller
         $role->update(['name' => $request->name]);
 
         if ($request->has('permissions')) {
-            $role->syncPermissions($request->permissions);
+            $perms = Permission::whereIn('name', $request->permissions)->pluck('id')->toArray();
+            $role->permissions()->sync($perms);
         }
 
         return response()->json([

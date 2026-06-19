@@ -1,11 +1,15 @@
 <?php
-
 namespace App\Models;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-use Spatie\Permission\Models\Role as SpatieRole;
-use Illuminate\Database\Eloquent\SoftDeletes;
-
-class Role extends SpatieRole
+class Role extends Model
 {
-    use SoftDeletes;
+    protected $fillable = ['name', 'guard_name'];
+
+    public function permissions(): BelongsToMany
+    {
+        return $this->morphToMany(Permission::class, 'model', 'model_has_permissions', 'model_id', 'permission_id')
+            ->wherePivot('model_type', Permission::class);
+    }
 }

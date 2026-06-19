@@ -1,25 +1,17 @@
 import React, { useEffect } from 'react';
-import { useAuthStore } from '../../store/authStore';
 import { useBranchStore } from '../../store/branchStore';
 import api from '../../services/api';
 
 export default function BranchSelector() {
-  const { roles } = useAuthStore();
   const { activeBranchId, availableBranches, setActiveBranch, setAvailableBranches } = useBranchStore();
 
-  const isAdmin = roles?.includes('Super Admin') || roles?.includes('Admin');
-
   useEffect(() => {
-    if (isAdmin) {
-      api.get('/branches')
-        .then((response) => {
-          setAvailableBranches(Array.isArray(response.data) ? response.data : response.data.data || []);
-        })
-        .catch((error) => console.error("Failed to load branches", error));
-    }
-  }, [isAdmin, setAvailableBranches]);
-
-  if (!isAdmin) return null;
+    api.get('/branches')
+      .then((response) => {
+        setAvailableBranches(Array.isArray(response.data) ? response.data : response.data.data || []);
+      })
+      .catch((error) => console.error("Failed to load branches", error));
+  }, [setAvailableBranches]);
 
   return (
     <div className="flex items-center ml-4 border-l border-gray-200 pl-4">

@@ -8,7 +8,7 @@ class UpdateEmployeeDocumentRequest extends FormRequest
 {
     public function authorize()
     {
-        return $this->user()->can('document.edit');
+        return true;
     }
 
     public function rules()

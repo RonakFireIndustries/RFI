@@ -12,7 +12,7 @@ class StoreShiftRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()->hasPermissionTo('shift.create') || $this->user()->hasRole(['Super Admin', 'Admin']);
+        return true;
     }
 
     /**

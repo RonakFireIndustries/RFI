@@ -75,19 +75,18 @@ class EmployeeService
                     'password' => Hash::make('password123'),
                 ]);
                 
-                // Phase 9: Assign role based on designation name, explicit role field, or default
+                // Assign role based on designation name, explicit role field, or default
+                $roleName = 'Employee';
                 if (!empty($data['designation_id'])) {
                     $designation = \App\Models\Designation::find($data['designation_id']);
-                    if ($designation) {
-                        try {
-                            $user->assignRole($designation->name);
-                        } catch (\Exception $e) {}
-                    }
+                    if ($designation) $roleName = $designation->name;
                 } elseif (!empty($data['role'])) {
-                    $user->assignRole($data['role']);
-                } else {
-                    $user->assignRole('Employee');
+                    $roleName = $data['role'];
                 }
+                $role = \App\Models\Role::firstOrCreate(['name' => $roleName, 'guard_name' => 'web']);
+                try {
+                    $user->roles()->sync([$role->id]);
+                } catch (\Exception $e) {}
 
                 $employee->update(['user_id' => $user->id]);
             }
@@ -99,8 +98,17 @@ class EmployeeService
     public function updateEmployee(Employee $employee, array $data): Employee
     {
         $this->processUploads($data);
-        
+
         $employee->update($data);
+
+        if (isset($data['designation_id']) && $employee->user) {
+            $designation = \App\Models\Designation::find($data['designation_id']);
+            if ($designation) {
+                $role = \App\Models\Role::firstOrCreate(['name' => $designation->name, 'guard_name' => 'web']);
+                $employee->user->roles()->sync([$role->id]);
+            }
+        }
+
         return $employee->fresh(['department', 'designation', 'manager']);
     }
 

@@ -12,7 +12,7 @@ class UpdateShiftRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()->hasPermissionTo('shift.edit') || $this->user()->hasRole(['Super Admin', 'Admin']);
+        return true;
     }
 
     public function rules(): array

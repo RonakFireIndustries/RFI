@@ -25,8 +25,6 @@ class LeaveTypeController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $this->authorize('viewAny', LeaveType::class);
-
         $filters = $request->only(['status']);
         $perPage = (int) $request->input('per_page', 100);
 
@@ -45,8 +43,6 @@ class LeaveTypeController extends Controller
 
     public function store(StoreLeaveTypeRequest $request): JsonResponse
     {
-        $this->authorize('create', LeaveType::class);
-
         $type = $this->service->createLeaveType($request->validated());
 
         return $this->success('Leave type created successfully', [
@@ -56,8 +52,6 @@ class LeaveTypeController extends Controller
 
     public function show(LeaveType $leaveType): JsonResponse
     {
-        $this->authorize('view', $leaveType);
-
         return $this->success('Leave type retrieved successfully', [
             'leave_type' => (new LeaveTypeResource($leaveType))->resolve(request())
         ]);
@@ -65,8 +59,6 @@ class LeaveTypeController extends Controller
 
     public function update(UpdateLeaveTypeRequest $request, LeaveType $leaveType): JsonResponse
     {
-        $this->authorize('update', $leaveType);
-
         $type = $this->service->updateLeaveType($leaveType, $request->validated());
 
         return $this->success('Leave type updated successfully', [
@@ -76,8 +68,6 @@ class LeaveTypeController extends Controller
 
     public function destroy(LeaveType $leaveType): JsonResponse
     {
-        $this->authorize('delete', $leaveType);
-
         $this->service->deleteLeaveType($leaveType);
 
         return $this->success('Leave type deleted successfully');

@@ -183,7 +183,7 @@ export default function ModuleListPage({
                     >
                       <option value="">{field.placeholder || `Select ${field.label}`}</option>
                       {(lookups[field.optionsKey] || field.options || []).map((option) => (
-                        <option key={option.id ?? option.value} value={option.id ?? option.value}>
+                        <option key={`${field.optionsKey || field.name}-${option.id ?? option.value}`} value={option.id ?? option.value}>
                           {option.name ?? option.label}
                         </option>
                       ))}

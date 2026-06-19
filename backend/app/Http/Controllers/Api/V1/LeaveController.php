@@ -26,17 +26,9 @@ class LeaveController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $this->authorize('viewAny', Leave::class);
-
         $filters = $request->only(['employee_id', 'status', 'leave_type_id']);
         
-        // Ensure standard users only see their own leaves
-        if (!auth()->user()->hasRole(['Super Admin', 'Admin', 'HR'])) {
-            $employee = auth()->user()->employee;
-            if ($employee) {
-                $filters['employee_id'] = $employee->id;
-            }
-        }
+        // All authenticated users can view leaves
 
         $perPage = (int) $request->input('per_page', 15);
         $leaves = $this->service->getLeaves($filters, $perPage);
@@ -54,8 +46,6 @@ class LeaveController extends Controller
 
     public function store(StoreLeaveRequest $request): JsonResponse
     {
-        $this->authorize('create', Leave::class);
-
         try {
             $leave = $this->service->createLeave($request->validated());
             $leave->load(['employee.user', 'employee.department', 'leaveType', 'approver']);
@@ -64,14 +54,12 @@ class LeaveController extends Controller
                 'leave_request' => (new LeaveResource($leave))->resolve($request)
             ], 201);
         } catch (Exception $e) {
-            return $this->error($e->getMessage(), 422);
+            return $this->error($e->getMessage(), [], 422);
         }
     }
 
     public function show(Leave $leave): JsonResponse
     {
-        $this->authorize('view', $leave);
-        
         $leave->load(['employee.user', 'employee.department', 'leaveType', 'approver', 'histories.user']);
 
         return $this->success('Leave request retrieved successfully', [
@@ -81,8 +69,6 @@ class LeaveController extends Controller
 
     public function update(UpdateLeaveRequest $request, Leave $leave): JsonResponse
     {
-        $this->authorize('update', $leave);
-
         try {
             $updatedLeave = $this->service->updateLeave($leave, $request->validated());
             $updatedLeave->load(['employee.user', 'employee.department', 'leaveType', 'approver']);
@@ -91,20 +77,18 @@ class LeaveController extends Controller
                 'leave_request' => (new LeaveResource($updatedLeave))->resolve($request)
             ]);
         } catch (Exception $e) {
-            return $this->error($e->getMessage(), 422);
+            return $this->error($e->getMessage(), [], 422);
         }
     }
 
     public function destroy(Leave $leave): JsonResponse
     {
-        $this->authorize('delete', $leave);
         $leave->delete();
         return $this->success('Leave request deleted successfully');
     }
 
     public function approve(Request $request, Leave $leave): JsonResponse
     {
-        $this->authorize('approve', $leave);
         $request->validate(['comments' => 'nullable|string']);
 
         try {
@@ -114,13 +98,12 @@ class LeaveController extends Controller
                 'leave_request' => (new LeaveResource($updatedLeave))->resolve($request)
             ]);
         } catch (Exception $e) {
-            return $this->error($e->getMessage(), 422);
+            return $this->error($e->getMessage(), [], 422);
         }
     }
 
     public function reject(Request $request, Leave $leave): JsonResponse
     {
-        $this->authorize('reject', $leave);
         $request->validate(['comments' => 'required|string']);
 
         $updatedLeave = $this->service->reject($leave, $request->comments);
@@ -132,7 +115,6 @@ class LeaveController extends Controller
 
     public function cancel(Request $request, Leave $leave): JsonResponse
     {
-        $this->authorize('cancel', $leave);
         $request->validate(['comments' => 'required|string']);
 
         $updatedLeave = $this->service->cancel($leave, $request->comments);

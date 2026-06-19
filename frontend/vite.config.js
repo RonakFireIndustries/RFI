@@ -42,7 +42,7 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/rfibackend\.ronakfire\.com\/api\/.*/i,
+            urlPattern: /\/api\/.*/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
@@ -65,7 +65,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://rfibackend.ronakfire.com',
+        target: 'http://localhost:8000',
         changeOrigin: true,
       },
     },

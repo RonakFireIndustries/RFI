@@ -24,12 +24,8 @@ export default function SuperAdminLogin() {
       const roles = (user.roles || []).map(r => typeof r === 'string' ? r : r.name);
       const permissions = (user.permissions || []).map(p => typeof p === 'string' ? p : p.name);
             
-      if (roles.includes('Super Admin') || user.email === 'superadmin@example.com') {
-        setAuth(user, token, roles, permissions);
-        navigate('/superadmin/dashboard');
-      } else {
-        setError('Access Denied. You are not a Super Admin.');
-      }
+      setAuth(user, token, roles, permissions);
+      navigate('/superadmin/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to authenticate');
     } finally {

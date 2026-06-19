@@ -29,10 +29,7 @@ class EmployeeDocumentController extends Controller
      */
     public function index($employeeId, Request $request)
     {
-        $this->authorize('viewAny', EmployeeDocument::class);
-
         $documents = EmployeeDocument::with('uploader')
-            ->withTrashed()
             ->where('documentable_id', $employeeId)
             ->latest()
             ->paginate($request->get('per_page', 15));
@@ -70,8 +67,6 @@ class EmployeeDocumentController extends Controller
     {
         $document = EmployeeDocument::with('uploader')->findOrFail($id);
         
-        $this->authorize('view', $document);
-
         return $this->success(
             'Document details retrieved successfully.',
             new EmployeeDocumentResource($document)
@@ -98,14 +93,12 @@ class EmployeeDocumentController extends Controller
     }
 
     /**
-     * Delete document (Soft delete).
+     * Delete document permanently (hard delete).
      */
     public function destroy($id)
     {
         $document = EmployeeDocument::findOrFail($id);
         
-        $this->authorize('delete', $document);
-
         $this->documentService->deleteDocument($document);
 
         return $this->success('Document deleted successfully.', null);
@@ -118,13 +111,8 @@ class EmployeeDocumentController extends Controller
     {
         $document = EmployeeDocument::findOrFail($id);
         
-        // Use download authorization if needed, falling back to view
-        if (request()->user()->cannot('document.download') && request()->user()->cannot('document.view')) {
-            abort(403, 'Unauthorized');
-        }
-
         if (!Storage::disk('local')->exists($document->file_path)) {
-            return $this->error('File not found in storage.', 404);
+            return $this->error('File not found in storage.', [], 404);
         }
 
         return Storage::disk('local')->download($document->file_path, $document->original_file_name);
@@ -137,12 +125,8 @@ class EmployeeDocumentController extends Controller
     {
         $document = EmployeeDocument::findOrFail($id);
         
-        if (request()->user()->cannot('document.preview') && request()->user()->cannot('document.view')) {
-            abort(403, 'Unauthorized');
-        }
-
         if (!Storage::disk('local')->exists($document->file_path)) {
-            return $this->error('File not found in storage.', 404);
+            return $this->error('File not found in storage.', [], 404);
         }
 
         $file = Storage::disk('local')->get($document->file_path);
@@ -156,10 +140,6 @@ class EmployeeDocumentController extends Controller
      */
     public function expiring(Request $request)
     {
-        if ($request->user()->cannot('document.manage-expiry')) {
-            abort(403, 'Unauthorized');
-        }
-
         $expiring = $this->documentService->getExpiringDocuments();
 
         return $this->success('Expiring documents retrieved successfully.', [

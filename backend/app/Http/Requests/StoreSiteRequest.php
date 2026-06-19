@@ -8,7 +8,7 @@ class StoreSiteRequest extends FormRequest
 {
     public function authorize()
     {
-        return $this->user()->can('create', \App\Models\Site::class);
+        return true;
     }
 
     public function rules()
