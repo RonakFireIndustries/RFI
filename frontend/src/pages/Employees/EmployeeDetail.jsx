@@ -7,6 +7,7 @@ import { useSiteStore } from '../../store/siteStore';
 import { useAttendanceStore } from '../../store/attendanceStore';
 import { useDailyReportsStore } from '../../store/dailyReportStore';
 import DataTable from '../../components/Shared/DataTable';
+import { STORAGE_URL } from '../../services/api';
 import EmployeeDocumentsPage from './documents/EmployeeDocumentsPage';
 import DocumentHistory from './documents/DocumentHistory';
 import { 
@@ -118,11 +119,11 @@ export default function EmployeeDetail() {
     {
       title: 'Uploaded Documents',
       fields: [
-        { label: 'Profile Photo', render: (e) => e.photo_path ? <a href={`http://127.0.0.1:8000/storage/${e.photo_path}`} target="_blank" rel="noopener noreferrer" className="text-[#1a56db] hover:underline font-semibold flex items-center gap-1">View Photo</a> : '-' },
-        { label: 'Resume', render: (e) => e.resume_path ? <a href={`http://127.0.0.1:8000/storage/${e.resume_path}`} target="_blank" rel="noopener noreferrer" className="text-[#1a56db] hover:underline font-semibold flex items-center gap-1">View Resume</a> : '-' },
-        { label: 'Aadhaar Card', render: (e) => e.aadhaar_path ? <a href={`http://127.0.0.1:8000/storage/${e.aadhaar_path}`} target="_blank" rel="noopener noreferrer" className="text-[#1a56db] hover:underline font-semibold flex items-center gap-1">View Aadhaar</a> : '-' },
-        { label: 'PAN Card', render: (e) => e.pan_path ? <a href={`http://127.0.0.1:8000/storage/${e.pan_path}`} target="_blank" rel="noopener noreferrer" className="text-[#1a56db] hover:underline font-semibold flex items-center gap-1">View PAN</a> : '-' },
-        { label: 'Offer Letter', render: (e) => e.offer_letter_path ? <a href={`http://127.0.0.1:8000/storage/${e.offer_letter_path}`} target="_blank" rel="noopener noreferrer" className="text-[#1a56db] hover:underline font-semibold flex items-center gap-1">View Offer Letter</a> : '-' },
+        { label: 'Profile Photo', render: (e) => e.photo_path ? <a href={`${STORAGE_URL}/${e.photo_path}`} target="_blank" rel="noopener noreferrer" className="text-[#1a56db] hover:underline font-semibold flex items-center gap-1">View Photo</a> : '-' },
+        { label: 'Resume', render: (e) => e.resume_path ? <a href={`${STORAGE_URL}/${e.resume_path}`} target="_blank" rel="noopener noreferrer" className="text-[#1a56db] hover:underline font-semibold flex items-center gap-1">View Resume</a> : '-' },
+        { label: 'Aadhaar Card', render: (e) => e.aadhaar_path ? <a href={`${STORAGE_URL}/${e.aadhaar_path}`} target="_blank" rel="noopener noreferrer" className="text-[#1a56db] hover:underline font-semibold flex items-center gap-1">View Aadhaar</a> : '-' },
+        { label: 'PAN Card', render: (e) => e.pan_path ? <a href={`${STORAGE_URL}/${e.pan_path}`} target="_blank" rel="noopener noreferrer" className="text-[#1a56db] hover:underline font-semibold flex items-center gap-1">View PAN</a> : '-' },
+        { label: 'Offer Letter', render: (e) => e.offer_letter_path ? <a href={`${STORAGE_URL}/${e.offer_letter_path}`} target="_blank" rel="noopener noreferrer" className="text-[#1a56db] hover:underline font-semibold flex items-center gap-1">View Offer Letter</a> : '-' },
       ]
     }
   ];

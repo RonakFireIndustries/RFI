@@ -1,4 +1,6 @@
-const BASE_URL = 'http://127.0.0.1:8000/api/v1';
+const API_HOST = 'https://rfibackend.ronakfire.com';
+const BASE_URL = import.meta.env.DEV ? `/api/v1` : `${API_HOST}/api/v1`;
+export const STORAGE_URL = `${API_HOST}/storage`;
 
 const getAuthToken = () => {
   const authStorage = localStorage.getItem('auth-storage');
@@ -27,17 +29,17 @@ const buildHeaders = () => {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   };
-  
+
   const token = getAuthToken();
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
-  
+
   const branchId = getActiveBranchId();
   if (branchId) {
     headers['X-Branch-Id'] = String(branchId);
   }
-  
+
   return headers;
 };
 
@@ -51,7 +53,7 @@ const handleResponse = async (response) => {
     };
     throw error;
   }
-  
+
   const data = await response.json();
   // If backend uses the standardized wrapper { success, message, data }, unwrap it for callers
   if (data && typeof data === 'object' && Object.prototype.hasOwnProperty.call(data, 'success') && Object.prototype.hasOwnProperty.call(data, 'data')) {
@@ -100,7 +102,7 @@ const api = {
       });
       return handleResponse(response);
     }
-    
+
     const response = await fetch(`${BASE_URL}${endpoint}`, {
       method: 'PUT',
       headers,

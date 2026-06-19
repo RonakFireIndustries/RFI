@@ -26,7 +26,8 @@ class AuthController extends Controller
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;
-        $user->load('roles', 'permissions');
+        $user->load('roles');
+        $user->setRelation('permissions', $user->getAllPermissions());
 
         return $this->success('Login successful', [
             'user' => $user,
@@ -49,8 +50,8 @@ class AuthController extends Controller
      */
     public function user(Request $request): JsonResponse
     {
-        // Add roles and permissions if using Spatie later
-        $user = $request->user()->load('roles', 'permissions');
+        $user = $request->user()->load('roles');
+        $user->setRelation('permissions', $user->getAllPermissions());
 
         return $this->success('User fetched successfully', [
             'user' => $user

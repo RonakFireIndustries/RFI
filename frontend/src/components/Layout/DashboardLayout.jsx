@@ -119,13 +119,10 @@ export default function DashboardLayout() {
   }, [searchQuery]);
 
   const canAccess = (permission) => {
-    // If no permission specified, always allow
     if (!permission) return true;
-    // If user is Super Admin or Admin, allow all
-    if (roles?.includes('Super Admin') || roles?.includes('Admin')) return true;
-    // If permissions not yet loaded or empty, deny access
+    const adminRoles = roles?.map(r => r.toLowerCase()) || [];
+    if (adminRoles.some(r => ['super admin', 'admin', 'system admin', 'superadmin'].includes(r))) return true;
     if (!permissions || permissions.length === 0) return false;
-    // Check if user has specific permission
     return permissions?.includes(permission);
   };
 
