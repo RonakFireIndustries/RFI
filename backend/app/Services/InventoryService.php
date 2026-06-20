@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Branch;
 use App\Models\ProductStock;
 use App\Models\TransactionLedger;
 use App\Models\Product;
@@ -29,12 +28,12 @@ class InventoryService
         return $prefix . '-' . str_pad($last + 1, 4, '0', STR_PAD_LEFT);
     }
 
-    public function addStock($productId, $branchId, $quantity, $referenceType, $referenceId, $notes = '')
+    public function addStock($productId, $locationType, $locationId, $quantity, $referenceType, $referenceId, $notes = '')
     {
         return $this->recordTransaction(
             productId: $productId,
-            locationType: Branch::class,
-            locationId: $branchId,
+            locationType: $locationType,
+            locationId: $locationId,
             transactionType: 'purchase',
             quantity: $quantity,
             toLocationType: null,
@@ -45,12 +44,12 @@ class InventoryService
         );
     }
 
-    public function removeStock($productId, $branchId, $quantity, $referenceType, $referenceId, $notes = '')
+    public function removeStock($productId, $locationType, $locationId, $quantity, $referenceType, $referenceId, $notes = '')
     {
         return $this->recordTransaction(
             productId: $productId,
-            locationType: Branch::class,
-            locationId: $branchId,
+            locationType: $locationType,
+            locationId: $locationId,
             transactionType: 'sales',
             quantity: $quantity,
             toLocationType: null,

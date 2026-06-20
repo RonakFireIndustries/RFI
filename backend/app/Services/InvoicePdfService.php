@@ -9,12 +9,11 @@ class InvoicePdfService
 {
     public function generate(Invoice $invoice)
     {
-        $invoice->load(['customer', 'branch', 'items.product', 'creator']);
+        $invoice->load(['customer', 'items.product', 'creator']);
         
         $data = [
             'invoice' => $invoice,
             'customer' => $invoice->customer,
-            'branch' => $invoice->branch,
             'items' => $invoice->items
         ];
 

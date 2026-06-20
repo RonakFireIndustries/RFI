@@ -4,12 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\BelongsToBranch;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Attendance extends Model
 {
-    use HasFactory, BelongsToBranch;
+    use HasFactory;
 
     protected $fillable = [
         'employee_id',
@@ -22,7 +21,6 @@ class Attendance extends Model
         'overtime_hours',
         'status',
         'remarks',
-        'branch_id',
         'checkin_latitude',
         'checkin_longitude',
         'checkout_latitude',
@@ -51,6 +49,24 @@ class Attendance extends Model
         'location_verified' => 'boolean',
         'accuracy' => 'decimal:2',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (self $attendance) {
+            if ($attendance->check_in && $attendance->check_out) {
+                $diffMins = $attendance->check_in->diffInMinutes($attendance->check_out);
+                $diffHours = round($diffMins / 60, 2);
+                $attendance->working_hours = $diffHours;
+                if ($diffHours > 8) {
+                    $attendance->overtime_hours = round($diffHours - 8, 2);
+                    $attendance->overtime = $attendance->overtime_hours;
+                } else {
+                    $attendance->overtime_hours = 0;
+                    $attendance->overtime = 0;
+                }
+            }
+        });
+    }
 
     public function employee(): BelongsTo
     {

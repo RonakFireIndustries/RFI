@@ -6,7 +6,6 @@ use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use App\Models\User;
-use App\Models\Branch;
 use Illuminate\Support\Facades\Hash;
 
 class RolesAndPermissionsSeeder extends Seeder
@@ -154,20 +153,6 @@ class RolesAndPermissionsSeeder extends Seeder
             'view_sales_orders', 'create_sales_orders',
             'view_invoices', 'create_invoices',
         ]);
-
-        $maxBranchId = Branch::max('id') ?? 0;
-        $branch = Branch::where('name', 'Headquarters')->first();
-        if (!$branch) {
-            $maxBranchId++;
-            Branch::insert([
-                'id' => $maxBranchId,
-                'name' => 'Headquarters',
-                'location' => 'Main City',
-                'created_at' => now(),
-                'updated_at' => now()
-            ]);
-            $branch = Branch::find($maxBranchId);
-        }
 
         $maxUserId = User::max('id') ?? 0;
 

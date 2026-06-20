@@ -15,7 +15,7 @@ class StoreInventoryLocationRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'type' => 'required|in:branch,site',
+            'type' => 'required|in:site',
             'address' => 'nullable|string|max:500',
         ];
     }

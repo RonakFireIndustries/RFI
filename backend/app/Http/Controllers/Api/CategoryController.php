@@ -11,18 +11,9 @@ class CategoryController extends Controller
 {
     public function index(Request $request)
     {
-        $branchId = $request->header('X-Branch-ID');
-        $query = Category::with(['parent', 'creator'])
-                         ->withCount('products');
-        
-        if ($branchId) {
-            $query->where(function($q) use ($branchId) {
-                $q->where('branch_id', $branchId)
-                  ->orWhereNull('branch_id'); // Include global categories
-            });
-        }
-        
-        $categories = $query->get();
+        $categories = Category::with(['parent', 'creator'])
+                         ->withCount('products')
+                         ->get();
         return response()->json($categories);
     }
 
@@ -35,7 +26,6 @@ class CategoryController extends Controller
             'parent_id' => 'nullable|exists:categories,id',
         ]);
 
-        $validated['branch_id'] = $request->header('X-Branch-ID');
         $validated['created_by'] = Auth::id();
 
         $category = Category::create($validated);

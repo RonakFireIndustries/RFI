@@ -118,7 +118,7 @@ class ReportsController extends Controller
 
     public function employeeReport(Request $request)
     {
-        $employees = Employee::with('user', 'department', 'designation', 'branch')
+        $employees = Employee::with('user', 'department', 'designation')
             ->where('status', $request->query('status', 'Active'))
             ->get();
 

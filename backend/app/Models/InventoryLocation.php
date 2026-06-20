@@ -8,19 +8,6 @@ class InventoryLocation
 {
     public static function all(): Collection
     {
-        $branches = Branch::select('id', 'name', \DB::raw("'Branch' as type"), 'location as address', 'created_at', 'updated_at')
-            ->get()
-            ->map(fn($b) => [
-                'id' => 'branch_' . $b->id,
-                'location_type' => Branch::class,
-                'location_id' => $b->id,
-                'name' => $b->name,
-                'type' => 'branch',
-                'address' => $b->address,
-                'created_at' => $b->created_at,
-                'updated_at' => $b->updated_at,
-            ]);
-
         $sites = Site::select('id', 'name', 'status as type', 'address', 'created_at', 'updated_at')
             ->get()
             ->map(fn($s) => [
@@ -34,6 +21,6 @@ class InventoryLocation
                 'updated_at' => $s->updated_at,
             ]);
 
-        return $branches->concat($sites)->values();
+        return $sites->values();
     }
 }

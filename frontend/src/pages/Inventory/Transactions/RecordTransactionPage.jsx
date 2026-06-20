@@ -7,10 +7,9 @@ import { useInventoryLocationStore } from '../../../store/inventoryLocationStore
 import { transactionLedgerService } from '../../../services/transactionLedgerService';
 
 const parseLocationId = (compositeId) => {
-  const match = compositeId.match(/^(branch|site)_(\d+)$/);
+  const match = compositeId.match(/^site_(\d+)$/);
   if (!match) return { location_type: '', location_id: '' };
-  const types = { branch: 'App\\Models\\Branch', site: 'App\\Models\\Site' };
-  return { location_type: types[match[1]], location_id: parseInt(match[2], 10) };
+  return { location_type: 'App\\Models\\Site', location_id: parseInt(match[2], 10) };
 };
 
 export default function RecordTransactionPage() {
@@ -20,8 +19,8 @@ export default function RecordTransactionPage() {
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form, setForm] = useState({
-    product_id: '', location_type: 'App\\Models\\Branch', location_id: '', transaction_type: 'adjustment',
-    quantity: '', unit_price: '', to_location_type: 'App\\Models\\Branch', to_location_id: '', notes: '',
+    product_id: '', location_type: 'App\\Models\\Site', location_id: '', transaction_type: 'adjustment',
+    quantity: '', unit_price: '', to_location_type: 'App\\Models\\Site', to_location_id: '', notes: '',
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
@@ -53,7 +52,7 @@ export default function RecordTransactionPage() {
     try {
       await transactionLedgerService.create(form);
       setIsModalOpen(false);
-      setForm({ product_id: '', location_type: 'App\\Models\\Branch', location_id: '', transaction_type: 'adjustment', quantity: '', unit_price: '', to_location_type: 'App\\Models\\Branch', to_location_id: '', notes: '' });
+      setForm({ product_id: '', location_type: 'App\\Models\\Site', location_id: '', transaction_type: 'adjustment', quantity: '', unit_price: '', to_location_type: 'App\\Models\\Site', to_location_id: '', notes: '' });
       loadTransactions();
     } catch (e) {
       setError(e.response?.data?.message || e.message);
@@ -141,7 +140,7 @@ export default function RecordTransactionPage() {
 
                 <div>
                   <label className="mb-1 block text-sm font-medium text-gray-700">Location</label>
-                  <select value={form.location_id ? `${form.location_type === 'App\\Models\\Branch' ? 'branch' : 'site'}_${form.location_id}` : ''} onChange={(e) => { const { location_type, location_id } = parseLocationId(e.target.value); setForm({ ...form, location_type, location_id }); }} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" required>
+                  <select value={form.location_id ? `site_${form.location_id}` : ''} onChange={(e) => { const { location_type, location_id } = parseLocationId(e.target.value); setForm({ ...form, location_type, location_id }); }} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" required>
                     <option value="">Select Location</option>
                     {locations.map((l) => <option key={l.id} value={l.id}>{l.name} ({l.type})</option>)}
                   </select>
@@ -150,7 +149,7 @@ export default function RecordTransactionPage() {
                 {form.transaction_type === 'transfer_out' && (
                   <div>
                     <label className="mb-1 block text-sm font-medium text-gray-700">Destination Location</label>
-                    <select value={form.to_location_id ? `${form.to_location_type === 'App\\Models\\Branch' ? 'branch' : 'site'}_${form.to_location_id}` : ''} onChange={(e) => { const { location_type, location_id } = parseLocationId(e.target.value); setForm({ ...form, to_location_type: location_type, to_location_id: location_id }); }} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
+                    <select value={form.to_location_id ? `site_${form.to_location_id}` : ''} onChange={(e) => { const { location_type, location_id } = parseLocationId(e.target.value); setForm({ ...form, to_location_type: location_type, to_location_id: location_id }); }} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
                       <option value="">Select Destination</option>
                       {locations.filter((l) => l.location_id !== form.location_id || l.location_type !== form.location_type).map((l) => (
                         <option key={l.id} value={l.id}>{l.name} ({l.type})</option>

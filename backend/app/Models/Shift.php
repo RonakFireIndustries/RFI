@@ -4,12 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\BelongsToBranch;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Shift extends Model
 {
-    use HasFactory, BelongsToBranch;
+    use HasFactory;
 
     protected $fillable = [
         'name',
@@ -19,7 +18,6 @@ class Shift extends Model
         'late_threshold',
         'half_day_threshold',
         'status',
-        'branch_id',
     ];
 
     protected $casts = [

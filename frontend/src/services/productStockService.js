@@ -6,7 +6,6 @@ export const productStockService = {
   get: async (id) => unwrapItem((await api.get(`/stock/${id}`)).data),
   byProduct: async (productId) => unwrapList((await api.get(`/stock/by-product/${productId}`)).data),
   byLocation: async (locationType, locationId) => {
-    const shortType = locationType === 'App\\Models\\Branch' ? 'branch' : 'site';
-    return unwrapList((await api.get(`/stock/by-location/${shortType}/${locationId}`)).data);
+    return unwrapList((await api.get(`/stock/by-location/site/${locationId}`)).data);
   },
 };

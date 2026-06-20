@@ -7,10 +7,9 @@ import { useProductsStore } from '../../../store/productsStore';
 import { useInventoryLocationStore } from '../../../store/inventoryLocationStore';
 
 const parseLocationId = (compositeId) => {
-  const match = compositeId.match(/^(branch|site)_(\d+)$/);
+  const match = compositeId.match(/^site_(\d+)$/);
   if (!match) return { location_type: '', location_id: '' };
-  const types = { branch: 'App\\Models\\Branch', site: 'App\\Models\\Site' };
-  return { location_type: types[match[1]], location_id: parseInt(match[2], 10) };
+  return { location_type: 'App\\Models\\Site', location_id: parseInt(match[2], 10) };
 };
 
 const statusColors = {
@@ -27,7 +26,7 @@ export default function StockRequestsPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [form, setForm] = useState({ product_id: '', from_location_type: 'App\\Models\\Branch', from_location_id: '', to_location_type: 'App\\Models\\Branch', to_location_id: '', quantity: '', notes: '' });
+  const [form, setForm] = useState({ product_id: '', from_location_type: 'App\\Models\\Site', from_location_id: '', to_location_type: 'App\\Models\\Site', to_location_id: '', quantity: '', notes: '' });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -43,7 +42,7 @@ export default function StockRequestsPage() {
     try {
       await createItem(form);
       setIsModalOpen(false);
-      setForm({ product_id: '', from_location_type: 'App\\Models\\Branch', from_location_id: '', to_location_type: 'App\\Models\\Branch', to_location_id: '', quantity: '', notes: '' });
+      setForm({ product_id: '', from_location_type: 'App\\Models\\Site', from_location_id: '', to_location_type: 'App\\Models\\Site', to_location_id: '', quantity: '', notes: '' });
     } catch (err) {
       alert(err.response?.data?.message || err.message);
     }
@@ -142,14 +141,14 @@ export default function StockRequestsPage() {
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">From Location</label>
-                <select value={form.from_location_id ? `${form.from_location_type === 'App\\Models\\Branch' ? 'branch' : 'site'}_${form.from_location_id}` : ''} onChange={(e) => { const { location_type, location_id } = parseLocationId(e.target.value); setForm({ ...form, from_location_type: location_type, from_location_id: location_id }); }} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" required>
+                <select value={form.from_location_id ? `site_${form.from_location_id}` : ''} onChange={(e) => { const { location_type, location_id } = parseLocationId(e.target.value); setForm({ ...form, from_location_type: location_type, from_location_id: location_id }); }} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" required>
                   <option value="">Select Source</option>
                   {locations.map((l) => <option key={l.id} value={l.id}>{l.name} ({l.type})</option>)}
                 </select>
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">To Location</label>
-                <select value={form.to_location_id ? `${form.to_location_type === 'App\\Models\\Branch' ? 'branch' : 'site'}_${form.to_location_id}` : ''} onChange={(e) => { const { location_type, location_id } = parseLocationId(e.target.value); setForm({ ...form, to_location_type: location_type, to_location_id: location_id }); }} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" required>
+                <select value={form.to_location_id ? `site_${form.to_location_id}` : ''} onChange={(e) => { const { location_type, location_id } = parseLocationId(e.target.value); setForm({ ...form, to_location_type: location_type, to_location_id: location_id }); }} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" required>
                   <option value="">Select Destination</option>
                   {locations.filter((l) => l.location_id !== form.from_location_id || l.location_type !== form.from_location_type).map((l) => (
                     <option key={l.id} value={l.id}>{l.name} ({l.type})</option>

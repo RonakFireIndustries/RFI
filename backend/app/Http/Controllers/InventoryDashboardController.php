@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\ProductStock;
 use App\Models\TransactionLedger;
 use App\Models\Product;
-use App\Models\Branch;
 use App\Models\Site;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -26,7 +25,7 @@ class InventoryDashboardController extends Controller
         }
 
         $totalProducts = Product::count();
-        $totalLocations = Branch::count() + Site::count();
+        $totalLocations = Site::count();
         $totalStockValue = (clone $stockQuery)
             ->join('products', 'product_stock.product_id', '=', 'products.id')
             ->sum(DB::raw('product_stock.quantity * products.cost_price'));

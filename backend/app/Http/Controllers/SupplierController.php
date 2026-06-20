@@ -11,7 +11,7 @@ class SupplierController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Supplier::with(['branch', 'products.category', 'purchaseOrders', 'payments']);
+        $query = Supplier::with(['products.category', 'purchaseOrders', 'payments']);
 
         // Search
         if ($request->has('search')) {
@@ -21,10 +21,6 @@ class SupplierController extends Controller
                   ->orWhere('email', 'like', "%{$search}%")
                   ->orWhere('phone', 'like', "%{$search}%");
             });
-        }
-
-        if ($request->has('branch_id')) {
-            $query->where('branch_id', $request->branch_id);
         }
 
         $suppliers = $query->paginate($request->input('per_page', 10));
@@ -53,16 +49,15 @@ class SupplierController extends Controller
             'phone' => 'nullable|string',
             'address' => 'nullable|string',
             'gst_number' => 'nullable|string',
-            'branch_id' => 'required|exists:branches,id',
         ]);
 
         $supplier = Supplier::create($validated);
-        return (new SupplierResource($supplier->load(['branch', 'products.category', 'purchaseOrders'])))->response()->setStatusCode(201);
+        return (new SupplierResource($supplier->load(['products.category', 'purchaseOrders'])))->response()->setStatusCode(201);
     }
 
     public function show($id)
     {
-        $supplier = Supplier::with(['branch', 'products.category', 'purchaseOrders', 'payments', 'notes.creator', 'documents.uploader'])->findOrFail($id);
+        $supplier = Supplier::with(['products.category', 'purchaseOrders', 'payments', 'notes.creator', 'documents.uploader'])->findOrFail($id);
         
         $poSum = $supplier->purchaseOrders->sum('total_amount');
         $paymentSum = $supplier->payments->where('type', 'Payable')->sum('amount');
@@ -86,7 +81,7 @@ class SupplierController extends Controller
         ]);
 
         $supplier->update($validated);
-        return new SupplierResource($supplier->load(['branch', 'products.category', 'purchaseOrders']));
+        return new SupplierResource($supplier->load(['products.category', 'purchaseOrders']));
     }
 
     public function destroy($id)

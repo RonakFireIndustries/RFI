@@ -45,7 +45,7 @@ class ProductStockController extends Controller
 
     public function byLocation($locationType, $locationId)
     {
-        $typeMap = ['branch' => 'App\\Models\\Branch', 'site' => 'App\\Models\\Site'];
+        $typeMap = ['site' => 'App\\Models\\Site'];
         $type = $typeMap[$locationType] ?? $locationType;
 
         return ProductStockResource::collection(

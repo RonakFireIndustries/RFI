@@ -31,7 +31,7 @@ class ProductResource extends JsonResource
                 'selling_price' => (float) $this->selling_price,
             ]),
             'cost_price' => (float) $this->cost_price,
-            'gst_percentage' => (float) $this->gst_percentage,
+            'opening_stock' => (float) $this->opening_stock,
             'reorder_level' => (float) $this->reorder_level,
             'min_stock' => (float) $this->min_stock,
             'max_stock' => (float) $this->max_stock,

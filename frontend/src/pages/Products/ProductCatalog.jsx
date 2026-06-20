@@ -8,14 +8,14 @@ import { useAuthStore } from '../../store/authStore';
 const FINANCE_ROLES = ['Super Admin', 'Admin', 'Finance Manager', 'Accountant'];
 
 export default function ProductCatalog() {
-  const [lookups, setLookups] = useState({ categories: [], suppliers: [] });
+  const [lookups, setLookups] = useState({ categories: [], suppliers: [], sites: [] });
   const userRoles = useAuthStore((s) => s.roles);
   const canFinance = userRoles.some((r) => FINANCE_ROLES.includes(r));
 
   useEffect(() => {
-    Promise.all([api.get('/categories'), api.get('/suppliers')])
-      .then(([categories, suppliers]) => {
-        setLookups({ categories: unwrapList(categories.data), suppliers: unwrapList(suppliers.data) });
+    Promise.all([api.get('/categories'), api.get('/suppliers'), api.get('/sites?per_page=1000')])
+      .then(([categories, suppliers, sites]) => {
+        setLookups({ categories: unwrapList(categories.data), suppliers: unwrapList(suppliers.data), sites: unwrapList(sites.data) });
       })
       .catch((error) => console.error('Failed to load product lookups', error));
   }, []);
@@ -26,7 +26,7 @@ export default function ProductCatalog() {
       { header: 'Product', accessor: 'name' },
       { header: 'Category', accessor: 'category.name' },
       { header: 'Supplier', accessor: 'supplier.name' },
-      { header: 'Stock', cellValue: (row) => row.inventory_quantity ?? 0 },
+      { header: 'Stock', cellValue: (row) => row.total_stock ?? 0 },
       { header: 'Status', accessor: 'status' },
     ];
     if (canFinance) {
@@ -37,12 +37,13 @@ export default function ProductCatalog() {
 
   const fields = useMemo(() => {
     const flds = [
-      { name: 'sku', label: 'SKU', required: true },
+      { name: 'sku', label: 'SKU (leave empty for auto-generate)' },
       { name: 'name', label: 'Product Name', required: true },
       { name: 'category_id', label: 'Category', type: 'select', optionsKey: 'categories', emptyAsNull: true },
       { name: 'supplier_id', label: 'Supplier', type: 'select', optionsKey: 'suppliers', emptyAsNull: true },
       { name: 'purchase_price', label: 'Purchase Price', type: 'number', step: '0.01', required: true },
-      { name: 'gst_percentage', label: 'GST %', type: 'number', step: '0.01', defaultValue: 0 },
+      { name: 'opening_stock', label: 'Opening Stock', type: 'number', step: '1', defaultValue: 0 },
+      { name: 'site_id', label: 'Store At (Site)', type: 'select', optionsKey: 'sites', emptyAsNull: true, placeholder: 'Select site (required if opening stock > 0)' },
       { name: 'status', label: 'Status', type: 'select', defaultValue: 'active', options: [{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }] },
     ];
     if (canFinance) {

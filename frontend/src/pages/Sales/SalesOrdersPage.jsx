@@ -11,8 +11,7 @@ export default function SalesOrdersPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [customers, setCustomers] = useState([]);
   const [products, setProducts] = useState([]);
-  const [branches, setBranches] = useState([]);
-  const [newOrder, setNewOrder] = useState({ customer_id: '', branch_id: '', items: [{ product_id: '', quantity: 1, unit_price: 0 }] });
+  const [newOrder, setNewOrder] = useState({ customer_id: '', gst_type: 'cgst', gst_rate: '18', items: [{ product_id: '', quantity: 1, unit_price: 0 }] });
   const [activeTab, setActiveTab] = useState('All Orders');
 
   useEffect(() => {
@@ -22,14 +21,12 @@ export default function SalesOrdersPage() {
 
   const fetchData = async () => {
     try {
-      const [custRes, prodRes, branchRes] = await Promise.all([
+      const [custRes, prodRes] = await Promise.all([
         api.get('/customers'),
-        api.get('/products'),
-        api.get('/branches')
+        api.get('/products')
       ]);
       setCustomers(custRes.data.data || custRes.data);
       setProducts(prodRes.data);
-      setBranches(branchRes.data);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -52,7 +49,6 @@ export default function SalesOrdersPage() {
 
     // Frontend Validation
     if (!newOrder.customer_id) return alert("Please select a Customer.");
-    if (!newOrder.branch_id) return alert("Please select a Warehouse Destination.");
     if (newOrder.items.length === 0) return alert("Please add at least one line item.");
     for (const item of newOrder.items) {
       if (!item.product_id) return alert("Please select a product for all line items.");
@@ -64,7 +60,7 @@ export default function SalesOrdersPage() {
       await api.post('/sales/orders', { ...newOrder, status });
       setIsModalOpen(false);
       fetchOrders();
-      setNewOrder({ customer_id: '', branch_id: '', items: [{ product_id: '', quantity: 1, unit_price: 0 }] });
+      setNewOrder({ customer_id: '', gst_type: 'cgst', gst_rate: '18', items: [{ product_id: '', quantity: 1, unit_price: 0 }] });
     } catch (error) {
       console.error("Error creating SO:", error);
       const msg = error.response?.data?.message || "Failed to create Sales Order.";
@@ -393,18 +389,6 @@ export default function SalesOrdersPage() {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-600 mb-1">Warehouse Origin</label>
-                        <select 
-                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#1a56db] focus:border-transparent transition-all"
-                          value={newOrder.branch_id}
-                          onChange={(e) => setNewOrder({...newOrder, branch_id: e.target.value})}
-                          required
-                        >
-                          <option value="">Select Warehouse...</option>
-                          {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                        </select>
-                      </div>
-                      <div>
                         <label className="block text-sm font-medium text-gray-600 mb-1">Order Date</label>
                         <input 
                           type="date"
@@ -418,6 +402,31 @@ export default function SalesOrdersPage() {
                           type="date"
                           className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#1a56db] focus:border-transparent transition-all"
                         />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">GST Type</label>
+                        <select 
+                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#1a56db] focus:border-transparent transition-all"
+                          value={newOrder.gst_type}
+                          onChange={(e) => setNewOrder({...newOrder, gst_type: e.target.value})}
+                        >
+                          <option value="cgst">CGST + SGST (Intra-State)</option>
+                          <option value="igst">IGST (Inter-State)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">GST Rate (%)</label>
+                        <select 
+                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#1a56db] focus:border-transparent transition-all"
+                          value={newOrder.gst_rate}
+                          onChange={(e) => setNewOrder({...newOrder, gst_rate: e.target.value})}
+                        >
+                          <option value="0">0%</option>
+                          <option value="5">5%</option>
+                          <option value="12">12%</option>
+                          <option value="18">18%</option>
+                          <option value="28">28%</option>
+                        </select>
                       </div>
                     </div>
                   </div>
@@ -445,7 +454,6 @@ export default function SalesOrdersPage() {
                             <th className="p-4">Product Code / Name</th>
                             <th className="p-4 w-24 text-center">Quantity</th>
                             <th className="p-4 w-32 text-right">Unit Price</th>
-                            <th className="p-4 w-24 text-center">Tax (GST)</th>
                             <th className="p-4 w-32 text-right">Total</th>
                             <th className="p-4 w-12 text-center"></th>
                           </tr>
@@ -499,9 +507,6 @@ export default function SalesOrdersPage() {
                                   required
                                 />
                               </td>
-                              <td className="p-4 text-center text-gray-500 text-sm">
-                                18%
-                              </td>
                               <td className="p-4 text-right font-bold text-gray-900">
                                 ${(item.quantity * item.unit_price).toLocaleString(undefined, {minimumFractionDigits: 2})}
                               </td>
@@ -542,9 +547,9 @@ export default function SalesOrdersPage() {
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Total GST (Tax)</span>
+                        <span>GST ({newOrder.gst_type === 'igst' ? 'IGST' : 'CGST+SGST'} @ {newOrder.gst_rate || 0}%)</span>
                         <span className="font-medium text-white">
-                          ${(newOrder.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0) * 0.18).toLocaleString(undefined, {minimumFractionDigits: 2})}
+                          ${(newOrder.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0) * (parseFloat(newOrder.gst_rate || 0) / 100)).toLocaleString(undefined, {minimumFractionDigits: 2})}
                         </span>
                       </div>
                       <div className="flex justify-between border-b border-blue-500/50 pb-4">
@@ -554,7 +559,7 @@ export default function SalesOrdersPage() {
                       <div className="flex justify-between items-center pt-2">
                         <span className="text-base text-white">Total Amount</span>
                         <span className="text-2xl font-bold text-white">
-                          ₹{((newOrder.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0) * 1.18) + 250).toLocaleString(undefined, {minimumFractionDigits: 2})}
+                          ₹{((newOrder.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0) * (1 + parseFloat(newOrder.gst_rate || 0) / 100)) + 250).toLocaleString(undefined, {minimumFractionDigits: 2})}
                         </span>
                       </div>
                       <p className="text-[10px] uppercase tracking-wider opacity-60 text-right mt-1">Currency: INR (Indian Rupee)</p>

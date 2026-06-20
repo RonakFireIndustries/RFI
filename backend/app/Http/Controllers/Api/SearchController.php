@@ -16,7 +16,6 @@ class SearchController extends Controller
     public function search(Request $request)
     {
         $query = $request->query('q');
-        $branchId = $request->header('X-Branch-Id');
 
         if (!$query || strlen($query) < 2) {
             return response()->json([]);
@@ -30,7 +29,6 @@ class SearchController extends Controller
               ->orWhere('email', 'like', "%{$query}%")
               ->orWhere('phone', 'like', "%{$query}%");
         });
-        if ($branchId) $customersQuery->where('branch_id', $branchId);
         
         $customers = $customersQuery->limit(5)->get();
         foreach ($customers as $c) {
@@ -49,7 +47,6 @@ class SearchController extends Controller
               ->orWhere('email', 'like', "%{$query}%")
               ->orWhere('phone', 'like', "%{$query}%");
         });
-        if ($branchId) $suppliersQuery->where('branch_id', $branchId);
         
         $suppliers = $suppliersQuery->limit(5)->get();
         foreach ($suppliers as $s) {
@@ -78,7 +75,6 @@ class SearchController extends Controller
 
         // 4. Invoices
         $invoicesQuery = Invoice::where('invoice_number', 'like', "%{$query}%");
-        if ($branchId) $invoicesQuery->where('branch_id', $branchId);
         
         $invoices = $invoicesQuery->limit(5)->get();
         foreach ($invoices as $i) {
@@ -93,7 +89,6 @@ class SearchController extends Controller
 
         // 5. Sales Orders
         $salesOrdersQuery = SalesOrder::where('order_number', 'like', "%{$query}%");
-        if ($branchId) $salesOrdersQuery->where('branch_id', $branchId);
         
         $salesOrders = $salesOrdersQuery->limit(5)->get();
         foreach ($salesOrders as $so) {
@@ -108,7 +103,6 @@ class SearchController extends Controller
 
         // 6. Purchase Orders
         $purchaseOrdersQuery = PurchaseOrder::where('po_number', 'like', "%{$query}%");
-        if ($branchId) $purchaseOrdersQuery->where('branch_id', $branchId);
         
         $purchaseOrders = $purchaseOrdersQuery->limit(5)->get();
         foreach ($purchaseOrders as $po) {

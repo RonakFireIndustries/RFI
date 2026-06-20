@@ -137,4 +137,23 @@ class PayrollController extends Controller
         Log::info("Payroll locked", ['payroll_id' => $payroll->id, 'user_id' => auth()->id() ?? 'system']);
         return response()->json($payroll);
     }
+
+    public function unlock(Request $request, Payroll $payroll)
+    {
+        if ($payroll->status !== 'Locked') {
+            return response()->json(['message' => 'Can only unlock Locked payroll entries.'], 403);
+        }
+        $payroll->update(['status' => 'Approved']);
+        Log::info("Payroll unlocked", ['payroll_id' => $payroll->id, 'user_id' => auth()->id() ?? 'system']);
+        return response()->json($payroll);
+    }
+
+    public function destroy(Payroll $payroll)
+    {
+        if (!in_array($payroll->status, ['Draft', 'Locked'])) {
+            return response()->json(['message' => 'Can only delete Draft or Locked payroll entries.'], 403);
+        }
+        $payroll->delete();
+        return response()->noContent();
+    }
 }

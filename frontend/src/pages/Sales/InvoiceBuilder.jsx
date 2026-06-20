@@ -7,15 +7,15 @@ export default function InvoiceBuilder() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [customers, setCustomers] = useState([]);
-  const [branches, setBranches] = useState([]);
   const [products, setProducts] = useState([]);
 
   const [formData, setFormData] = useState({
     customer_id: '',
-    branch_id: '',
     sales_order_id: '',
     status: 'Draft',
     due_date: '',
+    gst_type: 'cgst',
+    gst_rate: '18',
     notes: '',
     terms: '1. Payment is due within 30 days.\n2. Goods once sold will not be taken back.',
   });
@@ -28,8 +28,6 @@ export default function InvoiceBuilder() {
       hsn_code: '',
       quantity: 1,
       unit_price: 0,
-      tax_rate: 18,
-      is_igst: false,
     }
   ]);
 
@@ -39,13 +37,11 @@ export default function InvoiceBuilder() {
 
   const fetchInitialData = async () => {
     try {
-      const [customersRes, branchesRes, productsRes] = await Promise.all([
+      const [customersRes, productsRes] = await Promise.all([
         api.get('/customers'),
-        api.get('/branches'),
         api.get('/products')
       ]);
       setCustomers(customersRes.data.data || customersRes.data);
-      setBranches(branchesRes.data.data || branchesRes.data);
       setProducts(productsRes.data.data || productsRes.data);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -61,7 +57,6 @@ export default function InvoiceBuilder() {
           if (product) {
             updatedItem.item_description = product.name;
             updatedItem.unit_price = product.selling_price || 0;
-            updatedItem.tax_rate = product.gst_percentage || 18;
           }
         }
         return updatedItem;
@@ -78,8 +73,6 @@ export default function InvoiceBuilder() {
       hsn_code: '',
       quantity: 1,
       unit_price: 0,
-      tax_rate: 18,
-      is_igst: false,
     }]);
   };
 
@@ -89,32 +82,30 @@ export default function InvoiceBuilder() {
   };
 
   const calculateTotals = () => {
-    let subtotal = 0;
+    const subtotal = items.reduce((sum, item) => {
+      return sum + (parseFloat(item.quantity) || 0) * (parseFloat(item.unit_price) || 0);
+    }, 0);
+
+    const gstRate = parseFloat(formData.gst_rate) || 0;
+    const taxAmount = subtotal * (gstRate / 100);
+
     let cgst_total = 0;
     let sgst_total = 0;
     let igst_total = 0;
 
-    items.forEach(item => {
-      const lineTotal = parseFloat(item.quantity) * parseFloat(item.unit_price);
-      subtotal += lineTotal || 0;
-
-      const taxRate = parseFloat(item.tax_rate) || 0;
-      const taxAmount = lineTotal * (taxRate / 100);
-
-      if (item.is_igst) {
-        igst_total += taxAmount;
-      } else {
-        cgst_total += taxAmount / 2;
-        sgst_total += taxAmount / 2;
-      }
-    });
+    if (formData.gst_type === 'igst') {
+      igst_total = taxAmount;
+    } else {
+      cgst_total = taxAmount / 2;
+      sgst_total = taxAmount / 2;
+    }
 
     return {
       subtotal,
       cgst_total,
       sgst_total,
       igst_total,
-      grand_total: subtotal + cgst_total + sgst_total + igst_total
+      grand_total: subtotal + taxAmount
     };
   };
 
@@ -124,17 +115,20 @@ export default function InvoiceBuilder() {
 
     try {
       const payload = {
-        ...formData,
+        customer_id: formData.customer_id,
         sales_order_id: formData.sales_order_id || null,
+        status: formData.status,
         due_date: formData.due_date || null,
+        notes: formData.notes,
+        terms: formData.terms,
+        gst_type: formData.gst_type,
+        gst_rate: formData.gst_rate,
         items: items.map(i => ({
           product_id: i.product_id || null,
           item_description: i.item_description,
           hsn_code: i.hsn_code,
           quantity: i.quantity,
           unit_price: i.unit_price,
-          tax_rate: i.tax_rate,
-          is_igst: i.is_igst
         }))
       };
 
@@ -164,7 +158,7 @@ export default function InvoiceBuilder() {
         </div>
         <button
           onClick={handleSubmit}
-          disabled={loading || !formData.customer_id || !formData.branch_id}
+          disabled={loading || !formData.customer_id}
           className="inline-flex items-center px-6 py-2.5 bg-[#1a56db] hover:bg-[#1e40af] text-white font-medium rounded-lg transition-colors disabled:opacity-70 disabled:cursor-not-allowed shadow-sm"
         >
           {loading ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Save className="w-5 h-5 mr-2" />}
@@ -196,21 +190,6 @@ export default function InvoiceBuilder() {
               </div>
               
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Branch *</label>
-                <select
-                  required
-                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-[#1a56db] focus:border-[#1a56db] transition-all outline-none bg-white"
-                  value={formData.branch_id}
-                  onChange={(e) => setFormData({...formData, branch_id: e.target.value})}
-                >
-                  <option value="">Select a branch</option>
-                  {branches.map(b => (
-                    <option key={b.id} value={b.id}>{b.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Due Date</label>
                 <input
                   type="date"
@@ -221,7 +200,34 @@ export default function InvoiceBuilder() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Status</label>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">GST Type</label>
+                        <select
+                          className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-[#1a56db] focus:border-[#1a56db] transition-all outline-none bg-white"
+                          value={formData.gst_type}
+                          onChange={(e) => setFormData({...formData, gst_type: e.target.value})}
+                        >
+                          <option value="cgst">CGST + SGST (Intra-State)</option>
+                          <option value="igst">IGST (Inter-State)</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">GST Rate (%)</label>
+                        <select
+                          className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-[#1a56db] focus:border-[#1a56db] transition-all outline-none bg-white"
+                          value={formData.gst_rate}
+                          onChange={(e) => setFormData({...formData, gst_rate: e.target.value})}
+                        >
+                          <option value="0">0%</option>
+                          <option value="5">5%</option>
+                          <option value="12">12%</option>
+                          <option value="18">18%</option>
+                          <option value="28">28%</option>
+                        </select>
+                      </div>
+
+              <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">Status</label>
                 <select
                   className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-[#1a56db] focus:border-[#1a56db] transition-all outline-none bg-white"
                   value={formData.status}
@@ -241,21 +247,21 @@ export default function InvoiceBuilder() {
               <h2 className="text-lg font-bold text-gray-900">Line Items</h2>
               <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-md border border-blue-100 flex items-center">
                 <Info className="w-3 h-3 mr-1" />
-                GST calculates automatically
+                GST at {formData.gst_rate || 0}% ({formData.gst_type === 'igst' ? 'IGST' : 'CGST+SGST'})
               </div>
             </div>
             
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-white border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    <th className="p-4 w-[30%]">Product / Description</th>
-                    <th className="p-4 w-[15%]">HSN</th>
-                    <th className="p-4 w-[10%]">Qty</th>
-                    <th className="p-4 w-[15%]">Rate (₹)</th>
-                    <th className="p-4 w-[20%] text-center">Tax Info</th>
-                    <th className="p-4 w-[5%]"></th>
-                  </tr>
+                    <tr className="bg-white border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        <th className="p-4 w-[35%]">Product / Description</th>
+                        <th className="p-4 w-[15%]">HSN</th>
+                        <th className="p-4 w-[12%]">Qty</th>
+                        <th className="p-4 w-[15%]">Rate (₹)</th>
+                        <th className="p-4 w-[15%] text-right">Total</th>
+                        <th className="p-4 w-[5%]"></th>
+                      </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 bg-white">
                   {items.map((item, index) => (
@@ -310,29 +316,8 @@ export default function InvoiceBuilder() {
                           required
                         />
                       </td>
-                      <td className="p-4 align-top">
-                        <div className="space-y-2">
-                          <select
-                            className="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-[#1a56db] focus:border-[#1a56db]"
-                            value={item.tax_rate}
-                            onChange={(e) => handleItemChange(item.id, 'tax_rate', e.target.value)}
-                          >
-                            <option value="0">0%</option>
-                            <option value="5">5%</option>
-                            <option value="12">12%</option>
-                            <option value="18">18%</option>
-                            <option value="28">28%</option>
-                          </select>
-                          <label className="flex items-center space-x-2 text-xs text-gray-700 bg-gray-50 p-2 rounded border border-gray-200">
-                            <input 
-                              type="checkbox"
-                              checked={item.is_igst}
-                              onChange={(e) => handleItemChange(item.id, 'is_igst', e.target.checked)}
-                              className="rounded text-[#1a56db] focus:ring-[#1a56db]"
-                            />
-                            <span>Interstate (IGST)</span>
-                          </label>
-                        </div>
+                      <td className="p-4 align-top text-right font-medium text-gray-900">
+                        ₹{((parseFloat(item.quantity) || 0) * (parseFloat(item.unit_price) || 0)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                       </td>
                       <td className="p-4 align-top text-center">
                         <button

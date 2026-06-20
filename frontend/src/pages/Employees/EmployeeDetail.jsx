@@ -480,13 +480,43 @@ export default function EmployeeDetail() {
               ) : (
                 <DataTable 
                   columns={[
-                    { header: 'Date', accessorKey: 'date' },
-                    { header: 'Check In', accessorKey: 'check_in', cell: (row) => row.check_in ? new Date(row.check_in).toLocaleTimeString() : '-' },
-                    { header: 'Check Out', accessorKey: 'check_out', cell: (row) => row.check_out ? new Date(row.check_out).toLocaleTimeString() : '-' },
-                    { header: 'Working Hours', accessorKey: 'working_hours' },
-                    { header: 'Overtime', accessorKey: 'overtime_hours' },
+                    { header: 'Date', accessorKey: 'date', cell: ({ getValue }) => {
+                      const val = getValue();
+                      if (!val) return '-';
+                      const d = new Date(val);
+                      const dd = String(d.getDate()).padStart(2, '0');
+                      const mm = String(d.getMonth() + 1).padStart(2, '0');
+                      const yy = String(d.getFullYear()).slice(-2);
+                      return `${dd}/${mm}/${yy}`;
+                    }},
+                    { header: 'Check In', accessorKey: 'check_in', cell: ({ getValue }) => {
+                      const val = getValue();
+                      if (!val) return '-';
+                      const d = new Date(val);
+                      return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+                    }},
+                    { header: 'Check Out', accessorKey: 'check_out', cell: ({ getValue }) => {
+                      const val = getValue();
+                      if (!val) return '-';
+                      const d = new Date(val);
+                      return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+                    }},
+                    { header: 'Working Hours', accessorKey: 'working_hours', cell: ({ getValue }) => {
+                      const val = getValue();
+                      if (val == null) return '-';
+                      const h = Math.floor(Number(val));
+                      const m = Math.round((Number(val) - h) * 60);
+                      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                    }},
+                    { header: 'Overtime', accessorKey: 'overtime_hours', cell: ({ getValue }) => {
+                      const val = getValue();
+                      if (val == null) return '-';
+                      const h = Math.floor(Number(val));
+                      const m = Math.round((Number(val) - h) * 60);
+                      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                    }},
                     { header: 'Status', accessorKey: 'status' },
-                    { header: 'Site', accessorKey: 'site.name', cell: (row) => row.site?.name || '-' }
+                    { header: 'Site', cell: ({ row }) => row.original.site?.name || '-' }
                   ]} 
                   data={attendances} 
                   emptyText="No attendance records." 

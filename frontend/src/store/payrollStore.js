@@ -64,10 +64,34 @@ export const usePayrollStore = create((set, get) => ({
     }
   },
 
+  unlockPayroll: async (payrollId) => {
+    set({ loading: true, error: null });
+    try {
+      await api.post(`/payroll/${payrollId}/unlock`);
+      await get().fetchPayrolls();
+      set({ loading: false });
+    } catch (error) {
+      set({ error, loading: false });
+      throw error;
+    }
+  },
+
   lockPayroll: async (payrollId) => {
     set({ loading: true, error: null });
     try {
       await api.post(`/payroll/${payrollId}/lock`);
+      await get().fetchPayrolls();
+      set({ loading: false });
+    } catch (error) {
+      set({ error, loading: false });
+      throw error;
+    }
+  },
+
+  deletePayroll: async (payrollId) => {
+    set({ loading: true, error: null });
+    try {
+      await api.delete(`/payroll/${payrollId}`);
       await get().fetchPayrolls();
       set({ loading: false });
     } catch (error) {

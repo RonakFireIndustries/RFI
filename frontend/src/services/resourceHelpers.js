@@ -5,8 +5,12 @@ export const unwrapList = (payload) => {
   
   if (payload && typeof payload === 'object') {
     for (const key of Object.keys(payload)) {
-      if (Array.isArray(payload[key])) {
-        return payload[key];
+      const val = payload[key];
+      if (Array.isArray(val)) {
+        return val;
+      }
+      if (val && typeof val === 'object' && Array.isArray(val.data)) {
+        return val.data;
       }
     }
   }

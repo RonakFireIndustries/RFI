@@ -13,7 +13,6 @@ import InventoryDashboard from '../../pages/Inventory/InventoryDashboard';
 import InventoryDetail from '../../pages/Inventory/InventoryDetail';
 import ProductCatalog from '../../pages/Products/ProductCatalog';
 import ProductDetail from '../../pages/Products/ProductDetail';
-import Warehouses from '../../pages/Warehouses/Warehouses';
 import EmployeesPage from '../../pages/Employees/EmployeesPage';
 import EmployeeDetail from '../../pages/Employees/EmployeeDetail';
 import DepartmentsPage from '../../pages/Departments/DepartmentsPage';
@@ -41,6 +40,7 @@ import EmployeeAttendanceHistory from '../../pages/Attendance/EmployeeAttendance
 import SalaryStructuresPage from '../../pages/Payroll/SalaryStructuresPage';
 import PayrollPeriodsPage from '../../pages/Payroll/PayrollPeriodsPage';
 import PayrollGenerationPage from '../../pages/Payroll/PayrollGenerationPage';
+import PayrollDashboardPage from '../../pages/Payroll/PayrollDashboardPage';
 import EmployeePayrollPage from '../../pages/Payroll/EmployeePayrollPage';
 import PayslipPage from '../../pages/Payroll/PayslipPage';
 import Sites from '@/pages/Sites/Sites';
@@ -54,6 +54,9 @@ import LeaveBalancesPage from '../../pages/LeaveManagement/LeaveBalancesPage';
 import LeaveRequestsPage from '../../pages/LeaveManagement/LeaveRequestsPage';
 import LeaveRequestForm from '../../pages/LeaveManagement/LeaveRequestForm';
 import LeaveApprovalPage from '../../pages/LeaveManagement/LeaveApprovalPage';
+import MyLeaveRequestsPage from '../../pages/LeaveManagement/MyLeaveRequestsPage';
+import MyLeaveRequestForm from '../../pages/LeaveManagement/MyLeaveRequestForm';
+import MyLeaveDetailPage from '../../pages/LeaveManagement/MyLeaveDetailPage';
 
 // Inventory Management Pages
 import LocationsPage from '../../pages/Inventory/Locations/LocationsPage';
@@ -365,7 +368,6 @@ export default function DashboardLayout() {
               <Route path="inventory/requests/:id" element={<StockRequestDetail />} />
               <Route path="products" element={<ProductCatalog />} />
               <Route path="products/:id" element={<ProductDetail />} />
-              <Route path="warehouses" element={<Warehouses />} />
               <Route path="employees" element={<EmployeesPage />} />
               <Route path="employees/:id" element={<EmployeeDetail />} />
               <Route path="departments" element={<DepartmentsPage />} />
@@ -385,13 +387,16 @@ export default function DashboardLayout() {
               <Route path="leave-management/requests/new" element={<LeaveRequestForm />} />
               <Route path="leave-management/requests/:id" element={<LeaveApprovalPage />} />
 
-              <Route path="payroll" element={<PayrollGenerationPage />} />
+              <Route path="my-leaves" element={<MyLeaveRequestsPage />} />
+              <Route path="my-leaves/new" element={<MyLeaveRequestForm />} />
+              <Route path="my-leaves/:id" element={<MyLeaveDetailPage />} />
+
+              <Route path="payroll" element={<PayrollDashboardPage />} />
               <Route path="salary-structures" element={<SalaryStructuresPage />} />
               <Route path="period-payroll" element={<PayrollPeriodsPage />} />
               <Route path="process-payroll" element={<PayrollGenerationPage />} />
               <Route path="my-payroll" element={<EmployeePayrollPage />} />
               <Route path="payslip/:id" element={<PayslipPage />} />
-              <Route path="branches" element={<PlaceholderPage title="Branches" />} />
               <Route path="categories" element={<CategoryDirectory />} />
               <Route path="customers" element={<CustomerDirectory />} />
               <Route path="customers/:id" element={<CustomerProfile />} />

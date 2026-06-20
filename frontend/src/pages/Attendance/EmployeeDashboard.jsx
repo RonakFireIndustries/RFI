@@ -1,16 +1,95 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useAttendanceStore } from '../../store/attendanceStore';
 import { useSiteStore } from '../../store/siteStore';
 import { employeeSiteService } from '../../services/employeeSiteService';
-import { Calendar, Clock, MapPin, User, Shield, RefreshCw } from 'lucide-react';
+import { Calendar, Clock, MapPin, User, Shield, RefreshCw, ExternalLink, X, Download } from 'lucide-react';
 import useGeolocation from '../../hooks/useGeolocation';
 import AttendanceLocationCard from '../../components/Attendance/AttendanceLocationCard';
 import SlideAttendanceButton from '../../components/Attendance/SlideAttendanceButton';
 
+function isStandalone() {
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+}
+
+function isIOS() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+}
+
+function isAndroid() {
+  return /Android/.test(navigator.userAgent);
+}
+
+function getPermissionHelp(isStandaloneMode) {
+  if (isStandaloneMode) {
+    if (isIOS()) {
+      return {
+        title: 'Enable Location for RFI',
+        steps: [
+          'Open the Settings app on your iPhone/iPad',
+          'Scroll down and tap "RFI" in the app list',
+          'Tap "Location"',
+          'Select "While Using the App" or "Always"',
+          'Return to RFI and tap refresh above',
+        ],
+        icon: '📱',
+      };
+    }
+    if (isAndroid()) {
+      return {
+        title: 'Enable Location for RFI',
+        steps: [
+          'Open Settings on your device',
+          'Tap "Apps" or "App Management"',
+          'Tap "RFI" in the app list',
+          'Tap "Permissions"',
+          'Tap "Location" and select "Allow only while using the app"',
+          'Return to RFI and tap refresh above',
+        ],
+        icon: '📱',
+      };
+    }
+  }
+
+  if (isIOS()) {
+    return {
+      title: 'Enable Location on iOS',
+      steps: [
+        'Open Settings app',
+        'Scroll down and tap "Safari"',
+        'Tap "Location"',
+        'Select "While Using the App" or "Always"',
+      ],
+      icon: '🌐',
+    };
+  }
+  if (isAndroid()) {
+    return {
+      title: 'Enable Location on Android',
+      steps: [
+        'Tap the lock icon in the address bar',
+        'Tap "Site Settings" or "Permissions"',
+        'Tap "Location"',
+        'Select "Allow"',
+      ],
+      icon: '🌐',
+    };
+  }
+  return {
+    title: 'Enable Location in Browser Settings',
+    steps: [
+      'Click the lock/info icon in the address bar',
+      'Go to Site Settings or Permissions',
+      'Change Location to "Allow"',
+      'Refresh this page',
+    ],
+    icon: '🌐',
+  };
+}
+
 export default function EmployeeDashboard() {
   const { user } = useAuthStore();
-  const { logs, fetchLogs, checkIn, checkOut } = useAttendanceStore();
+  const { logs, fetchLogs, myAttendance, checkIn, checkOut } = useAttendanceStore();
   const { items: sites } = useSiteStore();
 
   const [currentSite, setCurrentSite] = useState(null);
@@ -18,6 +97,19 @@ export default function EmployeeDashboard() {
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState(null);
   const [actionSuccess, setActionSuccess] = useState(null);
+  const [showPermissionHelp, setShowPermissionHelp] = useState(false);
+  const [installPrompt, setInstallPrompt] = useState(null);
+  const deferredPromptRef = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => {
+      e.preventDefault();
+      deferredPromptRef.current = e;
+      setInstallPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
 
   const {
     position,
@@ -52,7 +144,7 @@ export default function EmployeeDashboard() {
     const loadToday = async () => {
       try {
         const today = new Date().toISOString().split('T')[0];
-        const records = await fetchLogs({ date: today, per_page: 10 });
+        const records = await myAttendance({ date: today, per_page: 10 });
         if (records?.length > 0) {
           setTodayAttendance(records[0]);
         } else {
@@ -63,7 +155,7 @@ export default function EmployeeDashboard() {
       }
     };
     loadToday();
-  }, []);
+  }, [myAttendance]);
 
   const distance = useMemo(() => {
     if (!position || !currentSite) return null;
@@ -105,7 +197,7 @@ export default function EmployeeDashboard() {
       const result = await checkIn(payload);
       setActionSuccess('Checked in successfully!');
       const today = new Date().toISOString().split('T')[0];
-      const records = await fetchLogs({ date: today, per_page: 10 });
+      const records = await myAttendance({ date: today, per_page: 10 });
       if (records?.length > 0) {
         setTodayAttendance(records[0]);
       }
@@ -115,7 +207,7 @@ export default function EmployeeDashboard() {
     } finally {
       setActionLoading(false);
     }
-  }, [position, currentSite, checkIn, fetchLogs]);
+  }, [position, currentSite, checkIn, myAttendance]);
 
   const handleCheckOut = useCallback(async () => {
     if (!currentSite) return;
@@ -133,7 +225,7 @@ export default function EmployeeDashboard() {
       const result = await checkOut(payload);
       setActionSuccess('Checked out successfully!');
       const today = new Date().toISOString().split('T')[0];
-      const records = await fetchLogs({ date: today, per_page: 10 });
+      const records = await myAttendance({ date: today, per_page: 10 });
       if (records?.length > 0) {
         setTodayAttendance(records[0]);
       }
@@ -143,7 +235,41 @@ export default function EmployeeDashboard() {
     } finally {
       setActionLoading(false);
     }
-  }, [position, currentSite, checkOut, fetchLogs]);
+  }, [position, currentSite, checkOut, myAttendance]);
+
+  const handleInstall = useCallback(async () => {
+    const deferred = deferredPromptRef.current;
+    if (!deferred) return;
+    deferred.prompt();
+    const result = await deferred.userChoice;
+    if (result.outcome === 'accepted') {
+      deferredPromptRef.current = null;
+      setInstallPrompt(null);
+    }
+  }, []);
+
+  const handleRequestPermission = useCallback(async () => {
+    if (!isStandalone() && deferredPromptRef.current) {
+      deferredPromptRef.current.prompt();
+      const result = await deferredPromptRef.current.userChoice;
+      if (result.outcome === 'accepted') {
+        deferredPromptRef.current = null;
+        setInstallPrompt(null);
+        return;
+      }
+    }
+    try {
+      if (navigator.permissions?.query) {
+        const result = await navigator.permissions.query({ name: 'geolocation' });
+        if (result.state === 'denied') {
+          setShowPermissionHelp(true);
+          return;
+        }
+      }
+    } catch {
+    }
+    refreshGPS();
+  }, [refreshGPS]);
 
   useEffect(() => {
     if (actionSuccess) {
@@ -152,9 +278,26 @@ export default function EmployeeDashboard() {
     }
   }, [actionSuccess]);
 
+  const formatDate = (dt) => {
+    if (!dt) return '--';
+    const d = new Date(dt);
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yy = String(d.getFullYear()).slice(-2);
+    return `${dd}/${mm}/${yy}`;
+  };
+
   const formatTime = (dt) => {
     if (!dt) return '--';
-    return new Date(dt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const d = new Date(dt);
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  };
+
+  const formatHours = (hours) => {
+    if (hours == null || hours === '') return '--';
+    const h = Math.floor(Number(hours));
+    const m = Math.round((Number(hours) - h) * 60);
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
   };
 
   return (
@@ -163,7 +306,7 @@ export default function EmployeeDashboard() {
         <div>
           <h1 className="text-2xl font-extrabold text-gray-900">My Attendance</h1>
           <p className="text-sm text-gray-500 mt-1">
-            {new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            {formatDate(new Date())} {formatTime(new Date())}
           </p>
         </div>
         <button
@@ -201,6 +344,7 @@ export default function EmployeeDashboard() {
         site={currentSite}
         distance={distance}
         allowedRadius={allowedRadius}
+        onRequestPermission={handleRequestPermission}
       />
 
       <div className="bg-white border border-gray-200 rounded-xl p-5">
@@ -211,6 +355,18 @@ export default function EmployeeDashboard() {
 
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div className="bg-gray-50 rounded-lg p-3">
+            <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Date</p>
+            <p className="text-lg font-bold text-gray-900 mt-1">
+              {todayAttendance ? formatDate(todayAttendance.date) : formatDate(new Date())}
+            </p>
+          </div>
+          <div className="bg-gray-50 rounded-lg p-3">
+            <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Site</p>
+            <p className="text-lg font-bold text-gray-900 mt-1 truncate">
+              {todayAttendance?.site?.name || currentSite?.name || '--'}
+            </p>
+          </div>
+          <div className="bg-gray-50 rounded-lg p-3">
             <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Check In</p>
             <p className="text-lg font-bold text-gray-900 mt-1">
               {formatTime(todayAttendance?.check_in)}
@@ -220,6 +376,18 @@ export default function EmployeeDashboard() {
             <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Check Out</p>
             <p className="text-lg font-bold text-gray-900 mt-1">
               {formatTime(todayAttendance?.check_out)}
+            </p>
+          </div>
+          <div className="bg-gray-50 rounded-lg p-3">
+            <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Working Hours</p>
+            <p className="text-lg font-bold text-gray-900 mt-1">
+              {formatHours(todayAttendance?.working_hours)}
+            </p>
+          </div>
+          <div className="bg-gray-50 rounded-lg p-3">
+            <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Overtime</p>
+            <p className="text-lg font-bold text-gray-900 mt-1">
+              {formatHours(todayAttendance?.overtime_hours)}
             </p>
           </div>
         </div>
@@ -246,6 +414,63 @@ export default function EmployeeDashboard() {
           isCheckedOut={isCheckedOut}
         />
       </div>
+
+      {!isStandalone() && installPrompt && (
+        <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-5">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center flex-shrink-0">
+              <Download className="w-5 h-5 text-indigo-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-bold text-indigo-800">Install RFI App</h3>
+              <p className="text-xs text-indigo-600 mt-1">
+                Install this app on your device for app-like location access and a better experience.
+              </p>
+              <div className="flex gap-2 mt-3">
+                <button
+                  onClick={handleInstall}
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition-colors"
+                >
+                  Install App
+                </button>
+                <button
+                  onClick={() => setInstallPrompt(null)}
+                  className="px-4 py-2 bg-white border border-indigo-200 text-indigo-700 text-xs font-semibold rounded-lg hover:bg-indigo-50 transition-colors"
+                >
+                  Not Now
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showPermissionHelp && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 relative">
+          <button
+            onClick={() => setShowPermissionHelp(false)}
+            className="absolute top-3 right-3 p-1 hover:bg-blue-100 rounded-full transition-colors"
+          >
+            <X className="w-4 h-4 text-blue-500" />
+          </button>
+          <h3 className="text-sm font-bold text-blue-800 mb-3 pr-6">
+            {getPermissionHelp(isStandalone()).icon} {getPermissionHelp(isStandalone()).title}
+          </h3>
+          <ol className="space-y-2">
+            {getPermissionHelp(isStandalone()).steps.map((step, i) => (
+              <li key={i} className="flex items-start gap-2 text-sm text-blue-700">
+                <span className="flex-shrink-0 w-5 h-5 rounded-full bg-blue-100 text-blue-600 text-xs font-bold flex items-center justify-center mt-0.5">
+                  {i + 1}
+                </span>
+                <span>{step}</span>
+              </li>
+            ))}
+          </ol>
+          <p className="text-xs text-blue-600 mt-3">
+            After changing the setting, tap the refresh button <RefreshCw className="w-3 h-3 inline" /> above to retry.
+          </p>
+        </div>
+      )}
 
       <div className="bg-white border border-gray-200 rounded-xl p-5">
         <h2 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">

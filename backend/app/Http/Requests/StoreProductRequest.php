@@ -23,12 +23,12 @@ class StoreProductRequest extends FormRequest
             'supplier_id' => 'nullable|exists:suppliers,id',
             'purchase_price' => 'required|numeric|min:0',
             'cost_price' => 'nullable|numeric|min:0',
-            'gst_percentage' => 'nullable|numeric|min:0|max:100',
             'reorder_level' => 'nullable|numeric|min:0',
             'min_stock' => 'nullable|numeric|min:0',
             'max_stock' => 'nullable|numeric|min:0',
             'description' => 'nullable|string',
             'status' => 'nullable|string|in:active,inactive',
+            'site_id' => 'nullable|exists:sites,id',
         ];
 
         if (ProductResource::canManageSalesPrice($this)) {

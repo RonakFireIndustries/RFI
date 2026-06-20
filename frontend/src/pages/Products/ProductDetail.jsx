@@ -31,12 +31,14 @@ export default function ProductDetail() {
       fields={fields}
       sections={[
         {
-          title: 'Inventory By Warehouse',
-          path: 'inventories',
-          emptyText: 'No inventory records.',
+          title: 'Stock By Location',
+          path: 'stock',
+          emptyText: 'No stock records.',
           columns: [
-            { header: 'Warehouse', accessorKey: 'warehouse.name' },
+            { header: 'Location', accessorKey: 'locationable.name' },
             { header: 'Quantity', accessorKey: 'quantity' },
+            { header: 'Available', accessorKey: 'available_quantity' },
+            { header: 'Reserved', accessorKey: 'reserved_quantity' },
           ],
         },
       ]}

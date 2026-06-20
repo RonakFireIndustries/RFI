@@ -16,11 +16,6 @@ class SupplierResource extends JsonResource
             'phone' => $this->phone,
             'gst_number' => $this->gst_number,
             'address' => $this->address,
-            'branch_id' => $this->branch_id,
-            'branch' => $this->whenLoaded('branch', fn () => [
-                'id' => $this->branch?->id,
-                'name' => $this->branch?->name,
-            ]),
             'products' => ProductResource::collection($this->whenLoaded('products')),
             'purchase_orders' => $this->whenLoaded('purchaseOrders', fn () => $this->purchaseOrders->map(fn ($order) => [
                 'id' => $order->id,

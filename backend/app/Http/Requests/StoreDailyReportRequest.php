@@ -23,7 +23,6 @@ class StoreDailyReportRequest extends FormRequest
             'issues_faced' => 'nullable|string',
             'materials_used' => 'nullable|string',
             'equipment_used' => 'nullable|string',
-            'remarks' => 'nullable|string',
             'status' => 'nullable|in:Draft,Submitted',
         ];
     }

@@ -1,22 +1,24 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
-import { FileText, Download } from 'lucide-react';
+import { FileText, Download, Plus } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
 const EmployeePayrollPage = () => {
+  const navigate = useNavigate();
   const { user } = useAuthStore();
   const [payrolls, setPayrolls] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Assuming user has employee_id or we fetch by logged in user
-    if (user?.employee_id) {
-      api.get(`/payroll?employee_id=${user.employee_id}`).then(res => {
+    const empId = user?.employee?.id;
+    if (empId) {
+      api.get(`/payroll?employee_id=${empId}`).then(res => {
         setPayrolls(res.data);
         setLoading(false);
       });
     } else {
-      setLoading(false); // Admin or user without employee profile
+      setLoading(false);
     }
   }, [user]);
 
@@ -40,7 +42,7 @@ const EmployeePayrollPage = () => {
             {payrolls.map((p) => (
               <tr key={p.id}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {p.payrollPeriod ? `${p.payrollPeriod.month}/${p.payrollPeriod.year}` : 'Unknown Period'}
+                  {p.payroll_period ? `${p.payroll_period.month}/${p.payroll_period.year}` : 'Unknown Period'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">
                   ₹{p.net_salary}
@@ -54,7 +56,21 @@ const EmployeePayrollPage = () => {
                       <FileText className="w-4 h-4 mr-1" /> View
                     </a>
                   ) : (
-                    <span className="text-gray-400 text-xs">Not Generated</span>
+                    <button onClick={async () => {
+                      try {
+                        const res = await api.post(`/payrolls/${p.id}/payslips/generate`);
+                        if (res?.data?.payslip) {
+                          navigate(`/dashboard/payslip/${res.data.payslip.id}`);
+                        } else {
+                          alert('Payslip generated');
+                        }
+                        setPayrolls(prev => prev.map(r => r.id === p.id ? { ...r, payslip: res?.data?.payslip || { id: 'new' } } : r));
+                      } catch (e) {
+                        alert(e?.response?.data?.message || e?.message || 'Failed to generate payslip');
+                      }
+                    }} className="text-orange-600 hover:text-orange-900 inline-flex items-center text-xs font-medium">
+                      <Plus className="w-3.5 h-3.5 mr-1" /> Generate
+                    </button>
                   )}
                 </td>
               </tr>

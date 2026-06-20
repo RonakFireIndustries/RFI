@@ -18,7 +18,6 @@ export default function DailyReportForm() {
     issues_faced: '',
     materials_used: '',
     equipment_used: '',
-    remarks: '',
   });
 
   useEffect(() => {

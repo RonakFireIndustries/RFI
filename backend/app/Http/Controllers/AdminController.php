@@ -10,7 +10,7 @@ class AdminController extends Controller
 {
     // List of tables we want to manage (hiding system tables)
     protected $allowedTables = [
-        'users', 'employees', 'branches', 'products', 'categories', 
+        'users', 'employees', 'products', 'categories', 
         'inventories', 'inventory_transactions', 'invoices', 'sales_orders', 
         'purchase_orders', 'customers', 'suppliers', 'leaves', 'tasks', 'payrolls'
     ];

@@ -12,10 +12,7 @@ class InventoryController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Inventory::with(['product.category', 'product.supplier', 'warehouse', 'branch']);
-        if ($request->has('branch_id')) {
-            $query->where('branch_id', $request->branch_id);
-        }
+        $query = Inventory::with(['product.category', 'product.supplier', 'warehouse']);
         return InventoryResource::collection($query->get());
     }
 
@@ -23,43 +20,32 @@ class InventoryController extends Controller
     {
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
-            'branch_id' => 'required_without:warehouse_id|exists:branches,id',
-            'warehouse_id' => 'required_without:branch_id|exists:branches,id',
             'quantity' => 'required|integer|min:0',
         ]);
 
-        $validated['branch_id'] = $validated['branch_id'] ?? $validated['warehouse_id'];
-
         $inventory = Inventory::updateOrCreate(
-            ['product_id' => $validated['product_id'], 'branch_id' => $validated['branch_id']],
+            ['product_id' => $validated['product_id']],
             ['quantity' => $validated['quantity']]
         );
 
-        return new InventoryResource($inventory->load(['product.category', 'product.supplier', 'warehouse', 'branch', 'transactions']));
+        return new InventoryResource($inventory->load(['product.category', 'product.supplier', 'warehouse', 'transactions']));
     }
 
     public function show(Inventory $inventory)
     {
-        return new InventoryResource($inventory->load(['product.category', 'product.supplier', 'warehouse', 'branch', 'transactions']));
+        return new InventoryResource($inventory->load(['product.category', 'product.supplier', 'warehouse', 'transactions']));
     }
 
     public function update(Request $request, Inventory $inventory)
     {
         $validated = $request->validate([
             'product_id' => 'sometimes|exists:products,id',
-            'branch_id' => 'sometimes|exists:branches,id',
-            'warehouse_id' => 'sometimes|exists:branches,id',
             'quantity' => 'sometimes|integer|min:0',
         ]);
 
-        if (isset($validated['warehouse_id'])) {
-            $validated['branch_id'] = $validated['warehouse_id'];
-            unset($validated['warehouse_id']);
-        }
-
         $inventory->update($validated);
 
-        return new InventoryResource($inventory->load(['product.category', 'product.supplier', 'warehouse', 'branch', 'transactions']));
+        return new InventoryResource($inventory->load(['product.category', 'product.supplier', 'warehouse', 'transactions']));
     }
 
     public function destroy(Inventory $inventory)
@@ -73,7 +59,6 @@ class InventoryController extends Controller
     {
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
-            'branch_id' => 'required|exists:branches,id',
             'type' => 'required|string|in:purchase,sale,return,damage,transfer_in,transfer_out,adjustment',
             'quantity' => 'required|integer',
             'reference_type' => 'nullable|string',
@@ -83,7 +68,7 @@ class InventoryController extends Controller
 
         return DB::transaction(function () use ($validated, $request) {
             $inventory = Inventory::firstOrCreate(
-                ['product_id' => $validated['product_id'], 'branch_id' => $validated['branch_id']],
+                ['product_id' => $validated['product_id']],
                 ['quantity' => 0]
             );
 
@@ -119,7 +104,7 @@ class InventoryController extends Controller
 
             return response()->json([
                 'message' => 'Transaction recorded successfully',
-                'inventory' => new InventoryResource($inventory->load(['product.category', 'product.supplier', 'warehouse', 'branch'])),
+                'inventory' => new InventoryResource($inventory->load(['product.category', 'product.supplier', 'warehouse'])),
                 'transaction' => $transaction
             ]);
         });
@@ -127,13 +112,7 @@ class InventoryController extends Controller
 
     public function transactions(Request $request)
     {
-        $query = InventoryTransaction::with(['inventory.product', 'inventory.branch', 'user']);
-        
-        if ($request->has('branch_id')) {
-            $query->whereHas('inventory', function($q) use ($request) {
-                $q->where('branch_id', $request->branch_id);
-            });
-        }
+        $query = InventoryTransaction::with(['inventory.product', 'user']);
         
         return $query->latest()->get();
     }

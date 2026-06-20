@@ -96,7 +96,7 @@ export default function ModuleListPage({
       accessorFn: (row) => column.accessor ? getPathValue(row, column.accessor) : column.cellValue?.(row),
       id: column.id || column.accessor || column.header,
       header: column.header,
-      cell: ({ row }) => column.cell ? column.cell(row.original) : (column.accessor ? getPathValue(row.original, column.accessor) : ''),
+      cell: ({ row }) => column.cell ? column.cell(row.original) : (column.accessor ? getPathValue(row.original, column.accessor) : (column.cellValue?.(row.original) ?? '')),
     })),
     {
       id: 'actions',
@@ -182,8 +182,8 @@ export default function ModuleListPage({
                       className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[#1a56db] focus:outline-none focus:ring-1 focus:ring-[#1a56db]"
                     >
                       <option value="">{field.placeholder || `Select ${field.label}`}</option>
-                      {(lookups[field.optionsKey] || field.options || []).map((option) => (
-                        <option key={`${field.optionsKey || field.name}-${option.id ?? option.value}`} value={option.id ?? option.value}>
+                      {(lookups[field.optionsKey] || field.options || []).map((option, index) => (
+                        <option key={`${field.name}-${option.id ?? option.value}-${index}`} value={option.id ?? option.value}>
                           {option.name ?? option.label}
                         </option>
                       ))}

@@ -52,6 +52,7 @@ export default defineConfig({
           },
         ],
       },
+      injectRegister: 'auto',
       devOptions: {
         enabled: true,
       },

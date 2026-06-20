@@ -11,7 +11,7 @@ class CustomerController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Customer::with(['branch', 'salesOrders.products', 'payments']);
+        $query = Customer::with(['salesOrders.products', 'payments']);
 
         // Search
         if ($request->has('search')) {
@@ -21,12 +21,6 @@ class CustomerController extends Controller
                   ->orWhere('email', 'like', "%{$search}%")
                   ->orWhere('phone', 'like', "%{$search}%");
             });
-        }
-
-        // Branch filtering (handled by BelongsToBranch trait globally, but just in case we need specific logic)
-        // If the user selects a specific branch
-        if ($request->has('branch_id')) {
-            $query->where('branch_id', $request->branch_id);
         }
 
         $customers = $query->paginate($request->input('per_page', 10));
@@ -55,16 +49,15 @@ class CustomerController extends Controller
             'phone' => 'nullable|string',
             'gst_number' => 'nullable|string',
             'address' => 'nullable|string',
-            'branch_id' => 'required|exists:branches,id',
         ]);
 
         $customer = Customer::create($validated);
-        return (new CustomerResource($customer->load(['branch', 'salesOrders.products'])))->response()->setStatusCode(201);
+        return (new CustomerResource($customer->load(['salesOrders.products'])))->response()->setStatusCode(201);
     }
 
     public function show($id)
     {
-        $customer = Customer::with(['branch', 'salesOrders.products', 'payments', 'notes.creator', 'documents.uploader'])->findOrFail($id);
+        $customer = Customer::with(['salesOrders.products', 'payments', 'notes.creator', 'documents.uploader'])->findOrFail($id);
         
         $soSum = $customer->salesOrders->sum('total_amount');
         $paymentSum = $customer->payments->where('type', 'Receivable')->sum('amount');
@@ -90,7 +83,7 @@ class CustomerController extends Controller
         ]);
 
         $customer->update($validated);
-        return new CustomerResource($customer->load(['branch', 'salesOrders.products']));
+        return new CustomerResource($customer->load(['salesOrders.products']));
     }
 
     public function destroy($id)

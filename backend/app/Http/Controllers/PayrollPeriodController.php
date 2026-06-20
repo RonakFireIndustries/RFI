@@ -50,8 +50,8 @@ class PayrollPeriodController extends Controller
 
     public function destroy(PayrollPeriod $payrollPeriod)
     {
-        if ($payrollPeriod->status !== 'Draft') {
-            return response()->json(['message' => 'Cannot delete a payroll period that is not in Draft status.'], 403);
+        if (in_array($payrollPeriod->status, ['Locked', 'Paid'])) {
+            return response()->json(['message' => 'Cannot delete a payroll period with Locked or Paid status.'], 403);
         }
         $payrollPeriod->delete();
         return response()->noContent();

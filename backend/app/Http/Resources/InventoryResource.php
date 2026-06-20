@@ -12,20 +12,8 @@ class InventoryResource extends JsonResource
         return [
             'id' => $this->id,
             'product_id' => $this->product_id,
-            'warehouse_id' => $this->branch_id,
-            'branch_id' => $this->branch_id,
             'quantity' => $this->quantity,
             'product' => new ProductResource($this->whenLoaded('product')),
-            'warehouse' => $this->whenLoaded('warehouse', fn () => [
-                'id' => $this->warehouse?->id,
-                'name' => $this->warehouse?->name,
-                'location' => $this->warehouse?->location,
-            ]),
-            'branch' => $this->whenLoaded('branch', fn () => [
-                'id' => $this->branch?->id,
-                'name' => $this->branch?->name,
-                'location' => $this->branch?->location,
-            ]),
             'transactions' => $this->whenLoaded('transactions', fn () => $this->transactions->map(fn ($transaction) => [
                 'id' => $transaction->id,
                 'type' => $transaction->type,

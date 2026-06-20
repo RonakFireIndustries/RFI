@@ -24,7 +24,6 @@ class UpdateProductRequest extends FormRequest
             'supplier_id' => 'nullable|exists:suppliers,id',
             'purchase_price' => 'sometimes|numeric|min:0',
             'cost_price' => 'nullable|numeric|min:0',
-            'gst_percentage' => 'nullable|numeric|min:0|max:100',
             'reorder_level' => 'nullable|numeric|min:0',
             'min_stock' => 'nullable|numeric|min:0',
             'max_stock' => 'nullable|numeric|min:0',

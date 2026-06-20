@@ -40,7 +40,7 @@
 
     <table style="width: 100%; margin-bottom: 30px;">
         <tr>
-            <td style="width: 50%; vertical-align: top;">
+            <td style="width: 100%; vertical-align: top;">
                 <h4 style="margin: 0 0 10px 0; color: #555;">Bill To:</h4>
                 <p style="margin: 0; font-weight: bold;">{{ $customer->name ?? 'N/A' }}</p>
                 <p style="margin: 5px 0 0 0; color: #777;">{{ $customer->email ?? '' }}</p>
@@ -48,11 +48,6 @@
                 @if($customer && $customer->gst_number)
                 <p style="margin: 5px 0 0 0; color: #777;">GSTIN: {{ $customer->gst_number }}</p>
                 @endif
-            </td>
-            <td style="width: 50%; vertical-align: top; text-align: right;">
-                <h4 style="margin: 0 0 10px 0; color: #555;">From:</h4>
-                <p style="margin: 0; font-weight: bold;">{{ $branch->name ?? 'Main Branch' }}</p>
-                <p style="margin: 5px 0 0 0; color: #777;">{{ $branch->address ?? '' }}</p>
             </td>
         </tr>
     </table>
@@ -64,7 +59,6 @@
                 <th>HSN/SAC</th>
                 <th class="right">Qty</th>
                 <th class="right">Rate</th>
-                <th class="right">Tax Rate</th>
                 <th class="right">Amount</th>
             </tr>
         </thead>
@@ -80,7 +74,6 @@
                 <td>{{ $item->hsn_code ?? '-' }}</td>
                 <td class="right">{{ $item->quantity }}</td>
                 <td class="right">{{ number_format($item->unit_price, 2) }}</td>
-                <td class="right">{{ number_format($item->tax_rate, 2) }}%</td>
                 <td class="right">{{ number_format($item->total, 2) }}</td>
             </tr>
             @endforeach

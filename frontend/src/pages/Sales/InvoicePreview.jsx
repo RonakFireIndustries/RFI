@@ -109,10 +109,6 @@ export default function InvoicePreview() {
             <div>
               <h2 className="text-3xl font-black text-[#1a56db] tracking-tighter">RFI ERP</h2>
               <div className="mt-4 text-gray-500 text-sm">
-                <p className="font-semibold text-gray-800">{invoice.branch?.name || 'Main Branch'}</p>
-                <p>{invoice.branch?.address}</p>
-                <p>{invoice.branch?.phone}</p>
-                <p>{invoice.branch?.email}</p>
               </div>
             </div>
             <div className="text-right">
@@ -159,7 +155,6 @@ export default function InvoicePreview() {
                   <th className="py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">HSN/SAC</th>
                   <th className="py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Qty</th>
                   <th className="py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Rate</th>
-                  <th className="py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Tax Rate</th>
                   <th className="py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Amount</th>
                 </tr>
               </thead>
@@ -173,7 +168,6 @@ export default function InvoicePreview() {
                     <td className="py-4 px-4 text-center text-gray-600">{item.hsn_code || '-'}</td>
                     <td className="py-4 px-4 text-center font-medium text-gray-900">{item.quantity}</td>
                     <td className="py-4 px-4 text-right text-gray-600">₹{parseFloat(item.unit_price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                    <td className="py-4 px-4 text-right text-gray-600">{parseFloat(item.tax_rate)}%</td>
                     <td className="py-4 px-4 text-right font-medium text-gray-900">₹{parseFloat(item.total).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                   </tr>
                 ))}

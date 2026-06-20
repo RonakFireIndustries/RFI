@@ -11,7 +11,6 @@ export default function SupplierProfile() {
         { label: 'Email', path: 'email' },
         { label: 'Phone', path: 'phone' },
         { label: 'GST Number', path: 'gst_number' },
-        { label: 'Branch', path: 'branch.name' },
         { label: 'Products', render: (supplier) => supplier.products_count ?? supplier.products?.length ?? 0 },
         { label: 'Balance', render: (supplier) => Number(supplier.balance || 0).toFixed(2) },
       ]}

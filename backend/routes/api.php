@@ -3,7 +3,6 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\BranchController;
 // EmployeeController imported from Api\V1 below
 use App\Http\Controllers\Api\V1\DesignationController;
 use App\Http\Controllers\Api\V1\ShiftController;
@@ -61,7 +60,6 @@ Route::prefix('v1')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index']);
 
     // Core HR
-    Route::apiResource('branches', BranchController::class);
     // Role & Permission Management
     Route::apiResource('roles', RoleController::class);
     Route::apiResource('permissions', PermissionController::class);
@@ -143,7 +141,7 @@ Route::prefix('v1')->group(function () {
     Route::apiResource('categories', \App\Http\Controllers\CategoryController::class);
     Route::apiResource('products', ProductController::class);
 
-    // Inventory Locations (using branches & sites - polymorphic)
+    // Inventory Locations (using sites - polymorphic)
     Route::get('/locations', [InventoryLocationController::class, 'index']);
     Route::post('/locations', [InventoryLocationController::class, 'store']);
 
@@ -229,6 +227,8 @@ Route::prefix('v1')->group(function () {
     Route::post('/payroll/regenerate', [PayrollController::class, 'regenerate']);
     Route::post('/payroll/{payroll}/approve', [PayrollController::class, 'approve']);
     Route::post('/payroll/{payroll}/lock', [PayrollController::class, 'lock']);
+    Route::post('/payroll/{payroll}/unlock', [PayrollController::class, 'unlock']);
+    Route::delete('/payroll/{payroll}', [PayrollController::class, 'destroy']);
 
     Route::get('/payslips', [PayslipController::class, 'index']);
     Route::get('/payslips/{payslip}', [PayslipController::class, 'show']);
@@ -265,6 +265,10 @@ Route::prefix('v1')->group(function () {
     Route::post('leave-requests/{leave}/approve', [LeaveController::class, 'approve']);
     Route::post('leave-requests/{leave}/reject', [LeaveController::class, 'reject']);
     Route::post('leave-requests/{leave}/cancel', [LeaveController::class, 'cancel']);
+
+    // My Leave Requests (employee self-service)
+    Route::get('/my-leave-requests', [LeaveController::class, 'myLeaves']);
+    Route::post('/my-leave-requests', [LeaveController::class, 'myStore']);
 });
 
 });

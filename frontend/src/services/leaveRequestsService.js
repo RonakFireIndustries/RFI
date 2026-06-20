@@ -10,4 +10,8 @@ export const leaveRequestsService = {
   approve: (id, data) => api.post(`/leave-requests/${id}/approve`, data),
   reject: (id, data) => api.post(`/leave-requests/${id}/reject`, data),
   cancel: (id, data) => api.post(`/leave-requests/${id}/cancel`, data),
+
+  // Employee self-service
+  myList: (params) => api.get(`/my-leave-requests${normalizeQuery(params)}`),
+  myCreate: (data) => api.post('/my-leave-requests', data),
 };

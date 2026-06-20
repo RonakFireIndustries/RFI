@@ -20,6 +20,7 @@ export const menuCategories = [
       { name: 'Shifts', path: '/dashboard/shifts', icon: Clock, roles: ['Super Admin', 'Admin', 'HR Manager'] },
       { name: 'Daily Reports', path: '/dashboard/daily-reports', icon: FileText, roles: ['Super Admin', 'Admin', 'HR Manager', 'General Manager', 'Production Manager', 'Workshop Supervisor', 'Design Manager'] },
       { name: 'Leave', path: '/dashboard/leave-management', icon: Briefcase, roles: ['Super Admin', 'Admin', 'HR Manager', 'General Manager'] },
+      { name: 'My Leaves', path: '/dashboard/my-leaves', icon: FileText, roles: ['*'] },
     ],
   },
   {

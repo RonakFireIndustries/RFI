@@ -20,7 +20,7 @@ class DailyReportResource extends JsonResource
             'issues_faced' => $this->issues_faced,
             'materials_used' => $this->materials_used,
             'equipment_used' => $this->equipment_used,
-            'remarks' => $this->remarks,
+            'supervisor_remarks' => $this->supervisor_remarks,
             'status' => $this->status,
             'submitted_at' => $this->submitted_at,
             'approved_at' => $this->approved_at,

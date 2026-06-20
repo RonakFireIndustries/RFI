@@ -18,23 +18,31 @@ class PurchaseOrderController extends Controller
     {
         $request->validate([
             'supplier_id' => 'required|exists:suppliers,id',
-            'branch_id' => 'required|exists:branches,id',
             'items' => 'required|array',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.unit_cost' => 'required|numeric|min:0',
+            'gst_type' => 'nullable|string|in:cgst,sgst,igst',
+            'gst_rate' => 'nullable|numeric|min:0|max:100',
         ]);
+
+        $subtotal = collect($request->items)->sum(function($item) {
+            return $item['quantity'] * $item['unit_cost'];
+        });
+
+        $gstRate = $request->input('gst_rate', 0);
+        $taxAmount = $subtotal * ($gstRate / 100);
 
         $po = PurchaseOrder::create([
             'po_number' => 'PO-' . time(),
             'supplier_id' => $request->supplier_id,
-            'branch_id' => $request->branch_id,
             'status' => $request->input('status', 'Pending Approval'),
             'requested_by' => Auth::id(),
             'notes' => $request->notes,
-            'total_amount' => collect($request->items)->sum(function($item) {
-                return $item['quantity'] * $item['unit_cost'];
-            })
+            'total_amount' => $subtotal,
+            'tax_amount' => $taxAmount,
+            'gst_type' => $request->gst_type,
+            'gst_rate' => $gstRate,
         ]);
 
         foreach ($request->items as $item) {
@@ -76,20 +84,28 @@ class PurchaseOrderController extends Controller
 
         $request->validate([
             'supplier_id' => 'required|exists:suppliers,id',
-            'branch_id' => 'required|exists:branches,id',
             'items' => 'required|array',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.unit_cost' => 'required|numeric|min:0',
+            'gst_type' => 'nullable|string|in:cgst,sgst,igst',
+            'gst_rate' => 'nullable|numeric|min:0|max:100',
         ]);
+
+        $subtotal = collect($request->items)->sum(function($item) {
+            return $item['quantity'] * $item['unit_cost'];
+        });
+
+        $gstRate = $request->input('gst_rate', 0);
+        $taxAmount = $subtotal * ($gstRate / 100);
 
         $po->update([
             'supplier_id' => $request->supplier_id,
-            'branch_id' => $request->branch_id,
             'notes' => $request->notes,
-            'total_amount' => collect($request->items)->sum(function($item) {
-                return $item['quantity'] * $item['unit_cost'];
-            })
+            'total_amount' => $subtotal,
+            'tax_amount' => $taxAmount,
+            'gst_type' => $request->gst_type,
+            'gst_rate' => $gstRate,
         ]);
 
         // Recreate items

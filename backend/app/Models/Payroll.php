@@ -4,15 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Traits\BelongsToBranch;
 
 class Payroll extends Model
 {
-    use BelongsToBranch;
-
     protected $fillable = [
         'employee_id',
-        'branch_id',
         'payroll_period_id',
         'month',
         'year',

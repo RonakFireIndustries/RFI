@@ -16,12 +16,12 @@ class StoreTransactionRequest extends FormRequest
     {
         return [
             'product_id' => 'required|exists:products,id',
-            'location_type' => 'required|string|in:App\Models\Branch,App\Models\Site',
+            'location_type' => 'required|string|in:App\Models\Site',
             'location_id' => 'required|integer',
             'transaction_type' => 'required|in:opening_stock,purchase,purchase_return,issue,consumption,transfer_in,transfer_out,adjustment,damage,sales,sales_return',
             'quantity' => 'required|numeric',
             'unit_price' => 'nullable|numeric|min:0',
-            'to_location_type' => 'nullable|string|in:App\Models\Branch,App\Models\Site',
+            'to_location_type' => 'nullable|string|in:App\Models\Site',
             'to_location_id' => 'nullable|integer',
             'reference_type' => 'nullable|string|max:100',
             'reference_id' => 'nullable|integer',

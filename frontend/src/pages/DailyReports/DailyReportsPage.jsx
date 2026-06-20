@@ -25,26 +25,32 @@ export default function DailyReportsPage() {
   const columns = [
     { 
       header: 'Date', 
-      accessor: 'date',
-      cell: (row) => new Date(row.date).toLocaleDateString()
+      accessorKey: 'date',
+      cell: ({ getValue }) => {
+        const val = getValue();
+        return val ? new Date(val).toLocaleDateString() : '--';
+      }
     },
     { 
       header: 'Employee', 
-      accessor: 'employee.full_name' 
+      accessorKey: 'employee.full_name' 
     },
     { 
       header: 'Site', 
-      accessor: 'site.name',
-      cell: (row) => row.site ? `${row.site.name} (${row.site.code})` : 'N/A'
+      accessorKey: 'site.name',
+      cell: ({ row }) => {
+        const site = row.original.site;
+        return site ? `${site.name} (${site.code})` : 'N/A';
+      }
     },
     { 
       header: 'Hours', 
-      accessor: 'hours_worked' 
+      accessorKey: 'hours_worked' 
     },
     { 
       header: 'Status', 
-      accessor: 'status',
-      cell: (row) => {
+      accessorKey: 'status',
+      cell: ({ row }) => {
         let badgeClass = 'bg-gray-100 text-gray-800';
         let Icon = Clock;
         

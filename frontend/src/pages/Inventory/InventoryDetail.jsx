@@ -4,13 +4,13 @@ import { useInventoryStore } from '../../store/inventoryStore';
 export default function InventoryDetail() {
   return (
     <ModuleDetailPage
-      title={(inventory) => `${inventory.product?.name || 'Inventory'} at ${inventory.warehouse?.name || inventory.branch?.name || 'Warehouse'}`}
+      title={(inventory) => `${inventory.product?.name || 'Inventory'} at ${inventory.warehouse?.name || inventory.locationable?.name || 'Warehouse'}`}
       store={useInventoryStore}
       backPath="/dashboard/inventory"
       fields={[
         { label: 'Product', path: 'product.name' },
         { label: 'SKU', path: 'product.sku' },
-        { label: 'Warehouse', render: (inventory) => inventory.warehouse?.name || inventory.branch?.name || '-' },
+        { label: 'Warehouse', render: (inventory) => inventory.warehouse?.name || inventory.locationable?.name || '-' },
         { label: 'Quantity', path: 'quantity' },
       ]}
       sections={[

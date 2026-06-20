@@ -5,13 +5,12 @@ import { unwrapList } from '../../services/resourceHelpers';
 import { useEmployeesStore } from '../../store/employeesStore';
 
 export default function EmployeesPage() {
-  const [lookups, setLookups] = useState({ branches: [], departments: [], designations: [], employees: [] });
+  const [lookups, setLookups] = useState({ departments: [], designations: [], employees: [] });
 
   useEffect(() => {
-    Promise.all([api.get('/branches'), api.get('/departments'), api.get('/designations'), api.get('/employees')])
-      .then(([branches, departments, designations, employees]) => {
+    Promise.all([api.get('/departments'), api.get('/designations'), api.get('/employees')])
+      .then(([departments, designations, employees]) => {
         setLookups({
-          branches: unwrapList(branches.data),
           departments: unwrapList(departments.data),
           designations: unwrapList(designations.data),
           employees: unwrapList(employees.data).map(emp => ({ ...emp, name: emp.full_name }))

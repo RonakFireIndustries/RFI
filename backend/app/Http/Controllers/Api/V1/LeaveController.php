@@ -58,19 +58,19 @@ class LeaveController extends Controller
         }
     }
 
-    public function show(Leave $leave): JsonResponse
+    public function show(Leave $leave_request): JsonResponse
     {
-        $leave->load(['employee.user', 'employee.department', 'leaveType', 'approver', 'histories.user']);
+        $leave_request->load(['employee.user', 'employee.department', 'leaveType', 'approver', 'histories.user']);
 
         return $this->success('Leave request retrieved successfully', [
-            'leave_request' => (new LeaveResource($leave))->resolve(request())
+            'leave_request' => (new LeaveResource($leave_request))->resolve(request())
         ]);
     }
 
-    public function update(UpdateLeaveRequest $request, Leave $leave): JsonResponse
+    public function update(UpdateLeaveRequest $request, Leave $leave_request): JsonResponse
     {
         try {
-            $updatedLeave = $this->service->updateLeave($leave, $request->validated());
+            $updatedLeave = $this->service->updateLeave($leave_request, $request->validated());
             $updatedLeave->load(['employee.user', 'employee.department', 'leaveType', 'approver']);
 
             return $this->success('Leave request updated successfully', [
@@ -81,9 +81,9 @@ class LeaveController extends Controller
         }
     }
 
-    public function destroy(Leave $leave): JsonResponse
+    public function destroy(Leave $leave_request): JsonResponse
     {
-        $leave->delete();
+        $leave_request->delete();
         return $this->success('Leave request deleted successfully');
     }
 
@@ -122,5 +122,62 @@ class LeaveController extends Controller
         return $this->success('Leave cancelled successfully', [
             'leave_request' => (new LeaveResource($updatedLeave))->resolve($request)
         ]);
+    }
+
+    public function myLeaves(Request $request): JsonResponse
+    {
+        $employee = $request->user()->employee;
+        if (!$employee) {
+            return $this->error('Employee profile not found', [], 404);
+        }
+
+        $filters = array_merge(
+            $request->only(['status', 'leave_type_id']),
+            ['employee_id' => $employee->id]
+        );
+        $perPage = (int) $request->input('per_page', 15);
+        $leaves = $this->service->getLeaves($filters, $perPage);
+
+        return $this->success('My leave requests retrieved successfully', [
+            'leave_requests' => LeaveResource::collection($leaves)->resolve($request),
+            'meta' => [
+                'current_page' => $leaves->currentPage(),
+                'last_page' => $leaves->lastPage(),
+                'per_page' => $leaves->perPage(),
+                'total' => $leaves->total(),
+            ]
+        ]);
+    }
+
+    public function myStore(Request $request): JsonResponse
+    {
+        $employee = $request->user()->employee;
+        if (!$employee) {
+            return $this->error('Employee profile not found', [], 404);
+        }
+
+        try {
+            $data = $request->validate([
+                'leave_type_id' => 'required|exists:leave_types,id',
+                'start_date' => 'required|date',
+                'end_date' => 'required|date|after_or_equal:start_date',
+                'is_half_day' => 'boolean',
+                'reason' => 'required|string',
+                'status' => 'nullable|in:Draft,Submitted',
+            ]);
+            $data['employee_id'] = $employee->id;
+            if (!isset($data['status'])) {
+                $data['status'] = 'Submitted';
+            }
+
+            $leave = $this->service->createLeave($data);
+            $leave->load(['employee.user', 'employee.department', 'leaveType', 'approver']);
+
+            return $this->success('Leave request created successfully', [
+                'leave_request' => (new LeaveResource($leave))->resolve($request)
+            ], 201);
+        } catch (Exception $e) {
+            return $this->error($e->getMessage(), [], 422);
+        }
     }
 }

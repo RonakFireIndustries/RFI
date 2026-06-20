@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Branch;
 use App\Models\Product;
 use App\Models\Supplier;
 use App\Http\Resources\ProductResource;
@@ -15,7 +14,7 @@ class ProductController extends Controller
     public function index()
     {
         return ProductResource::collection(
-            Product::with(['category', 'supplier', 'unit', 'stock.location'])->get()
+            Product::with(['category', 'supplier', 'unit', 'stock.locationable'])->get()
         );
     }
 
@@ -31,26 +30,27 @@ class ProductController extends Controller
         $product = Product::create($data);
 
         if ($openingStock > 0) {
-            $supplier = Supplier::where('name', 'InStorage')->first();
-            $branch = Branch::first();
-            if ($supplier && $branch) {
+            $locationType = 'App\Models\Site';
+            $locationId = (int) ($data['site_id'] ?? 0);
+            if ($locationId) {
                 $inventoryService->addStock(
-                    $product->id,
-                    $branch->id,
-                    $openingStock,
-                    'opening_stock',
-                    $product->id,
-                    'Opening stock on product creation'
+                    productId: $product->id,
+                    locationType: $locationType,
+                    locationId: $locationId,
+                    quantity: $openingStock,
+                    referenceType: 'opening_stock',
+                    referenceId: $product->id,
+                    notes: 'Opening stock on product creation'
                 );
             }
         }
 
-        return new ProductResource($product->load(['category', 'supplier', 'unit', 'stock.location']));
+        return new ProductResource($product->load(['category', 'supplier', 'unit', 'stock.locationable']));
     }
 
     public function show(Product $product)
     {
-        return new ProductResource($product->load(['category', 'supplier', 'unit', 'stock.location']));
+        return new ProductResource($product->load(['category', 'supplier', 'unit', 'stock.locationable']));
     }
 
     public function update(UpdateProductRequest $request, Product $product)
@@ -60,7 +60,7 @@ class ProductController extends Controller
             unset($data['selling_price']);
         }
         $product->update($data);
-        return new ProductResource($product->load(['category', 'supplier', 'unit', 'stock.location']));
+        return new ProductResource($product->load(['category', 'supplier', 'unit', 'stock.locationable']));
     }
 
     public function destroy(Product $product)

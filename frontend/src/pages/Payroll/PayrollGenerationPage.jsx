@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { usePayrollStore } from '../../store/payrollStore';
 import { usePayrollPeriodStore } from '../../store/payrollPeriodStore';
 import { useEmployeesStore } from '../../store/employeesStore';
-import { Play, CheckCircle, Lock, RefreshCw, FileText } from 'lucide-react';
+import { Play, CheckCircle, Lock, RefreshCw, FileText, Trash2 } from 'lucide-react';
 
 const PayrollGenerationPage = () => {
   const navigate = useNavigate();
-  const { payrolls, loading, fetchPayrolls, generatePayroll, approvePayroll, lockPayroll, generatePayslip } = usePayrollStore();
+  const { payrolls, loading, fetchPayrolls, generatePayroll, approvePayroll, lockPayroll, unlockPayroll, deletePayroll, generatePayslip } = usePayrollStore();
   const { items: periods, fetchItems: fetchPeriods } = usePayrollPeriodStore();
   const { items: employees, fetchItems: fetchEmployees } = useEmployeesStore();
   const [selectedPeriod, setSelectedPeriod] = useState('');
@@ -25,8 +25,19 @@ const PayrollGenerationPage = () => {
 
   const handleGenerate = async () => {
     if (!selectedPeriod) return alert("Select a period first");
-    await generatePayroll({ payroll_period_id: selectedPeriod });
-    fetchPayrolls({ payroll_period_id: selectedPeriod });
+    try {
+      const result = await generatePayroll({ payroll_period_id: selectedPeriod });
+      const msg = result?.message || 'Payroll generated';
+      const errs = result?.errors?.filter(Boolean);
+      if (errs?.length) {
+        alert(`${msg}\n\nErrors:\n${errs.join('\n')}`);
+      } else {
+        alert(msg);
+      }
+      fetchPayrolls({ payroll_period_id: selectedPeriod });
+    } catch (e) {
+      alert(e?.response?.data?.message || e?.message || 'Failed to generate payroll');
+    }
   };
 
   return (
@@ -84,10 +95,19 @@ const PayrollGenerationPage = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                       {p.status === 'Draft' && (
-                        <button onClick={() => approvePayroll(p.id)} title="Approve" className="text-green-600 hover:text-green-900"><CheckCircle className="w-4 h-4 inline" /></button>
+                        <>
+                          <button onClick={() => approvePayroll(p.id)} title="Approve" className="text-green-600 hover:text-green-900"><CheckCircle className="w-4 h-4 inline" /></button>
+                          <button onClick={async () => { if (window.confirm('Delete this payroll entry?')) try { await deletePayroll(p.id); } catch (e) { alert(e?.response?.data?.message || e?.message || 'Delete failed'); } }} title="Delete" className="text-red-600 hover:text-red-900 ml-2"><Trash2 className="w-4 h-4 inline" /></button>
+                        </>
                       )}
                       {p.status === 'Approved' && (
                         <button onClick={() => lockPayroll(p.id)} title="Lock" className="text-red-600 hover:text-red-900"><Lock className="w-4 h-4 inline" /></button>
+                      )}
+                      {p.status === 'Locked' && (
+                        <>
+                          <button onClick={async () => { try { await unlockPayroll(p.id); } catch (e) { alert(e?.response?.data?.message || e?.message || 'Unlock failed'); } }} title="Unlock" className="text-amber-600 hover:text-amber-900"><Lock className="w-4 h-4 inline" /></button>
+                          <button onClick={async () => { if (window.confirm('Delete this payroll entry?')) try { await deletePayroll(p.id); } catch (e) { alert(e?.response?.data?.message || e?.message || 'Delete failed'); } }} title="Delete" className="text-red-600 hover:text-red-900 ml-2"><Trash2 className="w-4 h-4 inline" /></button>
+                        </>
                       )}
                       {(p.status === 'Approved' || p.status === 'Locked' || p.status === 'Paid') && !p.payslip && (
                         <button onClick={async () => {

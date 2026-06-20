@@ -3,11 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\BelongsToBranch;
-
 class SalesOrder extends Model
 {
-    use BelongsToBranch;
     protected $guarded = [];
 
     public function items()
@@ -23,7 +20,7 @@ class SalesOrder extends Model
     public function products()
     {
         return $this->belongsToMany(Product::class, 'sales_order_items')
-            ->withPivot(['quantity', 'unit_price', 'gst_amount'])
+            ->withPivot(['quantity', 'unit_price'])
             ->withTimestamps();
     }
 }

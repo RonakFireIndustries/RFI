@@ -30,7 +30,6 @@ use Illuminate\Support\Facades\Schema;
 class DashboardService
 {
     protected $user;
-    protected $branchId;
     protected $employee;
 
     private const ROLE_MAP = [
@@ -116,7 +115,6 @@ class DashboardService
     public function forUser($user): static
     {
         $this->user = $user;
-        $this->branchId = request()->header('X-Branch-Id');
         $this->employee = $user->employee;
         return $this;
     }
@@ -255,25 +253,22 @@ class DashboardService
 
     protected function widgetTotalEmployees(): array
     {
-        $count = Employee::when($this->branchId, fn($q) => $q->whereHas('user', fn($u) => $u->where('branch_id', $this->branchId)))->count();
-        $newHires = Employee::when($this->branchId, fn($q) => $q->whereHas('user', fn($u) => $u->where('branch_id', $this->branchId)))
-            ->where('created_at', '>=', Carbon::now()->startOfWeek())->count();
+        $count = Employee::count();
+        $newHires = Employee::where('created_at', '>=', Carbon::now()->startOfWeek())->count();
         return ['value' => $count, 'subtitle' => "{$newHires} new this week", 'trend' => $newHires > 0 ? 'up' : 'neutral'];
     }
 
     protected function widgetPresentToday(): array
     {
         $count = Attendance::whereDate('date', Carbon::today())
-            ->when($this->branchId, fn($q) => $q->where('branch_id', $this->branchId))
             ->where('status', 'Present')->count();
         return ['value' => $count, 'subtitle' => 'Checked in today'];
     }
 
     protected function widgetAbsentToday(): array
     {
-        $total = Employee::when($this->branchId, fn($q) => $q->whereHas('user', fn($u) => $u->where('branch_id', $this->branchId)))->count();
+        $total = Employee::count();
         $present = Attendance::whereDate('date', Carbon::today())
-            ->when($this->branchId, fn($q) => $q->where('branch_id', $this->branchId))
             ->where('status', 'Present')->count();
         return ['value' => $total - $present, 'subtitle' => 'Not checked in'];
     }
@@ -313,21 +308,20 @@ class DashboardService
 
     protected function widgetRevenue(): array
     {
-        $total = Invoice::when($this->branchId, fn($q) => $q->where('branch_id', $this->branchId))->sum('total_amount');
+        $total = Invoice::sum('total_amount');
         return ['value' => round($total, 2), 'prefix' => '₹', 'subtitle' => 'Total revenue'];
     }
 
     protected function widgetExpenses(): array
     {
-        $total = PurchaseOrder::when($this->branchId, fn($q) => $q->where('branch_id', $this->branchId))->sum('total_amount');
+        $total = PurchaseOrder::sum('total_amount');
         return ['value' => round($total, 2), 'prefix' => '₹', 'subtitle' => 'Total expenses'];
     }
 
     protected function widgetPayrollCost(): array
     {
         $latestPeriod = PayrollPeriod::latest('id')->value('id');
-        $cost = Payroll::when($this->branchId, fn($q) => $q->where('branch_id', $this->branchId))
-            ->when($latestPeriod, fn($q) => $q->where('payroll_period_id', $latestPeriod))
+        $cost = Payroll::when($latestPeriod, fn($q) => $q->where('payroll_period_id', $latestPeriod))
             ->sum('net_salary');
         return ['value' => round($cost, 2), 'prefix' => '₹', 'subtitle' => 'Current period'];
     }
@@ -472,7 +466,7 @@ class DashboardService
 
     protected function widgetSalesTrend(): array
     {
-        $total = Invoice::when($this->branchId, fn($q) => $q->where('branch_id', $this->branchId))->sum('total_amount');
+        $total = Invoice::sum('total_amount');
         return ['value' => round($total, 2), 'prefix' => '₹', 'subtitle' => 'Total sales'];
     }
 
@@ -485,7 +479,6 @@ class DashboardService
             $date = Carbon::now()->subMonths($i);
             $present = Attendance::whereMonth('date', $date->month)->whereYear('date', $date->year)
                 ->where('status', 'Present')
-                ->when($this->branchId, fn($q) => $q->where('branch_id', $this->branchId))
                 ->count();
             $data[] = ['name' => $date->format('M'), 'value' => $present];
         }
@@ -498,7 +491,6 @@ class DashboardService
         for ($i = 5; $i >= 0; $i--) {
             $date = Carbon::now()->subMonths($i);
             $cost = Payroll::whereMonth('created_at', $date->month)->whereYear('created_at', $date->year)
-                ->when($this->branchId, fn($q) => $q->where('branch_id', $this->branchId))
                 ->sum('net_salary');
             $data[] = ['name' => $date->format('M'), 'value' => round($cost, 2)];
         }
@@ -524,7 +516,6 @@ class DashboardService
         for ($i = 5; $i >= 0; $i--) {
             $date = Carbon::now()->subMonths($i);
             $total = Invoice::whereMonth('issue_date', $date->month)->whereYear('issue_date', $date->year)
-                ->when($this->branchId, fn($q) => $q->where('branch_id', $this->branchId))
                 ->sum('total_amount');
             $data[] = ['name' => $date->format('M'), 'value' => round($total, 2)];
         }
@@ -537,10 +528,8 @@ class DashboardService
         for ($i = 5; $i >= 0; $i--) {
             $date = Carbon::now()->subMonths($i);
             $revenue = Invoice::whereMonth('issue_date', $date->month)->whereYear('issue_date', $date->year)
-                ->when($this->branchId, fn($q) => $q->where('branch_id', $this->branchId))
                 ->sum('total_amount');
             $expenses = PurchaseOrder::whereMonth('created_at', $date->month)->whereYear('created_at', $date->year)
-                ->when($this->branchId, fn($q) => $q->where('branch_id', $this->branchId))
                 ->sum('total_amount');
             $data[] = ['name' => $date->format('M'), 'revenue' => round($revenue, 2), 'expenses' => round($expenses, 2)];
         }
@@ -592,7 +581,6 @@ class DashboardService
         for ($i = 5; $i >= 0; $i--) {
             $date = Carbon::now()->subMonths($i);
             $total = PurchaseOrder::whereMonth('created_at', $date->month)->whereYear('created_at', $date->year)
-                ->when($this->branchId, fn($q) => $q->where('branch_id', $this->branchId))
                 ->sum('total_amount');
             $data[] = ['name' => $date->format('M'), 'value' => round($total, 2)];
         }
@@ -804,9 +792,8 @@ class DashboardService
 
     protected function widgetAbsenteeismAlert(): ?array
     {
-        $total = Employee::when($this->branchId, fn($q) => $q->whereHas('user', fn($u) => $u->where('branch_id', $this->branchId)))->count();
+        $total = Employee::count();
         $present = Attendance::whereDate('date', Carbon::today())
-            ->when($this->branchId, fn($q) => $q->where('branch_id', $this->branchId))
             ->where('status', 'Present')->count();
         $absentPercent = $total > 0 ? round((($total - $present) / $total) * 100) : 0;
         if ($absentPercent < 30) return null;

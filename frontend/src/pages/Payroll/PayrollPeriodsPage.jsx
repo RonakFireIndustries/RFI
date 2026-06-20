@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { usePayrollPeriodStore } from '../../store/payrollPeriodStore';
 import { Plus, Edit2, Trash2, X } from 'lucide-react';
 
+const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-GB') : '--';
+const toDateInput = (d) => d ? new Date(d).toISOString().split('T')[0] : '';
+
 const PayrollPeriodsPage = () => {
-  const { items: periods, loading, error, fetchItems, createItem, updateItem, removeItem } = usePayrollPeriodStore();
+  const { items: periods, loading, error, fetchItems, createItem, updateItem, deleteItem } = usePayrollPeriodStore();
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [deleteError, setDeleteError] = useState(null);
   const [formData, setFormData] = useState({
     month: '',
     year: '',
@@ -24,8 +28,8 @@ const PayrollPeriodsPage = () => {
       setFormData({
         month: period.month,
         year: period.year,
-        start_date: period.start_date,
-        end_date: period.end_date,
+        start_date: toDateInput(period.start_date),
+        end_date: toDateInput(period.end_date),
         status: period.status || 'Draft'
       });
     } else {
@@ -61,6 +65,16 @@ const PayrollPeriodsPage = () => {
   if (loading && !showModal) return <div className="p-6">Loading...</div>;
   if (error) return <div className="p-6 text-red-600">Error loading payroll periods.</div>;
 
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure?')) return;
+    setDeleteError(null);
+    try {
+      await deleteItem(id);
+    } catch (e) {
+      setDeleteError(e?.response?.data?.message || e?.message || 'Failed to delete');
+    }
+  };
+
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
@@ -85,8 +99,8 @@ const PayrollPeriodsPage = () => {
             {periods.map((p) => (
               <tr key={p.id}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{p.month}/{p.year}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{p.start_date}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{p.end_date}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{fmtDate(p.start_date)}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{fmtDate(p.end_date)}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   <span className={`px-2 py-1 rounded-full text-xs font-semibold 
                     ${p.status === 'Paid' ? 'bg-green-100 text-green-800' : 
@@ -97,7 +111,7 @@ const PayrollPeriodsPage = () => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <button onClick={() => handleOpenModal(p)} className="text-blue-600 hover:text-blue-900 mr-3"><Edit2 className="w-4 h-4" /></button>
-                  <button onClick={() => { if(window.confirm('Are you sure?')) removeItem(p.id); }} className="text-red-600 hover:text-red-900"><Trash2 className="w-4 h-4" /></button>
+                  <button onClick={() => handleDelete(p.id)} className="text-red-600 hover:text-red-900"><Trash2 className="w-4 h-4" /></button>
                 </td>
               </tr>
             ))}
@@ -109,6 +123,13 @@ const PayrollPeriodsPage = () => {
           </tbody>
         </table>
       </div>
+
+      {deleteError && (
+        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 flex justify-between items-center">
+          <span>{deleteError}</span>
+          <button onClick={() => setDeleteError(null)} className="text-red-500 hover:text-red-700 ml-4"><X className="w-4 h-4" /></button>
+        </div>
+      )}
 
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">

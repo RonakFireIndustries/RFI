@@ -16,11 +16,6 @@ class CustomerResource extends JsonResource
             'phone' => $this->phone,
             'gst_number' => $this->gst_number,
             'address' => $this->address,
-            'branch_id' => $this->branch_id,
-            'branch' => $this->whenLoaded('branch', fn () => [
-                'id' => $this->branch?->id,
-                'name' => $this->branch?->name,
-            ]),
             'sales_orders' => $this->whenLoaded('salesOrders', fn () => $this->salesOrders->map(fn ($order) => [
                 'id' => $order->id,
                 'status' => $order->status,

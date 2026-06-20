@@ -21,11 +21,11 @@ class DailyReport extends Model
         'issues_faced',
         'materials_used',
         'equipment_used',
-        'remarks',
         'status',
         'submitted_at',
         'approved_at',
-        'approved_by'
+        'approved_by',
+        'supervisor_remarks',
     ];
 
     protected $casts = [

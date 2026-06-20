@@ -3,8 +3,11 @@ import { useSalaryStructureStore } from '../../store/salaryStructureStore';
 import { useEmployeesStore } from '../../store/employeesStore';
 import { Plus, Edit2, Trash2, X } from 'lucide-react';
 
+const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-GB') : '--';
+const toDateInput = (d) => d ? new Date(d).toISOString().split('T')[0] : '';
+
 const SalaryStructuresPage = () => {
-  const { items: structures, loading, error, fetchItems, createItem, updateItem, removeItem } = useSalaryStructureStore();
+  const { items: structures, loading, error, fetchItems, createItem, updateItem, deleteItem } = useSalaryStructureStore();
   const { items: employees, fetchItems: fetchEmployees } = useEmployeesStore();
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -42,7 +45,7 @@ const SalaryStructuresPage = () => {
         travel_allowance: structure.travel_allowance || '',
         food_allowance: structure.food_allowance || '',
         other_allowance: structure.other_allowance || '',
-        effective_from: structure.effective_from || '',
+        effective_from: toDateInput(structure.effective_from),
         status: structure.status || 'active'
       });
     } else {
@@ -120,7 +123,7 @@ const SalaryStructuresPage = () => {
                   {s.employee ? `${s.employee.full_name || s.employee.first_name}` : `EMP-${s.employee_id}`}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">₹{s.basic_salary}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{s.effective_from}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{fmtDate(s.effective_from)}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   <span className={`px-2 py-1 rounded-full text-xs font-semibold ${s.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
                     {s.status}
@@ -128,7 +131,7 @@ const SalaryStructuresPage = () => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <button onClick={() => handleOpenModal(s)} className="text-blue-600 hover:text-blue-900 mr-3"><Edit2 className="w-4 h-4" /></button>
-                  <button onClick={() => { if (window.confirm('Are you sure?')) removeItem(s.id); }} className="text-red-600 hover:text-red-900"><Trash2 className="w-4 h-4" /></button>
+                  <button onClick={() => { if (window.confirm('Are you sure?')) deleteItem(s.id); }} className="text-red-600 hover:text-red-900"><Trash2 className="w-4 h-4" /></button>
                 </td>
               </tr>
             ))}

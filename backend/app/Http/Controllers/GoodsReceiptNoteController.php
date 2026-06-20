@@ -46,7 +46,6 @@ class GoodsReceiptNoteController extends Controller
             $grn = GoodsReceiptNote::create([
                 'grn_number' => 'GRN-' . time(),
                 'purchase_order_id' => $po->id,
-                'branch_id' => $po->branch_id,
                 'received_by' => Auth::id(),
                 'receipt_date' => $request->receipt_date,
                 'notes' => $request->notes,
@@ -79,7 +78,6 @@ class GoodsReceiptNoteController extends Controller
                 // Increase Inventory
                 $this->inventoryService->addStock(
                     $poItem->product_id,
-                    $po->branch_id,
                     $receivedQty,
                     'goods_receipt_note',
                     $grn->id,

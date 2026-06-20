@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
-use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\SalesOrder;
 use Illuminate\Http\Request;
@@ -15,14 +14,7 @@ class InvoiceController extends Controller
 {
     public function index(Request $request)
     {
-        $branchId = $request->header('X-Branch-ID');
-        $query = Invoice::with(['customer', 'creator']);
-        
-        if ($branchId) {
-            $query->where('branch_id', $branchId);
-        }
-        
-        $invoices = $query->orderBy('created_at', 'desc')->get();
+        $invoices = Invoice::with(['customer', 'creator'])->orderBy('created_at', 'desc')->get();
         return response()->json($invoices);
     }
 
@@ -30,7 +22,6 @@ class InvoiceController extends Controller
     {
         $validated = $request->validate([
             'customer_id' => 'required|exists:customers,id',
-            'branch_id' => 'required|exists:branches,id',
             'sales_order_id' => 'nullable|exists:sales_orders,id',
             'status' => 'required|string',
             'due_date' => 'nullable|date',
@@ -42,23 +33,20 @@ class InvoiceController extends Controller
             'items.*.hsn_code' => 'nullable|string',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.unit_price' => 'required|numeric|min:0',
-            'items.*.tax_rate' => 'required|numeric|min:0',
-            'items.*.is_igst' => 'boolean' // passed from frontend to know if IGST or CGST/SGST
+            'gst_type' => 'nullable|string|in:cgst,sgst,igst',
+            'gst_rate' => 'nullable|numeric|min:0|max:100',
         ]);
 
         DB::beginTransaction();
 
         try {
             // Generate Invoice Number
-            $branch = Branch::find($validated['branch_id']);
             $customer = Customer::find($validated['customer_id']);
             
-            $branchCode = strtoupper(substr($branch->name, 0, 3));
             $customerInitials = strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $customer->name), 0, 2));
             
-            // Get max sequence for this branch & customer
-            $lastInvoice = Invoice::where('branch_id', $branch->id)
-                                  ->where('customer_id', $customer->id)
+            // Get max sequence for this customer
+            $lastInvoice = Invoice::where('customer_id', $customer->id)
                                   ->orderBy('id', 'desc')
                                   ->first();
             
@@ -67,57 +55,32 @@ class InvoiceController extends Controller
                 $seq = intval($matches[1]) + 1;
             }
             
-            $invoiceNumber = "RFI-{$branchCode}-{$customerInitials}-" . str_pad($seq, 4, '0', STR_PAD_LEFT);
+            $invoiceNumber = "RFI-{$customerInitials}-" . str_pad($seq, 4, '0', STR_PAD_LEFT);
 
-            // Calculate Totals
-            $subtotal = 0;
+            // Calculate Totals (header-level GST)
+            $subtotal = collect($validated['items'])->sum(function($item) {
+                return $item['quantity'] * $item['unit_price'];
+            });
+
+            $gstRate = $validated['gst_rate'] ?? 0;
+            $taxAmount = $subtotal * ($gstRate / 100);
+
+            $gstType = $validated['gst_type'] ?? 'cgst';
             $cgst_total = 0;
             $sgst_total = 0;
             $igst_total = 0;
-            
-            $invoiceItems = [];
-            foreach ($validated['items'] as $item) {
-                $lineTotal = $item['quantity'] * $item['unit_price'];
-                $subtotal += $lineTotal;
-                
-                $taxAmount = $lineTotal * ($item['tax_rate'] / 100);
-                $isIgst = $item['is_igst'] ?? false;
-                
-                $cgst = 0;
-                $sgst = 0;
-                $igst = 0;
-                
-                if ($isIgst) {
-                    $igst = $taxAmount;
-                    $igst_total += $igst;
-                } else {
-                    $cgst = $taxAmount / 2;
-                    $sgst = $taxAmount / 2;
-                    $cgst_total += $cgst;
-                    $sgst_total += $sgst;
-                }
-                
-                $finalLineTotal = $lineTotal + $taxAmount;
-                
-                $invoiceItems[] = [
-                    'product_id' => $item['product_id'] ?? null,
-                    'item_description' => $item['item_description'],
-                    'hsn_code' => $item['hsn_code'] ?? null,
-                    'quantity' => $item['quantity'],
-                    'unit_price' => $item['unit_price'],
-                    'tax_rate' => $item['tax_rate'],
-                    'cgst_amount' => $cgst,
-                    'sgst_amount' => $sgst,
-                    'igst_amount' => $igst,
-                    'total' => $finalLineTotal
-                ];
+
+            if ($gstType === 'igst') {
+                $igst_total = $taxAmount;
+            } else {
+                $cgst_total = $taxAmount / 2;
+                $sgst_total = $taxAmount / 2;
             }
             
-            $grand_total = $subtotal + $cgst_total + $sgst_total + $igst_total;
+            $grand_total = $subtotal + $taxAmount;
 
             $invoice = Invoice::create([
                 'invoice_number' => $invoiceNumber,
-                'branch_id' => $validated['branch_id'],
                 'customer_id' => $validated['customer_id'],
                 'sales_order_id' => $validated['sales_order_id'],
                 'status' => $validated['status'],
@@ -129,11 +92,21 @@ class InvoiceController extends Controller
                 'sgst_total' => $sgst_total,
                 'igst_total' => $igst_total,
                 'grand_total' => $grand_total,
+                'gst_type' => $gstType,
+                'gst_rate' => $gstRate,
                 'created_by' => Auth::id()
             ]);
 
-            foreach ($invoiceItems as $itemData) {
-                $invoice->items()->create($itemData);
+            foreach ($validated['items'] as $item) {
+                $lineTotal = $item['quantity'] * $item['unit_price'];
+                $invoice->items()->create([
+                    'product_id' => $item['product_id'] ?? null,
+                    'item_description' => $item['item_description'],
+                    'hsn_code' => $item['hsn_code'] ?? null,
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $item['unit_price'],
+                    'total' => $lineTotal,
+                ]);
             }
 
             DB::commit();
@@ -147,7 +120,7 @@ class InvoiceController extends Controller
 
     public function show(Invoice $invoice)
     {
-        $invoice->load(['customer', 'branch', 'items.product', 'creator']);
+        $invoice->load(['customer', 'items.product', 'creator']);
         return response()->json($invoice);
     }
 

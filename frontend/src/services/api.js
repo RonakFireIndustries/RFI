@@ -1,4 +1,4 @@
-const API_HOST = 'https://rfibackend.ronakfire.com';
+const API_HOST = 'http://localhost:8000';
 export const BASE_URL = import.meta.env.DEV ? `/api/v1` : `${API_HOST}/api/v1`;
 export const STORAGE_URL = `${API_HOST}/storage`;
 
@@ -8,17 +8,6 @@ const getAuthToken = () => {
     const parsed = JSON.parse(authStorage);
     if (parsed?.state?.token) {
       return parsed.state.token;
-    }
-  }
-  return null;
-};
-
-const getActiveBranchId = () => {
-  const branchStorage = localStorage.getItem('branch-storage');
-  if (branchStorage) {
-    const parsed = JSON.parse(branchStorage);
-    if (parsed?.state?.activeBranchId) {
-      return parsed.state.activeBranchId;
     }
   }
   return null;
@@ -35,11 +24,6 @@ const buildHeaders = () => {
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const branchId = getActiveBranchId();
-  if (branchId) {
-    headers['X-Branch-Id'] = String(branchId);
-  }
-
   return headers;
 };
 
@@ -52,6 +36,11 @@ const handleResponse = async (response) => {
       data: await response.json().catch(() => ({})),
     };
     throw error;
+  }
+
+  // 204 No Content — no body to parse
+  if (response.status === 204) {
+    return { data: null };
   }
 
   const data = await response.json();

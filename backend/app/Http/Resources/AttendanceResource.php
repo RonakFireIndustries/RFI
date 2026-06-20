@@ -13,7 +13,7 @@ class AttendanceResource extends JsonResource
             'id' => $this->id,
             'employee' => $this->whenLoaded('employee', fn () => [
                 'id' => $this->employee->id,
-                'name' => $this->employee->user->name ?? null,
+                'name' => $this->employee->user?->name,
                 'full_name' => $this->employee->full_name ?? null,
             ]),
             'site' => $this->whenLoaded('site', fn () => [

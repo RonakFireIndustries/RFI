@@ -46,7 +46,6 @@ class DeliveryNoteController extends Controller
             $delivery = DeliveryNote::create([
                 'delivery_number' => 'DEL-' . time(),
                 'sales_order_id' => $so->id,
-                'branch_id' => $so->branch_id,
                 'delivered_by' => Auth::id(),
                 'delivery_date' => $request->delivery_date,
                 'notes' => $request->notes,
@@ -79,7 +78,6 @@ class DeliveryNoteController extends Controller
                 // Decrease Inventory
                 $this->inventoryService->removeStock(
                     $soItem->product_id,
-                    $so->branch_id,
                     $deliveredQty,
                     'delivery_note',
                     $delivery->id,

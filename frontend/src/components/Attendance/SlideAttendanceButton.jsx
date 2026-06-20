@@ -82,6 +82,7 @@ export default function SlideAttendanceButton({
   const startXRef = useRef(0);
   const currentXRef = useRef(0);
   const isDraggingRef = useRef(false);
+  const maxTravelRef = useRef(0);
 
   const stateKey = transitioning
     ? 'loading_action'
@@ -108,6 +109,7 @@ export default function SlideAttendanceButton({
     currentXRef.current = clientX;
     const rect = containerRef.current.getBoundingClientRect();
     const maxTravel = rect.width - 56;
+    maxTravelRef.current = maxTravel;
     const traveled = Math.max(0, Math.min(clientX - startXRef.current, maxTravel));
     const percent = (traveled / maxTravel) * 100;
     setSlidePercent(percent);
@@ -171,7 +173,7 @@ export default function SlideAttendanceButton({
       <div
         className={`absolute top-1 left-1 h-12 w-12 rounded-full flex items-center justify-center shadow-md transition-shadow ${state.sliderBg} ${state.disabled ? '' : 'hover:shadow-lg'}`}
         style={{
-          transform: sliding ? `translateX(${slidePercent}%)` : 'translateX(0)',
+          transform: sliding ? `translateX(${(slidePercent / 100) * maxTravelRef.current}px)` : 'translateX(0)',
           transition: sliding ? 'none' : 'transform 0.3s ease-out',
         }}
       >

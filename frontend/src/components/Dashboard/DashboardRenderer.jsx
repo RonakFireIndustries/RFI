@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useBranchStore } from '../../store/branchStore';
 import { dashboardService } from '../../services/dashboardService';
 import DashboardCard from './DashboardCard';
 import DashboardChart from './DashboardChart';
@@ -25,7 +24,6 @@ const DASHBOARD_TITLES = {
 
 export default function DashboardRenderer() {
   const navigate = useNavigate();
-  const activeBranchId = useBranchStore(state => state.activeBranchId);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -42,7 +40,7 @@ export default function DashboardRenderer() {
       }
     };
     fetch();
-  }, [activeBranchId]);
+  }, []);
 
   if (loading) return <DashboardSkeleton />;
   if (!data) return null;

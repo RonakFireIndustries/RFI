@@ -3,7 +3,6 @@ import { useInventoryLocationStore } from '../../../store/inventoryLocationStore
 
 const typeColors = {
   warehouse: 'bg-purple-50 text-purple-700',
-  branch: 'bg-blue-50 text-blue-700',
   site: 'bg-orange-50 text-orange-700',
   workshop: 'bg-teal-50 text-teal-700',
   store: 'bg-pink-50 text-pink-700',
@@ -13,7 +12,7 @@ export default function LocationsPage() {
   return (
     <ModuleListPage
       title="Inventory Locations"
-      description="Manage warehouses, branches, sites, workshops, and stores"
+      description="Manage warehouses, sites, workshops, and stores"
       store={useInventoryLocationStore}
       detailBasePath="/dashboard/inventory/locations"
       searchPlaceholder="Search locations..."
@@ -51,7 +50,6 @@ export default function LocationsPage() {
         {
           name: 'type', label: 'Type', type: 'select', required: true, options: [
             { value: 'warehouse', name: 'Warehouse' },
-            { value: 'branch', name: 'Branch' },
             { value: 'site', name: 'Site' },
             { value: 'workshop', name: 'Workshop' },
             { value: 'store', name: 'Store' },

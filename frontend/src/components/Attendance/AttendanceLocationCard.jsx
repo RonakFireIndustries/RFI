@@ -43,33 +43,56 @@ export default function AttendanceLocationCard({
   site,
   distance,
   allowedRadius,
+  onRequestPermission,
 }) {
   if (gpsLoading || (!position && !gpsError)) {
     const cfg = statusConfig.loading;
     const Icon = cfg.icon;
+    const isPermissionDenied = gpsError?.toLowerCase().includes('denied');
     return (
-      <div className={`rounded-xl border p-5 ${cfg.bg}`}>
+      <div className={`rounded-xl border p-5 ${isPermissionDenied ? 'border-orange-200 bg-orange-50' : cfg.bg}`}>
         <div className="flex items-center gap-3">
-          <div className="animate-pulse"><Icon className={`w-6 h-6 ${cfg.iconColor}`} /></div>
-          <div>
-            <p className={`text-sm font-semibold ${cfg.text}`}>{cfg.label}</p>
-            <p className="text-xs text-gray-400">Please allow location access</p>
+          <div className="animate-pulse"><Icon className={`w-6 h-6 ${isPermissionDenied ? 'text-orange-500' : cfg.iconColor}`} /></div>
+          <div className="flex-1">
+            <p className={`text-sm font-semibold ${isPermissionDenied ? 'text-orange-800' : cfg.text}`}>
+              {isPermissionDenied ? 'Location Permission Required' : cfg.label}
+            </p>
+            <p className="text-xs text-gray-400">
+              {isPermissionDenied ? 'Grant location access to enable check-in' : 'Please allow location access'}
+            </p>
           </div>
         </div>
+        {isPermissionDenied && onRequestPermission && (
+          <button
+            onClick={onRequestPermission}
+            className="mt-3 w-full py-2 px-4 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-lg transition-colors"
+          >
+            Grant Location Access
+          </button>
+        )}
       </div>
     );
   }
 
   if (gpsError) {
+    const isPermissionDenied = gpsError.toLowerCase().includes('denied');
     return (
       <div className="rounded-xl border border-red-200 bg-red-50 p-5">
         <div className="flex items-start gap-3">
           <AlertTriangle className="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5" />
-          <div>
+          <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-red-800">GPS Error</p>
             <p className="text-xs text-red-600 mt-1">{gpsError}</p>
           </div>
         </div>
+        {isPermissionDenied && onRequestPermission && (
+          <button
+            onClick={onRequestPermission}
+            className="mt-3 w-full py-2 px-4 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold rounded-lg transition-colors"
+          >
+            Grant Location Access
+          </button>
+        )}
       </div>
     );
   }

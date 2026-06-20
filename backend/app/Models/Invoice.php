@@ -4,14 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\BelongsToBranch;
 
 class Invoice extends Model
 {
-    use HasFactory, BelongsToBranch;
+    use HasFactory;
 
     protected $fillable = [
-        'invoice_number', 'branch_id', 'customer_id', 'sales_order_id',
+        'invoice_number', 'customer_id', 'sales_order_id',
         'subtotal', 'cgst_total', 'sgst_total', 'igst_total', 'grand_total',
         'status', 'due_date', 'payment_date', 'paid_amount', 'notes', 'terms', 'created_by'
     ];

@@ -11,7 +11,6 @@ export default function CustomerProfile() {
         { label: 'Email', path: 'email' },
         { label: 'Phone', path: 'phone' },
         { label: 'GST Number', path: 'gst_number' },
-        { label: 'Branch', path: 'branch.name' },
         { label: 'Orders', render: (customer) => customer.orders_count ?? customer.sales_orders?.length ?? 0 },
         { label: 'Outstanding', render: (customer) => Number(customer.outstanding_balance || customer.balance || 0).toFixed(2) },
       ]}
