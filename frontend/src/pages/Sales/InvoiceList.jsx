@@ -146,19 +146,20 @@ export default function InvoiceList() {
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
                 <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Amount</th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-100">
               {loading ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-12 text-center">
+                  <td colSpan="6" className="px-6 py-12 text-center">
                     <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#1a56db]"></div>
                     <p className="mt-2 text-sm text-gray-500">Loading invoices...</p>
                   </td>
                 </tr>
               ) : filteredInvoices.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
                     No invoices found.
                   </td>
                 </tr>
@@ -185,6 +186,14 @@ export default function InvoiceList() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getStatusBadge(invoice.status)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <Link
+                        to={`/dashboard/invoices/${invoice.id}`}
+                        className="inline-flex items-center px-3 py-1.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs font-medium rounded-md transition-colors"
+                      >
+                        Preview
+                      </Link>
                     </td>
                   </tr>
                 ))

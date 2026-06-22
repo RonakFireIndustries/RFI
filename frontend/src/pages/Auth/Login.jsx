@@ -43,10 +43,13 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4 safe-bottom" style={{ paddingTop: 'env(safe-area-inset-top, 1rem)' }}>
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold tracking-tight">Welcome Back</CardTitle>
+          <div className="mb-4 flex justify-center">
+            <img src="/logo.png" alt="RFI" className="h-14 w-auto" />
+          </div>
+          <CardTitle className="text-xl sm:text-2xl font-bold tracking-tight">Welcome Back</CardTitle>
           <CardDescription>Enter your credentials to access the ERP</CardDescription>
         </CardHeader>
         <form onSubmit={handleLogin}>

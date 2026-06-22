@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Users, Calendar, ClipboardList, MapPin, Clock, FileText, Briefcase,
-  DollarSign, Layers, Package, Boxes, Warehouse, ShoppingCart, Shield, Settings,
+  DollarSign, Layers, Package, Boxes, Warehouse, ShoppingCart, Shield, Settings, Sliders,
   Ruler, GitCompare, Move3D, FileSpreadsheet, FileClock, FileInput,
 } from 'lucide-react';
 
@@ -70,7 +70,7 @@ export const menuCategories = [
     title: 'System',
     items: [
       { name: 'Reports', path: '/dashboard/reports', icon: ClipboardList, roles: ['Super Admin', 'Admin', 'General Manager', 'Finance Manager', 'Design Manager'] },
-      { name: 'Role & Permissions', path: '/dashboard/roles', icon: Shield, roles: ['Super Admin', 'Admin', 'System Admin', 'IT Manager'] },
+      { name: 'Role Configuration', path: '/dashboard/role-configuration', icon: Sliders, roles: ['Super Admin', 'Admin', 'System Admin', 'IT Manager'] },
       { name: 'User Access', path: '/dashboard/user-access', icon: Shield, roles: ['Super Admin', 'Admin', 'System Admin', 'IT Manager'] },
     ],
   },

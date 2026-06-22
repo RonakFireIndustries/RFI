@@ -2,8 +2,16 @@ import { Link, useLocation, Outlet, Routes, Route, useNavigate } from 'react-rou
 import { useAuthStore } from '../../store/authStore';
 import { useState, useEffect, useRef } from 'react';
 import api from '../../services/api';
-import {
-  Settings, LogOut, Bell, HelpCircle, Search, Menu, X, Download,
+import { 
+  Menu, X, Bell, LogOut, ChevronDown, 
+  Home, Users, Settings, Package, ShoppingCart, 
+  FileText, Activity, ShieldAlert, Truck, ChevronLeft,
+  ChevronRight, ArrowLeft, ArrowRight, Wallet, Calculator,
+  LifeBuoy, Fingerprint, Calendar, DollarSign, PenTool, Key,
+  Shield, Network, HardHat, FileSignature, MapPin, Search, Plus,
+  LayoutDashboard, ShoppingBag, Layers, Building, Factory, Pickaxe, UserCheck, 
+  HelpCircle, MoreVertical, Sliders, Moon, Sun, User, Palette, 
+  Lock, Globe, BellRing, Database, Smartphone, ShieldCheck, Mail, WifiOff
 } from 'lucide-react';
 import { menuCategories } from '../../config/sidebarMenu';
 
@@ -20,12 +28,17 @@ import DesignationsPage from '../../pages/Designations/DesignationsPage';
 import PermissionManagement from '../../pages/Admin/PermissionManagement';
 import RoleList from '../../pages/Admin/Roles/RoleList';
 import RoleForm from '../../pages/Admin/Roles/RoleForm';
+import RoleConfigurationPage from '../../pages/Admin/RoleConfigurationPage';
 import PermissionList from '../../pages/Admin/Permissions/PermissionList';
 import PermissionForm from '../../pages/Admin/Permissions/PermissionForm';
 import UserAccess from '../../pages/Admin/UserAccess/UserAccess';
 import { usePwaInstall } from '@/hooks/usePwaInstall';
+import OfflineBanner from '../Pwa/OfflineBanner';
+import InstallBanner from '../Pwa/InstallBanner';
 import PurchaseOrdersPage from '../../pages/Purchases/PurchaseOrdersPage';
+import PurchaseOrderDetail from '../../pages/Purchases/PurchaseOrderDetail';
 import SalesOrdersPage from '../../pages/Sales/SalesOrdersPage';
+import SalesOrderDetail from '../../pages/Sales/SalesOrderDetail';
 import SupplierDirectory from '../../pages/Suppliers/SupplierDirectory';
 import SupplierProfile from '../../pages/Suppliers/SupplierProfile';
 import CustomerDirectory from '../../pages/Customers/CustomerDirectory';
@@ -33,7 +46,7 @@ import CustomerProfile from '../../pages/Customers/CustomerProfile';
 import CategoryDirectory from '../../pages/Categories/CategoryDirectory';
 import InvoiceList from '../../pages/Sales/InvoiceList';
 import InvoiceBuilder from '../../pages/Sales/InvoiceBuilder';
-import InvoicePreview from '../../pages/Sales/InvoicePreview';
+import InvoicePreviewPage from '../../pages/Sales/InvoicePreviewPage';
 import Attendance from '../../pages/Attendance/Attendance';
 import EmployeeDashboard from '../../pages/Attendance/EmployeeDashboard';
 import EmployeeAttendanceHistory from '../../pages/Attendance/EmployeeAttendanceHistory';
@@ -68,19 +81,16 @@ import RecordTransactionPage from '../../pages/Inventory/Transactions/RecordTran
 import TransfersPage from '../../pages/Inventory/Transfers/TransfersPage';
 import StockRequestsPage from '../../pages/Inventory/Requests/StockRequestsPage';
 import StockRequestDetail from '../../pages/Inventory/Requests/StockRequestDetail';
-
-const PlaceholderPage = ({ title }) => (
-  <div className="bg-white rounded-lg shadow border border-gray-100 p-6">
-    <h2 className="text-xl font-semibold mb-4">{title}</h2>
-    <p className="text-gray-500">This page is under construction.</p>
-  </div>
-);
+import ReportsPage from '../../pages/Reports/ReportsPage';
+import CompanySettingsPage from '../../pages/Settings/CompanySettingsPage';
+import UserSettingsPage from '../../pages/Settings/UserSettingsPage';
 
 export default function DashboardLayout() {
   const { user, roles, logout } = useAuthStore();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
   useEffect(() => {
     if (isMobileMenuOpen) {
@@ -94,6 +104,37 @@ export default function DashboardLayout() {
   const { isInstallable, handleInstall } = usePwaInstall();
   const navigate = useNavigate();
   const searchRef = useRef(null);
+  const touchStartX = useRef(0);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; };
+    const handleTouchEnd = (e) => {
+      const diff = e.changedTouches[0].clientX - touchStartX.current;
+      if (diff > 80 && touchStartX.current < 40 && window.innerWidth < 768) {
+        setIsMobileMenuOpen(true);
+      }
+      if (diff < -80 && window.innerWidth < 768) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
+    return () => {
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, []);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -221,25 +262,27 @@ export default function DashboardLayout() {
         </div>
 
         <div className="p-4 border-t border-gray-200">
-          <Link
-            to="/dashboard/settings"
-            title={!isSidebarOpen ? 'Settings' : ''}
-            className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${location.pathname.startsWith('/dashboard/settings')
-              ? 'bg-[#1a56db] text-white'
-              : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-              }`}
-          >
-            <Settings className="w-5 h-5 flex-shrink-0" />
-            {isSidebarOpen && <span className="ml-3">Settings</span>}
-          </Link>
+          {canAccess(['Super Admin', 'Admin']) && (
+            <Link
+              to="/dashboard/settings"
+              title={!isSidebarOpen ? 'Settings' : ''}
+              className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${location.pathname.startsWith('/dashboard/settings')
+                ? 'bg-[#1a56db] text-white'
+                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                }`}
+            >
+              <Settings className="w-5 h-5 flex-shrink-0" />
+              {isSidebarOpen && <span className="ml-3">Settings</span>}
+            </Link>
+          )}
           {isInstallable && (
             <button
               onClick={handleInstall}
-              title={!isSidebarOpen ? 'Install App' : ''}
-              className="mt-2 flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors w-full"
+              title={!isSidebarOpen ? 'Install' : ''}
+              className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors w-full"
             >
               <Download className="w-5 h-5 flex-shrink-0" />
-              {isSidebarOpen && <span className="ml-3">Install App</span>}
+              {isSidebarOpen && <span className="ml-3">Install</span>}
             </button>
           )}
         </div>
@@ -262,6 +305,7 @@ export default function DashboardLayout() {
 
       {/* Main Content Area with offset for sidebar */}
       <div className={`flex-1 flex flex-col min-w-0 overflow-hidden transition-all duration-300 ${isSidebarOpen ? 'md:ml-64' : 'md:ml-20'} print:ml-0 print:w-full`}>
+        <OfflineBanner />
         {/* Top Navbar */}
         <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-6 z-10 sticky top-0 print:hidden">
           <div className="flex items-center flex-1 min-w-0">
@@ -337,6 +381,10 @@ export default function DashboardLayout() {
               <span className="sr-only">Help</span>
               <HelpCircle className="h-5 w-5" />
             </button>
+            <Link to="/dashboard/user-settings" className="text-gray-400 hover:text-gray-500">
+              <span className="sr-only">User Settings</span>
+              <User className="h-5 w-5" />
+            </Link>
             <div className="relative border-l border-gray-200 pl-4">
               <button
                 onClick={logout}
@@ -350,7 +398,7 @@ export default function DashboardLayout() {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto bg-gray-50/50 p-4 md:p-6">
+        <main className="flex-1 overflow-y-auto bg-gray-50/50 p-3 sm:p-4 md:p-6 safe-bottom">
           <div className="max-w-7xl mx-auto">
             <Routes>
               <Route index element={<DashboardRenderer />} />
@@ -403,12 +451,16 @@ export default function DashboardLayout() {
               <Route path="suppliers" element={<SupplierDirectory />} />
               <Route path="suppliers/:id" element={<SupplierProfile />} />
               <Route path="purchases" element={<PurchaseOrdersPage />} />
+              <Route path="purchases/:id" element={<PurchaseOrderDetail />} />
               <Route path="sales" element={<SalesOrdersPage />} />
+              <Route path="sales/:id" element={<SalesOrderDetail />} />
               <Route path="invoices" element={<InvoiceList />} />
               <Route path="invoices/create" element={<InvoiceBuilder />} />
-              <Route path="invoices/:id" element={<InvoicePreview />} />
-              <Route path="reports" element={<PlaceholderPage title="Reports" />} />
-              <Route path="settings" element={<PlaceholderPage title="Settings" />} />
+              <Route path="invoices/:id" element={<InvoicePreviewPage />} />
+              <Route path="reports" element={<ReportsPage />} />
+              <Route path="settings" element={<CompanySettingsPage />} />
+              <Route path="user-settings" element={<UserSettingsPage />} />
+              <Route path="role-configuration" element={<RoleConfigurationPage />} />
               <Route path="permissions" element={<PermissionManagement />} />
               <Route path="roles" element={<RoleList />} />
               <Route path="roles/create" element={<RoleForm />} />
@@ -422,6 +474,7 @@ export default function DashboardLayout() {
           </div>
         </main>
       </div>
+      <InstallBanner />
     </div>
   );
 }

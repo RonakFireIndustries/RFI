@@ -19,7 +19,7 @@ class TransactionLedgerResource extends JsonResource
             'locationable' => $this->whenLoaded('locationable'),
             'to_location_type' => $this->to_location_type,
             'to_location_id' => $this->to_location_id,
-            'to_locationable' => $this->whenLoaded('toLocationable'),
+            'to_locationable' => $this->whenLoaded('to_locationable'),
             'transaction_type' => $this->transaction_type,
             'quantity' => (float) $this->quantity,
             'unit_price' => (float) $this->unit_price,

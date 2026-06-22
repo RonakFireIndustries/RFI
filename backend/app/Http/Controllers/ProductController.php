@@ -25,24 +25,21 @@ class ProductController extends Controller
             unset($data['selling_price']);
         }
         $openingStock = (float) ($data['opening_stock'] ?? 0);
-        unset($data['opening_stock']);
+        $siteId = (int) ($data['site_id'] ?? 0);
+        unset($data['opening_stock'], $data['site_id']);
 
         $product = Product::create($data);
 
-        if ($openingStock > 0) {
-            $locationType = 'App\Models\Site';
-            $locationId = (int) ($data['site_id'] ?? 0);
-            if ($locationId) {
-                $inventoryService->addStock(
-                    productId: $product->id,
-                    locationType: $locationType,
-                    locationId: $locationId,
-                    quantity: $openingStock,
-                    referenceType: 'opening_stock',
-                    referenceId: $product->id,
-                    notes: 'Opening stock on product creation'
-                );
-            }
+        if ($openingStock > 0 && $siteId) {
+            $inventoryService->addStock(
+                productId: $product->id,
+                locationType: 'App\Models\Site',
+                locationId: $siteId,
+                quantity: $openingStock,
+                referenceType: 'opening_stock',
+                referenceId: $product->id,
+                notes: 'Opening stock on product creation'
+            );
         }
 
         return new ProductResource($product->load(['category', 'supplier', 'unit', 'stock.locationable']));

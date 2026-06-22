@@ -1,4 +1,8 @@
+import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { ThemeProvider } from './contexts/ThemeContext';
+import UpdatePrompt from './components/Pwa/UpdatePrompt';
+import SplashScreen from './components/Pwa/SplashScreen';
 import { useAuthStore } from './store/authStore';
 import Login from './pages/Auth/Login';
 
@@ -38,36 +42,43 @@ const PlaceholderPage = ({ title }) => (
 );
 
 function App() {
+  const [ready, setReady] = useState(false);
+  useEffect(() => { setReady(true); }, []);
+
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/superadmin" element={<SuperAdminLogin />} />
+    <ThemeProvider>
+      <BrowserRouter>
+        {!ready && <SplashScreen />}
+        <UpdatePrompt />
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/superadmin" element={<SuperAdminLogin />} />
 
-        {/* Protected Super Admin Route */}
-        <Route
-          path="/superadmin/dashboard"
-          element={
-            <ProtectedRoute>
-              <SuperAdminDashboard />
-            </ProtectedRoute>
-          }
-        />
+          {/* Protected Super Admin Route */}
+          <Route
+            path="/superadmin/dashboard"
+            element={
+              <ProtectedRoute>
+                <SuperAdminDashboard />
+              </ProtectedRoute>
+            }
+          />
 
-        {/* Protected Routes */}
-        <Route
-          path="/dashboard/*"
-          element={
-            <ProtectedRoute>
-              <DashboardLayout />
-            </ProtectedRoute>
-          }
-        />
+          {/* Protected Routes */}
+          <Route
+            path="/dashboard/*"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout />
+              </ProtectedRoute>
+            }
+          />
 
-        {/* Default redirect */}
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
-    </BrowserRouter>
+          {/* Default redirect */}
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 

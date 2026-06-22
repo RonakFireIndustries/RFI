@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+
 class PurchaseOrder extends Model
 {
     protected $guarded = [];
@@ -10,5 +11,10 @@ class PurchaseOrder extends Model
     public function items()
     {
         return $this->hasMany(PurchaseOrderItem::class);
+    }
+
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class);
     }
 }

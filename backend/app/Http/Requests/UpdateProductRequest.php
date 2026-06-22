@@ -28,6 +28,7 @@ class UpdateProductRequest extends FormRequest
             'min_stock' => 'nullable|numeric|min:0',
             'max_stock' => 'nullable|numeric|min:0',
             'description' => 'nullable|string',
+            'opening_stock' => 'nullable|numeric|min:0',
             'status' => 'nullable|string|in:active,inactive',
         ];
 

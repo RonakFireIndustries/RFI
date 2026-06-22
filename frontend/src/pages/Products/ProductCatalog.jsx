@@ -39,6 +39,7 @@ export default function ProductCatalog() {
     const flds = [
       { name: 'sku', label: 'SKU (leave empty for auto-generate)' },
       { name: 'name', label: 'Product Name', required: true },
+      { name: 'hsn_code', label: 'HSN Code' },
       { name: 'category_id', label: 'Category', type: 'select', optionsKey: 'categories', emptyAsNull: true },
       { name: 'supplier_id', label: 'Supplier', type: 'select', optionsKey: 'suppliers', emptyAsNull: true },
       { name: 'purchase_price', label: 'Purchase Price', type: 'number', step: '0.01', required: true },

@@ -77,37 +77,60 @@ const api = {
     if (isFormData) {
       delete headers['Content-Type'];
     }
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
-      method: 'POST',
-      headers,
-      body: isFormData ? body : JSON.stringify(body),
-      credentials: 'include',
-    });
-    return handleResponse(response);
+    try {
+      const response = await fetch(`${BASE_URL}${endpoint}`, {
+        method: 'POST',
+        headers,
+        body: isFormData ? body : JSON.stringify(body),
+        credentials: 'include',
+      });
+      return handleResponse(response);
+    } catch (error) {
+      if (!window.navigator.onLine || error.message === 'Failed to fetch') {
+        if (!isFormData) {
+          const { enqueueRequest } = await import('./offlineQueue');
+          await enqueueRequest({ url: `${BASE_URL}${endpoint}`, method: 'POST', headers, body: JSON.stringify(body) });
+          return { data: { offline: true, message: 'Request queued for offline sync' }, meta: { success: true } };
+        }
+      }
+      throw error;
+    }
   },
 
   put: async (endpoint, body) => {
     const isFormData = body instanceof FormData;
     const headers = buildHeaders();
-    if (isFormData) {
-      delete headers['Content-Type'];
-      body.append('_method', 'PUT');
+    
+    try {
+      if (isFormData) {
+        delete headers['Content-Type'];
+        body.append('_method', 'PUT');
+        const response = await fetch(`${BASE_URL}${endpoint}`, {
+          method: 'POST',
+          headers,
+          body,
+          credentials: 'include',
+        });
+        return handleResponse(response);
+      }
+
       const response = await fetch(`${BASE_URL}${endpoint}`, {
-        method: 'POST',
+        method: 'PUT',
         headers,
-        body,
+        body: JSON.stringify(body),
         credentials: 'include',
       });
       return handleResponse(response);
+    } catch (error) {
+      if (!window.navigator.onLine || error.message === 'Failed to fetch') {
+        if (!isFormData) {
+          const { enqueueRequest } = await import('./offlineQueue');
+          await enqueueRequest({ url: `${BASE_URL}${endpoint}`, method: 'PUT', headers, body: JSON.stringify(body) });
+          return { data: { offline: true, message: 'Request queued for offline sync' }, meta: { success: true } };
+        }
+      }
+      throw error;
     }
-
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
-      method: 'PUT',
-      headers,
-      body: JSON.stringify(body),
-      credentials: 'include',
-    });
-    return handleResponse(response);
   },
 
   getBlob: async (endpoint) => {

@@ -7,6 +7,9 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.js',
       registerType: 'autoUpdate',
       includeAssets: ['pwa-icons/*.png'],
       manifest: {
@@ -16,9 +19,13 @@ export default defineConfig({
         theme_color: '#1a56db',
         background_color: '#ffffff',
         display: 'standalone',
-        orientation: 'portrait-primary',
+        orientation: 'any',
         start_url: '/dashboard',
         scope: '/',
+        categories: ['business', 'productivity', 'enterprise'],
+        lang: 'en',
+        display_override: ['window-controls-overlay', 'standalone'],
+        edge_side_panel: { preferred_width: 480 },
         icons: [
           {
             src: '/pwa-icons/icon-192x192.png',
@@ -34,27 +41,19 @@ export default defineConfig({
             src: '/pwa-icons/icon-512x512.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'maskable',
+            purpose: 'any maskable',
           },
         ],
+        screenshots: [],
       },
-      workbox: {
+      injectManifest: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        runtimeCaching: [
-          {
-            urlPattern: /\/api\/.*/i,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'api-cache',
-              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 },
-              networkTimeoutSeconds: 10,
-            },
-          },
-        ],
+        maximumFileSizeToCacheInBytes: 5000000,
       },
-      injectRegister: 'auto',
       devOptions: {
         enabled: true,
+        type: 'module',
+        navigateFallback: 'index.html',
       },
     }),
   ],

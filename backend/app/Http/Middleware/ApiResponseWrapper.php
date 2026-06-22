@@ -15,8 +15,12 @@ class ApiResponseWrapper
         // Only wrap JSON responses
         if ($response instanceof JsonResponse) {
             $data = $response->getData(true);
-            // If already wrapped, return as-is
-            if (is_array($data) && array_key_exists('success', $data) && array_key_exists('message', $data) && array_key_exists('data', $data)) {
+            // If already wrapped { success, data }, return as-is (inject message if missing)
+            if (is_array($data) && array_key_exists('success', $data) && array_key_exists('data', $data)) {
+                if (!array_key_exists('message', $data)) {
+                    $data['message'] = 'Success';
+                    $response->setData($data);
+                }
                 return $response;
             }
 

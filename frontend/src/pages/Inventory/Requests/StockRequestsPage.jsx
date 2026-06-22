@@ -5,11 +5,12 @@ import { Search, Plus, CheckCircle, Send, Download } from 'lucide-react';
 import { useStockRequestStore } from '../../../store/stockRequestStore';
 import { useProductsStore } from '../../../store/productsStore';
 import { useInventoryLocationStore } from '../../../store/inventoryLocationStore';
+import { useEmployeesStore } from '../../../store/employeesStore';
 
 const parseLocationId = (compositeId) => {
   const match = compositeId.match(/^site_(\d+)$/);
   if (!match) return { location_type: '', location_id: '' };
-  return { location_type: 'App\\Models\\Site', location_id: parseInt(match[2], 10) };
+  return { location_type: 'App\\Models\\Site', location_id: parseInt(match[1], 10) };
 };
 
 const statusColors = {
@@ -23,10 +24,11 @@ export default function StockRequestsPage() {
   const { items, loading, fetchItems, approve, issue, receive, createItem } = useStockRequestStore();
   const { items: products, fetchItems: fetchProducts } = useProductsStore();
   const { items: locations, fetchItems: fetchLocations } = useInventoryLocationStore();
+  const { items: employees, fetchItems: fetchEmployees } = useEmployeesStore();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [form, setForm] = useState({ product_id: '', from_location_type: 'App\\Models\\Site', from_location_id: '', to_location_type: 'App\\Models\\Site', to_location_id: '', quantity: '', notes: '' });
+  const [form, setForm] = useState({ product_id: '', from_location_type: 'App\\Models\\Site', from_location_id: '', to_location_type: 'App\\Models\\Site', to_location_id: '', quantity: '', approved_by: '', notes: '' });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -35,14 +37,15 @@ export default function StockRequestsPage() {
     fetchItems(params);
     fetchProducts();
     fetchLocations();
-  }, [fetchItems, fetchProducts, fetchLocations, statusFilter]);
+    fetchEmployees();
+  }, [fetchItems, fetchProducts, fetchLocations, fetchEmployees, statusFilter]);
 
   const handleCreate = async (e) => {
     e.preventDefault();
     try {
       await createItem(form);
       setIsModalOpen(false);
-      setForm({ product_id: '', from_location_type: 'App\\Models\\Site', from_location_id: '', to_location_type: 'App\\Models\\Site', to_location_id: '', quantity: '', notes: '' });
+      setForm({ product_id: '', from_location_type: 'App\\Models\\Site', from_location_id: '', to_location_type: 'App\\Models\\Site', to_location_id: '', quantity: '', approved_by: '', notes: '' });
     } catch (err) {
       alert(err.response?.data?.message || err.message);
     }
@@ -63,6 +66,7 @@ export default function StockRequestsPage() {
         </span>
       ),
     },
+    { accessorFn: (row) => row.approver || '-', id: 'approver', header: 'Approver' },
     {
       id: 'actions',
       header: 'Actions',
@@ -158,6 +162,13 @@ export default function StockRequestsPage() {
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Quantity</label>
                 <input type="number" step="0.01" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" required />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Approver</label>
+                <select value={form.approved_by} onChange={(e) => setForm({ ...form, approved_by: e.target.value })} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
+                  <option value="">Select Approver (optional)</option>
+                  {employees.map((emp) => <option key={emp.id} value={emp.user_id}>{emp.full_name}</option>)}
+                </select>
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Notes</label>

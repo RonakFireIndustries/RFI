@@ -1,23 +1,31 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
-  Plus, Search, Download, TrendingUp, Clock, AlertCircle, Filter, ChevronDown, Trash2, FileText, CheckCircle, Truck, Package, List
+  Plus, Search, Download, TrendingUp, Clock, AlertCircle, Filter, ChevronDown, Trash2, FileText, CheckCircle, Truck, Package, List, Eye
 } from 'lucide-react';
 import api from '../../services/api';
 
 export default function SalesOrdersPage() {
+  const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [customers, setCustomers] = useState([]);
   const [products, setProducts] = useState([]);
-  const [newOrder, setNewOrder] = useState({ customer_id: '', gst_type: 'cgst', gst_rate: '18', items: [{ product_id: '', quantity: 1, unit_price: 0 }] });
+  const [newOrder, setNewOrder] = useState({ customer_id: '', gst_type: 'cgst', shipping_cost: 0, items: [{ product_id: '', quantity: 1, unit_price: 0, gst_rate: 18, hsn_code: '' }] });
   const [activeTab, setActiveTab] = useState('All Orders');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 25;
 
   useEffect(() => {
     fetchOrders();
     fetchData();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, activeTab]);
 
   const fetchData = async () => {
     try {
@@ -26,7 +34,7 @@ export default function SalesOrdersPage() {
         api.get('/products')
       ]);
       setCustomers(custRes.data.data || custRes.data);
-      setProducts(prodRes.data);
+      setProducts(prodRes.data.data || prodRes.data);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -60,7 +68,7 @@ export default function SalesOrdersPage() {
       await api.post('/sales/orders', { ...newOrder, status });
       setIsModalOpen(false);
       fetchOrders();
-      setNewOrder({ customer_id: '', gst_type: 'cgst', gst_rate: '18', items: [{ product_id: '', quantity: 1, unit_price: 0 }] });
+      setNewOrder({ customer_id: '', gst_type: 'cgst', shipping_cost: '0', items: [{ product_id: '', quantity: 1, unit_price: 0, gst_rate: 18, hsn_code: '' }] });
     } catch (error) {
       console.error("Error creating SO:", error);
       const msg = error.response?.data?.message || "Failed to create Sales Order.";
@@ -142,7 +150,45 @@ export default function SalesOrdersPage() {
     );
   };
 
-  const filteredOrders = orders.filter(o => o.so_number?.toLowerCase().includes(searchQuery.toLowerCase()));
+  const statusFilterMap = {
+    'All Orders': '',
+    'Drafts': 'Draft',
+    'In Fulfillment': 'Approved,Partially Delivered',
+    'Shipped': 'Fully Delivered',
+    'Cancelled': 'Cancelled',
+  };
+
+  const filteredOrders = orders.filter(o => {
+    const matchesSearch = o.so_number?.toLowerCase().includes(searchQuery.toLowerCase());
+    const statusFilter = statusFilterMap[activeTab];
+    const matchesTab = !statusFilter || statusFilter.split(',').includes(o.status);
+    return matchesSearch && matchesTab;
+  });
+
+  const totalPages = Math.ceil(filteredOrders.length / pageSize);
+  const paginatedOrders = filteredOrders.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  const handleExport = () => {
+    const headers = ['SO #', 'Customer', 'Date', 'Total Amount', 'Status'];
+    const rows = filteredOrders.map(o => {
+      const customer = customers.find(c => c.id === o.customer_id);
+      return [
+        o.so_number,
+        customer?.name || `Customer #${o.customer_id}`,
+        new Date(o.created_at).toLocaleDateString(),
+        o.total_amount,
+        o.status,
+      ];
+    });
+    const csv = [headers, ...rows].map(r => r.map(v => `"${v ?? ''}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `sales-orders-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   // Calculate stats
   const totalAmount = orders.reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0);
@@ -157,7 +203,10 @@ export default function SalesOrdersPage() {
           <p className="text-sm text-gray-500 mt-1">Manage and track your global enterprise sales pipeline.</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-lg transition-colors shadow-sm">
+          <button 
+            onClick={handleExport}
+            className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-lg transition-colors shadow-sm"
+          >
             <Download className="w-4 h-4 mr-2" />
             Export
           </button>
@@ -224,6 +273,16 @@ export default function SalesOrdersPage() {
             ))}
           </div>
           <div className="flex items-center gap-2 p-3 sm:p-0 pr-4 w-full sm:w-auto justify-end">
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search SO #..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 pr-3 py-1.5 bg-white border border-gray-300 rounded-md text-sm focus:ring-[#1a56db] focus:border-[#1a56db] w-40"
+              />
+            </div>
             <button className="inline-flex items-center px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-md transition-colors">
               <Filter className="w-4 h-4 mr-2" />
               <span className="hidden sm:inline">Advanced</span> Filters
@@ -264,7 +323,7 @@ export default function SalesOrdersPage() {
                   </td>
                 </tr>
               ) : (
-                filteredOrders.map((order) => {
+                paginatedOrders.map((order) => {
                   const customer = customers.find(c => c.id === order.customer_id);
                   const customerName = customer ? customer.name : `Customer #${order.customer_id}`;
                   const customerInitials = customerName.substring(0, 2).toUpperCase();
@@ -291,7 +350,7 @@ export default function SalesOrdersPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
-                      ${parseFloat(order.total_amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                      ₹{parseFloat(order.total_amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getPaymentBadge(order.status)}
@@ -300,10 +359,17 @@ export default function SalesOrdersPage() {
                       {getFulfillmentBadge(order.status)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button
+                        onClick={() => navigate(`/dashboard/sales/${order.id}`)}
+                        className="text-gray-400 hover:text-[#1a56db] mr-3"
+                        title="Preview Order"
+                      >
+                        <Eye className="w-5 h-5" />
+                      </button>
                       {order.status === 'Pending Approval' && (
                         <button 
                           onClick={() => approveOrder(order.id)}
-                          className="text-[#1a56db] hover:text-[#1e40af] mr-4 font-semibold"
+                          className="text-[#1a56db] hover:text-[#1e40af] mr-3 font-semibold"
                         >
                           Approve
                         </button>
@@ -323,16 +389,42 @@ export default function SalesOrdersPage() {
           </table>
         </div>
         
-        {/* Pagination placeholder */}
-        <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between bg-gray-50">
-          <span className="text-sm text-gray-500">Showing 1 to {filteredOrders.length} of {filteredOrders.length} orders</span>
-          <div className="flex space-x-1">
-            <button className="px-3 py-1 rounded bg-white border border-gray-300 text-gray-500 hover:bg-gray-50">«</button>
-            <button className="px-3 py-1 rounded bg-[#1a56db] text-white">1</button>
-            <button className="px-3 py-1 rounded bg-white border border-gray-300 text-gray-700 hover:bg-gray-50">2</button>
-            <button className="px-3 py-1 rounded bg-white border border-gray-300 text-gray-700 hover:bg-gray-50">»</button>
+        {filteredOrders.length > 0 && (
+          <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between bg-gray-50">
+            <span className="text-sm text-gray-500">
+              Showing {Math.min((currentPage - 1) * pageSize + 1, filteredOrders.length)} to {Math.min(currentPage * pageSize, filteredOrders.length)} of {filteredOrders.length} orders
+            </span>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 rounded bg-white border border-gray-300 text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                ‹
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                    currentPage === page
+                      ? 'bg-[#1a56db] text-white'
+                      : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 rounded bg-white border border-gray-300 text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                ›
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Main Table Area Ends */}
@@ -415,18 +507,15 @@ export default function SalesOrdersPage() {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-600 mb-1">GST Rate (%)</label>
-                        <select 
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Shipping Cost (₹)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
                           className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#1a56db] focus:border-transparent transition-all"
-                          value={newOrder.gst_rate}
-                          onChange={(e) => setNewOrder({...newOrder, gst_rate: e.target.value})}
-                        >
-                          <option value="0">0%</option>
-                          <option value="5">5%</option>
-                          <option value="12">12%</option>
-                          <option value="18">18%</option>
-                          <option value="28">28%</option>
-                        </select>
+                          value={newOrder.shipping_cost}
+                          onChange={(e) => setNewOrder({...newOrder, shipping_cost: e.target.value})}
+                        />
                       </div>
                     </div>
                   </div>
@@ -440,7 +529,7 @@ export default function SalesOrdersPage() {
                       </h2>
                       <button 
                         type="button"
-                        onClick={() => setNewOrder({...newOrder, items: [...newOrder.items, { product_id: '', quantity: 1, unit_price: 0 }]})}
+                        onClick={() => setNewOrder({...newOrder, items: [...newOrder.items, { product_id: '', quantity: 1, unit_price: 0, gst_rate: 18, hsn_code: '' }]})}
                         className="flex items-center text-[#1a56db] font-semibold text-sm hover:text-[#1e40af]"
                       >
                         <Plus className="w-4 h-4 mr-1" /> Add New Product
@@ -453,13 +542,17 @@ export default function SalesOrdersPage() {
                           <tr className="bg-gray-50 border-b border-gray-200 text-xs uppercase tracking-wider text-gray-500 font-bold">
                             <th className="p-4">Product Code / Name</th>
                             <th className="p-4 w-24 text-center">Quantity</th>
-                            <th className="p-4 w-32 text-right">Unit Price</th>
-                            <th className="p-4 w-32 text-right">Total</th>
+                            <th className="p-4 w-28 text-right">Unit Price</th>
+                            <th className="p-4 w-24 text-center">HSN Code</th>
+                            <th className="p-4 w-20 text-center">GST %</th>
+                            <th className="p-4 w-28 text-right">Total</th>
                             <th className="p-4 w-12 text-center"></th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                          {newOrder.items.map((item, index) => (
+                          {newOrder.items.map((item, index) => {
+                            const prod = products.find(p => p.id == item.product_id);
+                            return (
                             <tr key={index} className="hover:bg-gray-50/50">
                               <td className="p-4">
                                 <select
@@ -469,7 +562,10 @@ export default function SalesOrdersPage() {
                                     const items = [...newOrder.items];
                                     const prod = products.find(p => p.id == e.target.value);
                                     items[index].product_id = e.target.value;
-                                    if(prod) items[index].unit_price = parseFloat(prod.selling_price || 0);
+                                    if (prod) {
+                                      items[index].unit_price = parseFloat(prod.selling_price || 0);
+                                      items[index].hsn_code = prod.hsn_code || '';
+                                    }
                                     setNewOrder({...newOrder, items});
                                   }}
                                   required
@@ -507,8 +603,38 @@ export default function SalesOrdersPage() {
                                   required
                                 />
                               </td>
+                              <td className="p-4">
+                                <input
+                                  type="text"
+                                  className="w-full text-center bg-transparent border-0 border-b border-gray-200 focus:ring-0 focus:border-[#1a56db] p-0 pb-1 text-xs font-mono"
+                                  value={item.hsn_code}
+                                  onChange={(e) => {
+                                    const items = [...newOrder.items];
+                                    items[index].hsn_code = e.target.value;
+                                    setNewOrder({...newOrder, items});
+                                  }}
+                                  placeholder="HSN"
+                                />
+                              </td>
+                              <td className="p-4">
+                                <select
+                                  className="w-full bg-transparent border-0 border-b border-gray-200 focus:ring-0 focus:border-[#1a56db] p-0 pb-1 text-center font-semibold"
+                                  value={item.gst_rate}
+                                  onChange={(e) => {
+                                    const items = [...newOrder.items];
+                                    items[index].gst_rate = parseInt(e.target.value) || 0;
+                                    setNewOrder({...newOrder, items});
+                                  }}
+                                >
+                                  <option value="0">0%</option>
+                                  <option value="5">5%</option>
+                                  <option value="12">12%</option>
+                                  <option value="18">18%</option>
+                                  <option value="28">28%</option>
+                                </select>
+                              </td>
                               <td className="p-4 text-right font-bold text-gray-900">
-                                ${(item.quantity * item.unit_price).toLocaleString(undefined, {minimumFractionDigits: 2})}
+                                ₹{(item.quantity * item.unit_price).toLocaleString(undefined, {minimumFractionDigits: 2})}
                               </td>
                               <td className="p-4 text-center">
                                 <button
@@ -523,7 +649,7 @@ export default function SalesOrdersPage() {
                                 </button>
                               </td>
                             </tr>
-                          ))}
+                          )})}
                         </tbody>
                       </table>
                     </div>
@@ -543,23 +669,23 @@ export default function SalesOrdersPage() {
                       <div className="flex justify-between">
                         <span>Subtotal</span>
                         <span className="font-medium text-white">
-                          ${newOrder.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0).toLocaleString(undefined, {minimumFractionDigits: 2})}
+                          ₹{newOrder.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0).toLocaleString(undefined, {minimumFractionDigits: 2})}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span>GST ({newOrder.gst_type === 'igst' ? 'IGST' : 'CGST+SGST'} @ {newOrder.gst_rate || 0}%)</span>
+                        <span>GST ({newOrder.gst_type === 'igst' ? 'IGST' : 'CGST+SGST'})</span>
                         <span className="font-medium text-white">
-                          ${(newOrder.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0) * (parseFloat(newOrder.gst_rate || 0) / 100)).toLocaleString(undefined, {minimumFractionDigits: 2})}
+                          ₹{newOrder.items.reduce((sum, item) => sum + (item.quantity * item.unit_price * (item.gst_rate || 0) / 100), 0).toLocaleString(undefined, {minimumFractionDigits: 2})}
                         </span>
                       </div>
                       <div className="flex justify-between border-b border-blue-500/50 pb-4">
-                        <span>Shipping Estimate</span>
-                        <span className="font-medium text-white">₹250.00</span>
+                        <span>Shipping</span>
+                        <span className="font-medium text-white">₹{parseFloat(newOrder.shipping_cost || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                       </div>
                       <div className="flex justify-between items-center pt-2">
                         <span className="text-base text-white">Total Amount</span>
                         <span className="text-2xl font-bold text-white">
-                          ₹{((newOrder.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0) * (1 + parseFloat(newOrder.gst_rate || 0) / 100)) + 250).toLocaleString(undefined, {minimumFractionDigits: 2})}
+                          ₹{(newOrder.items.reduce((sum, item) => sum + (item.quantity * item.unit_price * (1 + (item.gst_rate || 0) / 100)), 0) + parseFloat(newOrder.shipping_cost || 0)).toLocaleString(undefined, {minimumFractionDigits: 2})}
                         </span>
                       </div>
                       <p className="text-[10px] uppercase tracking-wider opacity-60 text-right mt-1">Currency: INR (Indian Rupee)</p>

@@ -9,7 +9,7 @@ import { transactionLedgerService } from '../../../services/transactionLedgerSer
 const parseLocationId = (compositeId) => {
   const match = compositeId.match(/^site_(\d+)$/);
   if (!match) return { location_type: '', location_id: '' };
-  return { location_type: 'App\\Models\\Site', location_id: parseInt(match[2], 10) };
+  return { location_type: 'App\\Models\\Site', location_id: parseInt(match[1], 10) };
 };
 
 export default function TransfersPage() {
@@ -69,7 +69,6 @@ export default function TransfersPage() {
     { accessorFn: (row) => row.to_locationable?.name || '-', id: 'to', header: 'To' },
     { accessorFn: (row) => Math.abs(Number(row.quantity)).toLocaleString(), id: 'qty', header: 'Qty' },
     { accessorFn: (row) => row.created_at ? new Date(row.created_at).toLocaleString() : '-', id: 'date', header: 'Date' },
-    { accessorFn: (row) => row.notes || '-', id: 'notes', header: 'Notes' },
   ];
 
   return (

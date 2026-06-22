@@ -82,9 +82,11 @@ class InvoiceController extends Controller
             $invoice = Invoice::create([
                 'invoice_number' => $invoiceNumber,
                 'customer_id' => $validated['customer_id'],
-                'sales_order_id' => $validated['sales_order_id'],
+                'sales_order_id' => $validated['sales_order_id'] ?? null,
                 'status' => $validated['status'],
-                'due_date' => $validated['due_date'],
+                'due_date' => $validated['due_date'] ?? null,
+                'issue_date' => now()->toDateString(),
+                'total_amount' => $grand_total,
                 'notes' => $validated['notes'],
                 'terms' => $validated['terms'],
                 'subtotal' => $subtotal,

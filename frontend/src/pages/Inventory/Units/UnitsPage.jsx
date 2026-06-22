@@ -28,7 +28,14 @@ export default function UnitsPage() {
       fields={[
         { name: 'name', label: 'Name', type: 'text', required: true },
         { name: 'code', label: 'Code', type: 'text', required: true },
-        { name: 'type', label: 'Type', type: 'text' },
+        { name: 'type', label: 'Type', type: 'select', options: [
+          { value: 'length', name: 'Length' },
+          { value: 'weight', name: 'Weight' },
+          { value: 'volume', name: 'Volume' },
+          { value: 'quantity', name: 'Quantity' },
+          { value: 'area', name: 'Area' },
+          { value: 'time', name: 'Time' },
+        ]},
         { name: 'status', label: 'Status', type: 'select', options: [
           { value: 'active', name: 'Active' },
           { value: 'inactive', name: 'Inactive' },

@@ -12,7 +12,9 @@ class Invoice extends Model
     protected $fillable = [
         'invoice_number', 'customer_id', 'sales_order_id',
         'subtotal', 'cgst_total', 'sgst_total', 'igst_total', 'grand_total',
-        'status', 'due_date', 'payment_date', 'paid_amount', 'notes', 'terms', 'created_by'
+        'status', 'due_date', 'payment_date', 'paid_amount', 'notes', 'terms', 'created_by',
+        'gst_type', 'gst_rate',
+        'issue_date', 'total_amount',
     ];
 
     public function customer()

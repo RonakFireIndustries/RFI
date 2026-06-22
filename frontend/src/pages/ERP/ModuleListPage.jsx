@@ -27,6 +27,7 @@ export default function ModuleListPage({
   detailBasePath,
   searchPlaceholder,
   lookups = {},
+  hideView,
 }) {
   const { items, loading, fetchItems, createItem, updateItem, deleteItem } = store();
   const [search, setSearch] = useState('');
@@ -104,9 +105,11 @@ export default function ModuleListPage({
       enableSorting: false,
       cell: ({ row }) => (
         <div className="flex justify-end gap-2">
-          <Link className="rounded-md border border-gray-200 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50" to={`${detailBasePath}/${row.original.id}`}>
-            View
-          </Link>
+          {!hideView && (
+            <Link className="rounded-md border border-gray-200 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50" to={`${detailBasePath}/${row.original.id}`}>
+              View
+            </Link>
+          )}
           <button type="button" className="rounded-md p-1.5 text-blue-600 hover:bg-blue-50" onClick={() => openModal(row.original)} title="Edit">
             <Edit2 className="h-4 w-4" />
           </button>

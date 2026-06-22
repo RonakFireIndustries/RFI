@@ -20,6 +20,7 @@ class StoreStockRequestRequest extends FormRequest
             'to_location_type' => 'required|string|in:App\Models\Site',
             'to_location_id' => 'required|integer|different:from_location_id',
             'quantity' => 'required|numeric|gt:0',
+            'approved_by' => 'nullable|integer|exists:users,id',
             'notes' => 'nullable|string',
         ];
     }

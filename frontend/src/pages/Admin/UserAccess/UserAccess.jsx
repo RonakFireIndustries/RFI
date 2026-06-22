@@ -24,7 +24,7 @@ export default function UserAccess() {
   const fetchUsers = async () => {
     try {
       const response = await api.get('/employees'); // or users endpoint
-      setUsers(response.data?.data || response.data || []);
+      setUsers(Array.isArray(response.data?.employees) ? response.data.employees : []);
     } catch (error) {
       console.error('Failed to fetch users', error);
     }
@@ -70,7 +70,7 @@ export default function UserAccess() {
                 onClick={() => handleSelectUser(user)}
                 className={`p-3 rounded-md cursor-pointer transition-colors border ${selectedUser?.id === user.id ? 'bg-[#e1effe] border-[#1a56db]' : 'border-gray-200 hover:bg-gray-50'}`}
               >
-                <div className="font-medium text-gray-900">{user.first_name ? `${user.first_name} ${user.last_name}` : user.name}</div>
+                <div className="font-medium text-gray-900">{user.full_name ? `${user.full_name}` : user.name}</div>
                 <div className="text-sm text-gray-500">{user.email}</div>
               </div>
             ))}

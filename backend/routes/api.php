@@ -15,18 +15,21 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\PurchaseController;
-use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\HRController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\TestController;
 use App\Http\Controllers\Api\SearchController;
+use App\Http\Controllers\Api\CompanySettingController;
+use App\Http\Controllers\Api\RoleConfigController;
 // Removed old Department/Designation/Employee controller imports
 use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReportsController;
+use App\Http\Controllers\ReportsModuleController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserAccessController;
 use App\Http\Controllers\SalaryStructureController;
@@ -52,8 +55,14 @@ Route::prefix('v1')->group(function () {
         Route::get('/user', [\App\Http\Controllers\Api\V1\AuthController::class, 'user']);
         Route::post('/logout', [\App\Http\Controllers\Api\V1\AuthController::class, 'logout']);
         Route::put('/profile', [\App\Http\Controllers\Api\V1\ProfileController::class, 'update']);
+        Route::post('/change-password', [\App\Http\Controllers\Api\V1\AuthController::class, 'changePassword']);
+        Route::post('/push-subscriptions', [\App\Http\Controllers\Api\V1\PushSubscriptionController::class, 'store']);
         
         Route::get('/search', [SearchController::class, 'search']);
+
+    // Company Settings
+    Route::get('/company-settings', [CompanySettingController::class, 'show']);
+    Route::post('/company-settings', [CompanySettingController::class, 'update']);
 
     // Dashboard
     Route::get('/dashboard/summary', [DashboardController::class, 'summary']);
@@ -63,6 +72,18 @@ Route::prefix('v1')->group(function () {
     // Role & Permission Management
     Route::apiResource('roles', RoleController::class);
     Route::apiResource('permissions', PermissionController::class);
+
+    // Role Configuration (Settings)
+    Route::get('/role-config/scopes', [RoleConfigController::class, 'scopes']);
+    Route::get('/role-config/templates', [RoleConfigController::class, 'templates']);
+    Route::post('/role-config/roles/{role}/apply-template', [RoleConfigController::class, 'applyTemplate']);
+    Route::get('/role-config/exceptions', [RoleConfigController::class, 'exceptions']);
+    Route::put('/role-config/exceptions/{exception}', [RoleConfigController::class, 'updateException']);
+    Route::get('/role-config/roles/{role}/audit', [RoleConfigController::class, 'auditSettings']);
+    Route::put('/role-config/roles/{role}/audit', [RoleConfigController::class, 'updateAuditSettings']);
+    Route::get('/role-config/roles/{role}/summary', [RoleConfigController::class, 'roleSummary']);
+    Route::get('/role-config/permissions-by-module', [RoleConfigController::class, 'permissionsByModule']);
+    Route::get('/role-config/dependencies', [RoleConfigController::class, 'dependencies']);
 
     // User Access Management
     Route::get('/users/{user}/roles', [UserAccessController::class, 'getRoles']);
@@ -152,25 +173,25 @@ Route::prefix('v1')->group(function () {
     Route::apiResource('unit-conversions', UnitConversionController::class);
     Route::get('/unit-conversions/convert/{from}/{to}/{quantity}', [UnitConversionController::class, 'convert']);
 
-    // Product Stock (named routes before wildcard {stock})
-    Route::get('/stock/by-product/{product}', [ProductStockController::class, 'byProduct']);
-    Route::get('/stock/by-location/{locationType}/{locationId}', [ProductStockController::class, 'byLocation']);
-    Route::get('/stock', [ProductStockController::class, 'index']);
-    Route::get('/stock/{stock}', [ProductStockController::class, 'show']);
-
-    // Transaction Ledger
+    // Transaction Ledger (must be before wildcard {stock})
     Route::get('/stock/transactions', [TransactionLedgerController::class, 'index']);
     Route::post('/stock/transactions', [TransactionLedgerController::class, 'store']);
     Route::get('/stock/transactions/{transactionLedger}', [TransactionLedgerController::class, 'show']);
     Route::get('/stock/transactions-summary', [TransactionLedgerController::class, 'summary']);
 
-    // Stock Requests
+    // Stock Requests (must be before wildcard {stock})
     Route::get('/stock/requests', [StockRequestController::class, 'index']);
     Route::post('/stock/requests', [StockRequestController::class, 'store']);
     Route::get('/stock/requests/{stockRequest}', [StockRequestController::class, 'show']);
     Route::post('/stock/requests/{stockRequest}/approve', [StockRequestController::class, 'approve']);
     Route::post('/stock/requests/{stockRequest}/issue', [StockRequestController::class, 'issue']);
     Route::post('/stock/requests/{stockRequest}/receive', [StockRequestController::class, 'receive']);
+
+    // Product Stock (wildcard {stock} — keep at end)
+    Route::get('/stock/by-product/{product}', [ProductStockController::class, 'byProduct']);
+    Route::get('/stock/by-location/{locationType}/{locationId}', [ProductStockController::class, 'byLocation']);
+    Route::get('/stock', [ProductStockController::class, 'index']);
+    Route::get('/stock/{stock}', [ProductStockController::class, 'show']);
 
     // CRM & Sales
     // Purchases Management
@@ -208,6 +229,9 @@ Route::prefix('v1')->group(function () {
     Route::apiResource('customers', CustomerController::class);
     Route::apiResource('invoices', InvoiceController::class);
     Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'generatePDF']);
+    Route::get('/invoices/{invoice}/preview', [\App\Http\Controllers\Api\InvoicePreviewController::class, 'preview']);
+    Route::get('/invoices/{invoice}/validate', [\App\Http\Controllers\Api\InvoicePreviewController::class, 'validateInvoice']);
+    Route::post('/invoices/{invoice}/email', [\App\Http\Controllers\Api\InvoicePreviewController::class, 'email']);
 
     // HR Additions
     Route::get('/leaves', [HRController::class, 'leaves']);
@@ -241,6 +265,23 @@ Route::prefix('v1')->group(function () {
     Route::get('/reports/attendance', [ReportsController::class, 'attendanceReport']);
     Route::get('/reports/leaves', [ReportsController::class, 'leaveReport']);
     Route::get('/reports/employees', [ReportsController::class, 'employeeReport']);
+
+    // Reports Module (catalog, schedules, generations)
+    Route::get('/reports-module/categories', [ReportsModuleController::class, 'categories']);
+    Route::get('/reports-module/stats', [ReportsModuleController::class, 'stats']);
+    Route::get('/reports-module/reports', [ReportsModuleController::class, 'index']);
+    Route::post('/reports-module/reports', [ReportsModuleController::class, 'store']);
+    Route::get('/reports-module/reports/{report}', [ReportsModuleController::class, 'show']);
+    Route::put('/reports-module/reports/{report}', [ReportsModuleController::class, 'update']);
+    Route::delete('/reports-module/reports/{report}', [ReportsModuleController::class, 'destroy']);
+    Route::post('/reports-module/reports/{report}/generate', [ReportsModuleController::class, 'generate']);
+    Route::get('/reports-module/generations', [ReportsModuleController::class, 'generations']);
+    Route::get('/reports-module/generations/{generation}/download', [ReportsModuleController::class, 'downloadGeneration']);
+    Route::get('/reports-module/schedules', [ReportsModuleController::class, 'schedules']);
+    Route::post('/reports-module/schedules', [ReportsModuleController::class, 'storeSchedule']);
+    Route::put('/reports-module/schedules/{schedule}', [ReportsModuleController::class, 'updateSchedule']);
+    Route::delete('/reports-module/schedules/{schedule}', [ReportsModuleController::class, 'destroySchedule']);
+    Route::post('/reports-module/schedules/{schedule}/toggle', [ReportsModuleController::class, 'toggleSchedule']);
 
     // Generic Admin Routes
     Route::group([], function () {

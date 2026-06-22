@@ -27,8 +27,9 @@ class StoreProductRequest extends FormRequest
             'min_stock' => 'nullable|numeric|min:0',
             'max_stock' => 'nullable|numeric|min:0',
             'description' => 'nullable|string',
+            'opening_stock' => 'nullable|numeric|min:0',
             'status' => 'nullable|string|in:active,inactive',
-            'site_id' => 'nullable|exists:sites,id',
+            'site_id' => 'required_if:opening_stock,gt:0|nullable|exists:sites,id',
         ];
 
         if (ProductResource::canManageSalesPrice($this)) {

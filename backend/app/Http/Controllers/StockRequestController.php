@@ -53,11 +53,12 @@ class StockRequestController extends Controller
             'quantity' => $data['quantity'],
             'status' => 'requested',
             'requested_by' => $request->user()->id,
+            'approved_by' => $data['approved_by'] ?? null,
             'notes' => $data['notes'] ?? null,
         ]);
 
         return new StockRequestResource(
-            $stockRequest->load(['product', 'fromLocationable', 'toLocationable', 'requester'])
+            $stockRequest->load(['product', 'fromLocationable', 'toLocationable', 'requester', 'approver'])
         );
     }
 
