@@ -45,7 +45,7 @@ class GeoLocationService
 
     public function getMaxAccuracyThreshold()
     {
-        return 50.0;
+        return 100.0;
     }
 
     public function isWithinRadius($distance, $allowedRadius)

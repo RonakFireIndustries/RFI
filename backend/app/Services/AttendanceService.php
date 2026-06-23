@@ -128,13 +128,14 @@ class AttendanceService
             }
 
             $accuracy = $data['accuracy'] ?? null;
-            if (!$this->geoLocation->isAccuracyAcceptable($accuracy)) {
+            $maxAccuracy = max($allowedRadius, 100);
+            if ($accuracy === null || $accuracy > $maxAccuracy) {
                 return [
                     'success' => false,
-                    'message' => 'GPS accuracy is too low (' . round($accuracy) . 'm). Move to an open area with better GPS signal.',
+                    'message' => 'GPS accuracy is too low (' . round($accuracy ?? 0) . 'm). Move to an open area with better GPS signal.',
                     'data' => [
                         'accuracy' => $accuracy,
-                        'max_accuracy' => $this->geoLocation->getMaxAccuracyThreshold(),
+                        'max_accuracy' => $maxAccuracy,
                     ],
                     'status' => 403,
                 ];
@@ -228,13 +229,14 @@ class AttendanceService
             }
 
             $accuracy = $data['accuracy'] ?? null;
-            if (!$this->geoLocation->isAccuracyAcceptable($accuracy)) {
+            $maxAccuracy = max($allowedRadius, 100);
+            if ($accuracy === null || $accuracy > $maxAccuracy) {
                 return [
                     'success' => false,
-                    'message' => 'GPS accuracy is too low (' . round($accuracy) . 'm). Move to an open area with better GPS signal.',
+                    'message' => 'GPS accuracy is too low (' . round($accuracy ?? 0) . 'm). Move to an open area with better GPS signal.',
                     'data' => [
                         'accuracy' => $accuracy,
-                        'max_accuracy' => $this->geoLocation->getMaxAccuracyThreshold(),
+                        'max_accuracy' => $maxAccuracy,
                     ],
                     'status' => 403,
                 ];
@@ -280,15 +282,12 @@ class AttendanceService
             ];
         }
 
-        $activeSite = $employee->employeeSites()
-            ->whereHas('site', fn($q) => $q->where('status', 'Active'))
-            ->with('site')
-            ->first();
+        $activeSite = $employee->employeeSites()->with('site')->first();
 
         if (!$activeSite || !$activeSite->site) {
             return [
                 'success' => false,
-                'message' => 'You are not assigned to any active site. Contact your administrator.',
+                'message' => 'You are not assigned to any site. Contact your administrator.',
                 'status' => 403,
             ];
         }

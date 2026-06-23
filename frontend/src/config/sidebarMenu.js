@@ -14,11 +14,11 @@ export const menuCategories = [
   {
     title: 'Human Resources',
     items: [
-      { name: 'Employees', path: '/dashboard/employees', icon: Users, roles: ['Super Admin', 'Admin', 'HR Manager', 'General Manager', 'Production Manager', 'Workshop Supervisor', 'Design Manager'] },
+      { name: 'Employees', path: '/dashboard/employees', icon: Users, roles: ['Super Admin', 'Admin'] },
       { name: 'Attendance', path: '/dashboard/attendance', icon: Calendar, roles: ['Super Admin', 'Admin', 'HR Manager', 'General Manager', 'Production Manager', 'Workshop Supervisor'] },
       { name: 'My Attendance', path: '/dashboard/my-attendance', icon: MapPin, roles: ['*'] },
       { name: 'Shifts', path: '/dashboard/shifts', icon: Clock, roles: ['Super Admin', 'Admin', 'HR Manager'] },
-      { name: 'Daily Reports', path: '/dashboard/daily-reports', icon: FileText, roles: ['Super Admin', 'Admin', 'HR Manager', 'General Manager', 'Production Manager', 'Workshop Supervisor', 'Design Manager'] },
+      { name: 'Daily Reports', path: '/dashboard/daily-reports', icon: FileText, roles: ['*'] },
       { name: 'Leave', path: '/dashboard/leave-management', icon: Briefcase, roles: ['Super Admin', 'Admin', 'HR Manager', 'General Manager'] },
       { name: 'My Leaves', path: '/dashboard/my-leaves', icon: FileText, roles: ['*'] },
     ],

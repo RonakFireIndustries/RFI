@@ -140,22 +140,37 @@ export default function EmployeeDashboard() {
     loadSite();
   }, [employeeId]);
 
-  useEffect(() => {
-    const loadToday = async () => {
-      try {
-        const today = new Date().toISOString().split('T')[0];
-        const records = await myAttendance({ date: today, per_page: 10 });
-        if (records?.length > 0) {
-          setTodayAttendance(records[0]);
-        } else {
-          setTodayAttendance(null);
-        }
-      } catch (e) {
-        console.error('Failed to load today attendance:', e);
+  const loadTodayAttendance = useCallback(async () => {
+    if (!employeeId) return;
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const records = await myAttendance({ date: today, per_page: 10 });
+      if (records?.length > 0) {
+        setTodayAttendance(records[0]);
+      } else {
+        setTodayAttendance(null);
       }
+    } catch (e) {
+      console.error('Failed to load today attendance:', e);
+    }
+  }, [employeeId, myAttendance]);
+
+  useEffect(() => {
+    loadTodayAttendance();
+  }, [loadTodayAttendance]);
+
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') loadTodayAttendance();
     };
-    loadToday();
-  }, [myAttendance]);
+    const handleFocus = () => loadTodayAttendance();
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [loadTodayAttendance]);
 
   const distance = useMemo(() => {
     if (!position || !currentSite) return null;
@@ -171,18 +186,17 @@ export default function EmployeeDashboard() {
   const isCheckedOut = !!todayAttendance?.check_out;
 
   const buttonStatus = useMemo(() => {
-    if (!currentSite?.geo_fencing_enabled) return 'ready_checkin';
     if (gpsLoading) return 'gps_loading';
     if (gpsError) return gpsError.includes('denied') ? 'permission_denied' : 'gps_error';
     if (!position) return 'gps_loading';
     if (!currentSite) return 'outside_radius';
-    if (distance !== null && !isInsideRadius) return 'outside_radius';
+    if (currentSite.geo_fencing_enabled && distance !== null && !isInsideRadius) return 'outside_radius';
     return 'ready_checkin';
   }, [gpsLoading, gpsError, position, currentSite, distance, isInsideRadius]);
 
   const handleCheckIn = useCallback(async () => {
     if (!currentSite) return;
-    if (currentSite.geo_fencing_enabled && !position) return;
+    if (!position) return;
     setActionLoading(true);
     setActionError(null);
     setActionSuccess(null);
@@ -196,22 +210,21 @@ export default function EmployeeDashboard() {
       };
       const result = await checkIn(payload);
       setActionSuccess('Checked in successfully!');
-      const today = new Date().toISOString().split('T')[0];
-      const records = await myAttendance({ date: today, per_page: 10 });
-      if (records?.length > 0) {
-        setTodayAttendance(records[0]);
-      }
+      await loadTodayAttendance();
     } catch (e) {
-      const msg = e?.response?.data?.message || e?.message || 'Check-in failed';
+      const data = e?.response?.data;
+      console.error('Check-in error:', data);
+      const msg = data?.message || e?.message || 'Check-in failed';
       setActionError(msg);
+      await loadTodayAttendance();
     } finally {
       setActionLoading(false);
     }
-  }, [position, currentSite, checkIn, myAttendance]);
+  }, [position, currentSite, checkIn, loadTodayAttendance]);
 
   const handleCheckOut = useCallback(async () => {
     if (!currentSite) return;
-    if (currentSite.geo_fencing_enabled && !position) return;
+    if (!position) return;
     setActionLoading(true);
     setActionError(null);
     setActionSuccess(null);
@@ -224,18 +237,17 @@ export default function EmployeeDashboard() {
       };
       const result = await checkOut(payload);
       setActionSuccess('Checked out successfully!');
-      const today = new Date().toISOString().split('T')[0];
-      const records = await myAttendance({ date: today, per_page: 10 });
-      if (records?.length > 0) {
-        setTodayAttendance(records[0]);
-      }
+      await loadTodayAttendance();
     } catch (e) {
-      const msg = e?.response?.data?.message || e?.message || 'Check-out failed';
+      const data = e?.response?.data;
+      console.error('Check-out error:', data);
+      const msg = data?.message || e?.message || 'Check-out failed';
       setActionError(msg);
+      await loadTodayAttendance();
     } finally {
       setActionLoading(false);
     }
-  }, [position, currentSite, checkOut, myAttendance]);
+  }, [position, currentSite, checkOut, loadTodayAttendance]);
 
   const handleInstall = useCallback(async () => {
     const deferred = deferredPromptRef.current;

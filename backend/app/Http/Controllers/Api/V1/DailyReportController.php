@@ -27,6 +27,14 @@ class DailyReportController extends Controller
     public function index(Request $request): JsonResponse
     {
         $filters = $request->only(['employee_id', 'site_id', 'date', 'start_date', 'end_date', 'status']);
+
+        $user = $request->user();
+        $isManager = $user->roles()->whereIn('name', ['Super Admin', 'Admin', 'HR Manager', 'General Manager', 'Production Manager', 'Workshop Supervisor', 'Design Manager'])->exists();
+
+        if (!$isManager) {
+            $filters['employee_id'] = $user->employee?->id ?? -1;
+        }
+
         $perPage = (int) $request->input('per_page', 15);
 
         $reports = $this->dprService->getReports($filters, $perPage);
