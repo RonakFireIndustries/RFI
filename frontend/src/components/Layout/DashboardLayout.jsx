@@ -11,7 +11,7 @@ import {
   Shield, Network, HardHat, FileSignature, MapPin, Search, Plus,
   LayoutDashboard, ShoppingBag, Layers, Building, Factory, Pickaxe, UserCheck, 
   HelpCircle, MoreVertical, Sliders, Moon, Sun, User, Palette, 
-  Lock, Globe, BellRing, Database, Smartphone, ShieldCheck, Mail, WifiOff
+  Lock, Globe, BellRing, Database, Smartphone, ShieldCheck, Mail, WifiOff, Download
 } from 'lucide-react';
 import { menuCategories } from '../../config/sidebarMenu';
 
@@ -82,7 +82,7 @@ import TransfersPage from '../../pages/Inventory/Transfers/TransfersPage';
 import StockRequestsPage from '../../pages/Inventory/Requests/StockRequestsPage';
 import StockRequestDetail from '../../pages/Inventory/Requests/StockRequestDetail';
 import ReportsPage from '../../pages/Reports/ReportsPage';
-import CompanySettingsPage from '../../pages/Settings/CompanySettingsPage';
+import SettingsPage from '../../pages/Settings/SettingsPage';
 import UserSettingsPage from '../../pages/Settings/UserSettingsPage';
 
 export default function DashboardLayout() {
@@ -458,7 +458,7 @@ export default function DashboardLayout() {
               <Route path="invoices/create" element={<InvoiceBuilder />} />
               <Route path="invoices/:id" element={<InvoicePreviewPage />} />
               <Route path="reports" element={<ReportsPage />} />
-              <Route path="settings" element={<CompanySettingsPage />} />
+              <Route path="settings" element={<SettingsPage />} />
               <Route path="user-settings" element={<UserSettingsPage />} />
               <Route path="role-configuration" element={<RoleConfigurationPage />} />
               <Route path="permissions" element={<PermissionManagement />} />

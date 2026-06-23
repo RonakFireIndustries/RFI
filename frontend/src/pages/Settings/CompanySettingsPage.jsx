@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import api, { STORAGE_URL } from '../../services/api';
 import { Loader } from 'lucide-react';
 
-export default function CompanySettingsPage() {
+export default function CompanySettingsPage({ nested }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
@@ -111,13 +111,16 @@ export default function CompanySettingsPage() {
     );
   }
 
-  return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-xl font-bold text-gray-800 mb-6">Company Settings</h1>
-      <p className="text-sm text-gray-500 mb-6">
-        Configure your company information, bank details, and signature — these appear on invoices, quotations, and other documents.
-      </p>
-
+  const content = (
+    <>
+      {!nested && (
+        <>
+          <h2 className="text-lg font-bold text-gray-900">Company Settings</h2>
+          <p className="text-sm text-gray-500 mt-1 mb-6">
+            Configure your company information, bank details, and signature — these appear on invoices, quotations, and other documents.
+          </p>
+        </>
+      )}
       <form onSubmit={handleSubmit} className="space-y-8">
         <section className="bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-4">Company Information</h2>
@@ -232,6 +235,10 @@ export default function CompanySettingsPage() {
           </button>
         </div>
       </form>
-    </div>
+    </>
   );
+
+  if (nested) return content;
+
+  return <div className="p-6 max-w-4xl mx-auto">{content}</div>;
 }

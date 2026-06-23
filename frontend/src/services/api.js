@@ -1,4 +1,6 @@
-const API_HOST = 'http://localhost:8000';
+// const API_HOST = 'http://localhost:8000';
+const API_HOST = 'https://rfibackend.ronakfire.com';
+
 export const BASE_URL = import.meta.env.DEV ? `/api/v1` : `${API_HOST}/api/v1`;
 export const STORAGE_URL = `${API_HOST}/storage`;
 
@@ -100,7 +102,7 @@ const api = {
   put: async (endpoint, body) => {
     const isFormData = body instanceof FormData;
     const headers = buildHeaders();
-    
+
     try {
       if (isFormData) {
         delete headers['Content-Type'];
