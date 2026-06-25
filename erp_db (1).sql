@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 19, 2026 at 02:58 PM
+-- Generation Time: Jun 25, 2026 at 02:57 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -54,31 +54,44 @@ CREATE TABLE `attendances` (
   `updated_at` timestamp NULL DEFAULT NULL,
   `shift_id` bigint(20) UNSIGNED DEFAULT NULL,
   `overtime_hours` decimal(8,2) NOT NULL DEFAULT 0.00,
-  `remarks` text DEFAULT NULL,
-  `branch_id` bigint(20) UNSIGNED DEFAULT NULL
+  `remarks` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `attendances`
+--
+
+INSERT INTO `attendances` (`id`, `employee_id`, `site_id`, `date`, `check_in`, `check_out`, `checkin_latitude`, `checkin_longitude`, `checkout_latitude`, `checkout_longitude`, `checkin_distance`, `checkout_distance`, `location_verified`, `accuracy`, `device_info`, `browser_info`, `ip_address`, `working_hours`, `overtime`, `status`, `created_at`, `updated_at`, `shift_id`, `overtime_hours`, `remarks`) VALUES
+(33, 9, 4, '2026-06-20', '2026-06-20 12:06:38', '2026-06-20 19:36:46', 19.29946630, 72.85804723, 19.29946630, 72.85804723, 135.08, 135.08, 1, 141.00, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', '127.0.0.1', 7.50, 0.00, 'Present', '2026-06-20 01:06:38', '2026-06-20 07:05:36', NULL, 0.00, NULL),
+(34, 10, 4, '2026-06-23', '2026-06-23 11:58:22', '2026-06-23 12:47:49', 19.29942676, 72.85814550, 19.29942676, 72.85814550, 146.00, 146.00, 1, 141.00, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', '127.0.0.1', 0.82, 0.00, 'Present', '2026-06-23 06:28:22', '2026-06-23 07:17:49', NULL, 0.00, NULL),
+(35, 9, 4, '2026-06-23', '2026-06-23 14:46:50', NULL, 19.29942676, 72.85814550, NULL, NULL, 146.00, NULL, 1, 141.00, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', '127.0.0.1', 0.00, 0.00, 'Present', '2026-06-23 09:16:50', '2026-06-23 09:16:50', NULL, 0.00, NULL);
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `branches`
+-- Table structure for table `audit_settings`
 --
 
-CREATE TABLE `branches` (
+CREATE TABLE `audit_settings` (
   `id` bigint(20) UNSIGNED NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `location` varchar(255) DEFAULT NULL,
+  `configurable_type` varchar(255) NOT NULL,
+  `configurable_id` bigint(20) UNSIGNED NOT NULL,
+  `logging_verbosity` varchar(255) NOT NULL DEFAULT 'medium',
+  `retention_days` int(11) NOT NULL DEFAULT 90,
+  `reason_required` tinyint(1) NOT NULL DEFAULT 0,
+  `change_tracking_enabled` tinyint(1) NOT NULL DEFAULT 1,
+  `snapshot_creation_enabled` tinyint(1) NOT NULL DEFAULT 0,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `branches`
+-- Dumping data for table `audit_settings`
 --
 
-INSERT INTO `branches` (`id`, `name`, `location`, `created_at`, `updated_at`) VALUES
-(1, 'Godown 1', 'Bhyander', '2026-06-13 01:58:40', '2026-06-13 01:58:40'),
-(2, 'Headquarters', 'Bhyander Office', '2026-06-16 23:03:12', '2026-06-16 23:03:12');
+INSERT INTO `audit_settings` (`id`, `configurable_type`, `configurable_id`, `logging_verbosity`, `retention_days`, `reason_required`, `change_tracking_enabled`, `snapshot_creation_enabled`, `created_at`, `updated_at`) VALUES
+(1, 'role', 1, 'medium', 90, 0, 1, 0, '2026-06-22 12:05:34', '2026-06-22 12:05:34'),
+(2, 'role', 2, 'medium', 90, 0, 1, 0, '2026-06-22 12:21:17', '2026-06-22 12:21:17');
 
 -- --------------------------------------------------------
 
@@ -97,7 +110,7 @@ CREATE TABLE `cache` (
 --
 
 INSERT INTO `cache` (`key`, `value`, `expiration`) VALUES
-('rfi-management-suite-cache-spatie.permission.cache', 'a:3:{s:5:\"alias\";a:4:{s:1:\"a\";s:2:\"id\";s:1:\"b\";s:4:\"name\";s:1:\"c\";s:10:\"guard_name\";s:1:\"r\";s:5:\"roles\";}s:11:\"permissions\";a:191:{i:0;a:4:{s:1:\"a\";i:1;s:1:\"b\";s:12:\"create sales\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:7:{i:0;i:3;i:1;i:5;i:2;i:10;i:3;i:11;i:4;i:1;i:5;i:2;i:6;i:9;}}i:1;a:4:{s:1:\"a\";i:2;s:1:\"b\";s:16:\"manage employees\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:7:{i:0;i:3;i:1;i:10;i:2;i:11;i:3;i:1;i:4;i:2;i:5;i:7;i:6;i:4;}}i:2;a:4:{s:1:\"a\";i:3;s:1:\"b\";s:16:\"manage inventory\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:8:{i:0;i:3;i:1;i:5;i:2;i:10;i:3;i:11;i:4;i:1;i:5;i:2;i:6;i:7;i:7;i:8;}}i:3;a:4:{s:1:\"a\";i:4;s:1:\"b\";s:14:\"manage payroll\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:3;i:1;i:10;i:2;i:11;i:3;i:1;i:4;i:2;i:5;i:4;}}i:4;a:4:{s:1:\"a\";i:5;s:1:\"b\";s:16:\"manage purchases\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:3;i:1;i:10;i:2;i:11;i:3;i:1;i:4;i:2;i:5;i:6;}}i:5;a:4:{s:1:\"a\";i:6;s:1:\"b\";s:12:\"manage sales\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:6;}}i:6;a:4:{s:1:\"a\";i:7;s:1:\"b\";s:15:\"manage settings\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:7;a:4:{s:1:\"a\";i:8;s:1:\"b\";s:16:\"manage suppliers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:8;a:4:{s:1:\"a\";i:9;s:1:\"b\";s:16:\"manage transfers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:8;}}i:9;a:4:{s:1:\"a\";i:10;s:1:\"b\";s:15:\"view attendance\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:7:{i:0;i:3;i:1;i:5;i:2;i:10;i:3;i:11;i:4;i:1;i:5;i:2;i:6;i:4;}}i:10;a:4:{s:1:\"a\";i:11;s:1:\"b\";s:15:\"view categories\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:11;a:4:{s:1:\"a\";i:12;s:1:\"b\";s:14:\"view dashboard\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:9:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:7;i:5;i:4;i:6;i:6;i:7;i:8;i:8;i:9;}}i:12;a:4:{s:1:\"a\";i:13;s:1:\"b\";s:14:\"view inventory\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:7;i:5;i:8;}}i:13;a:4:{s:1:\"a\";i:14;s:1:\"b\";s:13:\"view invoices\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:6;i:5;i:9;}}i:14;a:4:{s:1:\"a\";i:15;s:1:\"b\";s:13:\"view products\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:7;i:5;i:8;}}i:15;a:4:{s:1:\"a\";i:16;s:1:\"b\";s:12:\"view reports\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:7:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:7;i:5;i:4;i:6;i:6;}}i:16;a:4:{s:1:\"a\";i:17;s:1:\"b\";s:15:\"view warehouses\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:17;a:4:{s:1:\"a\";i:18;s:1:\"b\";s:14:\"view_employees\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:18;a:4:{s:1:\"a\";i:19;s:1:\"b\";s:16:\"create_employees\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:19;a:4:{s:1:\"a\";i:20;s:1:\"b\";s:16:\"update_employees\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:20;a:4:{s:1:\"a\";i:21;s:1:\"b\";s:16:\"delete_employees\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:21;a:4:{s:1:\"a\";i:22;s:1:\"b\";s:13:\"view_products\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:7;i:5;i:8;}}i:22;a:4:{s:1:\"a\";i:23;s:1:\"b\";s:15:\"create_products\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:7;}}i:23;a:4:{s:1:\"a\";i:24;s:1:\"b\";s:15:\"update_products\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:7;}}i:24;a:4:{s:1:\"a\";i:25;s:1:\"b\";s:15:\"delete_products\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:25;a:4:{s:1:\"a\";i:26;s:1:\"b\";s:14:\"view_customers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:6;i:5;i:9;}}i:26;a:4:{s:1:\"a\";i:27;s:1:\"b\";s:16:\"create_customers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:9;}}i:27;a:4:{s:1:\"a\";i:28;s:1:\"b\";s:16:\"update_customers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:9;}}i:28;a:4:{s:1:\"a\";i:29;s:1:\"b\";s:16:\"delete_customers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:29;a:4:{s:1:\"a\";i:30;s:1:\"b\";s:14:\"view_suppliers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:6;}}i:30;a:4:{s:1:\"a\";i:31;s:1:\"b\";s:16:\"create_suppliers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:31;a:4:{s:1:\"a\";i:32;s:1:\"b\";s:16:\"update_suppliers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:32;a:4:{s:1:\"a\";i:33;s:1:\"b\";s:16:\"delete_suppliers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:33;a:4:{s:1:\"a\";i:34;s:1:\"b\";s:10:\"view_sites\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:34;a:4:{s:1:\"a\";i:35;s:1:\"b\";s:12:\"create_sites\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:35;a:4:{s:1:\"a\";i:36;s:1:\"b\";s:12:\"update_sites\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:36;a:4:{s:1:\"a\";i:37;s:1:\"b\";s:12:\"delete_sites\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:37;a:4:{s:1:\"a\";i:38;s:1:\"b\";s:15:\"department.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;i:5;i:4;}}i:38;a:4:{s:1:\"a\";i:39;s:1:\"b\";s:17:\"department.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;i:5;i:4;}}i:39;a:4:{s:1:\"a\";i:40;s:1:\"b\";s:15:\"department.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;i:5;i:4;}}i:40;a:4:{s:1:\"a\";i:41;s:1:\"b\";s:17:\"department.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;}}i:41;a:4:{s:1:\"a\";i:42;s:1:\"b\";s:16:\"designation.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;i:5;i:4;}}i:42;a:4:{s:1:\"a\";i:43;s:1:\"b\";s:18:\"designation.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;i:5;i:4;}}i:43;a:4:{s:1:\"a\";i:44;s:1:\"b\";s:16:\"designation.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;i:5;i:4;}}i:44;a:4:{s:1:\"a\";i:45;s:1:\"b\";s:18:\"designation.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;}}i:45;a:4:{s:1:\"a\";i:46;s:1:\"b\";s:13:\"employee.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:7:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;i:5;i:7;i:6;i:4;}}i:46;a:4:{s:1:\"a\";i:47;s:1:\"b\";s:15:\"employee.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;i:5;i:4;}}i:47;a:4:{s:1:\"a\";i:48;s:1:\"b\";s:13:\"employee.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;i:5;i:4;}}i:48;a:4:{s:1:\"a\";i:49;s:1:\"b\";s:15:\"employee.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;}}i:49;a:4:{s:1:\"a\";i:50;s:1:\"b\";s:23:\"employee.assign-manager\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:50;a:4:{s:1:\"a\";i:51;s:1:\"b\";s:20:\"employee.assign-role\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:51;a:4:{s:1:\"a\";i:52;s:1:\"b\";s:15:\"view_categories\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:8;}}i:52;a:4:{s:1:\"a\";i:53;s:1:\"b\";s:17:\"create_categories\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:53;a:4:{s:1:\"a\";i:54;s:1:\"b\";s:17:\"update_categories\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:54;a:4:{s:1:\"a\";i:55;s:1:\"b\";s:17:\"delete_categories\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:55;a:4:{s:1:\"a\";i:56;s:1:\"b\";s:15:\"view_attendance\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:56;a:4:{s:1:\"a\";i:57;s:1:\"b\";s:17:\"create_attendance\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:57;a:4:{s:1:\"a\";i:58;s:1:\"b\";s:17:\"update_attendance\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:58;a:4:{s:1:\"a\";i:59;s:1:\"b\";s:14:\"view_inventory\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:7;i:5;i:8;}}i:59;a:4:{s:1:\"a\";i:60;s:1:\"b\";s:16:\"manage_inventory\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:7;i:5;i:8;}}i:60;a:4:{s:1:\"a\";i:61;s:1:\"b\";s:13:\"view_invoices\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:6;i:5;i:9;}}i:61;a:4:{s:1:\"a\";i:62;s:1:\"b\";s:15:\"create_invoices\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:6;i:5;i:9;}}i:62;a:4:{s:1:\"a\";i:63;s:1:\"b\";s:15:\"update_invoices\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:6;}}i:63;a:4:{s:1:\"a\";i:64;s:1:\"b\";s:15:\"delete_invoices\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:64;a:4:{s:1:\"a\";i:65;s:1:\"b\";s:13:\"view_payments\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:6;}}i:65;a:4:{s:1:\"a\";i:66;s:1:\"b\";s:15:\"create_payments\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:6;}}i:66;a:4:{s:1:\"a\";i:67;s:1:\"b\";s:12:\"view_payroll\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;i:5;i:6;}}i:67;a:4:{s:1:\"a\";i:68;s:1:\"b\";s:14:\"manage_payroll\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;i:5;i:6;}}i:68;a:4:{s:1:\"a\";i:69;s:1:\"b\";s:11:\"view_leaves\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:69;a:4:{s:1:\"a\";i:70;s:1:\"b\";s:13:\"create_leaves\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:70;a:4:{s:1:\"a\";i:71;s:1:\"b\";s:17:\"view_sales_orders\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:6;i:5;i:9;}}i:71;a:4:{s:1:\"a\";i:72;s:1:\"b\";s:19:\"create_sales_orders\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:9;}}i:72;a:4:{s:1:\"a\";i:73;s:1:\"b\";s:20:\"view_purchase_orders\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:6;}}i:73;a:4:{s:1:\"a\";i:74;s:1:\"b\";s:22:\"create_purchase_orders\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:74;a:4:{s:1:\"a\";i:75;s:1:\"b\";s:12:\"manage_roles\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:75;a:4:{s:1:\"a\";i:76;s:1:\"b\";s:18:\"manage_permissions\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:76;a:4:{s:1:\"a\";i:77;s:1:\"b\";s:12:\"manage_users\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:77;a:4:{s:1:\"a\";i:78;s:1:\"b\";s:13:\"document.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:78;a:4:{s:1:\"a\";i:79;s:1:\"b\";s:15:\"document.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:79;a:4:{s:1:\"a\";i:80;s:1:\"b\";s:13:\"document.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:80;a:4:{s:1:\"a\";i:81;s:1:\"b\";s:15:\"document.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:81;a:4:{s:1:\"a\";i:82;s:1:\"b\";s:17:\"document.download\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:82;a:4:{s:1:\"a\";i:83;s:1:\"b\";s:16:\"document.preview\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:83;a:4:{s:1:\"a\";i:84;s:1:\"b\";s:22:\"document.manage-expiry\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:84;a:4:{s:1:\"a\";i:85;s:1:\"b\";s:9:\"site.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:12;i:3;i:1;i:4;i:2;}}i:85;a:4:{s:1:\"a\";i:86;s:1:\"b\";s:11:\"site.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:86;a:4:{s:1:\"a\";i:87;s:1:\"b\";s:9:\"site.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:87;a:4:{s:1:\"a\";i:88;s:1:\"b\";s:11:\"site.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:88;a:4:{s:1:\"a\";i:89;s:1:\"b\";s:11:\"site.assign\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:89;a:4:{s:1:\"a\";i:90;s:1:\"b\";s:13:\"site.transfer\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:90;a:4:{s:1:\"a\";i:91;s:1:\"b\";s:17:\"site.history.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:91;a:4:{s:1:\"a\";i:92;s:1:\"b\";s:17:\"delete_attendance\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:92;a:4:{s:1:\"a\";i:93;s:1:\"b\";s:15:\"attendance.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:14:{i:0;i:10;i:1;i:11;i:2;i:12;i:3;i:13;i:4;i:14;i:5;i:15;i:6;i:16;i:7;i:17;i:8;i:19;i:9;i:20;i:10;i:22;i:11;i:1;i:12;i:2;i:13;i:4;}}i:93;a:4:{s:1:\"a\";i:94;s:1:\"b\";s:17:\"attendance.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:10:{i:0;i:10;i:1;i:11;i:2;i:14;i:3;i:15;i:4;i:16;i:5;i:17;i:6;i:22;i:7;i:1;i:8;i:2;i:9;i:4;}}i:94;a:4:{s:1:\"a\";i:95;s:1:\"b\";s:15:\"attendance.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;i:5;i:4;}}i:95;a:4:{s:1:\"a\";i:96;s:1:\"b\";s:17:\"attendance.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;i:5;i:4;}}i:96;a:4:{s:1:\"a\";i:97;s:1:\"b\";s:18:\"attendance.checkin\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:97;a:4:{s:1:\"a\";i:98;s:1:\"b\";s:19:\"attendance.checkout\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:98;a:4:{s:1:\"a\";i:99;s:1:\"b\";s:10:\"shift.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:8:{i:0;i:10;i:1;i:11;i:2;i:12;i:3;i:13;i:4;i:22;i:5;i:1;i:6;i:2;i:7;i:4;}}i:99;a:4:{s:1:\"a\";i:100;s:1:\"b\";s:12:\"shift.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;i:5;i:4;}}i:100;a:4:{s:1:\"a\";i:101;s:1:\"b\";s:10:\"shift.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;i:5;i:4;}}i:101;a:4:{s:1:\"a\";i:102;s:1:\"b\";s:12:\"shift.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;i:5;i:4;}}i:102;a:4:{s:1:\"a\";i:103;s:1:\"b\";s:17:\"daily-report.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:12:{i:0;i:10;i:1;i:11;i:2;i:12;i:3;i:13;i:4;i:14;i:5;i:15;i:6;i:16;i:7;i:17;i:8;i:22;i:9;i:1;i:10;i:2;i:11;i:4;}}i:103;a:4:{s:1:\"a\";i:104;s:1:\"b\";s:19:\"daily-report.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:7:{i:0;i:10;i:1;i:11;i:2;i:12;i:3;i:22;i:4;i:1;i:5;i:2;i:6;i:4;}}i:104;a:4:{s:1:\"a\";i:105;s:1:\"b\";s:17:\"daily-report.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;i:5;i:4;}}i:105;a:4:{s:1:\"a\";i:106;s:1:\"b\";s:19:\"daily-report.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;i:5;i:4;}}i:106;a:4:{s:1:\"a\";i:107;s:1:\"b\";s:19:\"daily-report.submit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:107;a:4:{s:1:\"a\";i:108;s:1:\"b\";s:20:\"daily-report.approve\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:108;a:4:{s:1:\"a\";i:109;s:1:\"b\";s:19:\"daily-report.reject\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:109;a:4:{s:1:\"a\";i:110;s:1:\"b\";s:19:\"daily-report.rework\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:110;a:4:{s:1:\"a\";i:111;s:1:\"b\";s:24:\"daily-report.report.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;i:4;i:4;}}i:111;a:4:{s:1:\"a\";i:112;s:1:\"b\";s:10:\"leave.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;}}i:112;a:4:{s:1:\"a\";i:113;s:1:\"b\";s:12:\"leave.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;}}i:113;a:4:{s:1:\"a\";i:114;s:1:\"b\";s:10:\"leave.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;}}i:114;a:4:{s:1:\"a\";i:115;s:1:\"b\";s:12:\"leave.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:1;i:4;i:2;}}i:115;a:4:{s:1:\"a\";i:116;s:1:\"b\";s:13:\"leave.approve\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:116;a:4:{s:1:\"a\";i:117;s:1:\"b\";s:12:\"leave.reject\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:117;a:4:{s:1:\"a\";i:118;s:1:\"b\";s:12:\"leave.cancel\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:118;a:4:{s:1:\"a\";i:119;s:1:\"b\";s:18:\"leave.balance.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:119;a:4:{s:1:\"a\";i:120;s:1:\"b\";s:15:\"leave-type.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:120;a:4:{s:1:\"a\";i:121;s:1:\"b\";s:17:\"leave-type.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:121;a:4:{s:1:\"a\";i:122;s:1:\"b\";s:15:\"leave-type.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:122;a:4:{s:1:\"a\";i:123;s:1:\"b\";s:17:\"leave-type.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:1;i:3;i:2;}}i:123;a:4:{s:1:\"a\";i:124;s:1:\"b\";s:9:\"user.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:23;}}i:124;a:4:{s:1:\"a\";i:125;s:1:\"b\";s:11:\"user.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:23;}}i:125;a:4:{s:1:\"a\";i:126;s:1:\"b\";s:9:\"user.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:23;}}i:126;a:4:{s:1:\"a\";i:127;s:1:\"b\";s:11:\"user.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:10;i:1;i:23;}}i:127;a:4:{s:1:\"a\";i:128;s:1:\"b\";s:9:\"role.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:23;}}i:128;a:4:{s:1:\"a\";i:129;s:1:\"b\";s:11:\"role.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:23;}}i:129;a:4:{s:1:\"a\";i:130;s:1:\"b\";s:9:\"role.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:23;}}i:130;a:4:{s:1:\"a\";i:131;s:1:\"b\";s:11:\"role.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:23;}}i:131;a:4:{s:1:\"a\";i:132;s:1:\"b\";s:15:\"permission.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:23;}}i:132;a:4:{s:1:\"a\";i:133;s:1:\"b\";s:17:\"permission.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:23;}}i:133;a:4:{s:1:\"a\";i:134;s:1:\"b\";s:15:\"permission.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:23;}}i:134;a:4:{s:1:\"a\";i:135;s:1:\"b\";s:17:\"permission.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:23;}}i:135;a:4:{s:1:\"a\";i:136;s:1:\"b\";s:14:\"inventory.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:12;i:3;i:21;}}i:136;a:4:{s:1:\"a\";i:137;s:1:\"b\";s:16:\"inventory.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:21;}}i:137;a:4:{s:1:\"a\";i:138;s:1:\"b\";s:14:\"inventory.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:21;}}i:138;a:4:{s:1:\"a\";i:139;s:1:\"b\";s:16:\"inventory.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:21;}}i:139;a:4:{s:1:\"a\";i:140;s:1:\"b\";s:14:\"warehouse.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:21;}}i:140;a:4:{s:1:\"a\";i:141;s:1:\"b\";s:16:\"warehouse.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:21;}}i:141;a:4:{s:1:\"a\";i:142;s:1:\"b\";s:14:\"warehouse.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:21;}}i:142;a:4:{s:1:\"a\";i:143;s:1:\"b\";s:16:\"warehouse.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:21;}}i:143;a:4:{s:1:\"a\";i:144;s:1:\"b\";s:12:\"product.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:12;i:3;i:19;i:4;i:20;i:5;i:21;}}i:144;a:4:{s:1:\"a\";i:145;s:1:\"b\";s:14:\"product.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:10;i:1;i:11;}}i:145;a:4:{s:1:\"a\";i:146;s:1:\"b\";s:12:\"product.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:10;i:1;i:11;}}i:146;a:4:{s:1:\"a\";i:147;s:1:\"b\";s:14:\"product.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:10;i:1;i:11;}}i:147;a:4:{s:1:\"a\";i:148;s:1:\"b\";s:13:\"customer.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:18;}}i:148;a:4:{s:1:\"a\";i:149;s:1:\"b\";s:15:\"customer.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:10;i:1;i:11;}}i:149;a:4:{s:1:\"a\";i:150;s:1:\"b\";s:13:\"customer.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:10;i:1;i:11;}}i:150;a:4:{s:1:\"a\";i:151;s:1:\"b\";s:15:\"customer.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:10;i:1;i:11;}}i:151;a:4:{s:1:\"a\";i:152;s:1:\"b\";s:16:\"sales-order.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:18;}}i:152;a:4:{s:1:\"a\";i:153;s:1:\"b\";s:18:\"sales-order.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:10;i:1;i:11;}}i:153;a:4:{s:1:\"a\";i:154;s:1:\"b\";s:16:\"sales-order.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:10;i:1;i:11;}}i:154;a:4:{s:1:\"a\";i:155;s:1:\"b\";s:18:\"sales-order.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:10;i:1;i:11;}}i:155;a:4:{s:1:\"a\";i:156;s:1:\"b\";s:12:\"invoice.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:18;}}i:156;a:4:{s:1:\"a\";i:157;s:1:\"b\";s:14:\"invoice.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:18;}}i:157;a:4:{s:1:\"a\";i:158;s:1:\"b\";s:12:\"invoice.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:18;}}i:158;a:4:{s:1:\"a\";i:159;s:1:\"b\";s:14:\"invoice.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:18;}}i:159;a:4:{s:1:\"a\";i:160;s:1:\"b\";s:19:\"purchase-order.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:18;}}i:160;a:4:{s:1:\"a\";i:161;s:1:\"b\";s:21:\"purchase-order.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:10;i:1;i:11;}}i:161;a:4:{s:1:\"a\";i:162;s:1:\"b\";s:19:\"purchase-order.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:10;i:1;i:11;}}i:162;a:4:{s:1:\"a\";i:163;s:1:\"b\";s:21:\"purchase-order.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:10;i:1;i:11;}}i:163;a:4:{s:1:\"a\";i:164;s:1:\"b\";s:11:\"report.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:18;i:3;i:22;}}i:164;a:4:{s:1:\"a\";i:165;s:1:\"b\";s:13:\"report.export\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:18;}}i:165;a:4:{s:1:\"a\";i:166;s:1:\"b\";s:14:\"dashboard.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:14:{i:0;i:10;i:1;i:11;i:2;i:12;i:3;i:13;i:4;i:14;i:5;i:15;i:6;i:16;i:7;i:17;i:8;i:18;i:9;i:19;i:10;i:20;i:11;i:21;i:12;i:22;i:13;i:23;}}i:166;a:4:{s:1:\"a\";i:167;s:1:\"b\";s:12:\"payroll.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:18;i:3;i:22;i:4;i:6;}}i:167;a:4:{s:1:\"a\";i:168;s:1:\"b\";s:14:\"payroll.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:22;}}i:168;a:4:{s:1:\"a\";i:169;s:1:\"b\";s:16:\"payroll.generate\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:6;}}i:169;a:4:{s:1:\"a\";i:170;s:1:\"b\";s:15:\"payroll.approve\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:18;}}i:170;a:4:{s:1:\"a\";i:171;s:1:\"b\";s:12:\"payroll.lock\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:18;}}i:171;a:4:{s:1:\"a\";i:172;s:1:\"b\";s:11:\"payroll.pay\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:18;}}i:172;a:4:{s:1:\"a\";i:173;s:1:\"b\";s:14:\"payroll.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:22;}}i:173;a:4:{s:1:\"a\";i:174;s:1:\"b\";s:12:\"payslip.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:22;}}i:174;a:4:{s:1:\"a\";i:175;s:1:\"b\";s:16:\"payslip.download\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:22;}}i:175;a:4:{s:1:\"a\";i:176;s:1:\"b\";s:21:\"salary-structure.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:6;}}i:176;a:4:{s:1:\"a\";i:177;s:1:\"b\";s:23:\"salary-structure.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:22;}}i:177;a:4:{s:1:\"a\";i:178;s:1:\"b\";s:21:\"salary-structure.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:22;}}i:178;a:4:{s:1:\"a\";i:179;s:1:\"b\";s:23:\"salary-structure.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:22;}}i:179;a:4:{s:1:\"a\";i:180;s:1:\"b\";s:13:\"category.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:21;}}i:180;a:4:{s:1:\"a\";i:181;s:1:\"b\";s:15:\"category.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:21;}}i:181;a:4:{s:1:\"a\";i:182;s:1:\"b\";s:13:\"category.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:21;}}i:182;a:4:{s:1:\"a\";i:183;s:1:\"b\";s:15:\"category.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:21;}}i:183;a:4:{s:1:\"a\";i:184;s:1:\"b\";s:13:\"supplier.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:18;}}i:184;a:4:{s:1:\"a\";i:185;s:1:\"b\";s:15:\"supplier.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:10;i:1;i:11;}}i:185;a:4:{s:1:\"a\";i:186;s:1:\"b\";s:13:\"supplier.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:10;i:1;i:11;}}i:186;a:4:{s:1:\"a\";i:187;s:1:\"b\";s:15:\"supplier.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:10;i:1;i:11;}}i:187;a:4:{s:1:\"a\";i:188;s:1:\"b\";s:22:\"attendance.geo.checkin\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:188;a:4:{s:1:\"a\";i:189;s:1:\"b\";s:23:\"attendance.geo.checkout\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:189;a:4:{s:1:\"a\";i:190;s:1:\"b\";s:24:\"attendance.location.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}i:190;a:4:{s:1:\"a\";i:191;s:1:\"b\";s:25:\"attendance.location.audit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:1;i:1;i:2;}}}s:5:\"roles\";a:23:{i:0;a:3:{s:1:\"a\";i:3;s:1:\"b\";s:7:\"Manager\";s:1:\"c\";s:3:\"web\";}i:1;a:3:{s:1:\"a\";i:5;s:1:\"b\";s:8:\"Employee\";s:1:\"c\";s:3:\"web\";}i:2;a:3:{s:1:\"a\";i:10;s:1:\"b\";s:12:\"System Admin\";s:1:\"c\";s:3:\"web\";}i:3;a:3:{s:1:\"a\";i:11;s:1:\"b\";s:15:\"General Manager\";s:1:\"c\";s:3:\"web\";}i:4;a:3:{s:1:\"a\";i:1;s:1:\"b\";s:11:\"Super Admin\";s:1:\"c\";s:3:\"web\";}i:5;a:3:{s:1:\"a\";i:2;s:1:\"b\";s:5:\"Admin\";s:1:\"c\";s:3:\"web\";}i:6;a:3:{s:1:\"a\";i:9;s:1:\"b\";s:15:\"Sales Executive\";s:1:\"c\";s:3:\"web\";}i:7;a:3:{s:1:\"a\";i:7;s:1:\"b\";s:17:\"Warehouse Manager\";s:1:\"c\";s:3:\"web\";}i:8;a:3:{s:1:\"a\";i:4;s:1:\"b\";s:2:\"HR\";s:1:\"c\";s:3:\"web\";}i:9;a:3:{s:1:\"a\";i:8;s:1:\"b\";s:15:\"Inventory Staff\";s:1:\"c\";s:3:\"web\";}i:10;a:3:{s:1:\"a\";i:6;s:1:\"b\";s:10:\"Accountant\";s:1:\"c\";s:3:\"web\";}i:11;a:3:{s:1:\"a\";i:22;s:1:\"b\";s:10:\"HR Manager\";s:1:\"c\";s:3:\"web\";}i:12;a:3:{s:1:\"a\";i:12;s:1:\"b\";s:18:\"Production Manager\";s:1:\"c\";s:3:\"web\";}i:13;a:3:{s:1:\"a\";i:13;s:1:\"b\";s:19:\"Workshop Supervisor\";s:1:\"c\";s:3:\"web\";}i:14;a:3:{s:1:\"a\";i:14;s:1:\"b\";s:6:\"Fitter\";s:1:\"c\";s:3:\"web\";}i:15;a:3:{s:1:\"a\";i:15;s:1:\"b\";s:6:\"Welder\";s:1:\"c\";s:3:\"web\";}i:16;a:3:{s:1:\"a\";i:16;s:1:\"b\";s:11:\"Electrician\";s:1:\"c\";s:3:\"web\";}i:17;a:3:{s:1:\"a\";i:17;s:1:\"b\";s:6:\"Helper\";s:1:\"c\";s:3:\"web\";}i:18;a:3:{s:1:\"a\";i:19;s:1:\"b\";s:14:\"Design Manager\";s:1:\"c\";s:3:\"web\";}i:19;a:3:{s:1:\"a\";i:20;s:1:\"b\";s:8:\"Designer\";s:1:\"c\";s:3:\"web\";}i:20;a:3:{s:1:\"a\";i:23;s:1:\"b\";s:10:\"IT Manager\";s:1:\"c\";s:3:\"web\";}i:21;a:3:{s:1:\"a\";i:21;s:1:\"b\";s:13:\"Store Manager\";s:1:\"c\";s:3:\"web\";}i:22;a:3:{s:1:\"a\";i:18;s:1:\"b\";s:15:\"Finance Manager\";s:1:\"c\";s:3:\"web\";}}}', 1781952158);
+('rfi-management-suite-cache-spatie.permission.cache', 'a:3:{s:5:\"alias\";a:4:{s:1:\"a\";s:2:\"id\";s:1:\"b\";s:4:\"name\";s:1:\"c\";s:10:\"guard_name\";s:1:\"r\";s:5:\"roles\";}s:11:\"permissions\";a:220:{i:0;a:4:{s:1:\"a\";i:1;s:1:\"b\";s:12:\"create sales\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:1;a:4:{s:1:\"a\";i:2;s:1:\"b\";s:16:\"manage employees\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:4;}}i:2;a:4:{s:1:\"a\";i:3;s:1:\"b\";s:16:\"manage inventory\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:3;a:4:{s:1:\"a\";i:4;s:1:\"b\";s:14:\"manage payroll\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:4;}}i:4;a:4:{s:1:\"a\";i:5;s:1:\"b\";s:16:\"manage purchases\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:5;a:4:{s:1:\"a\";i:6;s:1:\"b\";s:12:\"manage sales\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:6;a:4:{s:1:\"a\";i:7;s:1:\"b\";s:15:\"manage settings\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:7;a:4:{s:1:\"a\";i:8;s:1:\"b\";s:16:\"manage suppliers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:8;a:4:{s:1:\"a\";i:9;s:1:\"b\";s:16:\"manage transfers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:21;}}i:9;a:4:{s:1:\"a\";i:10;s:1:\"b\";s:15:\"view attendance\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:4;}}i:10;a:4:{s:1:\"a\";i:11;s:1:\"b\";s:15:\"view categories\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:11;a:4:{s:1:\"a\";i:12;s:1:\"b\";s:14:\"view dashboard\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:8:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:3;i:4;i:21;i:5;i:6;i:6;i:4;i:7;i:5;}}i:12;a:4:{s:1:\"a\";i:13;s:1:\"b\";s:14:\"view inventory\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:13;a:4:{s:1:\"a\";i:14;s:1:\"b\";s:13:\"view invoices\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:14;a:4:{s:1:\"a\";i:15;s:1:\"b\";s:13:\"view products\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:15;a:4:{s:1:\"a\";i:16;s:1:\"b\";s:12:\"view reports\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:3;i:4;i:6;i:5;i:4;}}i:16;a:4:{s:1:\"a\";i:17;s:1:\"b\";s:15:\"view warehouses\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:17;a:4:{s:1:\"a\";i:18;s:1:\"b\";s:14:\"view_employees\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:3;i:4;i:6;}}i:18;a:4:{s:1:\"a\";i:19;s:1:\"b\";s:16:\"create_employees\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:19;a:4:{s:1:\"a\";i:20;s:1:\"b\";s:16:\"update_employees\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:20;a:4:{s:1:\"a\";i:21;s:1:\"b\";s:16:\"delete_employees\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:21;a:4:{s:1:\"a\";i:22;s:1:\"b\";s:13:\"view_products\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:3;i:4;i:21;i:5;i:6;}}i:22;a:4:{s:1:\"a\";i:23;s:1:\"b\";s:15:\"create_products\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:21;}}i:23;a:4:{s:1:\"a\";i:24;s:1:\"b\";s:15:\"update_products\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:21;}}i:24;a:4:{s:1:\"a\";i:25;s:1:\"b\";s:15:\"delete_products\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:25;a:4:{s:1:\"a\";i:26;s:1:\"b\";s:14:\"view_customers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:6;}}i:26;a:4:{s:1:\"a\";i:27;s:1:\"b\";s:16:\"create_customers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:27;a:4:{s:1:\"a\";i:28;s:1:\"b\";s:16:\"update_customers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:28;a:4:{s:1:\"a\";i:29;s:1:\"b\";s:16:\"delete_customers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:29;a:4:{s:1:\"a\";i:30;s:1:\"b\";s:14:\"view_suppliers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:6;}}i:30;a:4:{s:1:\"a\";i:31;s:1:\"b\";s:16:\"create_suppliers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:31;a:4:{s:1:\"a\";i:32;s:1:\"b\";s:16:\"update_suppliers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:32;a:4:{s:1:\"a\";i:33;s:1:\"b\";s:16:\"delete_suppliers\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:33;a:4:{s:1:\"a\";i:34;s:1:\"b\";s:10:\"view_sites\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:3;i:4;i:4;}}i:34;a:4:{s:1:\"a\";i:35;s:1:\"b\";s:12:\"create_sites\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:4;}}i:35;a:4:{s:1:\"a\";i:36;s:1:\"b\";s:12:\"update_sites\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:4;}}i:36;a:4:{s:1:\"a\";i:37;s:1:\"b\";s:12:\"delete_sites\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:37;a:4:{s:1:\"a\";i:38;s:1:\"b\";s:15:\"department.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:2;i:4;i:4;}}i:38;a:4:{s:1:\"a\";i:39;s:1:\"b\";s:17:\"department.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:2;i:4;i:4;}}i:39;a:4:{s:1:\"a\";i:40;s:1:\"b\";s:15:\"department.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:2;i:4;i:4;}}i:40;a:4:{s:1:\"a\";i:41;s:1:\"b\";s:17:\"department.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:2;}}i:41;a:4:{s:1:\"a\";i:42;s:1:\"b\";s:16:\"designation.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:2;i:4;i:4;}}i:42;a:4:{s:1:\"a\";i:43;s:1:\"b\";s:18:\"designation.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:2;i:4;i:4;}}i:43;a:4:{s:1:\"a\";i:44;s:1:\"b\";s:16:\"designation.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:2;i:4;i:4;}}i:44;a:4:{s:1:\"a\";i:45;s:1:\"b\";s:18:\"designation.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:2;}}i:45;a:4:{s:1:\"a\";i:46;s:1:\"b\";s:13:\"employee.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:8:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:2;i:4;i:3;i:5;i:21;i:6;i:6;i:7;i:4;}}i:46;a:4:{s:1:\"a\";i:47;s:1:\"b\";s:15:\"employee.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:2;i:4;i:4;}}i:47;a:4:{s:1:\"a\";i:48;s:1:\"b\";s:13:\"employee.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:2;i:4;i:4;}}i:48;a:4:{s:1:\"a\";i:49;s:1:\"b\";s:15:\"employee.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:2;}}i:49;a:4:{s:1:\"a\";i:50;s:1:\"b\";s:23:\"employee.assign-manager\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:50;a:4:{s:1:\"a\";i:51;s:1:\"b\";s:20:\"employee.assign-role\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:51;a:4:{s:1:\"a\";i:52;s:1:\"b\";s:15:\"view_categories\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:3;i:4;i:21;i:5;i:6;}}i:52;a:4:{s:1:\"a\";i:53;s:1:\"b\";s:17:\"create_categories\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:21;}}i:53;a:4:{s:1:\"a\";i:54;s:1:\"b\";s:17:\"update_categories\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:21;}}i:54;a:4:{s:1:\"a\";i:55;s:1:\"b\";s:17:\"delete_categories\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:55;a:4:{s:1:\"a\";i:56;s:1:\"b\";s:15:\"view_attendance\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:3;i:4;i:4;}}i:56;a:4:{s:1:\"a\";i:57;s:1:\"b\";s:17:\"create_attendance\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:4;}}i:57;a:4:{s:1:\"a\";i:58;s:1:\"b\";s:17:\"update_attendance\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:4;}}i:58;a:4:{s:1:\"a\";i:59;s:1:\"b\";s:14:\"view_inventory\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:3;i:4;i:21;}}i:59;a:4:{s:1:\"a\";i:60;s:1:\"b\";s:16:\"manage_inventory\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:21;}}i:60;a:4:{s:1:\"a\";i:61;s:1:\"b\";s:13:\"view_invoices\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:6;}}i:61;a:4:{s:1:\"a\";i:62;s:1:\"b\";s:15:\"create_invoices\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:6;}}i:62;a:4:{s:1:\"a\";i:63;s:1:\"b\";s:15:\"update_invoices\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:6;}}i:63;a:4:{s:1:\"a\";i:64;s:1:\"b\";s:15:\"delete_invoices\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:64;a:4:{s:1:\"a\";i:65;s:1:\"b\";s:13:\"view_payments\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:6;}}i:65;a:4:{s:1:\"a\";i:66;s:1:\"b\";s:15:\"create_payments\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:6;}}i:66;a:4:{s:1:\"a\";i:67;s:1:\"b\";s:12:\"view_payroll\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:6;i:4;i:4;i:5;i:5;}}i:67;a:4:{s:1:\"a\";i:68;s:1:\"b\";s:14:\"manage_payroll\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:6;i:4;i:4;}}i:68;a:4:{s:1:\"a\";i:69;s:1:\"b\";s:11:\"view_leaves\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:4;}}i:69;a:4:{s:1:\"a\";i:70;s:1:\"b\";s:13:\"create_leaves\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:4;}}i:70;a:4:{s:1:\"a\";i:71;s:1:\"b\";s:17:\"view_sales_orders\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:21;i:4;i:6;}}i:71;a:4:{s:1:\"a\";i:72;s:1:\"b\";s:19:\"create_sales_orders\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:21;i:4;i:6;}}i:72;a:4:{s:1:\"a\";i:73;s:1:\"b\";s:20:\"view_purchase_orders\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:21;i:4;i:6;}}i:73;a:4:{s:1:\"a\";i:74;s:1:\"b\";s:22:\"create_purchase_orders\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:21;i:4;i:6;}}i:74;a:4:{s:1:\"a\";i:75;s:1:\"b\";s:12:\"manage_roles\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:75;a:4:{s:1:\"a\";i:76;s:1:\"b\";s:18:\"manage_permissions\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:76;a:4:{s:1:\"a\";i:77;s:1:\"b\";s:12:\"manage_users\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:77;a:4:{s:1:\"a\";i:78;s:1:\"b\";s:13:\"document.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:4;}}i:78;a:4:{s:1:\"a\";i:79;s:1:\"b\";s:15:\"document.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:4;}}i:79;a:4:{s:1:\"a\";i:80;s:1:\"b\";s:13:\"document.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:4;}}i:80;a:4:{s:1:\"a\";i:81;s:1:\"b\";s:15:\"document.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:4;}}i:81;a:4:{s:1:\"a\";i:82;s:1:\"b\";s:17:\"document.download\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:4;}}i:82;a:4:{s:1:\"a\";i:83;s:1:\"b\";s:16:\"document.preview\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:4;}}i:83;a:4:{s:1:\"a\";i:84;s:1:\"b\";s:22:\"document.manage-expiry\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:4;}}i:84;a:4:{s:1:\"a\";i:85;s:1:\"b\";s:9:\"site.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:12;i:3;i:2;i:4;i:3;}}i:85;a:4:{s:1:\"a\";i:86;s:1:\"b\";s:11:\"site.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:86;a:4:{s:1:\"a\";i:87;s:1:\"b\";s:9:\"site.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:87;a:4:{s:1:\"a\";i:88;s:1:\"b\";s:11:\"site.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:88;a:4:{s:1:\"a\";i:89;s:1:\"b\";s:11:\"site.assign\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:89;a:4:{s:1:\"a\";i:90;s:1:\"b\";s:13:\"site.transfer\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:90;a:4:{s:1:\"a\";i:91;s:1:\"b\";s:17:\"site.history.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:91;a:4:{s:1:\"a\";i:92;s:1:\"b\";s:17:\"delete_attendance\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:4;}}i:92;a:4:{s:1:\"a\";i:93;s:1:\"b\";s:15:\"attendance.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:15:{i:0;i:10;i:1;i:11;i:2;i:12;i:3;i:13;i:4;i:14;i:5;i:15;i:6;i:16;i:7;i:17;i:8;i:19;i:9;i:20;i:10;i:22;i:11;i:2;i:12;i:3;i:13;i:4;i:14;i:5;}}i:93;a:4:{s:1:\"a\";i:94;s:1:\"b\";s:17:\"attendance.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:8:{i:0;i:10;i:1;i:11;i:2;i:14;i:3;i:15;i:4;i:16;i:5;i:17;i:6;i:22;i:7;i:4;}}i:94;a:4:{s:1:\"a\";i:95;s:1:\"b\";s:15:\"attendance.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:4;}}i:95;a:4:{s:1:\"a\";i:96;s:1:\"b\";s:17:\"attendance.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:4;}}i:96;a:4:{s:1:\"a\";i:97;s:1:\"b\";s:18:\"attendance.checkin\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:4;i:3;i:5;}}i:97;a:4:{s:1:\"a\";i:98;s:1:\"b\";s:19:\"attendance.checkout\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:4;i:3;i:5;}}i:98;a:4:{s:1:\"a\";i:99;s:1:\"b\";s:10:\"shift.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:7:{i:0;i:10;i:1;i:11;i:2;i:12;i:3;i:13;i:4;i:22;i:5;i:2;i:6;i:4;}}i:99;a:4:{s:1:\"a\";i:100;s:1:\"b\";s:12:\"shift.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:2;i:4;i:4;}}i:100;a:4:{s:1:\"a\";i:101;s:1:\"b\";s:10:\"shift.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:2;i:4;i:4;}}i:101;a:4:{s:1:\"a\";i:102;s:1:\"b\";s:12:\"shift.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:2;i:4;i:4;}}i:102;a:4:{s:1:\"a\";i:103;s:1:\"b\";s:17:\"daily-report.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:13:{i:0;i:10;i:1;i:11;i:2;i:12;i:3;i:13;i:4;i:14;i:5;i:15;i:6;i:16;i:7;i:17;i:8;i:22;i:9;i:2;i:10;i:3;i:11;i:4;i:12;i:5;}}i:103;a:4:{s:1:\"a\";i:104;s:1:\"b\";s:19:\"daily-report.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:7:{i:0;i:10;i:1;i:11;i:2;i:12;i:3;i:22;i:4;i:2;i:5;i:4;i:6;i:5;}}i:104;a:4:{s:1:\"a\";i:105;s:1:\"b\";s:17:\"daily-report.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:2;i:4;i:4;}}i:105;a:4:{s:1:\"a\";i:106;s:1:\"b\";s:19:\"daily-report.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:2;i:4;i:4;}}i:106;a:4:{s:1:\"a\";i:107;s:1:\"b\";s:19:\"daily-report.submit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:4;i:4;i:5;}}i:107;a:4:{s:1:\"a\";i:108;s:1:\"b\";s:20:\"daily-report.approve\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:4;}}i:108;a:4:{s:1:\"a\";i:109;s:1:\"b\";s:19:\"daily-report.reject\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:4;}}i:109;a:4:{s:1:\"a\";i:110;s:1:\"b\";s:19:\"daily-report.rework\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:4;}}i:110;a:4:{s:1:\"a\";i:111;s:1:\"b\";s:24:\"daily-report.report.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:3;i:4;i:4;}}i:111;a:4:{s:1:\"a\";i:112;s:1:\"b\";s:10:\"leave.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:7:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:2;i:4;i:3;i:5;i:4;i:6;i:5;}}i:112;a:4:{s:1:\"a\";i:113;s:1:\"b\";s:12:\"leave.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:2;i:4;i:4;i:5;i:5;}}i:113;a:4:{s:1:\"a\";i:114;s:1:\"b\";s:10:\"leave.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:2;}}i:114;a:4:{s:1:\"a\";i:115;s:1:\"b\";s:12:\"leave.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:2;}}i:115;a:4:{s:1:\"a\";i:116;s:1:\"b\";s:13:\"leave.approve\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:4;}}i:116;a:4:{s:1:\"a\";i:117;s:1:\"b\";s:12:\"leave.reject\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:4;}}i:117;a:4:{s:1:\"a\";i:118;s:1:\"b\";s:12:\"leave.cancel\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:5;}}i:118;a:4:{s:1:\"a\";i:119;s:1:\"b\";s:18:\"leave.balance.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:4;i:4;i:5;}}i:119;a:4:{s:1:\"a\";i:120;s:1:\"b\";s:15:\"leave-type.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:4;}}i:120;a:4:{s:1:\"a\";i:121;s:1:\"b\";s:17:\"leave-type.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:4;}}i:121;a:4:{s:1:\"a\";i:122;s:1:\"b\";s:15:\"leave-type.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:2;i:3;i:4;}}i:122;a:4:{s:1:\"a\";i:123;s:1:\"b\";s:17:\"leave-type.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:123;a:4:{s:1:\"a\";i:124;s:1:\"b\";s:9:\"user.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:23;i:3;i:2;}}i:124;a:4:{s:1:\"a\";i:125;s:1:\"b\";s:11:\"user.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:23;i:3;i:2;}}i:125;a:4:{s:1:\"a\";i:126;s:1:\"b\";s:9:\"user.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:23;i:3;i:2;}}i:126;a:4:{s:1:\"a\";i:127;s:1:\"b\";s:11:\"user.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:23;i:2;i:2;}}i:127;a:4:{s:1:\"a\";i:128;s:1:\"b\";s:9:\"role.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:23;i:3;i:2;}}i:128;a:4:{s:1:\"a\";i:129;s:1:\"b\";s:11:\"role.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:23;i:3;i:2;}}i:129;a:4:{s:1:\"a\";i:130;s:1:\"b\";s:9:\"role.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:23;i:3;i:2;}}i:130;a:4:{s:1:\"a\";i:131;s:1:\"b\";s:11:\"role.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:23;i:3;i:2;}}i:131;a:4:{s:1:\"a\";i:132;s:1:\"b\";s:15:\"permission.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:23;i:3;i:2;}}i:132;a:4:{s:1:\"a\";i:133;s:1:\"b\";s:17:\"permission.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:23;i:3;i:2;}}i:133;a:4:{s:1:\"a\";i:134;s:1:\"b\";s:15:\"permission.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:23;i:3;i:2;}}i:134;a:4:{s:1:\"a\";i:135;s:1:\"b\";s:17:\"permission.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:23;i:3;i:2;}}i:135;a:4:{s:1:\"a\";i:136;s:1:\"b\";s:14:\"inventory.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:12;i:3;i:2;}}i:136;a:4:{s:1:\"a\";i:137;s:1:\"b\";s:16:\"inventory.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:137;a:4:{s:1:\"a\";i:138;s:1:\"b\";s:14:\"inventory.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:138;a:4:{s:1:\"a\";i:139;s:1:\"b\";s:16:\"inventory.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:139;a:4:{s:1:\"a\";i:140;s:1:\"b\";s:14:\"warehouse.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:140;a:4:{s:1:\"a\";i:141;s:1:\"b\";s:16:\"warehouse.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:141;a:4:{s:1:\"a\";i:142;s:1:\"b\";s:14:\"warehouse.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:142;a:4:{s:1:\"a\";i:143;s:1:\"b\";s:16:\"warehouse.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:143;a:4:{s:1:\"a\";i:144;s:1:\"b\";s:12:\"product.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:6:{i:0;i:10;i:1;i:11;i:2;i:12;i:3;i:19;i:4;i:20;i:5;i:2;}}i:144;a:4:{s:1:\"a\";i:145;s:1:\"b\";s:14:\"product.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:145;a:4:{s:1:\"a\";i:146;s:1:\"b\";s:12:\"product.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:146;a:4:{s:1:\"a\";i:147;s:1:\"b\";s:14:\"product.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:147;a:4:{s:1:\"a\";i:148;s:1:\"b\";s:13:\"customer.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:18;i:3;i:2;}}i:148;a:4:{s:1:\"a\";i:149;s:1:\"b\";s:15:\"customer.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:149;a:4:{s:1:\"a\";i:150;s:1:\"b\";s:13:\"customer.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:150;a:4:{s:1:\"a\";i:151;s:1:\"b\";s:15:\"customer.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:151;a:4:{s:1:\"a\";i:152;s:1:\"b\";s:16:\"sales-order.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:18;i:3;i:2;}}i:152;a:4:{s:1:\"a\";i:153;s:1:\"b\";s:18:\"sales-order.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:153;a:4:{s:1:\"a\";i:154;s:1:\"b\";s:16:\"sales-order.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:154;a:4:{s:1:\"a\";i:155;s:1:\"b\";s:18:\"sales-order.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:155;a:4:{s:1:\"a\";i:156;s:1:\"b\";s:12:\"invoice.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:18;i:3;i:2;}}i:156;a:4:{s:1:\"a\";i:157;s:1:\"b\";s:14:\"invoice.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:18;i:3;i:2;}}i:157;a:4:{s:1:\"a\";i:158;s:1:\"b\";s:12:\"invoice.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:18;i:3;i:2;}}i:158;a:4:{s:1:\"a\";i:159;s:1:\"b\";s:14:\"invoice.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:18;i:3;i:2;}}i:159;a:4:{s:1:\"a\";i:160;s:1:\"b\";s:19:\"purchase-order.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:18;i:3;i:2;}}i:160;a:4:{s:1:\"a\";i:161;s:1:\"b\";s:21:\"purchase-order.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:161;a:4:{s:1:\"a\";i:162;s:1:\"b\";s:19:\"purchase-order.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:162;a:4:{s:1:\"a\";i:163;s:1:\"b\";s:21:\"purchase-order.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:163;a:4:{s:1:\"a\";i:164;s:1:\"b\";s:11:\"report.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:18;i:3;i:22;i:4;i:2;}}i:164;a:4:{s:1:\"a\";i:165;s:1:\"b\";s:13:\"report.export\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:18;i:3;i:2;}}i:165;a:4:{s:1:\"a\";i:166;s:1:\"b\";s:14:\"dashboard.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:14:{i:0;i:10;i:1;i:11;i:2;i:12;i:3;i:13;i:4;i:14;i:5;i:15;i:6;i:16;i:7;i:17;i:8;i:18;i:9;i:19;i:10;i:20;i:11;i:22;i:12;i:23;i:13;i:2;}}i:166;a:4:{s:1:\"a\";i:167;s:1:\"b\";s:12:\"payroll.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:18;i:3;i:22;i:4;i:2;}}i:167;a:4:{s:1:\"a\";i:168;s:1:\"b\";s:14:\"payroll.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:2;}}i:168;a:4:{s:1:\"a\";i:169;s:1:\"b\";s:16:\"payroll.generate\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:2;}}i:169;a:4:{s:1:\"a\";i:170;s:1:\"b\";s:15:\"payroll.approve\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:18;i:3;i:2;}}i:170;a:4:{s:1:\"a\";i:171;s:1:\"b\";s:12:\"payroll.lock\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:18;i:3;i:2;}}i:171;a:4:{s:1:\"a\";i:172;s:1:\"b\";s:11:\"payroll.pay\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:18;i:3;i:2;}}i:172;a:4:{s:1:\"a\";i:173;s:1:\"b\";s:14:\"payroll.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:2;}}i:173;a:4:{s:1:\"a\";i:174;s:1:\"b\";s:12:\"payslip.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:2;}}i:174;a:4:{s:1:\"a\";i:175;s:1:\"b\";s:16:\"payslip.download\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:2;}}i:175;a:4:{s:1:\"a\";i:176;s:1:\"b\";s:21:\"salary-structure.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:5:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:2;i:4;i:6;}}i:176;a:4:{s:1:\"a\";i:177;s:1:\"b\";s:23:\"salary-structure.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:2;}}i:177;a:4:{s:1:\"a\";i:178;s:1:\"b\";s:21:\"salary-structure.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:2;}}i:178;a:4:{s:1:\"a\";i:179;s:1:\"b\";s:23:\"salary-structure.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:22;i:3;i:2;}}i:179;a:4:{s:1:\"a\";i:180;s:1:\"b\";s:13:\"category.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:180;a:4:{s:1:\"a\";i:181;s:1:\"b\";s:15:\"category.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:181;a:4:{s:1:\"a\";i:182;s:1:\"b\";s:13:\"category.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:182;a:4:{s:1:\"a\";i:183;s:1:\"b\";s:15:\"category.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:183;a:4:{s:1:\"a\";i:184;s:1:\"b\";s:13:\"supplier.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:4:{i:0;i:10;i:1;i:11;i:2;i:18;i:3;i:2;}}i:184;a:4:{s:1:\"a\";i:185;s:1:\"b\";s:15:\"supplier.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:185;a:4:{s:1:\"a\";i:186;s:1:\"b\";s:13:\"supplier.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:186;a:4:{s:1:\"a\";i:187;s:1:\"b\";s:15:\"supplier.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:10;i:1;i:11;i:2;i:2;}}i:187;a:3:{s:1:\"a\";i:188;s:1:\"b\";s:22:\"attendance.geo.checkin\";s:1:\"c\";s:3:\"web\";}i:188;a:3:{s:1:\"a\";i:189;s:1:\"b\";s:23:\"attendance.geo.checkout\";s:1:\"c\";s:3:\"web\";}i:189;a:4:{s:1:\"a\";i:190;s:1:\"b\";s:24:\"attendance.location.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:2;}}i:190;a:4:{s:1:\"a\";i:191;s:1:\"b\";s:25:\"attendance.location.audit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:2;}}i:191;a:4:{s:1:\"a\";i:192;s:1:\"b\";s:12:\"view_reports\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:2;}}i:192;a:4:{s:1:\"a\";i:193;s:1:\"b\";s:14:\"create_reports\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:2;}}i:193;a:4:{s:1:\"a\";i:194;s:1:\"b\";s:12:\"edit_reports\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:2;}}i:194;a:4:{s:1:\"a\";i:195;s:1:\"b\";s:14:\"delete_reports\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:2;}}i:195;a:4:{s:1:\"a\";i:196;s:1:\"b\";s:14:\"export_reports\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:2;}}i:196;a:4:{s:1:\"a\";i:197;s:1:\"b\";s:16:\"schedule_reports\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:2;}}i:197;a:4:{s:1:\"a\";i:198;s:1:\"b\";s:24:\"inventory.locations.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:2;i:1;i:3;i:2;i:21;}}i:198;a:4:{s:1:\"a\";i:199;s:1:\"b\";s:26:\"inventory.locations.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:2;i:1;i:21;}}i:199;a:4:{s:1:\"a\";i:200;s:1:\"b\";s:24:\"inventory.locations.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:2;i:1;i:21;}}i:200;a:4:{s:1:\"a\";i:201;s:1:\"b\";s:26:\"inventory.locations.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:2;}}i:201;a:4:{s:1:\"a\";i:202;s:1:\"b\";s:20:\"inventory.units.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:2;i:1;i:3;i:2;i:21;}}i:202;a:4:{s:1:\"a\";i:203;s:1:\"b\";s:22:\"inventory.units.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:2;i:1;i:21;}}i:203;a:4:{s:1:\"a\";i:204;s:1:\"b\";s:20:\"inventory.units.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:2;i:1;i:21;}}i:204;a:4:{s:1:\"a\";i:205;s:1:\"b\";s:22:\"inventory.units.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:2;}}i:205;a:4:{s:1:\"a\";i:206;s:1:\"b\";s:26:\"inventory.conversions.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:2;i:1;i:21;}}i:206;a:4:{s:1:\"a\";i:207;s:1:\"b\";s:28:\"inventory.conversions.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:2;i:1;i:21;}}i:207;a:4:{s:1:\"a\";i:208;s:1:\"b\";s:26:\"inventory.conversions.edit\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:2;i:1;i:21;}}i:208;a:4:{s:1:\"a\";i:209;s:1:\"b\";s:28:\"inventory.conversions.delete\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:1:{i:0;i:2;}}i:209;a:4:{s:1:\"a\";i:210;s:1:\"b\";s:20:\"inventory.stock.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:2;i:1;i:3;i:2;i:21;}}i:210;a:4:{s:1:\"a\";i:211;s:1:\"b\";s:22:\"inventory.stock.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:2;i:1;i:21;}}i:211;a:4:{s:1:\"a\";i:212;s:1:\"b\";s:27:\"inventory.transactions.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:2;i:1;i:3;i:2;i:21;}}i:212;a:4:{s:1:\"a\";i:213;s:1:\"b\";s:29:\"inventory.transactions.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:2;i:1;i:21;}}i:213;a:4:{s:1:\"a\";i:214;s:1:\"b\";s:23:\"inventory.requests.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:2;i:1;i:3;i:2;i:21;}}i:214;a:4:{s:1:\"a\";i:215;s:1:\"b\";s:25:\"inventory.requests.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:2;i:1;i:21;}}i:215;a:4:{s:1:\"a\";i:216;s:1:\"b\";s:26:\"inventory.requests.approve\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:2;i:1;i:21;}}i:216;a:4:{s:1:\"a\";i:217;s:1:\"b\";s:24:\"inventory.transfers.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:2;i:1;i:3;i:2;i:21;}}i:217;a:4:{s:1:\"a\";i:218;s:1:\"b\";s:26:\"inventory.transfers.create\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:2;i:1;i:21;}}i:218;a:4:{s:1:\"a\";i:219;s:1:\"b\";s:27:\"inventory.transfers.approve\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:2:{i:0;i:2;i:1;i:21;}}i:219;a:4:{s:1:\"a\";i:220;s:1:\"b\";s:24:\"inventory.dashboard.view\";s:1:\"c\";s:3:\"web\";s:1:\"r\";a:3:{i:0;i:2;i:1;i:3;i:2;i:21;}}}s:5:\"roles\";a:19:{i:0;a:3:{s:1:\"a\";i:10;s:1:\"b\";s:12:\"System Admin\";s:1:\"c\";s:3:\"web\";}i:1;a:3:{s:1:\"a\";i:11;s:1:\"b\";s:15:\"General Manager\";s:1:\"c\";s:3:\"web\";}i:2;a:3:{s:1:\"a\";i:2;s:1:\"b\";s:5:\"Admin\";s:1:\"c\";s:3:\"web\";}i:3;a:3:{s:1:\"a\";i:4;s:1:\"b\";s:2:\"HR\";s:1:\"c\";s:3:\"web\";}i:4;a:3:{s:1:\"a\";i:21;s:1:\"b\";s:13:\"Store Manager\";s:1:\"c\";s:3:\"web\";}i:5;a:3:{s:1:\"a\";i:3;s:1:\"b\";s:7:\"Manager\";s:1:\"c\";s:3:\"web\";}i:6;a:3:{s:1:\"a\";i:6;s:1:\"b\";s:10:\"Accountant\";s:1:\"c\";s:3:\"web\";}i:7;a:3:{s:1:\"a\";i:5;s:1:\"b\";s:8:\"Employee\";s:1:\"c\";s:3:\"web\";}i:8;a:3:{s:1:\"a\";i:22;s:1:\"b\";s:10:\"HR Manager\";s:1:\"c\";s:3:\"web\";}i:9;a:3:{s:1:\"a\";i:12;s:1:\"b\";s:18:\"Production Manager\";s:1:\"c\";s:3:\"web\";}i:10;a:3:{s:1:\"a\";i:13;s:1:\"b\";s:19:\"Workshop Supervisor\";s:1:\"c\";s:3:\"web\";}i:11;a:3:{s:1:\"a\";i:14;s:1:\"b\";s:6:\"Fitter\";s:1:\"c\";s:3:\"web\";}i:12;a:3:{s:1:\"a\";i:15;s:1:\"b\";s:6:\"Welder\";s:1:\"c\";s:3:\"web\";}i:13;a:3:{s:1:\"a\";i:16;s:1:\"b\";s:11:\"Electrician\";s:1:\"c\";s:3:\"web\";}i:14;a:3:{s:1:\"a\";i:17;s:1:\"b\";s:6:\"Helper\";s:1:\"c\";s:3:\"web\";}i:15;a:3:{s:1:\"a\";i:19;s:1:\"b\";s:14:\"Design Manager\";s:1:\"c\";s:3:\"web\";}i:16;a:3:{s:1:\"a\";i:20;s:1:\"b\";s:8:\"Designer\";s:1:\"c\";s:3:\"web\";}i:17;a:3:{s:1:\"a\";i:23;s:1:\"b\";s:10:\"IT Manager\";s:1:\"c\";s:3:\"web\";}i:18;a:3:{s:1:\"a\";i:18;s:1:\"b\";s:15:\"Finance Manager\";s:1:\"c\";s:3:\"web\";}}}', 1782477496);
 
 -- --------------------------------------------------------
 
@@ -125,7 +138,6 @@ CREATE TABLE `categories` (
   `updated_at` timestamp NULL DEFAULT NULL,
   `status` varchar(255) NOT NULL DEFAULT 'Active',
   `parent_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `branch_id` bigint(20) UNSIGNED DEFAULT NULL,
   `created_by` bigint(20) UNSIGNED DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -133,13 +145,13 @@ CREATE TABLE `categories` (
 -- Dumping data for table `categories`
 --
 
-INSERT INTO `categories` (`id`, `name`, `description`, `created_at`, `updated_at`, `status`, `parent_id`, `branch_id`, `created_by`) VALUES
-(1, 'Electronics', NULL, '2026-06-13 03:04:01', '2026-06-13 03:04:01', 'Active', NULL, NULL, NULL),
-(2, 'Furniture', NULL, '2026-06-13 03:04:01', '2026-06-13 03:04:01', 'Active', NULL, NULL, NULL),
-(3, 'Machinery', NULL, '2026-06-15 01:12:18', '2026-06-15 01:12:18', 'Active', NULL, NULL, NULL),
-(1, 'Electronics', NULL, '2026-06-13 03:04:01', '2026-06-13 03:04:01', 'Active', NULL, NULL, NULL),
-(2, 'Furniture', NULL, '2026-06-13 03:04:01', '2026-06-13 03:04:01', 'Active', NULL, NULL, NULL),
-(3, 'Machinery', NULL, '2026-06-15 01:12:18', '2026-06-15 01:12:18', 'Active', NULL, NULL, NULL);
+INSERT INTO `categories` (`id`, `name`, `description`, `created_at`, `updated_at`, `status`, `parent_id`, `created_by`) VALUES
+(1, 'Electronics', NULL, '2026-06-13 03:04:01', '2026-06-13 03:04:01', 'Active', NULL, NULL),
+(2, 'Furniture', NULL, '2026-06-13 03:04:01', '2026-06-13 03:04:01', 'Active', NULL, NULL),
+(3, 'Machinery', NULL, '2026-06-15 01:12:18', '2026-06-15 01:12:18', 'Active', NULL, NULL),
+(1, 'Electronics', NULL, '2026-06-13 03:04:01', '2026-06-13 03:04:01', 'Active', NULL, NULL),
+(2, 'Furniture', NULL, '2026-06-13 03:04:01', '2026-06-13 03:04:01', 'Active', NULL, NULL),
+(3, 'Machinery', NULL, '2026-06-15 01:12:18', '2026-06-15 01:12:18', 'Active', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -158,6 +170,42 @@ CREATE TABLE `category_product` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `company_settings`
+--
+
+CREATE TABLE `company_settings` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `company_name` varchar(255) NOT NULL DEFAULT 'RFI Global ERP',
+  `address` text DEFAULT NULL,
+  `gst_number` varchar(255) DEFAULT NULL,
+  `vat_number` varchar(255) DEFAULT NULL,
+  `tax_registration_number` varchar(255) DEFAULT NULL,
+  `contact_email` varchar(255) DEFAULT NULL,
+  `contact_phone` varchar(255) DEFAULT NULL,
+  `website` varchar(255) DEFAULT NULL,
+  `bank_name` varchar(255) DEFAULT NULL,
+  `bank_account_name` varchar(255) DEFAULT NULL,
+  `bank_account_number` varchar(255) DEFAULT NULL,
+  `bank_ifsc_code` varchar(255) DEFAULT NULL,
+  `bank_swift_code` varchar(255) DEFAULT NULL,
+  `bank_branch` varchar(255) DEFAULT NULL,
+  `signatory_name` varchar(255) DEFAULT NULL,
+  `signature_image` varchar(255) DEFAULT NULL,
+  `company_seal` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `company_settings`
+--
+
+INSERT INTO `company_settings` (`id`, `company_name`, `address`, `gst_number`, `vat_number`, `tax_registration_number`, `contact_email`, `contact_phone`, `website`, `bank_name`, `bank_account_name`, `bank_account_number`, `bank_ifsc_code`, `bank_swift_code`, `bank_branch`, `signatory_name`, `signature_image`, `company_seal`, `created_at`, `updated_at`) VALUES
+(1, 'Ronak Fire Industries', 'Kasturi Vandana Complex, Bhayandar, Sonam Sagar, Indira Nagar, Bhayandar East., Bhayandar, Maharashtra - 401105', '27ABUPR0079D1ZB', 'VAT-12345678', 'PAN-AAAAA1234A', 'account@ronakfire.com', '+91 22 4123 4567', 'www.rfiglobal.com', 'HDFC Bank - CA', 'RFI Global ERP Solutions Pvt. Ltd.', '50200034070881', 'HDFC0001024', 'SBININBB123', 'Bhayander West', 'Authorised Signatory', NULL, NULL, '2026-06-22 07:48:42', '2026-06-22 07:48:42');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `customers`
 --
 
@@ -169,9 +217,15 @@ CREATE TABLE `customers` (
   `gst_number` varchar(255) DEFAULT NULL,
   `address` text DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL,
-  `branch_id` bigint(20) UNSIGNED DEFAULT NULL
+  `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `customers`
+--
+
+INSERT INTO `customers` (`id`, `name`, `email`, `phone`, `gst_number`, `address`, `created_at`, `updated_at`) VALUES
+(2, 'Abc', 'abc@gmail.com', '1234567980', '12345678912340', 'aaabbbccc', '2026-06-22 06:30:14', '2026-06-22 06:30:14');
 
 -- --------------------------------------------------------
 
@@ -207,7 +261,6 @@ CREATE TABLE `customer_quotation_items` (
   `product_id` bigint(20) UNSIGNED NOT NULL,
   `quantity` int(11) NOT NULL,
   `unit_price` decimal(10,2) NOT NULL,
-  `tax` decimal(10,2) NOT NULL DEFAULT 0.00,
   `discount` decimal(10,2) NOT NULL DEFAULT 0.00,
   `total` decimal(12,2) NOT NULL DEFAULT 0.00,
   `created_at` timestamp NULL DEFAULT NULL,
@@ -241,6 +294,13 @@ CREATE TABLE `daily_reports` (
   `approved_by` bigint(20) UNSIGNED DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `daily_reports`
+--
+
+INSERT INTO `daily_reports` (`id`, `employee_id`, `site_id`, `date`, `work_description`, `materials_used`, `supervisor_remarks`, `status`, `photo_path`, `created_at`, `updated_at`, `tasks_completed`, `hours_worked`, `issues_faced`, `equipment_used`, `submitted_at`, `approved_at`, `approved_by`) VALUES
+(3, 9, 4, '2026-06-20', 'aaa', 'asdqwe', NULL, 'Approved', NULL, '2026-06-20 07:13:31', '2026-06-20 07:17:25', 'abc', 8.00, 'qwe', 'zxcasdqew', '2026-06-20 07:13:31', '2026-06-20 07:17:25', 9);
+
 -- --------------------------------------------------------
 
 --
@@ -256,6 +316,13 @@ CREATE TABLE `daily_report_histories` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `daily_report_histories`
+--
+
+INSERT INTO `daily_report_histories` (`id`, `daily_report_id`, `action_by`, `action`, `comments`, `created_at`, `updated_at`) VALUES
+(1, 3, 9, 'Approved', 'Good', '2026-06-20 07:17:25', '2026-06-20 07:17:25');
 
 -- --------------------------------------------------------
 
@@ -398,7 +465,9 @@ INSERT INTO `dashboard_widgets` (`id`, `widget_key`, `name`, `type`, `icon`, `ch
 (113, 'dpr_reminder', 'DPR Submission Reminder', 'alert', 'Bell', NULL, '{\"severity\":\"info\"}', NULL, 6, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
 (114, 'leave_expiry_alert', 'Leave Balance Expiry', 'alert', 'CalendarClock', NULL, '{\"severity\":\"info\"}', NULL, 7, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
 (115, 'site_delays_alert', 'Site Delays', 'alert', 'Clock', NULL, '{\"severity\":\"warning\"}', NULL, 8, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
-(116, 'server_alert', 'Server Alert', 'alert', 'AlertCircle', NULL, '{\"severity\":\"critical\"}', NULL, 9, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12');
+(116, 'server_alert', 'Server Alert', 'alert', 'AlertCircle', NULL, '{\"severity\":\"critical\"}', NULL, 9, 1, '2026-06-18 06:14:12', '2026-06-18 06:14:12'),
+(119, 'my_documents', 'My Documents', 'widget', 'FileText', NULL, NULL, NULL, 1, 1, '2026-06-25 12:17:14', '2026-06-25 12:17:14'),
+(120, 'my_payslips', 'My Payslips', 'widget', 'CreditCard', NULL, NULL, NULL, 2, 1, '2026-06-25 12:17:14', '2026-06-25 12:17:14');
 
 -- --------------------------------------------------------
 
@@ -421,444 +490,303 @@ CREATE TABLE `dashboard_widget_designation` (
 INSERT INTO `dashboard_widget_designation` (`id`, `dashboard_widget_id`, `designation_id`, `created_at`, `updated_at`) VALUES
 (1, 1, 1, NULL, NULL),
 (2, 1, 2, NULL, NULL),
-(3, 1, 3, NULL, NULL),
-(4, 1, 4, NULL, NULL),
-(5, 1, 16, NULL, NULL),
 (6, 2, 1, NULL, NULL),
 (7, 2, 2, NULL, NULL),
-(8, 2, 3, NULL, NULL),
-(9, 2, 4, NULL, NULL),
-(10, 2, 5, NULL, NULL),
-(11, 2, 16, NULL, NULL),
 (12, 3, 1, NULL, NULL),
 (13, 3, 2, NULL, NULL),
-(14, 3, 3, NULL, NULL),
-(15, 3, 4, NULL, NULL),
-(16, 3, 5, NULL, NULL),
-(17, 3, 16, NULL, NULL),
 (18, 4, 1, NULL, NULL),
 (19, 4, 2, NULL, NULL),
-(20, 4, 3, NULL, NULL),
-(21, 4, 4, NULL, NULL),
-(22, 4, 16, NULL, NULL),
 (23, 5, 1, NULL, NULL),
 (24, 5, 2, NULL, NULL),
-(25, 5, 3, NULL, NULL),
-(26, 5, 4, NULL, NULL),
-(27, 5, 5, NULL, NULL),
-(28, 5, 6, NULL, NULL),
-(29, 5, 13, NULL, NULL),
 (30, 6, 1, NULL, NULL),
-(31, 6, 2, NULL, NULL),
-(32, 6, 3, NULL, NULL),
-(33, 6, 15, NULL, NULL),
-(34, 7, 15, NULL, NULL),
-(35, 7, 5, NULL, NULL),
-(36, 7, 3, NULL, NULL),
 (37, 7, 1, NULL, NULL),
-(38, 8, 15, NULL, NULL),
-(39, 8, 5, NULL, NULL),
 (40, 9, 1, NULL, NULL),
 (41, 9, 2, NULL, NULL),
-(42, 9, 3, NULL, NULL),
-(43, 9, 4, NULL, NULL),
-(44, 9, 11, NULL, NULL),
 (45, 10, 1, NULL, NULL),
 (46, 10, 2, NULL, NULL),
-(47, 10, 3, NULL, NULL),
 (48, 10, 4, NULL, NULL),
-(49, 10, 11, NULL, NULL),
-(50, 10, 12, NULL, NULL),
 (51, 11, 1, NULL, NULL),
 (52, 11, 2, NULL, NULL),
-(53, 11, 3, NULL, NULL),
-(54, 11, 11, NULL, NULL),
-(55, 11, 16, NULL, NULL),
 (56, 12, 1, NULL, NULL),
-(57, 12, 3, NULL, NULL),
-(58, 12, 4, NULL, NULL),
-(59, 12, 5, NULL, NULL),
-(60, 12, 11, NULL, NULL),
-(61, 12, 16, NULL, NULL),
-(62, 12, 13, NULL, NULL),
-(63, 13, 16, NULL, NULL),
 (64, 13, 1, NULL, NULL),
-(65, 13, 3, NULL, NULL),
-(66, 14, 16, NULL, NULL),
 (67, 14, 1, NULL, NULL),
-(68, 14, 3, NULL, NULL),
-(69, 14, 4, NULL, NULL),
-(70, 14, 5, NULL, NULL),
-(71, 15, 5, NULL, NULL),
-(72, 15, 6, NULL, NULL),
 (73, 15, 1, NULL, NULL),
-(74, 15, 3, NULL, NULL),
-(75, 15, 4, NULL, NULL),
-(76, 16, 16, NULL, NULL),
-(77, 16, 3, NULL, NULL),
 (78, 16, 1, NULL, NULL),
-(79, 17, 11, NULL, NULL),
-(80, 17, 12, NULL, NULL),
-(81, 17, 3, NULL, NULL),
 (82, 17, 1, NULL, NULL),
-(83, 18, 11, NULL, NULL),
-(84, 18, 12, NULL, NULL),
-(85, 18, 3, NULL, NULL),
 (86, 18, 1, NULL, NULL),
-(87, 19, 11, NULL, NULL),
-(88, 19, 3, NULL, NULL),
 (89, 19, 1, NULL, NULL),
-(90, 20, 11, NULL, NULL),
-(91, 20, 3, NULL, NULL),
 (92, 20, 1, NULL, NULL),
-(93, 21, 11, NULL, NULL),
-(94, 21, 12, NULL, NULL),
-(95, 21, 16, NULL, NULL),
-(96, 22, 11, NULL, NULL),
-(97, 22, 12, NULL, NULL),
-(98, 23, 11, NULL, NULL),
-(99, 23, 12, NULL, NULL),
-(100, 24, 5, NULL, NULL),
-(101, 24, 6, NULL, NULL),
-(102, 24, 4, NULL, NULL),
-(103, 25, 5, NULL, NULL),
-(104, 25, 6, NULL, NULL),
-(105, 25, 4, NULL, NULL),
-(106, 26, 6, NULL, NULL),
-(107, 26, 5, NULL, NULL),
 (108, 27, 7, NULL, NULL),
 (109, 27, 8, NULL, NULL),
 (110, 27, 9, NULL, NULL),
-(111, 27, 10, NULL, NULL),
 (112, 27, 6, NULL, NULL),
-(113, 27, 14, NULL, NULL),
 (114, 28, 7, NULL, NULL),
 (115, 28, 8, NULL, NULL),
 (116, 28, 9, NULL, NULL),
-(117, 28, 10, NULL, NULL),
 (118, 28, 6, NULL, NULL),
-(119, 28, 14, NULL, NULL),
 (120, 29, 7, NULL, NULL),
 (121, 29, 8, NULL, NULL),
 (122, 29, 9, NULL, NULL),
-(123, 29, 10, NULL, NULL),
 (124, 29, 6, NULL, NULL),
-(125, 29, 14, NULL, NULL),
-(126, 30, 13, NULL, NULL),
-(127, 30, 14, NULL, NULL),
-(128, 31, 13, NULL, NULL),
-(129, 32, 13, NULL, NULL),
-(130, 32, 14, NULL, NULL),
 (131, 33, 7, NULL, NULL),
 (132, 33, 8, NULL, NULL),
 (133, 33, 9, NULL, NULL),
-(134, 33, 10, NULL, NULL),
 (135, 33, 6, NULL, NULL),
-(136, 33, 14, NULL, NULL),
 (137, 34, 7, NULL, NULL),
 (138, 34, 8, NULL, NULL),
 (139, 34, 9, NULL, NULL),
-(140, 34, 10, NULL, NULL),
 (141, 34, 6, NULL, NULL),
 (142, 35, 7, NULL, NULL),
 (143, 35, 8, NULL, NULL),
 (144, 35, 9, NULL, NULL),
-(145, 35, 10, NULL, NULL),
 (146, 35, 6, NULL, NULL),
-(147, 35, 14, NULL, NULL),
 (148, 36, 7, NULL, NULL),
 (149, 36, 8, NULL, NULL),
 (150, 36, 9, NULL, NULL),
-(151, 36, 10, NULL, NULL),
 (152, 36, 6, NULL, NULL),
-(153, 36, 14, NULL, NULL),
 (154, 37, 7, NULL, NULL),
 (155, 37, 8, NULL, NULL),
 (156, 37, 9, NULL, NULL),
-(157, 37, 10, NULL, NULL),
 (158, 37, 6, NULL, NULL),
-(159, 37, 14, NULL, NULL),
 (160, 38, 7, NULL, NULL),
 (161, 38, 8, NULL, NULL),
 (162, 38, 9, NULL, NULL),
-(163, 38, 10, NULL, NULL),
 (164, 38, 6, NULL, NULL),
-(165, 38, 14, NULL, NULL),
 (166, 39, 7, NULL, NULL),
 (167, 39, 8, NULL, NULL),
 (168, 39, 9, NULL, NULL),
-(169, 39, 10, NULL, NULL),
 (170, 39, 6, NULL, NULL),
 (171, 40, 7, NULL, NULL),
 (172, 40, 8, NULL, NULL),
 (173, 40, 9, NULL, NULL),
-(174, 40, 10, NULL, NULL),
 (175, 40, 6, NULL, NULL),
-(176, 40, 14, NULL, NULL),
-(177, 41, 17, NULL, NULL),
-(178, 41, 2, NULL, NULL),
 (179, 41, 1, NULL, NULL),
-(180, 42, 17, NULL, NULL),
-(181, 42, 2, NULL, NULL),
 (182, 42, 1, NULL, NULL),
-(183, 43, 17, NULL, NULL),
-(184, 43, 2, NULL, NULL),
 (185, 43, 1, NULL, NULL),
-(186, 44, 17, NULL, NULL),
-(187, 44, 2, NULL, NULL),
 (188, 44, 1, NULL, NULL),
-(189, 45, 17, NULL, NULL),
-(190, 45, 2, NULL, NULL),
 (191, 45, 1, NULL, NULL),
-(192, 46, 17, NULL, NULL),
-(193, 46, 2, NULL, NULL),
 (194, 46, 1, NULL, NULL),
-(195, 47, 17, NULL, NULL),
-(196, 47, 2, NULL, NULL),
 (197, 47, 1, NULL, NULL),
-(198, 48, 17, NULL, NULL),
-(199, 48, 2, NULL, NULL),
 (200, 48, 1, NULL, NULL),
-(201, 49, 16, NULL, NULL),
-(202, 49, 3, NULL, NULL),
 (203, 49, 1, NULL, NULL),
-(204, 50, 16, NULL, NULL),
-(205, 50, 3, NULL, NULL),
-(206, 50, 4, NULL, NULL),
-(207, 50, 5, NULL, NULL),
-(208, 51, 16, NULL, NULL),
-(209, 51, 3, NULL, NULL),
-(210, 51, 4, NULL, NULL),
-(211, 52, 5, NULL, NULL),
-(212, 52, 6, NULL, NULL),
-(213, 52, 3, NULL, NULL),
-(214, 53, 11, NULL, NULL),
-(215, 53, 3, NULL, NULL),
 (216, 53, 1, NULL, NULL),
 (217, 54, 1, NULL, NULL),
-(218, 54, 3, NULL, NULL),
-(219, 54, 4, NULL, NULL),
-(220, 55, 5, NULL, NULL),
-(221, 55, 6, NULL, NULL),
-(222, 55, 4, NULL, NULL),
 (223, 56, 1, NULL, NULL),
-(224, 56, 3, NULL, NULL),
-(225, 56, 4, NULL, NULL),
-(226, 57, 15, NULL, NULL),
-(227, 57, 3, NULL, NULL),
-(228, 58, 15, NULL, NULL),
-(229, 58, 5, NULL, NULL),
-(230, 59, 17, NULL, NULL),
-(231, 59, 2, NULL, NULL),
-(232, 60, 16, NULL, NULL),
-(233, 60, 3, NULL, NULL),
 (234, 60, 1, NULL, NULL),
-(235, 60, 4, NULL, NULL),
-(236, 61, 11, NULL, NULL),
-(237, 61, 3, NULL, NULL),
 (238, 61, 1, NULL, NULL),
-(239, 62, 15, NULL, NULL),
-(240, 62, 3, NULL, NULL),
 (241, 62, 1, NULL, NULL),
-(242, 63, 11, NULL, NULL),
-(243, 63, 3, NULL, NULL),
 (244, 63, 1, NULL, NULL),
-(245, 63, 4, NULL, NULL),
-(246, 64, 11, NULL, NULL),
-(247, 64, 3, NULL, NULL),
 (248, 64, 1, NULL, NULL),
-(249, 64, 4, NULL, NULL),
-(250, 65, 16, NULL, NULL),
-(251, 65, 3, NULL, NULL),
 (252, 65, 1, NULL, NULL),
-(253, 66, 16, NULL, NULL),
-(254, 66, 3, NULL, NULL),
 (255, 66, 1, NULL, NULL),
-(256, 66, 4, NULL, NULL),
-(257, 67, 16, NULL, NULL),
-(258, 67, 3, NULL, NULL),
 (259, 67, 1, NULL, NULL),
-(260, 67, 4, NULL, NULL),
-(261, 68, 11, NULL, NULL),
-(262, 68, 3, NULL, NULL),
 (263, 68, 1, NULL, NULL),
-(264, 69, 11, NULL, NULL),
-(265, 69, 12, NULL, NULL),
-(266, 69, 3, NULL, NULL),
 (267, 69, 1, NULL, NULL),
-(268, 70, 5, NULL, NULL),
-(269, 70, 6, NULL, NULL),
-(270, 70, 3, NULL, NULL),
-(271, 71, 5, NULL, NULL),
-(272, 71, 6, NULL, NULL),
-(273, 71, 3, NULL, NULL),
-(274, 72, 5, NULL, NULL),
-(275, 72, 4, NULL, NULL),
-(276, 72, 3, NULL, NULL),
 (277, 72, 1, NULL, NULL),
-(278, 73, 13, NULL, NULL),
-(279, 73, 14, NULL, NULL),
 (280, 73, 3, NULL, NULL),
-(281, 74, 13, NULL, NULL),
-(282, 74, 14, NULL, NULL),
 (283, 74, 3, NULL, NULL),
-(284, 75, 15, NULL, NULL),
-(285, 75, 3, NULL, NULL),
-(286, 76, 15, NULL, NULL),
-(287, 76, 3, NULL, NULL),
-(288, 77, 15, NULL, NULL),
-(289, 77, 3, NULL, NULL),
 (290, 78, 1, NULL, NULL),
 (291, 78, 2, NULL, NULL),
-(292, 78, 3, NULL, NULL),
-(293, 78, 16, NULL, NULL),
 (294, 79, 1, NULL, NULL),
-(295, 79, 3, NULL, NULL),
-(296, 79, 4, NULL, NULL),
-(297, 79, 16, NULL, NULL),
-(298, 79, 5, NULL, NULL),
-(299, 80, 11, NULL, NULL),
-(300, 80, 12, NULL, NULL),
-(301, 80, 3, NULL, NULL),
 (302, 80, 1, NULL, NULL),
-(303, 81, 15, NULL, NULL),
-(304, 81, 3, NULL, NULL),
-(305, 81, 5, NULL, NULL),
-(306, 82, 3, NULL, NULL),
-(307, 82, 4, NULL, NULL),
-(308, 83, 17, NULL, NULL),
-(309, 83, 2, NULL, NULL),
 (310, 83, 1, NULL, NULL),
-(311, 84, 17, NULL, NULL),
-(312, 84, 2, NULL, NULL),
 (313, 84, 1, NULL, NULL),
-(314, 85, 17, NULL, NULL),
-(315, 85, 2, NULL, NULL),
 (316, 85, 1, NULL, NULL),
-(317, 86, 17, NULL, NULL),
-(318, 86, 2, NULL, NULL),
 (319, 86, 1, NULL, NULL),
-(320, 87, 5, NULL, NULL),
-(321, 87, 6, NULL, NULL),
-(322, 87, 3, NULL, NULL),
 (323, 87, 1, NULL, NULL),
 (324, 88, 7, NULL, NULL),
 (325, 88, 8, NULL, NULL),
 (326, 88, 9, NULL, NULL),
-(327, 88, 10, NULL, NULL),
 (328, 88, 6, NULL, NULL),
-(329, 88, 14, NULL, NULL),
-(330, 89, 11, NULL, NULL),
-(331, 89, 3, NULL, NULL),
 (332, 89, 1, NULL, NULL),
-(333, 90, 11, NULL, NULL),
-(334, 90, 12, NULL, NULL),
-(335, 91, 11, NULL, NULL),
-(336, 91, 12, NULL, NULL),
-(337, 92, 11, NULL, NULL),
-(338, 92, 12, NULL, NULL),
-(339, 93, 5, NULL, NULL),
-(340, 93, 6, NULL, NULL),
-(341, 93, 3, NULL, NULL),
-(342, 93, 4, NULL, NULL),
-(343, 94, 5, NULL, NULL),
-(344, 94, 6, NULL, NULL),
-(345, 94, 16, NULL, NULL),
-(346, 94, 4, NULL, NULL),
-(347, 95, 5, NULL, NULL),
-(348, 95, 6, NULL, NULL),
-(349, 95, 3, NULL, NULL),
 (350, 95, 1, NULL, NULL),
-(351, 96, 16, NULL, NULL),
-(352, 96, 3, NULL, NULL),
-(353, 96, 4, NULL, NULL),
 (354, 97, 7, NULL, NULL),
 (355, 97, 8, NULL, NULL),
 (356, 97, 9, NULL, NULL),
-(357, 97, 10, NULL, NULL),
 (358, 97, 6, NULL, NULL),
-(359, 97, 14, NULL, NULL),
 (360, 98, 7, NULL, NULL),
 (361, 98, 8, NULL, NULL),
 (362, 98, 9, NULL, NULL),
-(363, 98, 10, NULL, NULL),
 (364, 98, 6, NULL, NULL),
-(365, 98, 14, NULL, NULL),
 (366, 99, 7, NULL, NULL),
 (367, 99, 8, NULL, NULL),
 (368, 99, 9, NULL, NULL),
-(369, 99, 10, NULL, NULL),
 (370, 99, 6, NULL, NULL),
-(371, 99, 14, NULL, NULL),
-(372, 100, 3, NULL, NULL),
-(373, 100, 15, NULL, NULL),
-(374, 101, 15, NULL, NULL),
-(375, 101, 3, NULL, NULL),
-(376, 102, 15, NULL, NULL),
-(377, 102, 3, NULL, NULL),
-(378, 103, 17, NULL, NULL),
-(379, 103, 2, NULL, NULL),
 (380, 103, 1, NULL, NULL),
-(381, 104, 17, NULL, NULL),
-(382, 104, 2, NULL, NULL),
 (383, 104, 1, NULL, NULL),
 (384, 105, 7, NULL, NULL),
 (385, 105, 8, NULL, NULL),
 (386, 105, 9, NULL, NULL),
-(387, 105, 10, NULL, NULL),
 (388, 105, 6, NULL, NULL),
-(389, 105, 14, NULL, NULL),
 (390, 106, 7, NULL, NULL),
 (391, 106, 8, NULL, NULL),
 (392, 106, 9, NULL, NULL),
-(393, 106, 10, NULL, NULL),
 (394, 106, 6, NULL, NULL),
-(395, 106, 14, NULL, NULL),
 (396, 107, 7, NULL, NULL),
 (397, 107, 8, NULL, NULL),
 (398, 107, 9, NULL, NULL),
-(399, 107, 10, NULL, NULL),
 (400, 107, 6, NULL, NULL),
-(401, 107, 14, NULL, NULL),
-(402, 108, 15, NULL, NULL),
-(403, 108, 5, NULL, NULL),
-(404, 108, 3, NULL, NULL),
 (405, 108, 1, NULL, NULL),
-(406, 109, 16, NULL, NULL),
-(407, 109, 3, NULL, NULL),
 (408, 109, 1, NULL, NULL),
-(409, 110, 11, NULL, NULL),
-(410, 110, 12, NULL, NULL),
-(411, 110, 3, NULL, NULL),
 (412, 110, 1, NULL, NULL),
-(413, 111, 16, NULL, NULL),
-(414, 111, 5, NULL, NULL),
-(415, 111, 3, NULL, NULL),
-(416, 111, 4, NULL, NULL),
 (417, 112, 7, NULL, NULL),
 (418, 112, 8, NULL, NULL),
 (419, 112, 9, NULL, NULL),
-(420, 112, 10, NULL, NULL),
 (421, 112, 6, NULL, NULL),
-(422, 112, 14, NULL, NULL),
 (423, 113, 7, NULL, NULL),
 (424, 113, 8, NULL, NULL),
 (425, 113, 9, NULL, NULL),
-(426, 113, 10, NULL, NULL),
 (427, 113, 6, NULL, NULL),
-(428, 113, 14, NULL, NULL),
 (429, 114, 7, NULL, NULL),
 (430, 114, 8, NULL, NULL),
 (431, 114, 9, NULL, NULL),
-(432, 114, 10, NULL, NULL),
 (433, 114, 6, NULL, NULL),
-(434, 114, 14, NULL, NULL),
-(435, 115, 5, NULL, NULL),
-(436, 115, 6, NULL, NULL),
-(437, 115, 4, NULL, NULL),
-(438, 116, 17, NULL, NULL),
-(439, 116, 2, NULL, NULL),
-(440, 116, 1, NULL, NULL);
+(440, 116, 1, NULL, NULL),
+(441, 6, 10, NULL, NULL),
+(442, 7, 10, NULL, NULL),
+(443, 7, 2, NULL, NULL),
+(444, 8, 10, NULL, NULL),
+(445, 8, 2, NULL, NULL),
+(446, 12, 2, NULL, NULL),
+(447, 13, 2, NULL, NULL),
+(448, 14, 2, NULL, NULL),
+(449, 15, 2, NULL, NULL),
+(450, 16, 2, NULL, NULL),
+(451, 17, 4, NULL, NULL),
+(452, 18, 4, NULL, NULL),
+(453, 19, 2, NULL, NULL),
+(454, 20, 2, NULL, NULL),
+(455, 21, 2, NULL, NULL),
+(456, 21, 4, NULL, NULL),
+(457, 22, 4, NULL, NULL),
+(458, 23, 4, NULL, NULL),
+(459, 24, 2, NULL, NULL),
+(460, 25, 2, NULL, NULL),
+(461, 26, 2, NULL, NULL),
+(462, 27, 3, NULL, NULL),
+(463, 28, 3, NULL, NULL),
+(464, 29, 3, NULL, NULL),
+(465, 30, 2, NULL, NULL),
+(466, 30, 3, NULL, NULL),
+(467, 31, 2, NULL, NULL),
+(468, 32, 2, NULL, NULL),
+(469, 32, 3, NULL, NULL),
+(470, 33, 3, NULL, NULL),
+(471, 35, 3, NULL, NULL),
+(472, 36, 3, NULL, NULL),
+(473, 37, 3, NULL, NULL),
+(474, 38, 3, NULL, NULL),
+(475, 40, 3, NULL, NULL),
+(476, 41, 5, NULL, NULL),
+(477, 42, 5, NULL, NULL),
+(478, 43, 5, NULL, NULL),
+(479, 44, 5, NULL, NULL),
+(480, 45, 5, NULL, NULL),
+(481, 46, 5, NULL, NULL),
+(482, 47, 5, NULL, NULL),
+(483, 48, 5, NULL, NULL),
+(484, 49, 2, NULL, NULL),
+(485, 50, 2, NULL, NULL),
+(486, 50, 1, NULL, NULL),
+(487, 51, 2, NULL, NULL),
+(488, 51, 1, NULL, NULL),
+(489, 52, 2, NULL, NULL),
+(490, 52, 1, NULL, NULL),
+(491, 53, 2, NULL, NULL),
+(492, 54, 2, NULL, NULL),
+(493, 55, 2, NULL, NULL),
+(494, 56, 2, NULL, NULL),
+(495, 57, 10, NULL, NULL),
+(496, 57, 1, NULL, NULL),
+(497, 58, 10, NULL, NULL),
+(498, 58, 2, NULL, NULL),
+(499, 59, 5, NULL, NULL),
+(500, 59, 1, NULL, NULL),
+(501, 60, 2, NULL, NULL),
+(502, 61, 2, NULL, NULL),
+(503, 62, 10, NULL, NULL),
+(504, 63, 2, NULL, NULL),
+(505, 64, 2, NULL, NULL),
+(506, 65, 2, NULL, NULL),
+(507, 66, 2, NULL, NULL),
+(508, 67, 2, NULL, NULL),
+(509, 68, 2, NULL, NULL),
+(510, 69, 4, NULL, NULL),
+(511, 70, 2, NULL, NULL),
+(512, 70, 1, NULL, NULL),
+(513, 71, 2, NULL, NULL),
+(514, 71, 1, NULL, NULL),
+(515, 72, 2, NULL, NULL),
+(516, 73, 2, NULL, NULL),
+(517, 73, 1, NULL, NULL),
+(518, 74, 2, NULL, NULL),
+(519, 74, 1, NULL, NULL),
+(520, 75, 10, NULL, NULL),
+(521, 75, 1, NULL, NULL),
+(522, 76, 10, NULL, NULL),
+(523, 76, 1, NULL, NULL),
+(524, 77, 10, NULL, NULL),
+(525, 77, 1, NULL, NULL),
+(526, 79, 2, NULL, NULL),
+(527, 80, 2, NULL, NULL),
+(528, 80, 4, NULL, NULL),
+(529, 81, 10, NULL, NULL),
+(530, 81, 1, NULL, NULL),
+(531, 81, 2, NULL, NULL),
+(532, 82, 1, NULL, NULL),
+(533, 82, 2, NULL, NULL),
+(534, 83, 5, NULL, NULL),
+(535, 84, 5, NULL, NULL),
+(536, 85, 5, NULL, NULL),
+(537, 86, 5, NULL, NULL),
+(538, 87, 2, NULL, NULL),
+(539, 88, 3, NULL, NULL),
+(540, 89, 2, NULL, NULL),
+(541, 90, 4, NULL, NULL),
+(542, 91, 4, NULL, NULL),
+(543, 92, 2, NULL, NULL),
+(544, 92, 4, NULL, NULL),
+(545, 93, 2, NULL, NULL),
+(546, 93, 1, NULL, NULL),
+(547, 94, 2, NULL, NULL),
+(548, 95, 2, NULL, NULL),
+(549, 96, 2, NULL, NULL),
+(550, 96, 1, NULL, NULL),
+(551, 97, 3, NULL, NULL),
+(552, 98, 3, NULL, NULL),
+(553, 99, 3, NULL, NULL),
+(554, 100, 1, NULL, NULL),
+(555, 100, 10, NULL, NULL),
+(556, 101, 10, NULL, NULL),
+(557, 101, 1, NULL, NULL),
+(558, 102, 10, NULL, NULL),
+(559, 102, 1, NULL, NULL),
+(560, 103, 5, NULL, NULL),
+(561, 104, 5, NULL, NULL),
+(562, 105, 3, NULL, NULL),
+(563, 106, 3, NULL, NULL),
+(564, 107, 3, NULL, NULL),
+(565, 108, 10, NULL, NULL),
+(566, 108, 2, NULL, NULL),
+(567, 109, 2, NULL, NULL),
+(568, 110, 4, NULL, NULL),
+(569, 111, 2, NULL, NULL),
+(570, 111, 1, NULL, NULL),
+(571, 112, 3, NULL, NULL),
+(572, 113, 3, NULL, NULL),
+(573, 114, 3, NULL, NULL),
+(574, 115, 2, NULL, NULL),
+(575, 116, 5, NULL, NULL),
+(576, 119, 6, NULL, NULL),
+(577, 119, 7, NULL, NULL),
+(578, 119, 8, NULL, NULL),
+(579, 119, 9, NULL, NULL),
+(580, 119, 3, NULL, NULL),
+(581, 120, 6, NULL, NULL),
+(582, 120, 7, NULL, NULL),
+(583, 120, 8, NULL, NULL),
+(584, 120, 9, NULL, NULL),
+(585, 120, 3, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -870,7 +798,6 @@ CREATE TABLE `delivery_notes` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `delivery_number` varchar(255) NOT NULL,
   `sales_order_id` bigint(20) UNSIGNED NOT NULL,
-  `branch_id` bigint(20) UNSIGNED NOT NULL,
   `delivered_by` bigint(20) UNSIGNED DEFAULT NULL,
   `delivery_date` date NOT NULL,
   `notes` text DEFAULT NULL,
@@ -914,14 +841,14 @@ CREATE TABLE `departments` (
 --
 
 INSERT INTO `departments` (`id`, `name`, `description`, `created_at`, `updated_at`, `deleted_at`) VALUES
-(1, 'Administration', 'Core management, system administration, and executive oversight', '2026-06-17 08:44:21', '2026-06-17 08:44:21', NULL),
-(2, 'Production & Workshop', 'Manufacturing, fabrication, welding, and assembly operations', '2026-06-17 08:44:21', '2026-06-17 08:44:21', NULL),
-(3, 'Finance & Accounts', 'Financial management, bookkeeping, billing, and tax compliance', '2026-06-17 08:44:21', '2026-06-17 08:44:21', NULL),
-(4, 'Engineering & Design', 'Product development, drafting, and CAD structural design', '2026-06-17 08:44:21', '2026-06-17 08:44:21', NULL),
-(5, 'Inventory & Warehouse', 'Stock management, store logistics, and material tracking', '2026-06-17 08:44:21', '2026-06-17 08:44:21', NULL),
-(6, 'Human Resources', 'Recruitment, employee relations, payroll, and compliance', '2026-06-17 08:44:21', '2026-06-17 08:44:21', NULL),
-(7, 'Information Technology', 'IT support, network infrastructure, and hardware maintenance', '2026-06-17 08:44:21', '2026-06-17 08:44:21', NULL),
-(8, 'Sales & Marketing', 'Client acquisition, business development, marketing campaigns, and account management', '2026-06-17 09:19:35', '2026-06-17 09:19:35', NULL);
+(1, 'Administration', 'Core management and administrative operations', '2026-06-25 06:23:18', '2026-06-25 06:23:18', NULL),
+(2, 'Production', 'Manufacturing, fabrication, and assembly operations', '2026-06-25 06:23:18', '2026-06-25 06:23:18', NULL),
+(3, 'Accounts', 'Financial management, bookkeeping, and accounting', '2026-06-25 06:23:18', '2026-06-25 06:23:18', NULL),
+(4, 'IT', 'Information technology and system administration', '2026-06-25 06:23:18', '2026-06-25 06:23:18', NULL),
+(5, 'Designer', 'Design, drafting, and creative development', '2026-06-25 06:23:18', '2026-06-25 06:23:18', NULL),
+(6, 'Inventory & Warehouse', 'Stock management and material tracking', '2026-06-25 06:23:18', '2026-06-25 06:23:18', NULL),
+(7, 'Sales', 'Sales, client acquisition, and business development', '2026-06-25 06:23:18', '2026-06-25 06:23:18', NULL),
+(8, 'Other', 'For employees whose departments are not fixed', '2026-06-25 06:23:18', '2026-06-25 06:23:18', NULL);
 
 -- --------------------------------------------------------
 
@@ -944,23 +871,16 @@ CREATE TABLE `designations` (
 --
 
 INSERT INTO `designations` (`id`, `name`, `department_id`, `description`, `created_at`, `updated_at`, `deleted_at`) VALUES
-(1, 'Super Admin', 1, 'Full system access and overarching corporate control', '2026-06-17 08:45:44', '2026-06-17 08:45:44', NULL),
-(2, 'System Admin', 1, 'Technical system configuration and network administration', '2026-06-17 08:45:44', '2026-06-17 08:45:44', NULL),
-(3, 'Admin', 1, 'General administrative management and office operations', '2026-06-17 08:45:44', '2026-06-17 08:45:44', NULL),
-(4, 'General Manager', 1, 'Overall operational management and executive oversight', '2026-06-17 08:45:44', '2026-06-17 08:45:44', NULL),
-(5, 'Production Manager', 2, 'Oversight of workshop operations and manufacturing schedules', '2026-06-17 08:45:44', '2026-06-17 08:45:44', NULL),
-(6, 'Workshop Supervisor', 2, 'Direct supervision of technicians and workshop floor activities', '2026-06-17 08:45:44', '2026-06-17 08:45:44', NULL),
-(7, 'Fitter', 2, 'Mechanical fitting, assembly, and structural alignment tasks', '2026-06-17 08:45:44', '2026-06-17 08:45:44', NULL),
-(8, 'Welder', 2, 'Welding, fabrication, and metal joining operations', '2026-06-17 08:45:44', '2026-06-17 08:45:44', NULL),
-(9, 'Electrician', 2, 'Electrical installation, maintenance, and wiring troubleshooting', '2026-06-17 08:45:44', '2026-06-17 08:45:44', NULL),
-(10, 'Helper', 2, 'General workshop assistance, cleanup, and manual labor support', '2026-06-17 08:45:44', '2026-06-17 08:45:44', NULL),
-(11, 'Finance Manager', 3, 'Oversight of financial strategies, budgets, and reporting', '2026-06-17 08:45:44', '2026-06-17 08:45:44', NULL),
-(12, 'Accountant', 3, 'Day-to-day bookkeeping, invoicing, and ledger maintenance', '2026-06-17 08:45:44', '2026-06-17 08:45:44', NULL),
-(13, 'Design Manager', 4, 'Oversight of the design team and project blueprints', '2026-06-17 08:45:44', '2026-06-17 08:45:44', NULL),
-(14, 'Designer', 4, 'Product development, drafting, and CAD structural design', '2026-06-17 08:45:44', '2026-06-17 08:45:44', NULL),
-(15, 'Store Manager', 5, 'Inventory control, warehouse stock management, and logistics', '2026-06-17 08:45:44', '2026-06-17 08:45:44', NULL),
-(16, 'HR Manager', 6, 'Oversight of recruitment, payroll, and employee relations', '2026-06-17 08:45:44', '2026-06-17 08:45:44', NULL),
-(17, 'IT Manager', 7, 'Oversight of company technology infrastructure and security', '2026-06-17 08:45:44', '2026-06-17 08:45:44', NULL);
+(1, 'Admin', 1, 'General administrative management and office operations', '2026-06-25 06:23:18', '2026-06-25 06:23:18', NULL),
+(2, 'Manager', 1, 'Departmental oversight, team management, and operational supervision', '2026-06-25 06:23:18', '2026-06-25 06:23:18', NULL),
+(3, 'Designer', 5, 'Design, drafting, and creative development', '2026-06-25 06:23:18', '2026-06-25 06:23:18', NULL),
+(4, 'Accountant', 3, 'Financial bookkeeping, invoicing, and ledger management', '2026-06-25 06:23:18', '2026-06-25 06:23:18', NULL),
+(5, 'Developer', 4, 'Software development, IT support, and system administration', '2026-06-25 06:23:18', '2026-06-25 06:23:18', NULL),
+(6, 'Fitter', 2, 'Mechanical fitting, assembly, and structural alignment', '2026-06-25 06:23:18', '2026-06-25 06:23:18', NULL),
+(7, 'Welder', 2, 'Welding, fabrication, and metal joining operations', '2026-06-25 06:23:18', '2026-06-25 06:23:18', NULL),
+(8, 'Electrician', 2, 'Electrical installation, maintenance, and wiring', '2026-06-25 06:23:18', '2026-06-25 06:23:18', NULL),
+(9, 'Helper', 2, 'General workshop assistance and manual labor support', '2026-06-25 06:23:18', '2026-06-25 06:23:18', NULL),
+(10, 'Store Manager', 6, 'Inventory control, stock management, and logistics', '2026-06-25 06:23:18', '2026-06-25 06:23:18', NULL);
 
 -- --------------------------------------------------------
 
@@ -1031,53 +951,57 @@ CREATE TABLE `employees` (
 --
 
 INSERT INTO `employees` (`id`, `user_id`, `emp_id`, `full_name`, `photo_path`, `interview_date`, `joining_date`, `probation_end_date`, `dob`, `department_id`, `designation_id`, `employment_type`, `reporting_manager_id`, `gender`, `marital_status`, `government_id_type`, `address`, `contact_number`, `personal_number`, `emergency_contact`, `qualification`, `employment_bond_status`, `previous_termination_status`, `legal_proceedings_status`, `resume_path`, `aadhaar_path`, `pan_path`, `offer_letter_path`, `created_at`, `updated_at`, `deleted_at`) VALUES
-(9, 9, '000', 'Ronak Ray', NULL, '2026-06-17', '2026-06-17', '2026-06-17', '2023-06-19', 1, 2, 'Full-Time', NULL, 'Male', 'Single', 'Aadhaar', 'abc xyz', '123546798', '123546798', '123546798', '12th', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 03:18:52', '2026-06-17 03:18:52', NULL),
-(10, 10, '101', 'Darshna Lade', NULL, '2026-06-17', '2026-06-17', '2026-06-17', '2023-10-10', 3, 11, 'Full-Time', 9, 'Female', 'Single', 'Aadhaar', 'abc xyz', '123546798', '123546798', '123546798', '12th', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 03:20:33', '2026-06-19 05:58:37', NULL),
-(11, 11, '102', 'shwetali bavdane', NULL, '2026-06-17', '2026-06-17', '2026-06-17', '2020-10-10', 3, 12, 'Full-Time', 9, 'Female', 'Single', 'Aadhaar', 'abc xyz', '123546798', '123546798', '123546798', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 03:21:32', '2026-06-17 03:21:32', NULL),
-(12, 12, '103', 'Rohit Ambedkar', NULL, '2026-06-17', '2026-06-17', '2026-06-17', '2020-10-10', 2, 15, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '123546798', '123546798', '123546798', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 03:22:54', '2026-06-17 03:22:54', NULL),
-(13, 13, '104', 'Dhurmil Darji', NULL, '2026-06-17', '2026-06-17', '2026-06-17', '2010-10-10', 2, 7, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '123546798', '123546798', '123546798', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 03:24:06', '2026-06-17 03:45:06', NULL),
-(14, 14, '105', 'Sanjeevani Manjerekar', NULL, '2026-06-17', '2026-06-17', '2026-06-17', '2010-10-10', 4, 13, 'Full-Time', 9, 'Female', 'Single', 'Aadhaar', 'abc xyz', '123546798', '123546798', '123546798', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 03:25:03', '2026-06-17 03:25:04', NULL),
-(15, 15, '106', 'Mithun ghosh', 'employees/ykRCToTlDZ95KQ10octsC1Ph4wmDvHuj33LXWKJQ.jpg', '2026-06-17', '2026-06-17', '2026-06-17', '2010-10-10', 8, 15, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc zy', '123546798', '123546798', '123546798', '12', 0, 0, 0, 'employees/W79OYzhqvcY8YBeRutj9KMLfqa3XkstOXgrtADi6.pdf', 'employees/fKkAwhiS0ntju9VSDk32strQoG7f8dO4USnHvk5j.pdf', 'employees/2I70YqGovURVtX9iwwe1Q5TdrE5kKdjPVnehSvPt.pdf', 'employees/9ooxbV8Vc4VSuz7PASFrB1SxtpNkyErs563rEPfg.pdf', '2026-06-17 03:58:21', '2026-06-17 03:58:21', NULL),
-(16, 16, '107', 'Dileep Madhukar', NULL, '2026-06-17', '2026-06-17', '2026-06-17', '2010-10-10', 2, 8, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '123546798', '123546798', '123546798', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 04:11:48', '2026-06-17 04:11:48', NULL),
-(17, 17, '108', 'Rampreet Vishwakarma', NULL, '2026-06-17', '2026-06-17', '2026-06-17', '2010-10-10', 2, 10, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '123546798', '123546798', '123546798', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 04:12:51', '2026-06-17 04:12:51', NULL),
-(18, 18, '109', 'ugrasen', NULL, '2026-06-17', '2026-06-17', '2026-06-17', '2010-10-10', 2, 8, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '123546798', '123546798', '123546798', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 04:13:50', '2026-06-17 04:13:50', NULL),
-(19, 19, '110', 'Kishor Tare', NULL, '2026-06-17', '2026-06-17', '2026-06-17', '2010-10-10', 2, 9, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '123546798', '123546798', '123546798', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 04:15:08', '2026-06-17 04:15:08', NULL),
-(20, 20, '111', 'Sarvesh Pal', NULL, '2026-06-17', '2026-06-17', '2026-06-17', '2010-10-10', 2, 9, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '123546798', '123546798', '123546798', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 04:16:15', '2026-06-17 04:16:15', NULL),
-(21, 21, '112', 'Rama Shankar', NULL, '2026-06-17', '2026-06-17', '2026-06-17', '2010-10-10', 2, 9, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '123546798', '123546798', '123546798', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 04:45:26', '2026-06-17 04:45:26', NULL),
-(22, 22, '113', 'Ajay Saki', NULL, '2026-06-17', '2026-06-17', '2026-06-17', '2010-10-10', 2, 8, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '123546798', '123546798', '123546798', '12', 0, 0, 1, NULL, NULL, NULL, NULL, '2026-06-17 04:46:46', '2026-06-17 04:46:46', NULL),
-(23, 23, '114', 'Bhavesh Jawale', NULL, '2026-06-17', '2026-06-17', '2026-06-17', '2010-10-10', 5, 6, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '123546798', '123546798', '123546798', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 04:48:43', '2026-06-17 04:48:43', NULL),
-(24, 24, '115', 'Priyotosh mondal', NULL, '2026-06-17', '2026-06-17', '2026-06-17', '2010-10-10', 8, 15, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '123546798', '123546798', '123546798', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 04:49:57', '2026-06-17 04:49:57', NULL),
-(27, 25, '116', 'Santosh Mondak', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 8, 15, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 1, NULL, NULL, NULL, NULL, '2026-06-17 05:25:07', '2026-06-17 05:25:07', NULL),
-(28, 26, '117', 'Sukumar Konai', NULL, '2020-10-10', '2020-10-10', '2020-10-10', '2010-10-10', 8, 15, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 05:46:57', '2026-06-17 05:50:48', NULL),
-(29, 27, '118', 'Sahadeb konai', NULL, '2020-10-10', '2020-10-10', '2020-10-10', '2010-10-10', 8, 15, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 05:51:48', '2026-06-17 05:51:48', NULL),
-(30, 28, '119', 'Sujan Hansda', NULL, '2020-10-10', '2020-10-10', '2020-10-10', '2020-10-10', 8, 15, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'ab c xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 05:52:34', '2026-06-17 05:52:34', NULL),
-(31, 29, '120', 'Rintu Ghosh', NULL, '2020-10-10', '2020-10-10', '2020-10-10', '2010-10-10', 2, 10, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 05:53:26', '2026-06-17 05:53:26', NULL),
-(32, 30, '121', 'Nayan Kahar', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-02-10', 2, 8, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xtyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 05:54:23', '2026-06-17 05:54:24', NULL),
-(33, 31, '122', 'Nilkumar Aditya', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 8, 15, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 05:55:25', '2026-06-17 05:55:25', NULL),
-(34, 32, '123', 'Jayanta Kahar', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 2, 8, 'Full-Time', 9, 'Male', 'Single', 'PAN', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 1, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 05:56:35', '2026-06-17 05:56:36', NULL),
-(35, 33, '124', 'Raj Kumar Aditya', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 2, 10, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 05:57:33', '2026-06-17 05:57:33', NULL),
-(36, 34, '125', 'Raj Aditya', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 2, 10, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', NULL, '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 05:58:28', '2026-06-17 05:58:28', NULL),
-(37, 35, '126', 'Subodh Bholla', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 8, 15, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:00:05', '2026-06-17 06:00:05', NULL),
-(38, 36, '127', 'Hemant Kahar', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 2, 8, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:01:33', '2026-06-17 06:01:33', NULL),
-(39, 37, '128', 'Jeet Dhibar', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 8, 15, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:07:05', '2026-06-17 06:07:05', NULL),
-(40, 38, '129', 'Saheb Bholla', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 2, 8, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 1, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:40:09', '2026-06-17 06:40:09', NULL),
-(41, 39, '130', 'Ramkrishna Bholla', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 2, 10, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:41:04', '2026-06-17 06:41:04', NULL),
-(42, 40, '131', 'Biswanath Bholla', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 8, 15, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 1, 1, NULL, NULL, NULL, NULL, '2026-06-17 06:41:58', '2026-06-17 06:41:58', NULL),
-(43, 41, '132', 'Bappa Bholla', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 2, 8, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 1, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:42:54', '2026-06-17 06:42:54', NULL),
-(44, 42, '133', 'Jiban Pal', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 2, 7, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:43:44', '2026-06-17 06:43:44', NULL),
-(45, 43, '134', 'Bikash Bholla', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 8, 15, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 1, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:44:51', '2026-06-17 06:44:51', NULL),
-(46, 44, '135', 'Rahul Dhibar', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 8, 15, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:46:09', '2026-06-17 06:46:09', NULL),
-(47, 45, '136', 'Suvendu Fouzder', NULL, '2010-10-10', '2010-10-21', '2010-10-10', '2010-10-10', 2, 8, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:47:31', '2026-06-17 06:47:31', NULL),
-(48, 46, '137', 'Sanjeet Mondal', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 2, 7, 'Full-Time', 9, 'Male', 'Single', 'PAN', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:51:28', '2026-06-17 06:51:28', NULL),
-(49, 47, '138', 'Jiban Dhibar', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 2, 8, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:52:23', '2026-06-17 06:52:24', NULL),
-(50, 48, '139', 'Bishwajit Bholla', NULL, '2010-10-10', '2010-10-10', '2010-02-10', '2010-10-10', 8, 15, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:53:30', '2026-06-17 06:53:31', NULL),
-(51, 49, '140', 'Shib Shankar Roy', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 2, 10, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:54:20', '2026-06-17 06:54:20', NULL),
-(52, 50, '141', 'Aakash Bholla', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 2, 10, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:55:18', '2026-06-17 06:55:18', NULL),
-(53, 51, '142', 'Suvendu Dhibar', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 2, 10, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:56:24', '2026-06-17 06:56:24', NULL),
-(54, 52, '143', 'Palash Majhi', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 2, 10, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:57:27', '2026-06-17 06:57:27', NULL),
-(55, 53, '144', 'Gopeshwar Mondal', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 2, 10, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:58:16', '2026-06-17 06:58:17', NULL),
-(56, 54, '145', 'Prasad Kalvikatti', NULL, '2026-05-27', '2026-06-15', '2026-09-15', '2003-10-02', 7, 1, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '9022428111', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:59:45', '2026-06-19 06:11:22', NULL),
-(57, 55, '1010', 'test user', 'employees/YnaClsxS9FovTWmmMPFXK4X7j1QOlWAymDeuh8qa.png', '2026-01-01', '2026-01-01', '2026-01-01', '2005-02-10', 1, 1, 'Full-Time', 9, 'Male', 'Married', 'Aadhaar', 'abc xyz', '1478523690', '4567891230', '1324567890', 'yes', 0, 0, 0, 'employees/m2DSBk8caomLo2YzMo617vE20x4bUp3vRzFaBmuC.pdf', 'employees/FDxfTihz1wgXmAsTskmKbk1PzGpRsogA1ZmXLXm0.pdf', 'employees/yXpSRCjN2OERpE13z24sb7jn2QrmZgWszibenfhE.pdf', 'employees/CiN60JsqvqsFihsGdhDMokqh0QXEkpr58ABVLRbk.pdf', '2026-06-19 06:35:05', '2026-06-19 06:35:05', NULL);
+(9, 9, '000', 'Ronak Ray', NULL, '2026-06-17', '2026-06-17', '2026-06-17', '2023-06-19', 1, 1, 'Full-Time', NULL, 'Male', 'Single', 'Aadhaar', 'abc xyz', '123546798', '123546798', '123546798', '12th', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 03:18:52', '2026-06-19 23:50:48', NULL),
+(10, 10, '101', 'Darshna Lade', NULL, '2026-06-17', '2026-06-17', '2026-06-17', '2023-10-10', 3, 4, 'Full-Time', 9, 'Female', 'Single', 'Aadhaar', 'abc xyz', '123546798', '123546798', '123546798', '12th', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 03:20:33', '2026-06-22 05:04:21', NULL),
+(11, 11, '102', 'shwetali bavdane', NULL, '2026-06-17', '2026-06-17', '2026-06-17', '2020-10-10', 3, 4, 'Full-Time', 9, 'Female', 'Single', 'Aadhaar', 'abc xyz', '123546798', '123546798', '123546798', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 03:21:32', '2026-06-17 03:21:32', NULL),
+(12, 12, '103', 'Rohit Ambedkar', NULL, '2026-06-17', '2026-06-17', '2026-06-17', '2020-10-10', 2, 10, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '123546798', '123546798', '123546798', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 03:22:54', '2026-06-17 03:22:54', NULL),
+(13, 13, '104', 'Dhurmil Darji', NULL, '2026-06-17', '2026-06-17', '2026-06-17', '2010-10-10', 2, 6, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '123546798', '123546798', '123546798', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 03:24:06', '2026-06-17 03:45:06', NULL),
+(14, 14, '105', 'Sanjeevani Manjerekar', NULL, '2026-06-17', '2026-06-17', '2026-06-17', '2010-10-10', 1, 3, 'Full-Time', 9, 'Female', 'Single', 'Aadhaar', 'abc xyz', '123546798', '123546798', '123546798', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 03:25:03', '2026-06-17 03:25:04', NULL),
+(15, 15, '106', 'Mithun ghosh', 'employees/ykRCToTlDZ95KQ10octsC1Ph4wmDvHuj33LXWKJQ.jpg', '2026-06-17', '2026-06-17', '2026-06-17', '2010-10-10', 7, 10, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc zy', '123546798', '123546798', '123546798', '12', 0, 0, 0, 'employees/W79OYzhqvcY8YBeRutj9KMLfqa3XkstOXgrtADi6.pdf', 'employees/fKkAwhiS0ntju9VSDk32strQoG7f8dO4USnHvk5j.pdf', 'employees/2I70YqGovURVtX9iwwe1Q5TdrE5kKdjPVnehSvPt.pdf', 'employees/9ooxbV8Vc4VSuz7PASFrB1SxtpNkyErs563rEPfg.pdf', '2026-06-17 03:58:21', '2026-06-17 03:58:21', NULL),
+(16, 16, '107', 'Dileep Madhukar', NULL, '2026-06-17', '2026-06-17', '2026-06-17', '2010-10-10', 2, 7, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '123546798', '123546798', '123546798', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 04:11:48', '2026-06-17 04:11:48', NULL),
+(17, 17, '108', 'Rampreet Vishwakarma', NULL, '2026-06-17', '2026-06-17', '2026-06-17', '2010-10-10', 2, 9, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '123546798', '123546798', '123546798', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 04:12:51', '2026-06-17 04:12:51', NULL),
+(18, 18, '109', 'ugrasen', NULL, '2026-06-17', '2026-06-17', '2026-06-17', '2010-10-10', 2, 7, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '123546798', '123546798', '123546798', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 04:13:50', '2026-06-17 04:13:50', NULL),
+(19, 19, '110', 'Kishor Tare', NULL, '2026-06-17', '2026-06-17', '2026-06-17', '2010-10-10', 2, 8, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '123546798', '123546798', '123546798', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 04:15:08', '2026-06-17 04:15:08', NULL),
+(20, 20, '111', 'Sarvesh Pal', NULL, '2026-06-17', '2026-06-17', '2026-06-17', '2010-10-10', 2, 8, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '123546798', '123546798', '123546798', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 04:16:15', '2026-06-17 04:16:15', NULL),
+(21, 21, '112', 'Rama Shankar', NULL, '2026-06-17', '2026-06-17', '2026-06-17', '2010-10-10', 2, 8, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '123546798', '123546798', '123546798', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 04:45:26', '2026-06-17 04:45:26', NULL),
+(22, 22, '113', 'Ajay Saki', NULL, '2026-06-17', '2026-06-17', '2026-06-17', '2010-10-10', 2, 7, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '123546798', '123546798', '123546798', '12', 0, 0, 1, NULL, NULL, NULL, NULL, '2026-06-17 04:46:46', '2026-06-17 04:46:46', NULL),
+(23, 23, '114', 'Bhavesh Jawale', NULL, '2026-06-17', '2026-06-17', '2026-06-17', '2010-10-10', 1, 2, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '123546798', '123546798', '123546798', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 04:48:43', '2026-06-17 04:48:43', NULL),
+(24, 24, '115', 'Priyotosh mondal', NULL, '2026-06-17', '2026-06-17', '2026-06-17', '2010-10-10', 7, 10, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '123546798', '123546798', '123546798', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 04:49:57', '2026-06-17 04:49:57', NULL),
+(27, 25, '116', 'Santosh Mondak', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 7, 10, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 1, NULL, NULL, NULL, NULL, '2026-06-17 05:25:07', '2026-06-17 05:25:07', NULL),
+(28, 26, '117', 'Sukumar Konai', NULL, '2020-10-10', '2020-10-10', '2020-10-10', '2010-10-10', 7, 10, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 05:46:57', '2026-06-17 05:50:48', NULL),
+(29, 27, '118', 'Sahadeb konai', NULL, '2020-10-10', '2020-10-10', '2020-10-10', '2010-10-10', 7, 10, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 05:51:48', '2026-06-17 05:51:48', NULL),
+(30, 28, '119', 'Sujan Hansda', NULL, '2020-10-10', '2020-10-10', '2020-10-10', '2020-10-10', 7, 10, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'ab c xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 05:52:34', '2026-06-17 05:52:34', NULL),
+(31, 29, '120', 'Rintu Ghosh', NULL, '2020-10-10', '2020-10-10', '2020-10-10', '2010-10-10', 2, 9, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 05:53:26', '2026-06-17 05:53:26', NULL),
+(32, 30, '121', 'Nayan Kahar', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-02-10', 2, 7, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xtyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 05:54:23', '2026-06-17 05:54:24', NULL),
+(33, 31, '122', 'Nilkumar Aditya', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 7, 10, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 05:55:25', '2026-06-17 05:55:25', NULL),
+(34, 32, '123', 'Jayanta Kahar', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 2, 7, 'Full-Time', 9, 'Male', 'Single', 'PAN', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 1, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 05:56:35', '2026-06-17 05:56:36', NULL),
+(35, 33, '124', 'Raj Kumar Aditya', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 2, 9, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 05:57:33', '2026-06-17 05:57:33', NULL),
+(36, 34, '125', 'Raj Aditya', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 2, 9, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', NULL, '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 05:58:28', '2026-06-17 05:58:28', NULL),
+(37, 35, '126', 'Subodh Bholla', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 7, 10, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:00:05', '2026-06-17 06:00:05', NULL),
+(38, 36, '127', 'Hemant Kahar', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 2, 7, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:01:33', '2026-06-17 06:01:33', NULL),
+(39, 37, '128', 'Jeet Dhibar', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 7, 10, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:07:05', '2026-06-17 06:07:05', NULL),
+(40, 38, '129', 'Saheb Bholla', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 2, 7, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 1, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:40:09', '2026-06-17 06:40:09', NULL),
+(41, 39, '130', 'Ramkrishna Bholla', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 2, 9, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:41:04', '2026-06-17 06:41:04', NULL),
+(42, 40, '131', 'Biswanath Bholla', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 7, 10, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 1, 1, NULL, NULL, NULL, NULL, '2026-06-17 06:41:58', '2026-06-17 06:41:58', NULL),
+(43, 41, '132', 'Bappa Bholla', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 2, 7, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 1, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:42:54', '2026-06-17 06:42:54', NULL),
+(44, 42, '133', 'Jiban Pal', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 2, 6, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:43:44', '2026-06-17 06:43:44', NULL),
+(45, 43, '134', 'Bikash Bholla', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 7, 10, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 1, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:44:51', '2026-06-17 06:44:51', NULL),
+(46, 44, '135', 'Rahul Dhibar', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 7, 10, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:46:09', '2026-06-17 06:46:09', NULL),
+(47, 45, '136', 'Suvendu Fouzder', NULL, '2010-10-10', '2010-10-21', '2010-10-10', '2010-10-10', 2, 7, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:47:31', '2026-06-17 06:47:31', NULL),
+(48, 46, '137', 'Sanjeet Mondal', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 2, 6, 'Full-Time', 9, 'Male', 'Single', 'PAN', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:51:28', '2026-06-17 06:51:28', NULL),
+(49, 47, '138', 'Jiban Dhibar', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 2, 7, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:52:23', '2026-06-17 06:52:24', NULL),
+(50, 48, '139', 'Bishwajit Bholla', NULL, '2010-10-10', '2010-10-10', '2010-02-10', '2010-10-10', 7, 10, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:53:30', '2026-06-17 06:53:31', NULL),
+(51, 49, '140', 'Shib Shankar Roy', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 2, 9, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:54:20', '2026-06-17 06:54:20', NULL),
+(52, 50, '141', 'Aakash Bholla', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 2, 9, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:55:18', '2026-06-17 06:55:18', NULL),
+(53, 51, '142', 'Suvendu Dhibar', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 2, 9, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:56:24', '2026-06-17 06:56:24', NULL),
+(54, 52, '143', 'Palash Majhi', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 2, 9, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:57:27', '2026-06-17 06:57:27', NULL),
+(55, 53, '144', 'Gopeshwar Mondal', NULL, '2010-10-10', '2010-10-10', '2010-10-10', '2010-10-10', 2, 9, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:58:16', '2026-06-17 06:58:17', NULL),
+(56, 54, '145', 'Prasad Kalvikatti', NULL, '2026-05-27', '2026-06-15', '2026-09-15', '2003-10-02', 4, 1, 'Full-Time', 9, 'Male', 'Single', 'Aadhaar', 'abc xyz', '9022428111', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-17 06:59:45', '2026-06-19 06:11:22', NULL),
+(57, 55, '1010', 'test user', 'employees/YnaClsxS9FovTWmmMPFXK4X7j1QOlWAymDeuh8qa.png', '2026-01-01', '2026-01-01', '2026-01-01', '2005-02-10', 1, 1, 'Full-Time', 9, 'Male', 'Married', 'Aadhaar', 'abc xyz', '1478523690', '4567891230', '1324567890', 'yes', 0, 0, 0, 'employees/m2DSBk8caomLo2YzMo617vE20x4bUp3vRzFaBmuC.pdf', 'employees/FDxfTihz1wgXmAsTskmKbk1PzGpRsogA1ZmXLXm0.pdf', 'employees/yXpSRCjN2OERpE13z24sb7jn2QrmZgWszibenfhE.pdf', 'employees/CiN60JsqvqsFihsGdhDMokqh0QXEkpr58ABVLRbk.pdf', '2026-06-19 06:35:05', '2026-06-25 06:37:20', '2026-06-25 06:37:20'),
+(58, 1, 'EMP-001', 'Admin', NULL, NULL, '2026-06-20', NULL, NULL, NULL, NULL, 'Full-Time', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-06-19 23:35:26', '2026-06-19 23:35:26', NULL),
+(59, 2, 'EMP-002', 'Super Admin', NULL, NULL, '2026-06-20', NULL, NULL, NULL, NULL, 'Full-Time', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-06-19 23:35:26', '2026-06-19 23:35:26', NULL),
+(60, 3, 'EMP-003', 'System Admin', NULL, NULL, '2026-06-20', NULL, NULL, NULL, NULL, 'Full-Time', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-06-19 23:35:26', '2026-06-19 23:35:26', NULL),
+(61, 56, '146', 'Chandradeb Mondal', NULL, '2010-10-10', '2010-02-10', '2020-02-10', '2010-10-10', 1, 2, 'Full-Time', 9, 'Male', 'Married', 'Aadhaar', 'abc xyz', '1234567890', '1234567890', '1234567890', '12', 0, 0, 0, NULL, NULL, NULL, NULL, '2026-06-25 05:45:52', '2026-06-25 05:45:52', NULL);
 
 -- --------------------------------------------------------
 
@@ -1098,6 +1022,212 @@ CREATE TABLE `employee_leave_balances` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `employee_leave_balances`
+--
+
+INSERT INTO `employee_leave_balances` (`id`, `employee_id`, `leave_type_id`, `allocated`, `used`, `remaining`, `carry_forward`, `expired`, `year`, `created_at`, `updated_at`) VALUES
+(1, 9, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(2, 9, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(3, 9, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(4, 9, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(5, 10, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(6, 10, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(7, 10, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(8, 10, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(9, 11, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(10, 11, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(11, 11, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(12, 11, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(13, 12, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(14, 12, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(15, 12, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(16, 12, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(17, 13, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(18, 13, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(19, 13, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(20, 13, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(21, 14, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(22, 14, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(23, 14, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(24, 14, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(25, 15, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(26, 15, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(27, 15, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(28, 15, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(29, 16, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(30, 16, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(31, 16, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(32, 16, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(33, 17, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(34, 17, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(35, 17, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(36, 17, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(37, 18, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(38, 18, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(39, 18, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(40, 18, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(41, 19, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(42, 19, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(43, 19, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(44, 19, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(45, 20, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(46, 20, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(47, 20, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(48, 20, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(49, 21, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(50, 21, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(51, 21, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(52, 21, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(53, 22, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(54, 22, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(55, 22, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(56, 22, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(57, 23, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(58, 23, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(59, 23, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(60, 23, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(61, 24, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(62, 24, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(63, 24, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(64, 24, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(65, 27, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(66, 27, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(67, 27, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(68, 27, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(69, 28, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(70, 28, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(71, 28, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(72, 28, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(73, 29, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(74, 29, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(75, 29, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(76, 29, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(77, 30, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(78, 30, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(79, 30, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(80, 30, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(81, 31, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(82, 31, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(83, 31, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(84, 31, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(85, 32, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(86, 32, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(87, 32, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(88, 32, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(89, 33, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(90, 33, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(91, 33, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(92, 33, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(93, 34, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(94, 34, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(95, 34, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(96, 34, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(97, 35, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(98, 35, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(99, 35, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(100, 35, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(101, 36, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(102, 36, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(103, 36, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(104, 36, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(105, 37, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(106, 37, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(107, 37, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(108, 37, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(109, 38, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(110, 38, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(111, 38, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(112, 38, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(113, 39, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(114, 39, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(115, 39, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(116, 39, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(117, 40, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(118, 40, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(119, 40, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(120, 40, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(121, 41, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(122, 41, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(123, 41, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(124, 41, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(125, 42, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(126, 42, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(127, 42, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(128, 42, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(129, 43, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(130, 43, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(131, 43, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(132, 43, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(133, 44, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(134, 44, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(135, 44, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(136, 44, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(137, 45, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(138, 45, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(139, 45, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(140, 45, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(141, 46, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(142, 46, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(143, 46, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(144, 46, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(145, 47, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(146, 47, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(147, 47, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(148, 47, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(149, 48, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(150, 48, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(151, 48, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(152, 48, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:34', '2026-06-22 07:01:34'),
+(153, 49, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(154, 49, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(155, 49, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(156, 49, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(157, 50, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(158, 50, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(159, 50, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(160, 50, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(161, 51, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(162, 51, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(163, 51, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(164, 51, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(165, 52, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(166, 52, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(167, 52, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(168, 52, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(169, 53, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(170, 53, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(171, 53, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(172, 53, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(173, 54, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(174, 54, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(175, 54, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(176, 54, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(177, 55, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(178, 55, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(179, 55, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(180, 55, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(181, 56, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(182, 56, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(183, 56, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(184, 56, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(185, 57, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(186, 57, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(187, 57, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(188, 57, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(189, 58, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(190, 58, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(191, 58, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(192, 58, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(193, 59, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(194, 59, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(195, 59, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(196, 59, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(197, 60, 1, 21.00, 0.00, 21.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(198, 60, 2, 10.00, 0.00, 10.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(199, 60, 3, 7.00, 0.00, 7.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35'),
+(200, 60, 4, 90.00, 0.00, 90.00, 0.00, 0.00, '2026', '2026-06-22 07:01:35', '2026-06-22 07:01:35');
 
 -- --------------------------------------------------------
 
@@ -1120,10 +1250,8 @@ CREATE TABLE `employee_sites` (
 --
 
 INSERT INTO `employee_sites` (`id`, `employee_id`, `site_id`, `assigned_at`, `role`, `created_at`, `updated_at`) VALUES
-(3, 14, 2, '2026-06-17', NULL, '2026-06-17 04:00:17', '2026-06-17 04:00:17'),
-(5, 9, 3, '2026-06-17', NULL, '2026-06-17 07:37:51', '2026-06-17 07:37:51'),
-(6, 56, 2, '2026-06-18', NULL, '2026-06-18 00:25:31', '2026-06-18 00:25:31'),
-(7, 10, 2, '2026-06-18', NULL, '2026-06-18 00:26:15', '2026-06-18 00:26:15');
+(10, 9, 4, '2026-06-20', NULL, '2026-06-20 00:14:22', '2026-06-20 00:14:22'),
+(12, 10, 4, '2026-06-23', NULL, '2026-06-23 05:41:44', '2026-06-23 05:41:44');
 
 -- --------------------------------------------------------
 
@@ -1149,17 +1277,20 @@ CREATE TABLE `employee_site_histories` (
 --
 
 INSERT INTO `employee_site_histories` (`id`, `employee_id`, `assigned_by_id`, `previous_site_id`, `new_site_id`, `assigned_at`, `transfer_date`, `remarks`, `created_at`, `updated_at`) VALUES
-(3, 14, 3, NULL, 2, '2026-06-17 03:59:43', NULL, 'Assigned to site', '2026-06-17 03:59:43', '2026-06-17 03:59:43'),
-(4, 14, 3, 2, NULL, '2026-06-17 03:59:58', NULL, 'abc', '2026-06-17 03:59:58', '2026-06-17 03:59:58'),
-(5, 14, 3, NULL, 2, '2026-06-17 04:00:17', NULL, 'Assigned to site', '2026-06-17 04:00:17', '2026-06-17 04:00:17'),
-(6, 9, 3, NULL, 2, '2026-06-17 07:37:01', NULL, 'Assigned to site', '2026-06-17 07:37:01', '2026-06-17 07:37:01'),
-(7, 9, 3, NULL, 3, '2026-06-17 07:37:51', NULL, 'Assigned to site', '2026-06-17 07:37:51', '2026-06-17 07:37:51'),
-(8, 9, 3, 2, NULL, '2026-06-17 07:38:24', NULL, 'aqbc sa as das', '2026-06-17 07:38:24', '2026-06-17 07:38:24'),
-(9, 56, 3, NULL, 2, '2026-06-18 00:25:31', NULL, 'Assigned to site', '2026-06-18 00:25:31', '2026-06-18 00:25:31'),
-(10, 10, 3, NULL, 2, '2026-06-18 00:26:15', NULL, 'Assigned to site', '2026-06-18 00:26:15', '2026-06-18 00:26:15'),
-(11, 57, 3, NULL, 2, '2026-06-19 06:35:17', NULL, 'Assigned to site', '2026-06-19 06:35:17', '2026-06-19 06:35:17'),
-(12, 57, 3, 2, 3, '2026-06-19 06:35:25', '2026-06-19 06:35:25', 'pqr', '2026-06-19 06:35:25', '2026-06-19 06:35:25'),
-(13, 57, 3, 3, NULL, '2026-06-19 06:39:11', NULL, 'qwqe', '2026-06-19 06:39:11', '2026-06-19 06:39:11');
+(3, 14, 3, NULL, NULL, '2026-06-17 03:59:43', NULL, 'Assigned to site', '2026-06-17 03:59:43', '2026-06-17 03:59:43'),
+(4, 14, 3, NULL, NULL, '2026-06-17 03:59:58', NULL, 'abc', '2026-06-17 03:59:58', '2026-06-17 03:59:58'),
+(5, 14, 3, NULL, NULL, '2026-06-17 04:00:17', NULL, 'Assigned to site', '2026-06-17 04:00:17', '2026-06-17 04:00:17'),
+(6, 9, 3, NULL, NULL, '2026-06-17 07:37:01', NULL, 'Assigned to site', '2026-06-17 07:37:01', '2026-06-17 07:37:01'),
+(7, 9, 3, NULL, NULL, '2026-06-17 07:37:51', NULL, 'Assigned to site', '2026-06-17 07:37:51', '2026-06-17 07:37:51'),
+(8, 9, 3, NULL, NULL, '2026-06-17 07:38:24', NULL, 'aqbc sa as das', '2026-06-17 07:38:24', '2026-06-17 07:38:24'),
+(9, 56, 3, NULL, NULL, '2026-06-18 00:25:31', NULL, 'Assigned to site', '2026-06-18 00:25:31', '2026-06-18 00:25:31'),
+(10, 10, 3, NULL, NULL, '2026-06-18 00:26:15', NULL, 'Assigned to site', '2026-06-18 00:26:15', '2026-06-18 00:26:15'),
+(11, 57, 3, NULL, NULL, '2026-06-19 06:35:17', NULL, 'Assigned to site', '2026-06-19 06:35:17', '2026-06-19 06:35:17'),
+(12, 57, 3, NULL, NULL, '2026-06-19 06:35:25', '2026-06-19 06:35:25', 'pqr', '2026-06-19 06:35:25', '2026-06-19 06:35:25'),
+(13, 57, 3, NULL, NULL, '2026-06-19 06:39:11', NULL, 'qwqe', '2026-06-19 06:39:11', '2026-06-19 06:39:11'),
+(14, 9, 9, NULL, 4, '2026-06-20 00:14:22', NULL, 'Assigned to site', '2026-06-20 00:14:22', '2026-06-20 00:14:22'),
+(15, 10, 9, NULL, 5, '2026-06-22 05:04:28', NULL, 'Assigned to site', '2026-06-22 05:04:28', '2026-06-22 05:04:28'),
+(16, 10, 3, 5, 4, '2026-06-23 05:41:44', '2026-06-23 05:41:44', 'abc', '2026-06-23 05:41:44', '2026-06-23 05:41:44');
 
 -- --------------------------------------------------------
 
@@ -1187,7 +1318,6 @@ CREATE TABLE `goods_receipt_notes` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `grn_number` varchar(255) NOT NULL,
   `purchase_order_id` bigint(20) UNSIGNED NOT NULL,
-  `branch_id` bigint(20) UNSIGNED NOT NULL,
   `received_by` bigint(20) UNSIGNED DEFAULT NULL,
   `receipt_date` date NOT NULL,
   `notes` text DEFAULT NULL,
@@ -1236,7 +1366,6 @@ CREATE TABLE `holidays` (
 CREATE TABLE `inventories` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `product_id` bigint(20) UNSIGNED NOT NULL,
-  `branch_id` bigint(20) UNSIGNED NOT NULL,
   `quantity` int(11) NOT NULL DEFAULT 0,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
@@ -1246,43 +1375,43 @@ CREATE TABLE `inventories` (
 -- Dumping data for table `inventories`
 --
 
-INSERT INTO `inventories` (`id`, `product_id`, `branch_id`, `quantity`, `created_at`, `updated_at`) VALUES
-(1, 1, 1, 10, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
-(2, 1, 2, 20, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
-(3, 1, 3, 30, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
-(4, 1, 4, 40, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
-(5, 2, 1, 10, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
-(6, 2, 2, 20, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
-(7, 2, 3, 30, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
-(8, 2, 4, 40, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
-(9, 3, 1, 10, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
-(10, 3, 2, 20, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
-(11, 3, 3, 30, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
-(12, 3, 4, 40, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
-(1, 1, 1, 10, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
-(2, 1, 2, 20, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
-(3, 1, 3, 30, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
-(4, 1, 4, 40, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
-(5, 2, 1, 10, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
-(6, 2, 2, 20, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
-(7, 2, 3, 30, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
-(8, 2, 4, 40, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
-(9, 3, 1, 10, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
-(10, 3, 2, 20, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
-(11, 3, 3, 30, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
-(12, 3, 4, 40, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
-(1, 1, 1, 10, '2026-06-12 21:34:53', '2026-06-12 21:34:53'),
-(2, 1, 2, 20, '2026-06-12 21:34:53', '2026-06-12 21:34:53'),
-(3, 1, 3, 30, '2026-06-12 21:34:53', '2026-06-12 21:34:53'),
-(4, 1, 4, 40, '2026-06-12 21:34:53', '2026-06-12 21:34:53'),
-(5, 2, 1, 10, '2026-06-12 21:34:53', '2026-06-12 21:34:53'),
-(6, 2, 2, 20, '2026-06-12 21:34:53', '2026-06-12 21:34:53'),
-(7, 2, 3, 30, '2026-06-12 21:34:53', '2026-06-12 21:34:53'),
-(8, 2, 4, 40, '2026-06-12 21:34:53', '2026-06-12 21:34:53'),
-(9, 3, 1, 10, '2026-06-12 21:34:53', '2026-06-12 21:34:53'),
-(10, 3, 2, 20, '2026-06-12 21:34:53', '2026-06-12 21:34:53'),
-(11, 3, 3, 30, '2026-06-12 21:34:53', '2026-06-12 21:34:53'),
-(12, 3, 4, 40, '2026-06-12 21:34:53', '2026-06-12 21:34:53');
+INSERT INTO `inventories` (`id`, `product_id`, `quantity`, `created_at`, `updated_at`) VALUES
+(1, 1, 10, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
+(2, 1, 20, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
+(3, 1, 30, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
+(4, 1, 40, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
+(5, 2, 10, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
+(6, 2, 20, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
+(7, 2, 30, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
+(8, 2, 40, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
+(9, 3, 10, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
+(10, 3, 20, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
+(11, 3, 30, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
+(12, 3, 40, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
+(1, 1, 10, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
+(2, 1, 20, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
+(3, 1, 30, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
+(4, 1, 40, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
+(5, 2, 10, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
+(6, 2, 20, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
+(7, 2, 30, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
+(8, 2, 40, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
+(9, 3, 10, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
+(10, 3, 20, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
+(11, 3, 30, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
+(12, 3, 40, '2026-06-13 03:04:53', '2026-06-13 03:04:53'),
+(1, 1, 10, '2026-06-12 21:34:53', '2026-06-12 21:34:53'),
+(2, 1, 20, '2026-06-12 21:34:53', '2026-06-12 21:34:53'),
+(3, 1, 30, '2026-06-12 21:34:53', '2026-06-12 21:34:53'),
+(4, 1, 40, '2026-06-12 21:34:53', '2026-06-12 21:34:53'),
+(5, 2, 10, '2026-06-12 21:34:53', '2026-06-12 21:34:53'),
+(6, 2, 20, '2026-06-12 21:34:53', '2026-06-12 21:34:53'),
+(7, 2, 30, '2026-06-12 21:34:53', '2026-06-12 21:34:53'),
+(8, 2, 40, '2026-06-12 21:34:53', '2026-06-12 21:34:53'),
+(9, 3, 10, '2026-06-12 21:34:53', '2026-06-12 21:34:53'),
+(10, 3, 20, '2026-06-12 21:34:53', '2026-06-12 21:34:53'),
+(11, 3, 30, '2026-06-12 21:34:53', '2026-06-12 21:34:53'),
+(12, 3, 40, '2026-06-12 21:34:53', '2026-06-12 21:34:53');
 
 -- --------------------------------------------------------
 
@@ -1311,8 +1440,6 @@ CREATE TABLE `inventory_transactions` (
 
 CREATE TABLE `inventory_transfers` (
   `id` bigint(20) UNSIGNED NOT NULL,
-  `source_branch_id` bigint(20) UNSIGNED NOT NULL,
-  `destination_branch_id` bigint(20) UNSIGNED NOT NULL,
   `product_id` bigint(20) UNSIGNED NOT NULL,
   `quantity` int(11) NOT NULL,
   `status` enum('pending','approved','rejected','completed') NOT NULL DEFAULT 'pending',
@@ -1331,20 +1458,21 @@ CREATE TABLE `inventory_transfers` (
 
 CREATE TABLE `invoices` (
   `id` bigint(20) UNSIGNED NOT NULL,
-  `sales_order_id` bigint(20) UNSIGNED NOT NULL,
+  `sales_order_id` bigint(20) UNSIGNED DEFAULT NULL,
   `invoice_number` varchar(255) NOT NULL,
   `issue_date` date NOT NULL,
-  `due_date` date NOT NULL,
+  `due_date` date DEFAULT NULL,
   `total_amount` decimal(10,2) NOT NULL,
   `pdf_url` varchar(255) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
-  `branch_id` bigint(20) UNSIGNED DEFAULT NULL,
   `customer_id` bigint(20) UNSIGNED DEFAULT NULL,
   `subtotal` decimal(15,2) NOT NULL DEFAULT 0.00,
   `cgst_total` decimal(15,2) NOT NULL DEFAULT 0.00,
   `sgst_total` decimal(15,2) NOT NULL DEFAULT 0.00,
   `igst_total` decimal(15,2) NOT NULL DEFAULT 0.00,
+  `gst_type` varchar(255) DEFAULT NULL,
+  `gst_rate` decimal(5,2) NOT NULL DEFAULT 0.00,
   `grand_total` decimal(15,2) NOT NULL DEFAULT 0.00,
   `status` varchar(255) NOT NULL DEFAULT 'Draft',
   `payment_date` date DEFAULT NULL,
@@ -1353,6 +1481,13 @@ CREATE TABLE `invoices` (
   `terms` text DEFAULT NULL,
   `created_by` bigint(20) UNSIGNED DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `invoices`
+--
+
+INSERT INTO `invoices` (`id`, `sales_order_id`, `invoice_number`, `issue_date`, `due_date`, `total_amount`, `pdf_url`, `created_at`, `updated_at`, `customer_id`, `subtotal`, `cgst_total`, `sgst_total`, `igst_total`, `gst_type`, `gst_rate`, `grand_total`, `status`, `payment_date`, `paid_amount`, `notes`, `terms`, `created_by`) VALUES
+(4, NULL, 'RFI-AB-0001', '2026-06-22', '2026-06-22', 5900.00, NULL, '2026-06-22 10:53:57', '2026-06-22 10:53:57', 2, 5000.00, 450.00, 450.00, 0.00, 'cgst', 18.00, 5900.00, 'Paid', NULL, 0.00, NULL, '1. Payment is due within 30 days.\n2. Goods once sold will not be taken back.', 9);
 
 -- --------------------------------------------------------
 
@@ -1369,14 +1504,18 @@ CREATE TABLE `invoice_items` (
   `quantity` int(11) NOT NULL,
   `unit_price` decimal(15,2) NOT NULL,
   `discount` decimal(15,2) NOT NULL DEFAULT 0.00,
-  `tax_rate` decimal(5,2) NOT NULL DEFAULT 0.00,
-  `cgst_amount` decimal(15,2) NOT NULL DEFAULT 0.00,
-  `sgst_amount` decimal(15,2) NOT NULL DEFAULT 0.00,
-  `igst_amount` decimal(15,2) NOT NULL DEFAULT 0.00,
   `total` decimal(15,2) NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `invoice_items`
+--
+
+INSERT INTO `invoice_items` (`id`, `invoice_id`, `product_id`, `item_description`, `hsn_code`, `quantity`, `unit_price`, `discount`, `total`, `created_at`, `updated_at`) VALUES
+(2, 3, 3, 'sprinkler', 'abc123', 12, 200.00, 0.00, 2400.00, '2026-06-22 09:42:49', '2026-06-22 09:42:49'),
+(3, 4, 3, 'sprinkler', 'abc123', 25, 200.00, 0.00, 5000.00, '2026-06-22 10:53:57', '2026-06-22 10:53:57');
 
 -- --------------------------------------------------------
 
@@ -1443,7 +1582,8 @@ CREATE TABLE `leaves` (
 
 INSERT INTO `leaves` (`id`, `employee_id`, `leave_type_id`, `start_date`, `end_date`, `total_days`, `is_half_day`, `status`, `approved_by`, `reason`, `attachment_path`, `comments`, `applied_at`, `created_at`, `updated_at`) VALUES
 (1, 10, 3, '2026-06-18', '2026-06-18', 1.00, 0, 'Submitted', NULL, 'abc xyz', NULL, NULL, '2026-06-18 04:04:39', '2026-06-18 04:04:39', '2026-06-18 04:04:39'),
-(2, 10, 3, '2026-06-18', '2026-06-18', 1.00, 0, 'Submitted', NULL, 'abc xyz', NULL, NULL, '2026-06-18 04:07:18', '2026-06-18 04:07:18', '2026-06-18 04:07:18');
+(2, 10, 3, '2026-06-18', '2026-06-18', 1.00, 0, 'Cancelled', NULL, 'abc xyz', NULL, '111', '2026-06-18 04:07:18', '2026-06-18 04:07:18', '2026-06-23 05:41:10'),
+(3, 9, 1, '2026-06-20', '2026-06-20', 1.00, 0, 'Submitted', NULL, 'HEHE', NULL, NULL, '2026-06-20 07:24:59', '2026-06-20 07:24:59', '2026-06-20 07:24:59');
 
 -- --------------------------------------------------------
 
@@ -1467,7 +1607,9 @@ CREATE TABLE `leave_histories` (
 
 INSERT INTO `leave_histories` (`id`, `leave_id`, `action_by`, `action`, `comments`, `created_at`, `updated_at`) VALUES
 (1, 1, 3, 'Submitted', NULL, '2026-06-18 04:04:39', '2026-06-18 04:04:39'),
-(2, 2, 3, 'Submitted', NULL, '2026-06-18 04:07:18', '2026-06-18 04:07:18');
+(2, 2, 3, 'Submitted', NULL, '2026-06-18 04:07:18', '2026-06-18 04:07:18'),
+(3, 3, 9, 'Submitted', NULL, '2026-06-20 07:24:59', '2026-06-20 07:24:59'),
+(4, 2, 10, 'Cancelled', '111', '2026-06-23 05:41:10', '2026-06-23 05:41:10');
 
 -- --------------------------------------------------------
 
@@ -1604,7 +1746,31 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (97, '2026_06_19_000010_remove_soft_deletes_from_documents_table', 30),
 (98, '2026_06_19_000011_add_opening_stock_and_in_storage_supplier', 31),
 (99, '2026_06_19_000012_fix_suppliers_table_primary_key', 31),
-(100, '2026_06_19_000013_insert_in_storage_supplier', 31);
+(100, '2026_06_19_000013_insert_in_storage_supplier', 31),
+(101, '2026_06_19_000014_move_gst_to_header_level', 32),
+(102, '2026_06_20_170513_add_branch_id_to_payrolls_table', 32),
+(103, '2026_06_20_174233_remove_branches', 33),
+(104, '2026_06_20_180957_fix_products_id_auto_increment', 34),
+(105, '2026_06_22_114701_add_hsn_gst_and_shipping_to_purchase_tables', 35),
+(106, '2026_06_22_115806_fix_purchase_order_items_id_auto_increment', 36),
+(107, '2026_06_22_121500_add_hsn_gst_and_shipping_to_sales_tables', 37),
+(108, '2026_06_22_130000_create_report_categories_table', 38),
+(109, '2026_06_22_130001_create_reports_table', 38),
+(110, '2026_06_22_130002_create_report_schedules_table', 38),
+(111, '2026_06_22_130003_create_report_generations_table', 38),
+(112, '2026_06_22_140000_create_company_settings_table', 39),
+(113, '2026_06_22_150000_fix_sales_tables_id_auto_increment', 40),
+(114, '2026_06_22_170822_create_permission_scopes_table', 41),
+(115, '2026_06_22_170827_create_role_templates_table', 41),
+(116, '2026_06_22_170832_create_system_exceptions_table', 41),
+(117, '2026_06_22_170836_create_audit_settings_table', 41),
+(118, '2026_06_22_170841_create_permission_dependencies_table', 41),
+(119, '2026_06_22_180558_create_push_subscriptions_table', 42),
+(120, '2026_06_25_000001_update_departments_and_designations_data', 43),
+(121, '2026_06_25_000002_fix_employee_references_and_descriptions', 44),
+(122, '2026_06_25_000003_add_start_end_date_to_sites_table', 45),
+(124, '2026_06_25_000001_add_receipt_delivery_fields_to_orders', 46),
+(125, '2026_06_25_000004_allow_custom_products_in_order_items', 46);
 
 -- --------------------------------------------------------
 
@@ -1668,42 +1834,27 @@ CREATE TABLE `model_has_roles` (
 --
 
 INSERT INTO `model_has_roles` (`role_id`, `model_type`, `model_id`) VALUES
-(1, 'App\\Models\\User', 102),
 (2, 'App\\Models\\User', 101),
 (2, 'App\\Models\\User', 103),
 (4, 'App\\Models\\User', 105),
 (4, 'App\\Models\\User', 107),
 (4, 'App\\Models\\User', 109),
-(7, 'App\\Models\\User', 104),
-(7, 'App\\Models\\User', 106),
-(7, 'App\\Models\\User', 108),
-(1, 'App\\Models\\User', 102),
 (2, 'App\\Models\\User', 101),
 (2, 'App\\Models\\User', 103),
 (4, 'App\\Models\\User', 105),
 (4, 'App\\Models\\User', 107),
 (4, 'App\\Models\\User', 109),
-(7, 'App\\Models\\User', 104),
-(7, 'App\\Models\\User', 106),
-(7, 'App\\Models\\User', 108),
-(1, 'App\\Models\\User', 102),
 (2, 'App\\Models\\User', 101),
 (2, 'App\\Models\\User', 103),
 (4, 'App\\Models\\User', 105),
 (4, 'App\\Models\\User', 107),
 (4, 'App\\Models\\User', 109),
-(7, 'App\\Models\\User', 104),
-(7, 'App\\Models\\User', 106),
-(7, 'App\\Models\\User', 108),
-(1, 'App\\Models\\User', 2),
 (2, 'App\\Models\\User', 3),
 (5, 'App\\Models\\User', 4),
 (5, 'App\\Models\\User', 5),
 (5, 'App\\Models\\User', 6),
 (5, 'App\\Models\\User', 7),
 (5, 'App\\Models\\User', 8),
-(1, 'App\\Models\\User', 1),
-(10, 'App\\Models\\User', 9),
 (18, 'App\\Models\\User', 10),
 (6, 'App\\Models\\User', 11),
 (21, 'App\\Models\\User', 12),
@@ -1748,8 +1899,8 @@ INSERT INTO `model_has_roles` (`role_id`, `model_type`, `model_id`) VALUES
 (17, 'App\\Models\\User', 51),
 (17, 'App\\Models\\User', 52),
 (17, 'App\\Models\\User', 53),
-(1, 'App\\Models\\User', 54),
-(1, 'App\\Models\\User', 55);
+(11, 'App\\Models\\User', 56),
+(2, 'App\\Models\\User', 9);
 
 -- --------------------------------------------------------
 
@@ -1793,7 +1944,6 @@ CREATE TABLE `payments` (
   `payment_date` date NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
-  `branch_id` bigint(20) UNSIGNED DEFAULT NULL,
   `type` varchar(255) NOT NULL DEFAULT 'Payable',
   `supplier_id` bigint(20) UNSIGNED DEFAULT NULL,
   `customer_id` bigint(20) UNSIGNED DEFAULT NULL,
@@ -1850,7 +2000,7 @@ CREATE TABLE `payrolls` (
 --
 
 INSERT INTO `payrolls` (`id`, `employee_id`, `month`, `year`, `basic_salary`, `hra`, `other_allowance`, `overtime_pay`, `pf`, `pt`, `salary_advance`, `loss_of_pay`, `net_salary`, `status`, `created_at`, `updated_at`, `payroll_period_id`, `present_days`, `absent_days`, `paid_leaves`, `unpaid_leaves`, `working_days`, `conveyance`, `medical_allowance`, `special_allowance`, `site_allowance`, `travel_allowance`, `food_allowance`, `esic`, `tds`, `other_deductions`, `late_penalty`, `bonuses`) VALUES
-(1, 56, 6, 2026, 22000.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 22000.00, 'Locked', '2026-06-17 23:52:20', '2026-06-17 23:55:52', 1, 0.00, 0.00, 0.00, 0.00, 30.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00);
+(3, 9, 6, 2026, 25000.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 25000.00, 'Approved', '2026-06-20 12:05:43', '2026-06-20 12:06:00', 2, 0.00, 0.00, 0.00, 0.00, 1.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00);
 
 -- --------------------------------------------------------
 
@@ -1875,7 +2025,8 @@ CREATE TABLE `payroll_periods` (
 --
 
 INSERT INTO `payroll_periods` (`id`, `month`, `year`, `start_date`, `end_date`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES
-(1, 6, 2026, '2026-06-01', '2026-06-30', 'Approved', '2026-06-17 23:29:15', '2026-06-17 23:52:15', NULL);
+(1, 6, 2026, '2026-06-20', '2026-06-30', 'Approved', '2026-06-17 23:29:15', '2026-06-20 10:57:18', '2026-06-20 10:57:18'),
+(2, 6, 2026, '2026-06-16', '2026-06-16', 'Processing', '2026-06-20 10:57:48', '2026-06-22 05:59:21', NULL);
 
 -- --------------------------------------------------------
 
@@ -1897,7 +2048,7 @@ CREATE TABLE `payslips` (
 --
 
 INSERT INTO `payslips` (`id`, `payroll_id`, `file_path`, `generated_at`, `created_at`, `updated_at`) VALUES
-(1, 1, NULL, '2026-06-17 23:54:13', '2026-06-17 23:54:13', '2026-06-17 23:54:13');
+(2, 3, NULL, '2026-06-20 12:08:52', '2026-06-20 12:08:52', '2026-06-20 12:08:52');
 
 -- --------------------------------------------------------
 
@@ -2109,7 +2260,80 @@ INSERT INTO `permissions` (`id`, `name`, `guard_name`, `created_at`, `updated_at
 (188, 'attendance.geo.checkin', 'web', '2026-06-18 02:15:37', '2026-06-18 02:15:37', NULL),
 (189, 'attendance.geo.checkout', 'web', '2026-06-18 02:15:37', '2026-06-18 02:15:37', NULL),
 (190, 'attendance.location.view', 'web', '2026-06-18 02:15:37', '2026-06-18 02:15:37', NULL),
-(191, 'attendance.location.audit', 'web', '2026-06-18 02:15:37', '2026-06-18 02:15:37', NULL);
+(191, 'attendance.location.audit', 'web', '2026-06-18 02:15:37', '2026-06-18 02:15:37', NULL),
+(192, 'view_reports', 'web', '2026-06-22 06:52:55', '2026-06-22 06:52:55', NULL),
+(193, 'create_reports', 'web', '2026-06-22 06:52:55', '2026-06-22 06:52:55', NULL),
+(194, 'edit_reports', 'web', '2026-06-22 06:52:55', '2026-06-22 06:52:55', NULL),
+(195, 'delete_reports', 'web', '2026-06-22 06:52:55', '2026-06-22 06:52:55', NULL),
+(196, 'export_reports', 'web', '2026-06-22 06:52:55', '2026-06-22 06:52:55', NULL),
+(197, 'schedule_reports', 'web', '2026-06-22 06:52:55', '2026-06-22 06:52:55', NULL),
+(198, 'inventory.locations.view', 'web', '2026-06-25 10:25:56', '2026-06-25 10:25:56', NULL),
+(199, 'inventory.locations.create', 'web', '2026-06-25 10:25:56', '2026-06-25 10:25:56', NULL),
+(200, 'inventory.locations.edit', 'web', '2026-06-25 10:25:56', '2026-06-25 10:25:56', NULL),
+(201, 'inventory.locations.delete', 'web', '2026-06-25 10:25:56', '2026-06-25 10:25:56', NULL),
+(202, 'inventory.units.view', 'web', '2026-06-25 10:25:56', '2026-06-25 10:25:56', NULL),
+(203, 'inventory.units.create', 'web', '2026-06-25 10:25:56', '2026-06-25 10:25:56', NULL),
+(204, 'inventory.units.edit', 'web', '2026-06-25 10:25:57', '2026-06-25 10:25:57', NULL),
+(205, 'inventory.units.delete', 'web', '2026-06-25 10:25:57', '2026-06-25 10:25:57', NULL),
+(206, 'inventory.conversions.view', 'web', '2026-06-25 10:25:57', '2026-06-25 10:25:57', NULL),
+(207, 'inventory.conversions.create', 'web', '2026-06-25 10:25:57', '2026-06-25 10:25:57', NULL),
+(208, 'inventory.conversions.edit', 'web', '2026-06-25 10:25:57', '2026-06-25 10:25:57', NULL),
+(209, 'inventory.conversions.delete', 'web', '2026-06-25 10:25:57', '2026-06-25 10:25:57', NULL),
+(210, 'inventory.stock.view', 'web', '2026-06-25 10:25:57', '2026-06-25 10:25:57', NULL),
+(211, 'inventory.stock.create', 'web', '2026-06-25 10:25:57', '2026-06-25 10:25:57', NULL),
+(212, 'inventory.transactions.view', 'web', '2026-06-25 10:25:57', '2026-06-25 10:25:57', NULL),
+(213, 'inventory.transactions.create', 'web', '2026-06-25 10:25:57', '2026-06-25 10:25:57', NULL),
+(214, 'inventory.requests.view', 'web', '2026-06-25 10:25:57', '2026-06-25 10:25:57', NULL),
+(215, 'inventory.requests.create', 'web', '2026-06-25 10:25:57', '2026-06-25 10:25:57', NULL),
+(216, 'inventory.requests.approve', 'web', '2026-06-25 10:25:57', '2026-06-25 10:25:57', NULL),
+(217, 'inventory.transfers.view', 'web', '2026-06-25 10:25:57', '2026-06-25 10:25:57', NULL),
+(218, 'inventory.transfers.create', 'web', '2026-06-25 10:25:57', '2026-06-25 10:25:57', NULL),
+(219, 'inventory.transfers.approve', 'web', '2026-06-25 10:25:57', '2026-06-25 10:25:57', NULL),
+(220, 'inventory.dashboard.view', 'web', '2026-06-25 10:25:57', '2026-06-25 10:25:57', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `permission_dependencies`
+--
+
+CREATE TABLE `permission_dependencies` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `permission_id` bigint(20) UNSIGNED NOT NULL,
+  `depends_on_permission_id` bigint(20) UNSIGNED NOT NULL,
+  `type` varchar(255) NOT NULL DEFAULT 'requires',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `permission_scopes`
+--
+
+CREATE TABLE `permission_scopes` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `label` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `level` int(11) NOT NULL DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `permission_scopes`
+--
+
+INSERT INTO `permission_scopes` (`id`, `name`, `label`, `description`, `level`, `created_at`, `updated_at`) VALUES
+(1, 'self', 'Self', 'Own records only', 0, '2026-06-22 11:40:23', '2026-06-22 11:40:23'),
+(2, 'team', 'Team', 'Team members', 1, '2026-06-22 11:40:23', '2026-06-22 11:40:23'),
+(3, 'department', 'Department', 'Entire department', 2, '2026-06-22 11:40:23', '2026-06-22 11:40:23'),
+(4, 'branch', 'Branch', 'Branch-wide', 3, '2026-06-22 11:40:23', '2026-06-22 11:40:23'),
+(5, 'region', 'Region', 'Regional access', 4, '2026-06-22 11:40:23', '2026-06-22 11:40:23'),
+(6, 'organization', 'Organization', 'Entire organization', 5, '2026-06-22 11:40:23', '2026-06-22 11:40:23'),
+(7, 'global', 'Global', 'All access', 6, '2026-06-22 11:40:23', '2026-06-22 11:40:23');
 
 -- --------------------------------------------------------
 
@@ -2153,9 +2377,22 @@ INSERT INTO `personal_access_tokens` (`id`, `tokenable_type`, `tokenable_id`, `n
 (24, 'App\\Models\\User', 3, 'test', '258518818e6ec9f616291e1bafbf9364ba3463ebe17822daa8d1ac0da1e528b8', '[\"*\"]', '2026-06-17 05:19:50', NULL, '2026-06-17 05:18:34', '2026-06-17 05:19:50'),
 (35, 'App\\Models\\User', 10, 'auth_token', '9b49549166bdc038e049b9427807491e0cb18b60cabaeed8c4b2120c19501beb', '[\"*\"]', '2026-06-18 03:00:37', NULL, '2026-06-18 03:00:33', '2026-06-18 03:00:37'),
 (36, 'App\\Models\\User', 10, 'auth_token', '581abc7e1068865502ccb03e3ddf6ee8f2b05c1eca62a88580650c5bcffec760', '[\"*\"]', '2026-06-18 06:24:14', NULL, '2026-06-18 05:53:43', '2026-06-18 06:24:14'),
-(38, 'App\\Models\\User', 3, 'auth_token', 'feebf4d088d16dfd6a88affdbe4fb8ca9c80a4f0a815e56355d1fab7353ef0b1', '[\"*\"]', '2026-06-19 07:26:07', NULL, '2026-06-19 02:55:44', '2026-06-19 07:26:07'),
 (41, 'App\\Models\\User', 10, 'auth_token', '281976c390cc5d2f7253f62db6df4e85fd5352612cee0c317eda7e5e8c88eb81', '[\"*\"]', NULL, NULL, '2026-06-19 05:58:48', '2026-06-19 05:58:48'),
-(53, 'App\\Models\\User', 10, 'auth_token', '6174ce468b38d198c6d8f343650b17e440ee7de28a781760a63a3a2a305cf2bf', '[\"*\"]', '2026-06-19 07:17:56', NULL, '2026-06-19 07:17:38', '2026-06-19 07:17:56');
+(53, 'App\\Models\\User', 10, 'auth_token', '6174ce468b38d198c6d8f343650b17e440ee7de28a781760a63a3a2a305cf2bf', '[\"*\"]', '2026-06-19 07:17:56', NULL, '2026-06-19 07:17:38', '2026-06-19 07:17:56'),
+(58, 'App\\Models\\User', 9, 'auth_token', '5ddbc487d6c45e9847c36de7ead8cc3a1a48aa07ddfab37c280b733c25d95a04', '[\"*\"]', '2026-06-20 00:22:49', NULL, '2026-06-20 00:22:15', '2026-06-20 00:22:49'),
+(60, 'App\\Models\\User', 9, 'auth_token', 'd9e7874f28711c895886ebe47ed31e20e4e55b7c12b6a6a313acdca8b997d373', '[\"*\"]', '2026-06-20 00:32:39', NULL, '2026-06-20 00:32:39', '2026-06-20 00:32:39'),
+(61, 'App\\Models\\User', 9, 'auth_token', '20e6295bd4d0a9e5c038cdda1650766a14582171f826b6ab3ff4602318514a35', '[\"*\"]', '2026-06-20 00:40:21', NULL, '2026-06-20 00:33:52', '2026-06-20 00:40:21'),
+(62, 'App\\Models\\User', 9, 'test', '0f4bc1da6f823e98ebb51f2749d03ca90045419df92a5bc80114565058fd5c65', '[\"*\"]', '2026-06-20 00:41:43', NULL, '2026-06-20 00:41:42', '2026-06-20 00:41:43'),
+(66, 'App\\Models\\User', 9, 'test', '81e8071c7b6e0b9ef204f40f474dfa3fe66f97211f97fe01cea152d987735dcf', '[\"*\"]', '2026-06-20 07:09:48', NULL, '2026-06-20 07:09:47', '2026-06-20 07:09:48'),
+(67, 'App\\Models\\User', 9, 'test', '6a042459527e8dd8075ded4afb6144c2b9f2729deb82deef391378640472dbdf', '[\"*\"]', '2026-06-20 07:10:17', NULL, '2026-06-20 07:10:17', '2026-06-20 07:10:17'),
+(68, 'App\\Models\\User', 9, 'auth_token', '0a8420134033beeccccf715eb30403edeed92523245b604f0f43edfd2305f647', '[\"*\"]', '2026-06-20 08:18:18', NULL, '2026-06-20 08:18:15', '2026-06-20 08:18:18'),
+(72, 'App\\Models\\User', 1, 'test', '469c957f901c17c093f9b5fc7c2aeb0d72d8d8ed9827dc1f6d5d78e918552970', '[\"*\"]', '2026-06-22 07:21:19', NULL, '2026-06-22 07:21:19', '2026-06-22 07:21:19'),
+(75, 'App\\Models\\User', 3, 'auth_token', '7c1782c325e2edc1b461cd4b28652b334fcae5d8aaabb7a3bfbb0c3ae536f82a', '[\"*\"]', '2026-06-23 07:43:03', NULL, '2026-06-23 05:41:29', '2026-06-23 07:43:03'),
+(77, 'App\\Models\\User', 9, 'auth_token', '9674ec1e2171a2f8a46b11fa01919eee8e5ecbb1a46b09d9f6f22d4408bf413c', '[\"*\"]', '2026-06-23 09:28:19', NULL, '2026-06-23 08:51:54', '2026-06-23 09:28:19'),
+(78, 'App\\Models\\User', 1, 'test-token', '5c62a36db7dd04efe554492f69a016af0b7892595f7cea258d3469e4959290ee', '[\"*\"]', '2026-06-23 09:17:56', NULL, '2026-06-23 08:57:17', '2026-06-23 09:17:56'),
+(80, 'App\\Models\\User', 3, 'auth_token', '1eb7ae7e27ffb10ea7a3d603982108370c014e81250ecc17bc58dfcaf180759b', '[\"*\"]', '2026-06-25 12:27:22', NULL, '2026-06-25 06:14:46', '2026-06-25 12:27:22'),
+(81, 'App\\Models\\User', 12, 'auth_token', '4ece2bf442548f13663b8d5f11f2df6c71d0d450940aa26d93b60b1eb8552dc7', '[\"*\"]', '2026-06-25 12:13:54', NULL, '2026-06-25 11:42:40', '2026-06-25 12:13:54'),
+(82, 'App\\Models\\User', 12, 'auth_token', '463254ac377bc3152e928c3afc5c6e92039a9443bc5ddc57c534596d48a62efe', '[\"*\"]', '2026-06-25 12:56:26', NULL, '2026-06-25 12:28:00', '2026-06-25 12:56:26');
 
 -- --------------------------------------------------------
 
@@ -2166,6 +2403,7 @@ INSERT INTO `personal_access_tokens` (`id`, `tokenable_type`, `tokenable_id`, `n
 CREATE TABLE `products` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `sku` varchar(255) NOT NULL,
+  `hsn_code` varchar(255) DEFAULT NULL,
   `product_code` varchar(255) DEFAULT NULL,
   `name` varchar(255) NOT NULL,
   `category_id` bigint(20) UNSIGNED DEFAULT NULL,
@@ -2177,13 +2415,19 @@ CREATE TABLE `products` (
   `min_stock` decimal(10,2) NOT NULL DEFAULT 0.00,
   `max_stock` decimal(10,2) NOT NULL DEFAULT 0.00,
   `description` text DEFAULT NULL,
-  `gst_percentage` decimal(5,2) NOT NULL DEFAULT 0.00,
   `status` varchar(255) NOT NULL DEFAULT 'active',
   `opening_stock` decimal(15,2) NOT NULL DEFAULT 0.00,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   `unit_id` bigint(20) UNSIGNED DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `products`
+--
+
+INSERT INTO `products` (`id`, `sku`, `hsn_code`, `product_code`, `name`, `category_id`, `supplier_id`, `purchase_price`, `selling_price`, `cost_price`, `reorder_level`, `min_stock`, `max_stock`, `description`, `status`, `opening_stock`, `created_at`, `updated_at`, `unit_id`) VALUES
+(3, 'ELEC-SPRI-001', NULL, NULL, 'sprinkler', 1, 1, 150.00, 200.00, 0.00, 0.00, 0.00, 0.00, NULL, 'active', 0.00, '2026-06-22 04:47:17', '2026-06-22 04:47:17', NULL);
 
 -- --------------------------------------------------------
 
@@ -2203,6 +2447,14 @@ CREATE TABLE `product_stock` (
   `location_type` varchar(255) NOT NULL DEFAULT 'AppModelsBranch'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `product_stock`
+--
+
+INSERT INTO `product_stock` (`id`, `product_id`, `location_id`, `quantity`, `reserved_quantity`, `available_quantity`, `created_at`, `updated_at`, `location_type`) VALUES
+(3, 3, 4, 85.00, 0.00, 85.00, '2026-06-22 04:47:17', '2026-06-22 06:02:20', 'App\\Models\\Site'),
+(4, 3, 5, 415.00, 0.00, 415.00, '2026-06-22 05:23:55', '2026-06-22 06:02:20', 'App\\Models\\Site');
+
 -- --------------------------------------------------------
 
 --
@@ -2213,16 +2465,28 @@ CREATE TABLE `purchase_orders` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `po_number` varchar(255) NOT NULL,
   `supplier_id` bigint(20) UNSIGNED NOT NULL,
-  `branch_id` bigint(20) UNSIGNED NOT NULL,
   `total_amount` decimal(10,2) NOT NULL DEFAULT 0.00,
   `tax_amount` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `shipping_cost` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `gst_type` varchar(255) DEFAULT NULL,
+  `gst_rate` decimal(5,2) NOT NULL DEFAULT 0.00,
   `status` varchar(255) NOT NULL DEFAULT 'Pending',
   `notes` text DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   `requested_by` bigint(20) UNSIGNED DEFAULT NULL,
-  `approved_by` bigint(20) UNSIGNED DEFAULT NULL
+  `approved_by` bigint(20) UNSIGNED DEFAULT NULL,
+  `received_by` bigint(20) UNSIGNED DEFAULT NULL,
+  `received_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `purchase_orders`
+--
+
+INSERT INTO `purchase_orders` (`id`, `po_number`, `supplier_id`, `total_amount`, `tax_amount`, `shipping_cost`, `gst_type`, `gst_rate`, `status`, `notes`, `created_at`, `updated_at`, `requested_by`, `approved_by`, `received_by`, `received_at`) VALUES
+(4, 'PO-1782118783', 1, 1500.00, 75.00, 100.00, 'cgst', 0.00, 'Approved', NULL, '2026-06-22 08:59:43', '2026-06-22 08:59:55', 9, 9, NULL, NULL),
+(6, 'PO-1782387213', 1, 2175.00, 391.50, 150.00, 'cgst', 0.00, 'Approved', NULL, '2026-06-25 11:33:33', '2026-06-25 12:52:16', 3, 12, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -2233,15 +2497,26 @@ CREATE TABLE `purchase_orders` (
 CREATE TABLE `purchase_order_items` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `purchase_order_id` bigint(20) UNSIGNED NOT NULL,
-  `product_id` bigint(20) UNSIGNED NOT NULL,
+  `product_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `custom_product_name` varchar(255) DEFAULT NULL,
   `quantity` int(11) NOT NULL,
   `received_quantity` int(11) NOT NULL DEFAULT 0,
   `unit_cost` decimal(10,2) NOT NULL,
-  `tax` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `gst_rate` decimal(5,2) NOT NULL DEFAULT 0.00,
+  `hsn_code` varchar(255) DEFAULT NULL,
   `total` decimal(12,2) NOT NULL DEFAULT 0.00,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `purchase_order_items`
+--
+
+INSERT INTO `purchase_order_items` (`id`, `purchase_order_id`, `product_id`, `custom_product_name`, `quantity`, `received_quantity`, `unit_cost`, `gst_rate`, `hsn_code`, `total`, `created_at`, `updated_at`) VALUES
+(4, 4, 3, NULL, 10, 0, 150.00, 5.00, 'abc123', 1500.00, '2026-06-22 08:59:43', '2026-06-22 08:59:43'),
+(5, 6, NULL, 'ELEC-SPRI-001 - sprinkler', 10, 0, 150.00, 18.00, NULL, 1500.00, '2026-06-25 11:33:33', '2026-06-25 11:33:33'),
+(6, 6, NULL, 'Elbow', 15, 0, 45.00, 18.00, NULL, 675.00, '2026-06-25 11:33:33', '2026-06-25 11:33:33');
 
 -- --------------------------------------------------------
 
@@ -2282,6 +2557,158 @@ CREATE TABLE `purchase_return_items` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `push_subscriptions`
+--
+
+CREATE TABLE `push_subscriptions` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `user_id` bigint(20) UNSIGNED NOT NULL,
+  `endpoint` varchar(500) NOT NULL,
+  `public_key` varchar(255) DEFAULT NULL,
+  `auth_token` varchar(255) DEFAULT NULL,
+  `content_encoding` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `reports`
+--
+
+CREATE TABLE `reports` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `category_id` bigint(20) UNSIGNED NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `slug` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `icon` varchar(255) DEFAULT NULL,
+  `route` varchar(255) DEFAULT NULL,
+  `api_endpoint` varchar(255) DEFAULT NULL,
+  `status` varchar(255) NOT NULL DEFAULT 'active',
+  `created_by` bigint(20) UNSIGNED DEFAULT NULL,
+  `last_generated_at` timestamp NULL DEFAULT NULL,
+  `parameters` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`parameters`)),
+  `sort_order` int(11) NOT NULL DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `reports`
+--
+
+INSERT INTO `reports` (`id`, `category_id`, `name`, `slug`, `description`, `icon`, `route`, `api_endpoint`, `status`, `created_by`, `last_generated_at`, `parameters`, `sort_order`, `created_at`, `updated_at`) VALUES
+(1, 1, 'Sales Overview', 'sales-overview', 'Summary of sales orders, revenue, and trends', NULL, '/dashboard/reports/sales', '/api/v1/reports/sales', 'active', 1, NULL, NULL, 1, '2026-06-22 06:53:55', '2026-06-22 06:53:55'),
+(2, 1, 'Sales by Customer', 'sales-by-customer', 'Sales breakdown by customer account', NULL, NULL, NULL, 'active', 1, NULL, NULL, 2, '2026-06-22 06:53:55', '2026-06-22 06:53:55'),
+(3, 1, 'Revenue Report', 'revenue-report', 'Revenue analysis with period comparisons', NULL, NULL, NULL, 'active', 1, NULL, NULL, 3, '2026-06-22 06:53:55', '2026-06-22 06:53:55'),
+(4, 2, 'Stock Summary', 'stock-summary', 'Current stock levels across all locations', NULL, '/dashboard/inventory/stock', NULL, 'active', 1, NULL, NULL, 1, '2026-06-22 06:53:55', '2026-06-22 06:53:55'),
+(5, 2, 'Stock Movement', 'stock-movement', 'Transaction history and stock transfers', NULL, '/dashboard/inventory/transactions', NULL, 'active', 1, NULL, NULL, 2, '2026-06-22 06:53:55', '2026-06-22 06:53:55'),
+(6, 2, 'Inventory Valuation', 'inventory-valuation', 'Stock valuation by product and location', NULL, NULL, NULL, 'active', 1, NULL, NULL, 3, '2026-06-22 06:53:55', '2026-06-22 06:53:55'),
+(7, 3, 'Payment Report', 'payment-report', 'Payment collections and outstanding amounts', NULL, NULL, '/api/v1/reports/payments', 'active', 1, NULL, NULL, 1, '2026-06-22 06:53:55', '2026-06-22 06:53:55'),
+(8, 3, 'Invoice Summary', 'invoice-summary', 'Invoice generation and payment status', NULL, '/dashboard/invoices', NULL, 'active', 1, NULL, NULL, 2, '2026-06-22 06:53:55', '2026-06-22 06:53:55'),
+(9, 4, 'Employee Directory', 'employee-directory', 'Complete employee list with department and designation', NULL, '/dashboard/employees', '/api/v1/reports/employees', 'active', 1, NULL, NULL, 1, '2026-06-22 06:53:55', '2026-06-22 06:53:55'),
+(10, 4, 'Department Overview', 'department-overview', 'Employees grouped by department', NULL, '/dashboard/departments', NULL, 'active', 1, NULL, NULL, 2, '2026-06-22 06:53:55', '2026-06-22 06:53:55'),
+(11, 4, 'Employee Count Report', 'employee-count-report', 'Employee count and distribution analysis', NULL, NULL, '/api/v1/reports/employees', 'active', 1, NULL, NULL, 3, '2026-06-22 06:53:55', '2026-06-22 06:53:55'),
+(12, 5, 'Attendance Report', 'attendance-report', 'Monthly attendance records by employee', NULL, '/dashboard/attendance', '/api/v1/reports/attendance', 'active', 1, NULL, NULL, 1, '2026-06-22 06:53:55', '2026-06-22 06:53:55'),
+(13, 5, 'Attendance Summary', 'attendance-summary', 'Present, absent, late, and half-day counts', NULL, NULL, '/api/v1/reports/attendance', 'active', 1, NULL, NULL, 2, '2026-06-22 06:53:55', '2026-06-22 06:53:55'),
+(14, 6, 'Payroll Summary', 'payroll-summary', 'Payroll processing summary and totals', NULL, '/dashboard/payroll', NULL, 'active', 1, NULL, NULL, 1, '2026-06-22 06:53:55', '2026-06-22 06:53:55'),
+(15, 6, 'Salary Structure Report', 'salary-structure', 'Employee salary components breakdown', NULL, '/dashboard/salary-structures', NULL, 'active', 1, NULL, NULL, 2, '2026-06-22 06:53:55', '2026-06-22 06:53:55'),
+(16, 7, 'Purchase Orders', 'purchase-orders', 'Purchase order status and amounts', NULL, '/dashboard/purchases', NULL, 'active', 1, NULL, NULL, 1, '2026-06-22 06:53:55', '2026-06-22 06:53:55'),
+(17, 7, 'Supplier Report', 'supplier-report', 'Supplier performance and procurement metrics', NULL, NULL, NULL, 'active', 1, NULL, NULL, 2, '2026-06-22 06:53:55', '2026-06-22 06:53:55'),
+(18, 8, 'Leave Report', 'leave-report', 'Leave requests by status and period', NULL, '/dashboard/leave-management', '/api/v1/reports/leaves', 'active', 1, NULL, NULL, 1, '2026-06-22 06:53:55', '2026-06-22 06:53:55'),
+(19, 8, 'Leave Balance', 'leave-balance', 'Employee leave balance overview', NULL, '/dashboard/leave-management/balances', NULL, 'active', 1, '2026-06-22 07:29:44', NULL, 2, '2026-06-22 06:53:55', '2026-06-22 07:29:44');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `report_categories`
+--
+
+CREATE TABLE `report_categories` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `slug` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `icon` varchar(255) DEFAULT NULL,
+  `sort_order` int(11) NOT NULL DEFAULT 0,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `report_categories`
+--
+
+INSERT INTO `report_categories` (`id`, `name`, `slug`, `description`, `icon`, `sort_order`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 'Sales', 'sales', 'Sales performance and revenue reports', 'TrendingUp', 1, 1, '2026-06-22 06:53:55', '2026-06-22 06:53:55'),
+(2, 'Inventory', 'inventory', 'Stock levels, movements, and valuation reports', 'Package', 2, 1, '2026-06-22 06:53:55', '2026-06-22 06:53:55'),
+(3, 'Financial', 'financial', 'Payments, invoices, and accounting reports', 'DollarSign', 3, 1, '2026-06-22 06:53:55', '2026-06-22 06:53:55'),
+(4, 'Employees', 'employees', 'Employee information and HR metrics', 'Users', 4, 1, '2026-06-22 06:53:55', '2026-06-22 06:53:55'),
+(5, 'Attendance', 'attendance', 'Employee attendance and timesheet reports', 'Clock', 5, 1, '2026-06-22 06:53:55', '2026-06-22 06:53:55'),
+(6, 'Payroll', 'payroll', 'Salary, deductions, and payroll summary reports', 'Wallet', 6, 1, '2026-06-22 06:53:55', '2026-06-22 06:53:55'),
+(7, 'Purchases', 'purchases', 'Procurement and supplier reports', 'ShoppingBag', 7, 1, '2026-06-22 06:53:55', '2026-06-22 06:53:55'),
+(8, 'Leaves', 'leaves', 'Leave balances, requests, and utilization reports', 'Calendar', 8, 1, '2026-06-22 06:53:55', '2026-06-22 06:53:55');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `report_generations`
+--
+
+CREATE TABLE `report_generations` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `report_id` bigint(20) UNSIGNED NOT NULL,
+  `schedule_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `file_name` varchar(255) NOT NULL,
+  `file_type` varchar(255) NOT NULL DEFAULT 'pdf',
+  `file_path` varchar(255) DEFAULT NULL,
+  `file_size` bigint(20) UNSIGNED DEFAULT 0,
+  `generated_by` bigint(20) UNSIGNED DEFAULT NULL,
+  `generated_at` timestamp NULL DEFAULT NULL,
+  `parameters` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`parameters`)),
+  `status` varchar(255) NOT NULL DEFAULT 'pending',
+  `error_message` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `report_generations`
+--
+
+INSERT INTO `report_generations` (`id`, `report_id`, `schedule_id`, `file_name`, `file_type`, `file_path`, `file_size`, `generated_by`, `generated_at`, `parameters`, `status`, `error_message`, `created_at`, `updated_at`) VALUES
+(1, 19, NULL, 'leave-balance_20260622_124709.pdf', 'pdf', 'reports/leave-balance_20260622_124709.pdf', 158034, 9, '2026-06-22 07:17:09', '[]', 'completed', NULL, '2026-06-22 07:17:09', '2026-06-22 07:17:09'),
+(2, 19, NULL, 'leave-balance_20260622_125831.pdf', 'pdf', 'reports/leave-balance_20260622_125831.pdf', 905374, 1, '2026-06-22 07:28:32', '[]', 'completed', NULL, '2026-06-22 07:28:32', '2026-06-22 07:28:32'),
+(3, 19, NULL, 'leave-balance_20260622_125943.pdf', 'pdf', 'reports/leave-balance_20260622_125943.pdf', 905367, 9, '2026-06-22 07:29:44', '[]', 'completed', NULL, '2026-06-22 07:29:44', '2026-06-22 07:29:44');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `report_schedules`
+--
+
+CREATE TABLE `report_schedules` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `report_id` bigint(20) UNSIGNED NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `frequency` varchar(255) NOT NULL DEFAULT 'daily',
+  `config` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`config`)),
+  `next_run_at` timestamp NULL DEFAULT NULL,
+  `last_run_at` timestamp NULL DEFAULT NULL,
+  `status` varchar(255) NOT NULL DEFAULT 'active',
+  `created_by` bigint(20) UNSIGNED DEFAULT NULL,
+  `recipients` text DEFAULT NULL,
+  `format` varchar(255) NOT NULL DEFAULT 'pdf',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `roles`
 --
 
@@ -2299,15 +2726,11 @@ CREATE TABLE `roles` (
 --
 
 INSERT INTO `roles` (`id`, `name`, `guard_name`, `created_at`, `updated_at`, `deleted_at`) VALUES
-(1, 'Super Admin', 'web', '2026-06-11 04:24:50', '2026-06-12 20:27:54', NULL),
 (2, 'Admin', 'web', '2026-06-12 20:26:24', '2026-06-12 20:26:24', NULL),
 (3, 'Manager', 'web', '2026-06-12 20:26:24', '2026-06-12 20:26:24', NULL),
 (4, 'HR', 'web', '2026-06-12 20:26:24', '2026-06-12 20:26:24', NULL),
 (5, 'Employee', 'web', '2026-06-12 20:26:24', '2026-06-12 20:26:24', NULL),
 (6, 'Accountant', 'web', '2026-06-12 20:26:24', '2026-06-12 20:26:24', NULL),
-(7, 'Warehouse Manager', 'web', '2026-06-12 20:59:16', '2026-06-12 20:59:16', NULL),
-(8, 'Inventory Staff', 'web', '2026-06-12 20:59:16', '2026-06-12 20:59:16', NULL),
-(9, 'Sales Executive', 'web', '2026-06-12 20:59:16', '2026-06-12 20:59:16', NULL),
 (10, 'System Admin', 'web', '2026-06-18 00:47:34', '2026-06-18 00:47:34', NULL),
 (11, 'General Manager', 'web', '2026-06-18 00:47:34', '2026-06-18 00:47:34', NULL),
 (12, 'Production Manager', 'web', '2026-06-18 00:47:34', '2026-06-18 00:47:34', NULL),
@@ -2339,15 +2762,6 @@ CREATE TABLE `role_has_permissions` (
 --
 
 INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES
-(1, 3),
-(1, 5),
-(2, 3),
-(3, 3),
-(3, 5),
-(4, 3),
-(5, 3),
-(10, 3),
-(10, 5),
 (1, 10),
 (2, 10),
 (3, 10),
@@ -2770,20 +3184,6 @@ INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES
 (166, 20),
 (93, 20),
 (144, 20),
-(166, 21),
-(140, 21),
-(141, 21),
-(142, 21),
-(143, 21),
-(136, 21),
-(137, 21),
-(138, 21),
-(139, 21),
-(144, 21),
-(180, 21),
-(181, 21),
-(182, 21),
-(183, 21),
 (166, 22),
 (46, 22),
 (47, 22),
@@ -2837,150 +3237,23 @@ INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES
 (125, 23),
 (126, 23),
 (127, 23),
-(12, 1),
-(2, 1),
-(10, 1),
-(13, 1),
-(3, 1),
-(15, 1),
-(11, 1),
-(17, 1),
-(8, 1),
-(14, 1),
-(16, 1),
-(7, 1),
-(4, 1),
-(6, 1),
-(5, 1),
-(1, 1),
-(9, 1),
-(18, 1),
-(19, 1),
-(20, 1),
-(21, 1),
-(22, 1),
-(23, 1),
-(24, 1),
-(25, 1),
-(26, 1),
-(27, 1),
-(28, 1),
-(29, 1),
-(30, 1),
-(31, 1),
-(32, 1),
-(33, 1),
-(34, 1),
-(35, 1),
-(36, 1),
-(37, 1),
-(85, 1),
-(86, 1),
-(87, 1),
-(88, 1),
-(89, 1),
-(90, 1),
-(91, 1),
-(38, 1),
-(39, 1),
-(40, 1),
-(41, 1),
-(42, 1),
-(43, 1),
-(44, 1),
-(45, 1),
-(46, 1),
-(47, 1),
-(48, 1),
-(49, 1),
-(50, 1),
-(51, 1),
-(52, 1),
-(53, 1),
-(54, 1),
-(55, 1),
-(56, 1),
-(57, 1),
-(58, 1),
-(92, 1),
-(93, 1),
-(94, 1),
-(95, 1),
-(96, 1),
-(97, 1),
-(98, 1),
-(99, 1),
-(100, 1),
-(101, 1),
-(102, 1),
-(59, 1),
-(60, 1),
-(61, 1),
-(62, 1),
-(63, 1),
-(64, 1),
-(65, 1),
-(66, 1),
-(67, 1),
-(68, 1),
-(69, 1),
-(70, 1),
-(71, 1),
-(72, 1),
-(73, 1),
-(74, 1),
-(75, 1),
-(76, 1),
-(77, 1),
-(78, 1),
-(79, 1),
-(80, 1),
-(81, 1),
-(82, 1),
-(83, 1),
-(84, 1),
-(103, 1),
-(104, 1),
-(105, 1),
-(106, 1),
-(107, 1),
-(108, 1),
-(109, 1),
-(110, 1),
-(111, 1),
-(112, 1),
-(113, 1),
-(114, 1),
-(115, 1),
-(116, 1),
-(117, 1),
-(118, 1),
-(119, 1),
-(120, 1),
-(121, 1),
-(122, 1),
-(123, 1),
-(188, 1),
-(189, 1),
-(190, 1),
-(191, 1),
-(12, 2),
-(2, 2),
-(10, 2),
-(13, 2),
-(3, 2),
-(15, 2),
-(11, 2),
-(17, 2),
-(8, 2),
-(14, 2),
-(16, 2),
-(7, 2),
-(4, 2),
-(6, 2),
-(5, 2),
 (1, 2),
+(2, 2),
+(3, 2),
+(4, 2),
+(5, 2),
+(6, 2),
+(7, 2),
+(8, 2),
 (9, 2),
+(10, 2),
+(11, 2),
+(12, 2),
+(13, 2),
+(14, 2),
+(15, 2),
+(16, 2),
+(17, 2),
 (18, 2),
 (19, 2),
 (20, 2),
@@ -3001,13 +3274,6 @@ INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES
 (35, 2),
 (36, 2),
 (37, 2),
-(85, 2),
-(86, 2),
-(87, 2),
-(88, 2),
-(89, 2),
-(90, 2),
-(91, 2),
 (38, 2),
 (39, 2),
 (40, 2),
@@ -3027,19 +3293,6 @@ INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES
 (54, 2),
 (55, 2),
 (56, 2),
-(57, 2),
-(58, 2),
-(92, 2),
-(93, 2),
-(94, 2),
-(95, 2),
-(96, 2),
-(97, 2),
-(98, 2),
-(99, 2),
-(100, 2),
-(101, 2),
-(102, 2),
 (59, 2),
 (60, 2),
 (61, 2),
@@ -3066,6 +3319,18 @@ INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES
 (82, 2),
 (83, 2),
 (84, 2),
+(85, 2),
+(86, 2),
+(87, 2),
+(88, 2),
+(89, 2),
+(90, 2),
+(91, 2),
+(93, 2),
+(99, 2),
+(100, 2),
+(101, 2),
+(102, 2),
 (103, 2),
 (104, 2),
 (105, 2),
@@ -3087,22 +3352,177 @@ INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES
 (121, 2),
 (122, 2),
 (123, 2),
-(188, 2),
-(189, 2),
+(124, 2),
+(125, 2),
+(126, 2),
+(127, 2),
+(128, 2),
+(129, 2),
+(130, 2),
+(131, 2),
+(132, 2),
+(133, 2),
+(134, 2),
+(135, 2),
+(136, 2),
+(137, 2),
+(138, 2),
+(139, 2),
+(140, 2),
+(141, 2),
+(142, 2),
+(143, 2),
+(144, 2),
+(145, 2),
+(146, 2),
+(147, 2),
+(148, 2),
+(149, 2),
+(150, 2),
+(151, 2),
+(152, 2),
+(153, 2),
+(154, 2),
+(155, 2),
+(156, 2),
+(157, 2),
+(158, 2),
+(159, 2),
+(160, 2),
+(161, 2),
+(162, 2),
+(163, 2),
+(164, 2),
+(165, 2),
+(166, 2),
+(167, 2),
+(168, 2),
+(169, 2),
+(170, 2),
+(171, 2),
+(172, 2),
+(173, 2),
+(174, 2),
+(175, 2),
+(176, 2),
+(177, 2),
+(178, 2),
+(179, 2),
+(180, 2),
+(181, 2),
+(182, 2),
+(183, 2),
+(184, 2),
+(185, 2),
+(186, 2),
+(187, 2),
 (190, 2),
 (191, 2),
-(12, 7),
-(2, 7),
-(13, 7),
-(3, 7),
-(15, 7),
-(16, 7),
-(46, 7),
-(59, 7),
-(60, 7),
-(22, 7),
-(23, 7),
-(24, 7),
+(192, 2),
+(193, 2),
+(194, 2),
+(195, 2),
+(196, 2),
+(197, 2),
+(198, 2),
+(199, 2),
+(200, 2),
+(201, 2),
+(202, 2),
+(203, 2),
+(204, 2),
+(205, 2),
+(206, 2),
+(207, 2),
+(208, 2),
+(209, 2),
+(210, 2),
+(211, 2),
+(212, 2),
+(213, 2),
+(214, 2),
+(215, 2),
+(216, 2),
+(217, 2),
+(218, 2),
+(219, 2),
+(220, 2),
+(12, 3),
+(34, 3),
+(85, 3),
+(18, 3),
+(46, 3),
+(22, 3),
+(52, 3),
+(59, 3),
+(210, 3),
+(220, 3),
+(198, 3),
+(212, 3),
+(217, 3),
+(202, 3),
+(214, 3),
+(103, 3),
+(111, 3),
+(93, 3),
+(56, 3),
+(112, 3),
+(16, 3),
+(12, 21),
+(9, 21),
+(59, 21),
+(60, 21),
+(22, 21),
+(23, 21),
+(24, 21),
+(52, 21),
+(53, 21),
+(54, 21),
+(198, 21),
+(199, 21),
+(200, 21),
+(202, 21),
+(203, 21),
+(204, 21),
+(206, 21),
+(207, 21),
+(208, 21),
+(210, 21),
+(211, 21),
+(212, 21),
+(213, 21),
+(214, 21),
+(215, 21),
+(216, 21),
+(217, 21),
+(218, 21),
+(219, 21),
+(220, 21),
+(46, 21),
+(73, 21),
+(74, 21),
+(71, 21),
+(72, 21),
+(12, 6),
+(16, 6),
+(67, 6),
+(68, 6),
+(73, 6),
+(74, 6),
+(71, 6),
+(72, 6),
+(61, 6),
+(62, 6),
+(63, 6),
+(65, 6),
+(66, 6),
+(26, 6),
+(30, 6),
+(46, 6),
+(18, 6),
+(22, 6),
+(52, 6),
+(176, 6),
 (12, 4),
 (2, 4),
 (10, 4),
@@ -3154,44 +3574,53 @@ INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES
 (109, 4),
 (110, 4),
 (111, 4),
-(12, 6),
-(14, 6),
-(6, 6),
-(5, 6),
-(16, 6),
-(61, 6),
-(62, 6),
-(63, 6),
-(65, 6),
-(66, 6),
-(26, 6),
-(30, 6),
-(71, 6),
-(73, 6),
-(67, 6),
-(68, 6),
-(167, 6),
-(169, 6),
-(176, 6),
-(12, 8),
-(13, 8),
-(3, 8),
-(15, 8),
-(9, 8),
-(59, 8),
-(60, 8),
-(22, 8),
-(52, 8),
-(12, 9),
-(1, 9),
-(14, 9),
-(26, 9),
-(27, 9),
-(28, 9),
-(71, 9),
-(72, 9),
-(61, 9),
-(62, 9);
+(112, 4),
+(113, 4),
+(116, 4),
+(117, 4),
+(119, 4),
+(120, 4),
+(121, 4),
+(122, 4),
+(12, 5),
+(97, 5),
+(98, 5),
+(93, 5),
+(104, 5),
+(103, 5),
+(107, 5),
+(112, 5),
+(113, 5),
+(118, 5),
+(119, 5),
+(67, 5);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `role_templates`
+--
+
+CREATE TABLE `role_templates` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `category` varchar(255) DEFAULT NULL,
+  `permissions` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`permissions`)),
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `role_templates`
+--
+
+INSERT INTO `role_templates` (`id`, `name`, `description`, `category`, `permissions`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 'Manager Template', 'Comprehensive access for department managers with read/write on most modules', 'management', '[\"view_dashboard\",\"view_employees\",\"view_products\",\"view_customers\",\"view_suppliers\",\"view_sites\",\"view_inventory\",\"view_invoices\",\"view_reports\",\"view_attendance\",\"view_leaves\"]', 1, '2026-06-22 11:40:23', '2026-06-22 11:40:23'),
+(2, 'Executive Template', 'Read-only access across all modules for executive review', 'executive', '[\"view_dashboard\",\"view_employees\",\"view_products\",\"view_customers\",\"view_suppliers\",\"view_sites\",\"view_inventory\",\"view_invoices\",\"view_reports\",\"view_attendance\",\"view_payroll\",\"view_purchase_orders\",\"view_sales_orders\"]', 1, '2026-06-22 11:40:23', '2026-06-22 11:40:23'),
+(3, 'Finance Template', 'Financial module access including invoices, payments, and payroll', 'finance', '[\"view_dashboard\",\"view_invoices\",\"create_invoices\",\"update_invoices\",\"view_payments\",\"create_payments\",\"view_payroll\",\"manage_payroll\",\"view_customers\",\"view_suppliers\",\"view_reports\"]', 1, '2026-06-22 11:40:23', '2026-06-22 11:40:23'),
+(4, 'Operations Template', 'Operational access for inventory, purchasing, and site management', 'operations', '[\"view_dashboard\",\"view_inventory\",\"manage_inventory\",\"view_products\",\"view_categories\",\"view_purchase_orders\",\"create_purchase_orders\",\"view_sites\",\"view_suppliers\",\"inventory.stock.view\",\"inventory.transactions.view\",\"inventory.transactions.create\",\"inventory.transfers.view\",\"inventory.transfers.create\"]', 1, '2026-06-22 11:40:23', '2026-06-22 11:40:23');
 
 -- --------------------------------------------------------
 
@@ -3229,7 +3658,8 @@ CREATE TABLE `salary_structures` (
 --
 
 INSERT INTO `salary_structures` (`id`, `employee_id`, `basic_salary`, `hra`, `conveyance`, `medical_allowance`, `special_allowance`, `site_allowance`, `travel_allowance`, `food_allowance`, `other_earnings`, `pf_deduction`, `esic_deduction`, `professional_tax`, `tds`, `other_deductions`, `effective_from`, `effective_to`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES
-(1, 56, 22000.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, '2026-06-01', NULL, 'active', '2026-06-17 23:46:10', '2026-06-17 23:52:15', NULL);
+(1, 56, 22000.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, '2026-06-01', NULL, 'active', '2026-06-17 23:46:10', '2026-06-20 10:33:20', '2026-06-20 10:33:20'),
+(2, 9, 25000.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, '2026-06-01', NULL, 'active', '2026-06-20 10:39:49', '2026-06-20 11:15:26', NULL);
 
 -- --------------------------------------------------------
 
@@ -3241,17 +3671,28 @@ CREATE TABLE `sales_orders` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `so_number` varchar(255) NOT NULL,
   `customer_id` bigint(20) UNSIGNED NOT NULL,
-  `branch_id` bigint(20) UNSIGNED NOT NULL,
   `total_amount` decimal(10,2) NOT NULL DEFAULT 0.00,
   `tax_amount` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `shipping_cost` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `gst_type` varchar(255) DEFAULT NULL,
+  `gst_rate` decimal(5,2) NOT NULL DEFAULT 0.00,
   `discount_amount` decimal(12,2) NOT NULL DEFAULT 0.00,
   `status` varchar(255) NOT NULL DEFAULT 'Pending',
   `notes` text DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   `created_by` bigint(20) UNSIGNED DEFAULT NULL,
-  `approved_by` bigint(20) UNSIGNED DEFAULT NULL
+  `approved_by` bigint(20) UNSIGNED DEFAULT NULL,
+  `delivered_by` bigint(20) UNSIGNED DEFAULT NULL,
+  `delivered_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `sales_orders`
+--
+
+INSERT INTO `sales_orders` (`id`, `so_number`, `customer_id`, `total_amount`, `tax_amount`, `shipping_cost`, `gst_type`, `gst_rate`, `discount_amount`, `status`, `notes`, `created_at`, `updated_at`, `created_by`, `approved_by`, `delivered_by`, `delivered_at`) VALUES
+(1, 'SO-1782119309', 2, 3000.00, 360.00, 150.00, 'cgst', 0.00, 0.00, 'Approved', NULL, '2026-06-22 09:08:29', '2026-06-22 09:08:55', 9, 9, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -3262,16 +3703,25 @@ CREATE TABLE `sales_orders` (
 CREATE TABLE `sales_order_items` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `sales_order_id` bigint(20) UNSIGNED NOT NULL,
-  `product_id` bigint(20) UNSIGNED NOT NULL,
+  `product_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `custom_product_name` varchar(255) DEFAULT NULL,
   `quantity` int(11) NOT NULL,
   `delivered_quantity` int(11) NOT NULL DEFAULT 0,
   `unit_price` decimal(10,2) NOT NULL,
-  `gst_amount` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `gst_rate` decimal(5,2) NOT NULL DEFAULT 0.00,
+  `hsn_code` varchar(255) DEFAULT NULL,
   `discount` decimal(10,2) NOT NULL DEFAULT 0.00,
   `total` decimal(12,2) NOT NULL DEFAULT 0.00,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `sales_order_items`
+--
+
+INSERT INTO `sales_order_items` (`id`, `sales_order_id`, `product_id`, `custom_product_name`, `quantity`, `delivered_quantity`, `unit_price`, `gst_rate`, `hsn_code`, `discount`, `total`, `created_at`, `updated_at`) VALUES
+(1, 1, 3, NULL, 15, 0, 200.00, 12.00, NULL, 0.00, 3000.00, '2026-06-22 09:08:29', '2026-06-22 09:08:29');
 
 -- --------------------------------------------------------
 
@@ -3352,7 +3802,6 @@ INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, 
 
 CREATE TABLE `shifts` (
   `id` bigint(20) UNSIGNED NOT NULL,
-  `branch_id` bigint(20) UNSIGNED DEFAULT NULL,
   `name` varchar(255) NOT NULL,
   `start_time` time NOT NULL,
   `end_time` time NOT NULL,
@@ -3368,8 +3817,8 @@ CREATE TABLE `shifts` (
 -- Dumping data for table `shifts`
 --
 
-INSERT INTO `shifts` (`id`, `branch_id`, `name`, `start_time`, `end_time`, `grace_period`, `late_threshold`, `half_day_threshold`, `status`, `created_at`, `updated_at`) VALUES
-(1, NULL, 'Regular', '09:00:00', '18:00:00', 10, 10, 30, 'Active', '2026-06-17 07:10:02', '2026-06-17 07:10:02');
+INSERT INTO `shifts` (`id`, `name`, `start_time`, `end_time`, `grace_period`, `late_threshold`, `half_day_threshold`, `status`, `created_at`, `updated_at`) VALUES
+(1, 'Regular', '09:00:00', '18:00:00', 10, 10, 30, 'Active', '2026-06-17 07:10:02', '2026-06-17 07:10:02');
 
 -- --------------------------------------------------------
 
@@ -3396,6 +3845,8 @@ CREATE TABLE `sites` (
   `allowed_radius` int(11) NOT NULL DEFAULT 100,
   `geo_fencing_enabled` tinyint(1) NOT NULL DEFAULT 0,
   `site_manager_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `start_date` date DEFAULT NULL,
+  `end_date` date DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -3404,9 +3855,9 @@ CREATE TABLE `sites` (
 -- Dumping data for table `sites`
 --
 
-INSERT INTO `sites` (`id`, `name`, `code`, `client_details`, `address`, `city`, `state`, `country`, `pincode`, `contact_person`, `phone`, `email`, `status`, `latitude`, `longitude`, `allowed_radius`, `geo_fencing_enabled`, `site_manager_id`, `created_at`, `updated_at`) VALUES
-(2, 'Site A', '101', NULL, 'Kasturi Vandana Complex, Bhayandar, Sonam Sagar, Indira Nagar, Bhayandar East, Mira Bhayandar, Maharashtra 401105', 'Bhayandar East', 'maharashtra', 'India', '401105', 'Prasad', '9022428111', 'prasad.kalvikatti@company.com', 'Active', 19.29951800, 72.85806400, 100, 0, NULL, '2026-06-17 03:59:08', '2026-06-18 00:21:27'),
-(3, 'Site B', '102', '123456', NULL, NULL, NULL, 'India', NULL, NULL, NULL, NULL, 'Active', NULL, NULL, 100, 0, NULL, '2026-06-17 07:37:34', '2026-06-17 07:37:34');
+INSERT INTO `sites` (`id`, `name`, `code`, `client_details`, `address`, `city`, `state`, `country`, `pincode`, `contact_person`, `phone`, `email`, `status`, `latitude`, `longitude`, `allowed_radius`, `geo_fencing_enabled`, `site_manager_id`, `start_date`, `end_date`, `created_at`, `updated_at`) VALUES
+(4, 'Headquaters', '111', NULL, 'Kasturi Vandana Complex, Bhayandar, Sonam Sagar, Indira Nagar, Bhayandar East.', 'Bhayandar', 'Maharashtra', 'India', '401105', 'Ronak Ray', '1234567890', 'ronak.ray@company.com', 'Active', 19.29966670, 72.85677770, 200, 1, NULL, '2026-06-25', '2026-08-31', '2026-06-20 00:14:00', '2026-06-25 08:43:28'),
+(5, 'Remi', '102', '123456', 'abc xyz', NULL, NULL, 'India', NULL, 'Ronak Ray', '1234567890', 'ronak.ray@company.com', 'Active', 20.30764677, 72.84440918, 100, 1, NULL, NULL, NULL, '2026-06-22 04:51:40', '2026-06-22 05:11:26');
 
 -- --------------------------------------------------------
 
@@ -3436,6 +3887,14 @@ CREATE TABLE `stock_requests` (
   `to_location_type` varchar(255) NOT NULL DEFAULT 'AppModelsBranch'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `stock_requests`
+--
+
+INSERT INTO `stock_requests` (`id`, `request_number`, `product_id`, `from_location_id`, `to_location_id`, `quantity`, `approved_quantity`, `issued_quantity`, `received_quantity`, `status`, `requested_by`, `approved_by`, `issued_by`, `received_by`, `notes`, `created_at`, `updated_at`, `from_location_type`, `to_location_type`) VALUES
+(1, 'SRQ-20260622-0001', 3, 4, 5, 150.00, 150.00, 150.00, 150.00, 'received', 9, 9, 9, 9, NULL, '2026-06-22 05:46:11', '2026-06-22 05:46:33', 'App\\Models\\Site', 'App\\Models\\Site'),
+(2, 'SRQ-20260622-0002', 3, 4, 5, 150.00, 150.00, 150.00, 150.00, 'received', 9, 9, 9, 9, NULL, '2026-06-22 06:02:06', '2026-06-22 06:02:22', 'App\\Models\\Site', 'App\\Models\\Site');
+
 -- --------------------------------------------------------
 
 --
@@ -3451,16 +3910,15 @@ CREATE TABLE `suppliers` (
   `address` text DEFAULT NULL,
   `is_system` tinyint(1) NOT NULL DEFAULT 0,
   `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL,
-  `branch_id` bigint(20) UNSIGNED DEFAULT NULL
+  `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `suppliers`
 --
 
-INSERT INTO `suppliers` (`id`, `name`, `email`, `phone`, `gst_number`, `address`, `is_system`, `created_at`, `updated_at`, `branch_id`) VALUES
-(1, 'InStorage', 'instorage@system.local', '0000000000', NULL, 'System - Internal Storage', 1, '2026-06-19 07:25:39', '2026-06-19 07:25:39', NULL);
+INSERT INTO `suppliers` (`id`, `name`, `email`, `phone`, `gst_number`, `address`, `is_system`, `created_at`, `updated_at`) VALUES
+(1, 'InStorage', 'instorage@system.local', '1234567890', '123456000', 'System - Internal Storage', 1, '2026-06-19 07:25:39', '2026-06-22 06:08:56');
 
 -- --------------------------------------------------------
 
@@ -3495,11 +3953,41 @@ CREATE TABLE `supplier_quotation_items` (
   `product_id` bigint(20) UNSIGNED NOT NULL,
   `quantity` int(11) NOT NULL,
   `unit_price` decimal(10,2) NOT NULL,
-  `tax` decimal(10,2) NOT NULL DEFAULT 0.00,
   `total` decimal(12,2) NOT NULL DEFAULT 0.00,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `system_exceptions`
+--
+
+CREATE TABLE `system_exceptions` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `key` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `category` varchar(255) DEFAULT NULL,
+  `is_enabled` tinyint(1) NOT NULL DEFAULT 0,
+  `requires_approval` tinyint(1) NOT NULL DEFAULT 1,
+  `allowed_roles` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`allowed_roles`)),
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `system_exceptions`
+--
+
+INSERT INTO `system_exceptions` (`id`, `name`, `key`, `description`, `category`, `is_enabled`, `requires_approval`, `allowed_roles`, `created_at`, `updated_at`) VALUES
+(1, 'Override Credit Limits', 'override_credit_limits', 'Allow role to override customer credit limits during order processing', 'financial', 0, 1, NULL, '2026-06-22 11:40:23', '2026-06-22 11:40:23'),
+(2, 'Approve Beyond Threshold', 'approve_beyond_threshold', 'Allow approval of transactions exceeding standard approval thresholds', 'financial', 0, 1, NULL, '2026-06-22 11:40:23', '2026-06-22 11:40:23'),
+(3, 'Emergency Inventory Release', 'emergency_inventory_release', 'Authorize emergency release of inventory without standard approvals', 'inventory', 0, 1, NULL, '2026-06-22 11:40:23', '2026-06-22 11:40:23'),
+(4, 'Bulk Data Export', 'bulk_data_export', 'Allow export of large data sets from the system', 'system', 0, 1, NULL, '2026-06-22 11:40:23', '2026-06-22 11:40:23'),
+(5, 'Payroll Override', 'payroll_override', 'Override payroll calculations for adjustments', 'financial', 0, 1, NULL, '2026-06-22 11:40:23', '2026-06-22 11:40:23'),
+(6, 'Financial Adjustments', 'financial_adjustments', 'Make manual adjustments to financial records', 'financial', 0, 1, NULL, '2026-06-22 11:40:23', '2026-06-22 11:40:23');
 
 -- --------------------------------------------------------
 
@@ -3515,8 +4003,7 @@ CREATE TABLE `tasks` (
   `status` varchar(255) NOT NULL DEFAULT 'Assigned',
   `due_date` date DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL,
-  `branch_id` bigint(20) UNSIGNED DEFAULT NULL
+  `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -3546,6 +4033,21 @@ CREATE TABLE `transaction_ledger` (
   `location_type` varchar(255) NOT NULL DEFAULT 'AppModelsBranch',
   `to_location_type` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `transaction_ledger`
+--
+
+INSERT INTO `transaction_ledger` (`id`, `transaction_number`, `product_id`, `location_id`, `to_location_id`, `transaction_type`, `quantity`, `unit_price`, `total_price`, `quantity_before`, `quantity_after`, `reference_type`, `reference_id`, `notes`, `created_by`, `created_at`, `updated_at`, `location_type`, `to_location_type`) VALUES
+(1, 'TXN-20260622-0001', 3, 4, NULL, 'purchase', 500.00, 0.00, 0.00, 0.00, 500.00, 'opening_stock', 3, 'Opening stock on product creation', 9, '2026-06-22 04:47:17', '2026-06-22 04:47:17', 'App\\Models\\Site', NULL),
+(2, 'TXN-20260622-0002', 3, 5, NULL, 'transfer_in', 15.00, 0.00, 0.00, 0.00, 15.00, NULL, NULL, NULL, 9, '2026-06-22 05:23:55', '2026-06-22 05:23:55', 'App\\Models\\Site', NULL),
+(3, 'TXN-20260622-0003', 3, 4, 5, 'transfer_out', -15.00, 0.00, 0.00, 500.00, 485.00, NULL, NULL, NULL, 9, '2026-06-22 05:23:55', '2026-06-22 05:23:55', 'App\\Models\\Site', 'App\\Models\\Site'),
+(4, 'TXN-20260622-0004', 3, 5, NULL, 'transfer_in', 150.00, 0.00, 0.00, 15.00, 165.00, 'stock_request', 1, 'Stock request #SRQ-20260622-0001', 9, '2026-06-22 05:46:26', '2026-06-22 05:46:26', 'App\\Models\\Site', NULL),
+(5, 'TXN-20260622-0005', 3, 4, 5, 'transfer_out', -150.00, 0.00, 0.00, 485.00, 335.00, 'stock_request', 1, 'Stock request #SRQ-20260622-0001', 9, '2026-06-22 05:46:26', '2026-06-22 05:46:26', 'App\\Models\\Site', 'App\\Models\\Site'),
+(6, 'TXN-20260622-0006', 3, 5, NULL, 'transfer_in', 100.00, 0.00, 0.00, 165.00, 265.00, NULL, NULL, NULL, 9, '2026-06-22 06:01:45', '2026-06-22 06:01:45', 'App\\Models\\Site', NULL),
+(7, 'TXN-20260622-0007', 3, 4, 5, 'transfer_out', -100.00, 0.00, 0.00, 335.00, 235.00, NULL, NULL, NULL, 9, '2026-06-22 06:01:45', '2026-06-22 06:01:45', 'App\\Models\\Site', 'App\\Models\\Site'),
+(8, 'TXN-20260622-0008', 3, 5, NULL, 'transfer_in', 150.00, 0.00, 0.00, 265.00, 415.00, 'stock_request', 2, 'Stock request #SRQ-20260622-0002', 9, '2026-06-22 06:02:20', '2026-06-22 06:02:20', 'App\\Models\\Site', NULL),
+(9, 'TXN-20260622-0009', 3, 4, 5, 'transfer_out', -150.00, 0.00, 0.00, 235.00, 85.00, 'stock_request', 2, 'Stock request #SRQ-20260622-0002', 9, '2026-06-22 06:02:20', '2026-06-22 06:02:20', 'App\\Models\\Site', 'App\\Models\\Site');
 
 -- --------------------------------------------------------
 
@@ -3580,7 +4082,8 @@ INSERT INTO `units` (`id`, `name`, `code`, `type`, `status`, `created_at`, `upda
 (10, 'Square Feet', 'SQFT', 'area', 'active', '2026-06-19 03:11:50', '2026-06-19 03:11:50'),
 (11, 'Packet', 'PKT', 'quantity', 'active', '2026-06-19 03:11:50', '2026-06-19 03:11:50'),
 (12, 'Dozen', 'DOZ', 'quantity', 'active', '2026-06-19 03:11:50', '2026-06-19 03:11:50'),
-(13, 'Pair', 'PR', 'quantity', 'active', '2026-06-19 03:11:50', '2026-06-19 03:11:50');
+(13, 'Pair', 'PR', 'quantity', 'active', '2026-06-19 03:11:50', '2026-06-19 03:11:50'),
+(14, 'Milimeters', '111', 'length', 'active', '2026-06-22 05:16:50', '2026-06-22 05:16:50');
 
 -- --------------------------------------------------------
 
@@ -3613,7 +4116,8 @@ INSERT INTO `unit_conversions` (`id`, `from_unit_id`, `to_unit_id`, `conversion_
 (9, 8, 9, 100.000000, '2026-06-19 03:11:50', '2026-06-19 03:11:50'),
 (10, 9, 8, 0.010000, '2026-06-19 03:11:50', '2026-06-19 03:11:50'),
 (11, 12, 1, 12.000000, '2026-06-19 03:11:50', '2026-06-19 03:11:50'),
-(12, 1, 12, 0.083333, '2026-06-19 03:11:50', '2026-06-19 03:11:50');
+(12, 1, 12, 0.083333, '2026-06-19 03:11:50', '2026-06-19 03:11:50'),
+(13, 14, 9, 10.000000, '2026-06-22 05:18:57', '2026-06-22 05:18:57');
 
 -- --------------------------------------------------------
 
@@ -3640,53 +4144,54 @@ INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `password`, `re
 (1, 'Admin', 'admin@example.com', '2026-06-16 05:04:26', '$2y$12$cT8ilC.BsvFJqxOjsEMLuuwaI1RCdtoUOthnf12LIs24TbkBqxVQC', NULL, '2026-06-16 05:09:01', '2026-06-16 07:13:02'),
 (2, 'Super Admin', 'superadmin@example.com', NULL, '$2y$12$cT8ilC.BsvFJqxOjsEMLuuwaI1RCdtoUOthnf12LIs24TbkBqxVQC', NULL, '2026-06-16 23:03:32', '2026-06-16 23:03:32'),
 (3, 'System Admin', 'admin@erp.com', NULL, '$2y$12$cT8ilC.BsvFJqxOjsEMLuuwaI1RCdtoUOthnf12LIs24TbkBqxVQC', NULL, '2026-06-16 23:03:32', '2026-06-16 23:03:32'),
-(9, 'Ronak Ray', 'ronak.ray@company.com', NULL, '$2y$12$xiKz9w043OfLzvROw6OYIeEIDEhwlYF/j1Ta7o6.iN8WIp6dSgiDO', NULL, '2026-06-17 03:18:52', '2026-06-17 03:18:52'),
-(10, 'Darshna Lade', 'darshna.lade@company.com', NULL, '$2y$12$OkYYT6e8nc9XF9jEsiSTp.re4RLC.gXjths5nUteUyp1UxPWPUI5i', NULL, '2026-06-17 03:20:33', '2026-06-17 03:20:33'),
-(11, 'Shwetali bavdane', 'shwetali.bavdane@company.com', NULL, '$2y$12$peD5VQ0y1lfCOM05BXrw0erOuW7JoRyVzhi1edYLlMDfoBzFnAsjG', NULL, '2026-06-17 03:21:32', '2026-06-17 03:21:32'),
-(12, 'Rohit Ambedkar', 'rohit.ambedkar@company.com', NULL, '$2y$12$Uf9i9OUfyx048SjAhGRYC.UL57mQdDl6k3080ZCc0kwn8C/Yxk4lO', NULL, '2026-06-17 03:22:54', '2026-06-17 03:22:54'),
-(13, 'Dhurmil Darji', 'dhurmil.darji@company.com', NULL, '$2y$12$R4FeKLC2Ga.hKYazw6.bhu9zapRM5/tfhW5GJQnwfU6KpY/QMdDdi', NULL, '2026-06-17 03:24:06', '2026-06-17 03:24:06'),
-(14, 'Sanjeevani Manjerekar', 'sanjeevani.manjerekar@company.com', NULL, '$2y$12$ZYy7X2JVNym16WJ7wlbR1O/WQIAyZm3liNs33xnlR/JbEd0eaIRO6', NULL, '2026-06-17 03:25:04', '2026-06-17 03:25:04'),
-(15, 'Mithun ghosh', 'mithun.ghosh@company.com', NULL, '$2y$12$uS25Ia0YUv.cdx.M8QK0I.fgSLAlXW1b44zrIOjxSQre.xJc6fx5u', NULL, '2026-06-17 03:58:21', '2026-06-17 03:58:21'),
-(16, 'Dileep Madhukar', 'dileep.madhukar@company.com', NULL, '$2y$12$VQRg.LeOwNd/GqXgezcc8uipch2HnM0wy7KA6LeDcEsYF5ADx84E2', NULL, '2026-06-17 04:11:48', '2026-06-17 04:11:48'),
-(17, 'Rampreet Vishwakarma', 'rampreet.vishwakarma@company.com', NULL, '$2y$12$oEyxGu7AF7Q6KXKaxPxp9.iuKTKoZh95bp/FsYxYQyJxaqfLrQ4Oi', NULL, '2026-06-17 04:12:51', '2026-06-17 04:12:51'),
-(18, 'ugrasen', 'ugrasen@company.com', NULL, '$2y$12$fbm/rtqEgYkp2F1vKTTa6epb3cEIRcKa0KvgfVPY/5LM1KvPN4vvm', NULL, '2026-06-17 04:13:50', '2026-06-17 04:13:50'),
-(19, 'Kishor Tare', 'kishor.tare@company.com', NULL, '$2y$12$6yubkX2wV47o/BVxM1WE7OTvxN..QvF8LivA2EM8jy95Wyh1hZVJO', NULL, '2026-06-17 04:15:08', '2026-06-17 04:15:08'),
-(20, 'Sarvesh Pal', 'sarvesh.pal@company.com', NULL, '$2y$12$llxFF4C0Wf/Yg9hpzlFC8.DINapKdXT7xt7daF2EHKiND2C3aHNQ2', NULL, '2026-06-17 04:16:15', '2026-06-17 04:16:15'),
-(21, 'Rama Shankar', 'rama.shankar@company.com', NULL, '$2y$12$0KZGIPXqnljA4Hooisx8LeNZ/1dM.D62Rw.Lk2vmGyDh/JPodo3Ga', NULL, '2026-06-17 04:45:26', '2026-06-17 04:45:26'),
-(22, 'Ajay Saki', 'ajay.saki@company.com', NULL, '$2y$12$IbWNzSZLVjBVKkfKphlbcOQJLvH7OgXgT2MOBWk3pkwGafQvBp3zm', NULL, '2026-06-17 04:46:46', '2026-06-17 04:46:46'),
-(23, 'Bhavesh Jawale', 'bhavesh.jawale@company.com', NULL, '$2y$12$oMkSQSoOekMYQi4L.C.HMOU04CIHpIoSlrLPtLXdY7gUaI7pO6p8u', NULL, '2026-06-17 04:48:43', '2026-06-17 04:48:43'),
-(24, 'Priyotosh mondal', 'priyotosh.mondal@company.com', NULL, '$2y$12$rJcd.z1tVhJMxQc2coCqie117Yo2OxmtRYtTme5k0MpbXkH8YKmLC', NULL, '2026-06-17 04:49:57', '2026-06-17 04:49:57'),
-(25, 'Santosh Mondak', 'santosh.mondak@company.com', NULL, '$2y$12$B2xnvB4L2XZdsyLC6I9.X.Oh2gjCgq6zjmExIAAmZlTXNCcsc7STW', NULL, '2026-06-17 05:25:07', '2026-06-17 05:25:07'),
-(26, 'Sukumar Mondal', 'sukumar.mondal@company.com', NULL, '$2y$12$zSi61bx44lfzWE2alvjAY.MHbcfNTCt2LtC8CEgo63p9FSIXMOVVa', NULL, '2026-06-17 05:46:57', '2026-06-17 05:46:57'),
-(27, 'Sahadeb konai', 'sahadeb.konai@company.com', NULL, '$2y$12$NYMu20DqFM0jIaQ9.3LSXuc1s00pTxmY.hGOtmB6/zDr88MjriEae', NULL, '2026-06-17 05:51:48', '2026-06-17 05:51:48'),
-(28, 'Sujan Hansda', 'sujan.hansda@company.com', NULL, '$2y$12$HrwXJSZhtANzY3QxpkbrFeEudzIbrehwwMdevmdsMvRqe/nVMC0bi', NULL, '2026-06-17 05:52:34', '2026-06-17 05:52:34'),
-(29, 'Rintu Ghosh', 'rintu.ghosh@company.com', NULL, '$2y$12$m1bkpcrwt95KO4ySF8M.debEE34Z80tyKdVfqLSlSDaG89lDEde.W', NULL, '2026-06-17 05:53:26', '2026-06-17 05:53:26'),
-(30, 'Nayan Kahar', 'nayan.kahar@company.com', NULL, '$2y$12$nPjWJ6i335jB/ZdRS1ULoevnB9sC7oU2EZwvmPLkhyjAxnGxqVslG', NULL, '2026-06-17 05:54:24', '2026-06-17 05:54:24'),
-(31, 'Nilkumar Aditya', 'nilkumar.aditya@company.com', NULL, '$2y$12$.MLR9o8MaAcUYwrx3Ith.uk9NnImW2CoSoYKPJ10sn44mfDWdsIIS', NULL, '2026-06-17 05:55:25', '2026-06-17 05:55:25'),
-(32, 'Jayanta Kahar', 'jayanta.kahar@company.com', NULL, '$2y$12$WX9ZsK9KI9I8pr/SBdYWbOSnTGvIOAZCPwIsEANH.ez3pqtmRo5mK', NULL, '2026-06-17 05:56:36', '2026-06-17 05:56:36'),
-(33, 'Raj Kumar Aditya', 'raj.kumar.aditya@company.com', NULL, '$2y$12$ZePto9Q6.AtbGEpFzlPRDOy5oYU61Pdr.eZSY3j9a.avugocYR1/y', NULL, '2026-06-17 05:57:33', '2026-06-17 05:57:33'),
-(34, 'Raj Aditya', 'raj.aditya@company.com', NULL, '$2y$12$NFDRECdEmKNYOZPIfe9aTef3M/oBTW2637SK6.r.OBwosNYtKdctq', NULL, '2026-06-17 05:58:28', '2026-06-17 05:58:28'),
-(35, 'Subodh Bholla', 'subodh.bholla@company.com', NULL, '$2y$12$BeUiT9mDcSAYzqQ9XiPQjOxLnRLZ7m92k.lbwUsiVYMiSehW7Uaey', NULL, '2026-06-17 06:00:05', '2026-06-17 06:00:05'),
-(36, 'Hemant Kahar', 'hemant.kahar@company.com', NULL, '$2y$12$ebDSIS8wcOHha7AlnvXDeeR/pI.X2M3l.awvHi8TdiZR4d47xmVkG', NULL, '2026-06-17 06:01:33', '2026-06-17 06:01:33'),
-(37, 'Jeet Dhibar', 'jeet.dhibar@company.com', NULL, '$2y$12$6iZZsWCOkRySDskFJRAwIu3bAQW1xs.D5dOBW4dUxXQC8J8Pca6qS', NULL, '2026-06-17 06:07:05', '2026-06-17 06:07:05'),
-(38, 'Saheb Bholla', 'saheb.bholla@company.com', NULL, '$2y$12$b.xjyHedYGis2rbKTdi.z.lTkjTq2N2mcF7yi5nPLkrkceIp1mAdS', NULL, '2026-06-17 06:40:09', '2026-06-17 06:40:09'),
-(39, 'Ramkrishna Bholla', 'ramkrishna.bholla@company.com', NULL, '$2y$12$iOIfFVbDhymeCF7.ZUDTw.p1k2t00Ets6p8hlQUnvnYjWsKkU1SB6', NULL, '2026-06-17 06:41:04', '2026-06-17 06:41:04'),
-(40, 'Biswanath Bholla', 'biswanath.bholla@company.com', NULL, '$2y$12$dZKw8GzT4Uwly3yy2euXU.wz3mPTaX013WrQN5zYuDkDHfi.GY/j6', NULL, '2026-06-17 06:41:58', '2026-06-17 06:41:58'),
-(41, 'Bappa Bholla', 'bappa.bholla@company.com', NULL, '$2y$12$max7LLq9YXt0fXFimo1SSey8LkijrdHjlyvYS/FmTImxGWbygC.AC', NULL, '2026-06-17 06:42:54', '2026-06-17 06:42:54'),
-(42, 'Jiban Pal', 'jiban.pal@company.com', NULL, '$2y$12$AYpHhnylJHTJwVGvQClHaes6nTd3K9clSZB/NuUxvwRmp947u7FHW', NULL, '2026-06-17 06:43:44', '2026-06-17 06:43:44'),
-(43, 'Bikash Bholla', 'bikash.bholla@company.com', NULL, '$2y$12$8WhM41gnGu0AzM7PQNio9uP2RTj9KMf2nVLS5xYtEfepMJwLoJGoG', NULL, '2026-06-17 06:44:51', '2026-06-17 06:44:51'),
-(44, 'Rahul Dhibar', 'rahul.dhibar@company.com', NULL, '$2y$12$vMI3mqZ9TIaTMCrn0trifO1CdmQClcHlB9HYvp0/jFkivcXRNBr9K', NULL, '2026-06-17 06:46:09', '2026-06-17 06:46:09'),
-(45, 'Suvendu Fouzder', 'suvendu.fouzder@company.com', NULL, '$2y$12$MrFDqoX3XSawoh/p7UhLRe5C6DIKoFFxDxbLN8XCMAUl3bfUn/aUC', NULL, '2026-06-17 06:47:31', '2026-06-17 06:47:31'),
-(46, 'Sanjeet Mondal', 'sanjeet.mondal@company.com', NULL, '$2y$12$KOAouXZUCLCHOX3ocknHk.f7W/dTRLwG6qiIq7TdSd8FrwwCj54FW', NULL, '2026-06-17 06:51:28', '2026-06-17 06:51:28'),
-(47, 'Jiban Dhibar', 'jiban.dhibar@company.com', NULL, '$2y$12$ksnE1Y9lC0k03Ut7wchSDuODNppiqsdiTSxLeQq.TBNEE0jqwZ8Ha', NULL, '2026-06-17 06:52:24', '2026-06-17 06:52:24'),
-(48, 'Bishwajit Bholla', 'bishwajit.bholla@company.com', NULL, '$2y$12$z0e/QcYt9ryTf0YOUIT7J.esmiVzF34Ov7bN/M6iA/C.kYbLRxRjG', NULL, '2026-06-17 06:53:31', '2026-06-17 06:53:31'),
-(49, 'Shib Shankar Roy', 'shib.shankar.roy@company.com', NULL, '$2y$12$07ZeCiq2hUnZgN/o6jsqAeVhhYEt44/J.LRafOkk2B8zai09ZsjEa', NULL, '2026-06-17 06:54:20', '2026-06-17 06:54:20'),
-(50, 'Aakash Bholla', 'aakash.bholla@company.com', NULL, '$2y$12$LSXO6cGfmNyXNvGWnwipSuyeJhjbN2w0PdfE6.QesSQ2nH8lQaMqy', NULL, '2026-06-17 06:55:18', '2026-06-17 06:55:18'),
-(51, 'Suvendu Dhibar', 'suvendu.dhibar@company.com', NULL, '$2y$12$fxl0qwBuXPM1YRPkTfXwMexiMgIRKEmxGtuaD3WTsm97g4Sbyz6Dm', NULL, '2026-06-17 06:56:24', '2026-06-17 06:56:24'),
-(52, 'Palash Majhi', 'palash.majhi@company.com', NULL, '$2y$12$5ujnUINvzhgUxF8DXOQfE.l.ARfxUQxt7eNcEBRi89rHvRh5qAo0C', NULL, '2026-06-17 06:57:27', '2026-06-17 06:57:27'),
-(53, 'Gopeshwar Mondal', 'gopeshwar.mondal@company.com', NULL, '$2y$12$2VkXQ67ep2cW53Vsbp21retq/BLiM6zzq7iDD9faC4LuKWUr0b9za', NULL, '2026-06-17 06:58:17', '2026-06-17 06:58:17'),
-(54, 'Prasad Kalvikatti', 'prasad.kalvikatti@company.com', NULL, '$2y$12$Hb.xR1z3ZInjczfPmX65IetX0XqemsNO4TPEqMTK0eqki1N6nNsFi', NULL, '2026-06-17 06:59:45', '2026-06-17 06:59:45'),
-(55, 'test user', 'test.user@ronakfire.com', NULL, '$2y$12$IMiQ3pzqEAR1Unm65A7lhOtKrJwe96slxtGMbZSEJqeNJ44ZtCfby', NULL, '2026-06-19 06:35:05', '2026-06-19 06:35:05');
+(9, 'Ronak Ray', 'ronak.ray@ronakfire.com', NULL, '$2y$12$xiKz9w043OfLzvROw6OYIeEIDEhwlYF/j1Ta7o6.iN8WIp6dSgiDO', NULL, '2026-06-17 03:18:52', '2026-06-17 03:18:52'),
+(10, 'Darshna Lade', 'darshna.lade@ronakfire.com', NULL, '$2y$12$OkYYT6e8nc9XF9jEsiSTp.re4RLC.gXjths5nUteUyp1UxPWPUI5i', NULL, '2026-06-17 03:20:33', '2026-06-17 03:20:33'),
+(11, 'Shwetali bavdane', 'shwetali.bavdane@ronakfire.com', NULL, '$2y$12$peD5VQ0y1lfCOM05BXrw0erOuW7JoRyVzhi1edYLlMDfoBzFnAsjG', NULL, '2026-06-17 03:21:32', '2026-06-17 03:21:32'),
+(12, 'Rohit Ambedkar', 'rohit.ambedkar@ronakfire.com', NULL, '$2y$12$Uf9i9OUfyx048SjAhGRYC.UL57mQdDl6k3080ZCc0kwn8C/Yxk4lO', NULL, '2026-06-17 03:22:54', '2026-06-17 03:22:54'),
+(13, 'Dhurmil Darji', 'dhurmil.darji@ronakfire.com', NULL, '$2y$12$R4FeKLC2Ga.hKYazw6.bhu9zapRM5/tfhW5GJQnwfU6KpY/QMdDdi', NULL, '2026-06-17 03:24:06', '2026-06-17 03:24:06'),
+(14, 'Sanjeevani Manjerekar', 'sanjeevani.manjerekar@ronakfire.com', NULL, '$2y$12$ZYy7X2JVNym16WJ7wlbR1O/WQIAyZm3liNs33xnlR/JbEd0eaIRO6', NULL, '2026-06-17 03:25:04', '2026-06-17 03:25:04'),
+(15, 'Mithun ghosh', 'mithun.ghosh@ronakfire.com', NULL, '$2y$12$uS25Ia0YUv.cdx.M8QK0I.fgSLAlXW1b44zrIOjxSQre.xJc6fx5u', NULL, '2026-06-17 03:58:21', '2026-06-17 03:58:21'),
+(16, 'Dileep Madhukar', 'dileep.madhukar@ronakfire.com', NULL, '$2y$12$VQRg.LeOwNd/GqXgezcc8uipch2HnM0wy7KA6LeDcEsYF5ADx84E2', NULL, '2026-06-17 04:11:48', '2026-06-17 04:11:48'),
+(17, 'Rampreet Vishwakarma', 'rampreet.vishwakarma@ronakfire.com', NULL, '$2y$12$oEyxGu7AF7Q6KXKaxPxp9.iuKTKoZh95bp/FsYxYQyJxaqfLrQ4Oi', NULL, '2026-06-17 04:12:51', '2026-06-17 04:12:51'),
+(18, 'ugrasen', 'ugrasen@ronakfire.com', NULL, '$2y$12$fbm/rtqEgYkp2F1vKTTa6epb3cEIRcKa0KvgfVPY/5LM1KvPN4vvm', NULL, '2026-06-17 04:13:50', '2026-06-17 04:13:50'),
+(19, 'Kishor Tare', 'kishor.tare@ronakfire.com', NULL, '$2y$12$6yubkX2wV47o/BVxM1WE7OTvxN..QvF8LivA2EM8jy95Wyh1hZVJO', NULL, '2026-06-17 04:15:08', '2026-06-17 04:15:08'),
+(20, 'Sarvesh Pal', 'sarvesh.pal@ronakfire.com', NULL, '$2y$12$llxFF4C0Wf/Yg9hpzlFC8.DINapKdXT7xt7daF2EHKiND2C3aHNQ2', NULL, '2026-06-17 04:16:15', '2026-06-17 04:16:15'),
+(21, 'Rama Shankar', 'rama.shankar@ronakfire.com', NULL, '$2y$12$0KZGIPXqnljA4Hooisx8LeNZ/1dM.D62Rw.Lk2vmGyDh/JPodo3Ga', NULL, '2026-06-17 04:45:26', '2026-06-17 04:45:26'),
+(22, 'Ajay Saki', 'ajay.saki@ronakfire.com', NULL, '$2y$12$IbWNzSZLVjBVKkfKphlbcOQJLvH7OgXgT2MOBWk3pkwGafQvBp3zm', NULL, '2026-06-17 04:46:46', '2026-06-17 04:46:46'),
+(23, 'Bhavesh Jawale', 'bhavesh.jawale@ronakfire.com', NULL, '$2y$12$oMkSQSoOekMYQi4L.C.HMOU04CIHpIoSlrLPtLXdY7gUaI7pO6p8u', NULL, '2026-06-17 04:48:43', '2026-06-17 04:48:43'),
+(24, 'Priyotosh mondal', 'priyotosh.mondal@ronakfire.com', NULL, '$2y$12$rJcd.z1tVhJMxQc2coCqie117Yo2OxmtRYtTme5k0MpbXkH8YKmLC', NULL, '2026-06-17 04:49:57', '2026-06-17 04:49:57'),
+(25, 'Santosh Mondak', 'santosh.mondak@ronakfire.com', NULL, '$2y$12$B2xnvB4L2XZdsyLC6I9.X.Oh2gjCgq6zjmExIAAmZlTXNCcsc7STW', NULL, '2026-06-17 05:25:07', '2026-06-17 05:25:07'),
+(26, 'Sukumar Mondal', 'sukumar.mondal@ronakfire.com', NULL, '$2y$12$zSi61bx44lfzWE2alvjAY.MHbcfNTCt2LtC8CEgo63p9FSIXMOVVa', NULL, '2026-06-17 05:46:57', '2026-06-17 05:46:57'),
+(27, 'Sahadeb konai', 'sahadeb.konai@ronakfire.com', NULL, '$2y$12$NYMu20DqFM0jIaQ9.3LSXuc1s00pTxmY.hGOtmB6/zDr88MjriEae', NULL, '2026-06-17 05:51:48', '2026-06-17 05:51:48'),
+(28, 'Sujan Hansda', 'sujan.hansda@ronakfire.com', NULL, '$2y$12$HrwXJSZhtANzY3QxpkbrFeEudzIbrehwwMdevmdsMvRqe/nVMC0bi', NULL, '2026-06-17 05:52:34', '2026-06-17 05:52:34'),
+(29, 'Rintu Ghosh', 'rintu.ghosh@ronakfire.com', NULL, '$2y$12$m1bkpcrwt95KO4ySF8M.debEE34Z80tyKdVfqLSlSDaG89lDEde.W', NULL, '2026-06-17 05:53:26', '2026-06-17 05:53:26'),
+(30, 'Nayan Kahar', 'nayan.kahar@ronakfire.com', NULL, '$2y$12$nPjWJ6i335jB/ZdRS1ULoevnB9sC7oU2EZwvmPLkhyjAxnGxqVslG', NULL, '2026-06-17 05:54:24', '2026-06-17 05:54:24'),
+(31, 'Nilkumar Aditya', 'nilkumar.aditya@ronakfire.com', NULL, '$2y$12$.MLR9o8MaAcUYwrx3Ith.uk9NnImW2CoSoYKPJ10sn44mfDWdsIIS', NULL, '2026-06-17 05:55:25', '2026-06-17 05:55:25'),
+(32, 'Jayanta Kahar', 'jayanta.kahar@ronakfire.com', NULL, '$2y$12$WX9ZsK9KI9I8pr/SBdYWbOSnTGvIOAZCPwIsEANH.ez3pqtmRo5mK', NULL, '2026-06-17 05:56:36', '2026-06-17 05:56:36'),
+(33, 'Raj Kumar Aditya', 'raj.kumar.aditya@ronakfire.com', NULL, '$2y$12$ZePto9Q6.AtbGEpFzlPRDOy5oYU61Pdr.eZSY3j9a.avugocYR1/y', NULL, '2026-06-17 05:57:33', '2026-06-17 05:57:33'),
+(34, 'Raj Aditya', 'raj.aditya@ronakfire.com', NULL, '$2y$12$NFDRECdEmKNYOZPIfe9aTef3M/oBTW2637SK6.r.OBwosNYtKdctq', NULL, '2026-06-17 05:58:28', '2026-06-17 05:58:28'),
+(35, 'Subodh Bholla', 'subodh.bholla@ronakfire.com', NULL, '$2y$12$BeUiT9mDcSAYzqQ9XiPQjOxLnRLZ7m92k.lbwUsiVYMiSehW7Uaey', NULL, '2026-06-17 06:00:05', '2026-06-17 06:00:05'),
+(36, 'Hemant Kahar', 'hemant.kahar@ronakfire.com', NULL, '$2y$12$ebDSIS8wcOHha7AlnvXDeeR/pI.X2M3l.awvHi8TdiZR4d47xmVkG', NULL, '2026-06-17 06:01:33', '2026-06-17 06:01:33'),
+(37, 'Jeet Dhibar', 'jeet.dhibar@ronakfire.com', NULL, '$2y$12$6iZZsWCOkRySDskFJRAwIu3bAQW1xs.D5dOBW4dUxXQC8J8Pca6qS', NULL, '2026-06-17 06:07:05', '2026-06-17 06:07:05'),
+(38, 'Saheb Bholla', 'saheb.bholla@ronakfire.com', NULL, '$2y$12$b.xjyHedYGis2rbKTdi.z.lTkjTq2N2mcF7yi5nPLkrkceIp1mAdS', NULL, '2026-06-17 06:40:09', '2026-06-17 06:40:09'),
+(39, 'Ramkrishna Bholla', 'ramkrishna.bholla@ronakfire.com', NULL, '$2y$12$iOIfFVbDhymeCF7.ZUDTw.p1k2t00Ets6p8hlQUnvnYjWsKkU1SB6', NULL, '2026-06-17 06:41:04', '2026-06-17 06:41:04'),
+(40, 'Biswanath Bholla', 'biswanath.bholla@ronakfire.com', NULL, '$2y$12$dZKw8GzT4Uwly3yy2euXU.wz3mPTaX013WrQN5zYuDkDHfi.GY/j6', NULL, '2026-06-17 06:41:58', '2026-06-17 06:41:58'),
+(41, 'Bappa Bholla', 'bappa.bholla@ronakfire.com', NULL, '$2y$12$max7LLq9YXt0fXFimo1SSey8LkijrdHjlyvYS/FmTImxGWbygC.AC', NULL, '2026-06-17 06:42:54', '2026-06-17 06:42:54'),
+(42, 'Jiban Pal', 'jiban.pal@ronakfire.com', NULL, '$2y$12$AYpHhnylJHTJwVGvQClHaes6nTd3K9clSZB/NuUxvwRmp947u7FHW', NULL, '2026-06-17 06:43:44', '2026-06-17 06:43:44'),
+(43, 'Bikash Bholla', 'bikash.bholla@ronakfire.com', NULL, '$2y$12$8WhM41gnGu0AzM7PQNio9uP2RTj9KMf2nVLS5xYtEfepMJwLoJGoG', NULL, '2026-06-17 06:44:51', '2026-06-17 06:44:51'),
+(44, 'Rahul Dhibar', 'rahul.dhibar@ronakfire.com', NULL, '$2y$12$vMI3mqZ9TIaTMCrn0trifO1CdmQClcHlB9HYvp0/jFkivcXRNBr9K', NULL, '2026-06-17 06:46:09', '2026-06-17 06:46:09'),
+(45, 'Suvendu Fouzder', 'suvendu.fouzder@ronakfire.com', NULL, '$2y$12$MrFDqoX3XSawoh/p7UhLRe5C6DIKoFFxDxbLN8XCMAUl3bfUn/aUC', NULL, '2026-06-17 06:47:31', '2026-06-17 06:47:31'),
+(46, 'Sanjeet Mondal', 'sanjeet.mondal@ronakfire.com', NULL, '$2y$12$KOAouXZUCLCHOX3ocknHk.f7W/dTRLwG6qiIq7TdSd8FrwwCj54FW', NULL, '2026-06-17 06:51:28', '2026-06-17 06:51:28'),
+(47, 'Jiban Dhibar', 'jiban.dhibar@ronakfire.com', NULL, '$2y$12$ksnE1Y9lC0k03Ut7wchSDuODNppiqsdiTSxLeQq.TBNEE0jqwZ8Ha', NULL, '2026-06-17 06:52:24', '2026-06-17 06:52:24'),
+(48, 'Bishwajit Bholla', 'bishwajit.bholla@ronakfire.com', NULL, '$2y$12$z0e/QcYt9ryTf0YOUIT7J.esmiVzF34Ov7bN/M6iA/C.kYbLRxRjG', NULL, '2026-06-17 06:53:31', '2026-06-17 06:53:31'),
+(49, 'Shib Shankar Roy', 'shib.shankar.roy@ronakfire.com', NULL, '$2y$12$07ZeCiq2hUnZgN/o6jsqAeVhhYEt44/J.LRafOkk2B8zai09ZsjEa', NULL, '2026-06-17 06:54:20', '2026-06-17 06:54:20'),
+(50, 'Aakash Bholla', 'aakash.bholla@ronakfire.com', NULL, '$2y$12$LSXO6cGfmNyXNvGWnwipSuyeJhjbN2w0PdfE6.QesSQ2nH8lQaMqy', NULL, '2026-06-17 06:55:18', '2026-06-17 06:55:18'),
+(51, 'Suvendu Dhibar', 'suvendu.dhibar@ronakfire.com', NULL, '$2y$12$fxl0qwBuXPM1YRPkTfXwMexiMgIRKEmxGtuaD3WTsm97g4Sbyz6Dm', NULL, '2026-06-17 06:56:24', '2026-06-17 06:56:24'),
+(52, 'Palash Majhi', 'palash.majhi@ronakfire.com', NULL, '$2y$12$5ujnUINvzhgUxF8DXOQfE.l.ARfxUQxt7eNcEBRi89rHvRh5qAo0C', NULL, '2026-06-17 06:57:27', '2026-06-17 06:57:27'),
+(53, 'Gopeshwar Mondal', 'gopeshwar.mondal@ronakfire.com', NULL, '$2y$12$2VkXQ67ep2cW53Vsbp21retq/BLiM6zzq7iDD9faC4LuKWUr0b9za', NULL, '2026-06-17 06:58:17', '2026-06-17 06:58:17'),
+(54, 'Prasad Kalvikatti', 'prasad.kalvikatti@ronakfire.com', NULL, '$2y$12$Hb.xR1z3ZInjczfPmX65IetX0XqemsNO4TPEqMTK0eqki1N6nNsFi', NULL, '2026-06-17 06:59:45', '2026-06-17 06:59:45'),
+(55, 'test user', 'test.user@ronakfire.com', NULL, '$2y$12$IMiQ3pzqEAR1Unm65A7lhOtKrJwe96slxtGMbZSEJqeNJ44ZtCfby', NULL, '2026-06-19 06:35:05', '2026-06-19 06:35:05'),
+(56, 'Chandradeb Mondal', 'chandradeb.mondal@ronakfire.com', NULL, '$2y$12$gxENmjtWMGegURm9DwnqqeF8ebM8P/tcTF8VLIzkF.oFbaiV5g8MG', NULL, '2026-06-25 05:45:52', '2026-06-25 05:45:52');
 
 --
 -- Indexes for dumped tables
@@ -3702,10 +4207,11 @@ ALTER TABLE `attendances`
   ADD KEY `attendances_shift_id_foreign` (`shift_id`);
 
 --
--- Indexes for table `branches`
+-- Indexes for table `audit_settings`
 --
-ALTER TABLE `branches`
-  ADD PRIMARY KEY (`id`);
+ALTER TABLE `audit_settings`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `audit_settings_configurable_type_configurable_id_index` (`configurable_type`,`configurable_id`);
 
 --
 -- Indexes for table `cache`
@@ -3720,6 +4226,18 @@ ALTER TABLE `cache`
 ALTER TABLE `cache_locks`
   ADD PRIMARY KEY (`key`),
   ADD KEY `cache_locks_expiration_index` (`expiration`);
+
+--
+-- Indexes for table `company_settings`
+--
+ALTER TABLE `company_settings`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `customers`
+--
+ALTER TABLE `customers`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `daily_reports`
@@ -3826,6 +4344,18 @@ ALTER TABLE `holidays`
   ADD UNIQUE KEY `holidays_date_unique` (`date`);
 
 --
+-- Indexes for table `invoices`
+--
+ALTER TABLE `invoices`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `invoice_items`
+--
+ALTER TABLE `invoice_items`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `jobs`
 --
 ALTER TABLE `jobs`
@@ -3902,6 +4432,20 @@ ALTER TABLE `permissions`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `permission_dependencies`
+--
+ALTER TABLE `permission_dependencies`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `pd_unique` (`permission_id`,`depends_on_permission_id`),
+  ADD KEY `permission_dependencies_depends_on_permission_id_foreign` (`depends_on_permission_id`);
+
+--
+-- Indexes for table `permission_scopes`
+--
+ALTER TABLE `permission_scopes`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `personal_access_tokens`
 --
 ALTER TABLE `personal_access_tokens`
@@ -3914,6 +4458,7 @@ ALTER TABLE `personal_access_tokens`
 -- Indexes for table `products`
 --
 ALTER TABLE `products`
+  ADD PRIMARY KEY (`id`),
   ADD KEY `products_unit_id_foreign` (`unit_id`);
 
 --
@@ -3924,9 +4469,70 @@ ALTER TABLE `product_stock`
   ADD UNIQUE KEY `product_stock_product_id_location_type_location_id_unique` (`product_id`,`location_type`,`location_id`);
 
 --
+-- Indexes for table `purchase_orders`
+--
+ALTER TABLE `purchase_orders`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `purchase_orders_received_by_foreign` (`received_by`);
+
+--
+-- Indexes for table `purchase_order_items`
+--
+ALTER TABLE `purchase_order_items`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `purchase_order_items_product_id_foreign` (`product_id`);
+
+--
+-- Indexes for table `push_subscriptions`
+--
+ALTER TABLE `push_subscriptions`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `push_subscriptions_endpoint_unique` (`endpoint`),
+  ADD KEY `push_subscriptions_user_id_foreign` (`user_id`);
+
+--
+-- Indexes for table `reports`
+--
+ALTER TABLE `reports`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `reports_slug_unique` (`slug`),
+  ADD KEY `reports_category_id_foreign` (`category_id`),
+  ADD KEY `reports_created_by_foreign` (`created_by`);
+
+--
+-- Indexes for table `report_categories`
+--
+ALTER TABLE `report_categories`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `report_categories_slug_unique` (`slug`);
+
+--
+-- Indexes for table `report_generations`
+--
+ALTER TABLE `report_generations`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `report_generations_report_id_foreign` (`report_id`),
+  ADD KEY `report_generations_schedule_id_foreign` (`schedule_id`),
+  ADD KEY `report_generations_generated_by_foreign` (`generated_by`);
+
+--
+-- Indexes for table `report_schedules`
+--
+ALTER TABLE `report_schedules`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `report_schedules_report_id_foreign` (`report_id`),
+  ADD KEY `report_schedules_created_by_foreign` (`created_by`);
+
+--
 -- Indexes for table `roles`
 --
 ALTER TABLE `roles`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `role_templates`
+--
+ALTER TABLE `role_templates`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -3935,6 +4541,20 @@ ALTER TABLE `roles`
 ALTER TABLE `salary_structures`
   ADD PRIMARY KEY (`id`),
   ADD KEY `salary_structures_employee_id_foreign` (`employee_id`);
+
+--
+-- Indexes for table `sales_orders`
+--
+ALTER TABLE `sales_orders`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `sales_orders_delivered_by_foreign` (`delivered_by`);
+
+--
+-- Indexes for table `sales_order_items`
+--
+ALTER TABLE `sales_order_items`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `sales_order_items_product_id_foreign` (`product_id`);
 
 --
 -- Indexes for table `sessions`
@@ -3973,6 +4593,13 @@ ALTER TABLE `suppliers`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `system_exceptions`
+--
+ALTER TABLE `system_exceptions`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `system_exceptions_key_unique` (`key`);
+
+--
 -- Indexes for table `transaction_ledger`
 --
 ALTER TABLE `transaction_ledger`
@@ -4009,73 +4636,91 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `attendances`
 --
 ALTER TABLE `attendances`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
+
+--
+-- AUTO_INCREMENT for table `audit_settings`
+--
+ALTER TABLE `audit_settings`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `company_settings`
+--
+ALTER TABLE `company_settings`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `customers`
+--
+ALTER TABLE `customers`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `daily_reports`
 --
 ALTER TABLE `daily_reports`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `daily_report_histories`
 --
 ALTER TABLE `daily_report_histories`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `dashboard_widgets`
 --
 ALTER TABLE `dashboard_widgets`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=118;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=121;
 
 --
 -- AUTO_INCREMENT for table `dashboard_widget_designation`
 --
 ALTER TABLE `dashboard_widget_designation`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=441;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=586;
 
 --
 -- AUTO_INCREMENT for table `departments`
 --
 ALTER TABLE `departments`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `designations`
 --
 ALTER TABLE `designations`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `documents`
 --
 ALTER TABLE `documents`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `employees`
 --
 ALTER TABLE `employees`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=62;
 
 --
 -- AUTO_INCREMENT for table `employee_leave_balances`
 --
 ALTER TABLE `employee_leave_balances`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=201;
 
 --
 -- AUTO_INCREMENT for table `employee_sites`
 --
 ALTER TABLE `employee_sites`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `employee_site_histories`
 --
 ALTER TABLE `employee_site_histories`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `failed_jobs`
@@ -4090,6 +4735,18 @@ ALTER TABLE `holidays`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `invoices`
+--
+ALTER TABLE `invoices`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `invoice_items`
+--
+ALTER TABLE `invoice_items`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
 -- AUTO_INCREMENT for table `jobs`
 --
 ALTER TABLE `jobs`
@@ -4099,13 +4756,13 @@ ALTER TABLE `jobs`
 -- AUTO_INCREMENT for table `leaves`
 --
 ALTER TABLE `leaves`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `leave_histories`
 --
 ALTER TABLE `leave_histories`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `leave_types`
@@ -4117,43 +4774,103 @@ ALTER TABLE `leave_types`
 -- AUTO_INCREMENT for table `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=101;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=126;
 
 --
 -- AUTO_INCREMENT for table `payrolls`
 --
 ALTER TABLE `payrolls`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `payroll_periods`
 --
 ALTER TABLE `payroll_periods`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `payslips`
 --
 ALTER TABLE `payslips`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `permissions`
 --
 ALTER TABLE `permissions`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=192;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=221;
+
+--
+-- AUTO_INCREMENT for table `permission_dependencies`
+--
+ALTER TABLE `permission_dependencies`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `permission_scopes`
+--
+ALTER TABLE `permission_scopes`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `personal_access_tokens`
 --
 ALTER TABLE `personal_access_tokens`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=54;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=83;
+
+--
+-- AUTO_INCREMENT for table `products`
+--
+ALTER TABLE `products`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `product_stock`
 --
 ALTER TABLE `product_stock`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `purchase_orders`
+--
+ALTER TABLE `purchase_orders`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `purchase_order_items`
+--
+ALTER TABLE `purchase_order_items`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `push_subscriptions`
+--
+ALTER TABLE `push_subscriptions`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `reports`
+--
+ALTER TABLE `reports`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+
+--
+-- AUTO_INCREMENT for table `report_categories`
+--
+ALTER TABLE `report_categories`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
+-- AUTO_INCREMENT for table `report_generations`
+--
+ALTER TABLE `report_generations`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `report_schedules`
+--
+ALTER TABLE `report_schedules`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `roles`
@@ -4162,28 +4879,46 @@ ALTER TABLE `roles`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
+-- AUTO_INCREMENT for table `role_templates`
+--
+ALTER TABLE `role_templates`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
 -- AUTO_INCREMENT for table `salary_structures`
 --
 ALTER TABLE `salary_structures`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `sales_orders`
+--
+ALTER TABLE `sales_orders`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `sales_order_items`
+--
+ALTER TABLE `sales_order_items`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `shifts`
 --
 ALTER TABLE `shifts`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `sites`
 --
 ALTER TABLE `sites`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `stock_requests`
 --
 ALTER TABLE `stock_requests`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `suppliers`
@@ -4192,28 +4927,34 @@ ALTER TABLE `suppliers`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
+-- AUTO_INCREMENT for table `system_exceptions`
+--
+ALTER TABLE `system_exceptions`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
 -- AUTO_INCREMENT for table `transaction_ledger`
 --
 ALTER TABLE `transaction_ledger`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `units`
 --
 ALTER TABLE `units`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `unit_conversions`
 --
 ALTER TABLE `unit_conversions`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=57;
 
 --
 -- Constraints for dumped tables
@@ -4316,16 +5057,75 @@ ALTER TABLE `payslips`
   ADD CONSTRAINT `payslips_payroll_id_foreign` FOREIGN KEY (`payroll_id`) REFERENCES `payrolls` (`id`) ON DELETE CASCADE;
 
 --
+-- Constraints for table `permission_dependencies`
+--
+ALTER TABLE `permission_dependencies`
+  ADD CONSTRAINT `permission_dependencies_depends_on_permission_id_foreign` FOREIGN KEY (`depends_on_permission_id`) REFERENCES `permissions` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `permission_dependencies_permission_id_foreign` FOREIGN KEY (`permission_id`) REFERENCES `permissions` (`id`) ON DELETE CASCADE;
+
+--
 -- Constraints for table `products`
 --
 ALTER TABLE `products`
   ADD CONSTRAINT `products_unit_id_foreign` FOREIGN KEY (`unit_id`) REFERENCES `units` (`id`) ON DELETE SET NULL;
 
 --
+-- Constraints for table `purchase_orders`
+--
+ALTER TABLE `purchase_orders`
+  ADD CONSTRAINT `purchase_orders_received_by_foreign` FOREIGN KEY (`received_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `purchase_order_items`
+--
+ALTER TABLE `purchase_order_items`
+  ADD CONSTRAINT `purchase_order_items_product_id_foreign` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `push_subscriptions`
+--
+ALTER TABLE `push_subscriptions`
+  ADD CONSTRAINT `push_subscriptions_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `reports`
+--
+ALTER TABLE `reports`
+  ADD CONSTRAINT `reports_category_id_foreign` FOREIGN KEY (`category_id`) REFERENCES `report_categories` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `reports_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `report_generations`
+--
+ALTER TABLE `report_generations`
+  ADD CONSTRAINT `report_generations_generated_by_foreign` FOREIGN KEY (`generated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `report_generations_report_id_foreign` FOREIGN KEY (`report_id`) REFERENCES `reports` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `report_generations_schedule_id_foreign` FOREIGN KEY (`schedule_id`) REFERENCES `report_schedules` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `report_schedules`
+--
+ALTER TABLE `report_schedules`
+  ADD CONSTRAINT `report_schedules_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `report_schedules_report_id_foreign` FOREIGN KEY (`report_id`) REFERENCES `reports` (`id`) ON DELETE CASCADE;
+
+--
 -- Constraints for table `salary_structures`
 --
 ALTER TABLE `salary_structures`
   ADD CONSTRAINT `salary_structures_employee_id_foreign` FOREIGN KEY (`employee_id`) REFERENCES `employees` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `sales_orders`
+--
+ALTER TABLE `sales_orders`
+  ADD CONSTRAINT `sales_orders_delivered_by_foreign` FOREIGN KEY (`delivered_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `sales_order_items`
+--
+ALTER TABLE `sales_order_items`
+  ADD CONSTRAINT `sales_order_items_product_id_foreign` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `sites`
