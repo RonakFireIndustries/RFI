@@ -88,7 +88,7 @@ function getPermissionHelp(isStandaloneMode) {
 }
 
 export default function EmployeeDashboard() {
-  const { user } = useAuthStore();
+  const { user, roles } = useAuthStore();
   const { logs, fetchLogs, myAttendance, checkIn, checkOut } = useAttendanceStore();
   const { items: sites } = useSiteStore();
 
@@ -418,13 +418,21 @@ export default function EmployeeDashboard() {
           </div>
         )}
 
-        <SlideAttendanceButton
-          status={buttonStatus}
-          onCheckIn={handleCheckIn}
-          onCheckOut={handleCheckOut}
-          isCheckedIn={isCheckedIn}
-          isCheckedOut={isCheckedOut}
-        />
+        {roles?.includes('Admin') ? (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
+            <Shield className="w-6 h-6 text-amber-500 mx-auto mb-2" />
+            <p className="text-sm font-semibold text-amber-800">Attendance check-in/out is not available for Admin users.</p>
+            <p className="text-xs text-amber-600 mt-1">Only employees with assigned designations can record attendance.</p>
+          </div>
+        ) : (
+          <SlideAttendanceButton
+            status={buttonStatus}
+            onCheckIn={handleCheckIn}
+            onCheckOut={handleCheckOut}
+            isCheckedIn={isCheckedIn}
+            isCheckedOut={isCheckedOut}
+          />
+        )}
       </div>
 
       {!isStandalone() && installPrompt && (

@@ -74,13 +74,21 @@ class RolesAndPermissionsSeeder extends Seeder
             }
         }
 
-        $roles = [
-            'Super Admin', 'Admin', 'Warehouse Manager', 
-            'HR', 'Accountant', 'Inventory Staff', 'Sales Executive'
-        ];
+        // Remove old replaced roles (detach permissions first)
+        $oldRolesToRemove = ['Super Admin', 'Warehouse Manager', 'Inventory Staff', 'Sales Executive'];
+        foreach ($oldRolesToRemove as $roleName) {
+            $role = Role::where('name', $roleName)->first();
+            if ($role) {
+                $role->permissions()->detach();
+                $role->delete();
+            }
+        }
+
+        // Define new roles
+        $newRoles = ['Admin', 'Manager', 'Store Manager', 'Accountant', 'HR', 'Employee'];
 
         $maxRoleId = Role::max('id') ?? 0;
-        foreach ($roles as $role) {
+        foreach ($newRoles as $role) {
             $exists = Role::where('name', $role)->first();
             if (!$exists) {
                 $maxRoleId++;
@@ -88,24 +96,69 @@ class RolesAndPermissionsSeeder extends Seeder
             }
         }
 
-        Role::findByName('Super Admin')->syncPermissions($permissions);
-        Role::findByName('Admin')->syncPermissions($permissions);
-        
-        Role::findByName('Warehouse Manager')->syncPermissions([
-            'view dashboard', 'manage employees', 'view inventory',
-            'manage inventory', 'view products', 'view reports',
-            'employee.view', 'view_inventory', 'manage_inventory',
+        // Attendance write permissions - Admin should NOT have these
+        $attendanceWritePermissions = [
+            'create_attendance', 'update_attendance', 'delete_attendance',
+            'attendance.create', 'attendance.edit', 'attendance.delete',
+            'attendance.checkin', 'attendance.checkout',
+            'attendance.geo.checkin', 'attendance.geo.checkout',
+        ];
+
+        $allPermissions = Permission::pluck('name')->toArray();
+        $adminPermissions = array_values(array_diff($allPermissions, $attendanceWritePermissions));
+
+        Role::findByName('Admin')->syncPermissions($adminPermissions);
+
+        // Manager: can view sites, their stock, and site employees (read-only)
+        Role::findByName('Manager')->syncPermissions([
+            'view dashboard',
+            'view_sites', 'site.view', 'view_employees',
+            'employee.view',
+            'view_products', 'view_categories',
+            'view_inventory', 'inventory.stock.view', 'inventory.dashboard.view',
+            'inventory.locations.view', 'inventory.transactions.view', 'inventory.transfers.view',
+            'inventory.units.view', 'inventory.requests.view',
+            'daily-report.view', 'daily-report.report.view',
+            'attendance.view', 'view_attendance',
+            'leave.view',
+            'view reports',
+        ]);
+
+        // Store Manager: full inventory operations
+        Role::findByName('Store Manager')->syncPermissions([
+            'view dashboard', 'manage transfers',
+            'view_inventory', 'manage_inventory',
             'view_products', 'create_products', 'update_products',
-            'inventory.locations.view', 'inventory.locations.create', 'inventory.locations.edit', 'inventory.locations.delete',
-            'inventory.units.view', 'inventory.units.create', 'inventory.units.edit', 'inventory.units.delete',
-            'inventory.conversions.view', 'inventory.conversions.create', 'inventory.conversions.edit', 'inventory.conversions.delete',
+            'view_categories', 'create_categories', 'update_categories',
+            'inventory.locations.view', 'inventory.locations.create', 'inventory.locations.edit',
+            'inventory.units.view', 'inventory.units.create', 'inventory.units.edit',
+            'inventory.conversions.view', 'inventory.conversions.create', 'inventory.conversions.edit',
             'inventory.stock.view', 'inventory.stock.create',
             'inventory.transactions.view', 'inventory.transactions.create',
             'inventory.requests.view', 'inventory.requests.create', 'inventory.requests.approve',
             'inventory.transfers.view', 'inventory.transfers.create', 'inventory.transfers.approve',
             'inventory.dashboard.view',
+            'employee.view',
+            'view_products', 'view_categories',
+            'view_purchase_orders', 'create_purchase_orders',
+            'view_sales_orders', 'create_sales_orders',
         ]);
-        
+
+        // Accountant: payroll + purchase/sales orders (no inventory update)
+        Role::findByName('Accountant')->syncPermissions([
+            'view dashboard', 'view reports',
+            'view_payroll', 'manage_payroll',
+            'view_purchase_orders', 'create_purchase_orders',
+            'view_sales_orders', 'create_sales_orders',
+            'view_invoices', 'create_invoices', 'update_invoices',
+            'view_payments', 'create_payments',
+            'view_customers', 'view_suppliers',
+            'employee.view', 'view_employees',
+                    'view_products', 'view_categories',
+                    'salary-structure.view',
+        ]);
+
+        // HR: unchanged
         Role::findByName('HR')->syncPermissions([
             'view dashboard', 'manage employees', 'view attendance',
             'manage payroll', 'view reports',
@@ -122,54 +175,21 @@ class RolesAndPermissionsSeeder extends Seeder
             'document.download', 'document.preview', 'document.manage-expiry',
             'daily-report.view', 'daily-report.create', 'daily-report.edit', 'daily-report.delete',
             'daily-report.submit', 'daily-report.approve', 'daily-report.reject', 'daily-report.rework', 'daily-report.report.view',
-        ]);
-        
-        Role::findByName('Accountant')->syncPermissions([
-            'view dashboard', 'view invoices', 'manage sales',
-            'manage purchases', 'view reports',
-            'view_invoices', 'create_invoices', 'update_invoices',
-            'view_payments', 'create_payments',
-            'view_customers', 'view_suppliers',
-            'view_sales_orders', 'view_purchase_orders',
-            'view_payroll', 'manage_payroll', 'payroll.view', 'payroll.generate', 'salary-structure.view',
+            'leave.view', 'leave.create', 'leave.approve', 'leave.reject', 'leave.balance.view',
+            'leave-type.view', 'leave-type.create', 'leave-type.edit',
         ]);
 
-        Role::findByName('Inventory Staff')->syncPermissions([
-            'view dashboard', 'view inventory', 'manage inventory',
-            'view products', 'manage transfers',
-            'view_inventory', 'manage_inventory',
-            'view_products', 'view_categories',
-            'inventory.locations.view', 'inventory.units.view',
-            'inventory.stock.view',
-            'inventory.transactions.view', 'inventory.transactions.create',
-            'inventory.requests.view', 'inventory.requests.create',
-            'inventory.transfers.view', 'inventory.transfers.create',
-            'inventory.dashboard.view',
-        ]);
-
-        Role::findByName('Sales Executive')->syncPermissions([
-            'view dashboard', 'create sales', 'view invoices',
-            'view_customers', 'create_customers', 'update_customers',
-            'view_sales_orders', 'create_sales_orders',
-            'view_invoices', 'create_invoices',
+        // Employee: self-service (own attendance, daily reports, payroll, leaves)
+        Role::findByName('Employee')->syncPermissions([
+            'view dashboard',
+            'attendance.checkin', 'attendance.checkout',
+            'attendance.view',
+            'daily-report.create', 'daily-report.view', 'daily-report.submit',
+            'leave.view', 'leave.create', 'leave.cancel', 'leave.balance.view',
+            'view_payroll',
         ]);
 
         $maxUserId = User::max('id') ?? 0;
-
-        $superAdmin = User::where('email', 'superadmin@example.com')->first();
-        if (!$superAdmin) {
-            $maxUserId++;
-            User::insert([
-                'id' => $maxUserId,
-                'email' => 'superadmin@example.com',
-                'name' => 'Super Admin',
-                'password' => Hash::make('password'),
-                'created_at' => now(),
-                'updated_at' => now()
-            ]);
-            $superAdmin = User::find($maxUserId);
-        }
-        $superAdmin->assignRole('Super Admin');
 
         $admin = User::where('email', 'admin@erp.com')->first();
         if (!$admin) {

@@ -21,12 +21,14 @@ class PayrollController extends Controller
 
     public function index(Request $request)
     {
+        $this->authorize('view_payroll');
+
         $query = Payroll::with(['employee', 'payrollPeriod', 'payslip']);
-        
+
         if ($request->has('payroll_period_id')) {
             $query->where('payroll_period_id', $request->payroll_period_id);
         }
-        
+
         if ($request->has('employee_id')) {
             $query->where('employee_id', $request->employee_id);
         }
@@ -34,13 +36,34 @@ class PayrollController extends Controller
         return response()->json($query->orderBy('created_at', 'desc')->get());
     }
 
+    public function myPayroll(Request $request)
+    {
+        $user = $request->user();
+        $employee = $user->employee;
+
+        if (!$employee) {
+            return response()->json(['message' => 'No employee profile found'], 404);
+        }
+
+        $payrolls = Payroll::with(['payrollPeriod', 'payslip'])
+            ->where('employee_id', $employee->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json($payrolls);
+    }
+
     public function show(Payroll $payroll)
     {
+        $this->authorize('view_payroll');
+
         return response()->json($payroll->load(['employee.department', 'employee.designation', 'payrollPeriod', 'payslip']));
     }
 
     public function generate(Request $request)
     {
+        $this->authorize('manage_payroll');
+
         $request->validate([
             'payroll_period_id' => 'required|exists:payroll_periods,id',
             'employee_id' => 'nullable|exists:employees,id',
@@ -49,7 +72,7 @@ class PayrollController extends Controller
         ]);
 
         $period = PayrollPeriod::findOrFail($request->payroll_period_id);
-        
+
         if ($period->status === 'Locked' || $period->status === 'Paid') {
             return response()->json(['message' => 'Cannot generate payroll for a locked or paid period.'], 403);
         }
@@ -73,87 +96,140 @@ class PayrollController extends Controller
         DB::beginTransaction();
         try {
             foreach ($employees as $employee) {
-                // Prevent duplicate generation unless regenerate is called
                 if (Payroll::where('employee_id', $employee->id)->where('payroll_period_id', $period->id)->exists()) {
                     continue;
                 }
 
                 try {
-                    $payrollData = $this->payrollService->calculate($employee, $period);
-                    Payroll::create($payrollData);
+                    $result = $this->payrollService->calculatePayroll($employee, $period);
+                    Payroll::create([
+                        'employee_id' => $employee->id,
+                        'payroll_period_id' => $period->id,
+                        'basic_pay' => $result['basic_pay'],
+                        'allowances' => json_encode($result['allowances']),
+                        'deductions' => json_encode($result['deductions']),
+                        'net_pay' => $result['net_pay'],
+                        'status' => 'Generated',
+                    ]);
                     $generatedCount++;
                 } catch (\Exception $e) {
-                    $errors[] = "Employee ID {$employee->id}: " . $e->getMessage();
+                    $errors[] = "Employee {$employee->id}: {$e->getMessage()}";
                 }
             }
             DB::commit();
-            Log::info("Payroll generation completed", [
-                'period_id' => $period->id,
-                'generated_count' => $generatedCount,
-                'user_id' => auth()->id() ?? 'system'
-            ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Payroll generation failed.', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'Payroll generation failed', 'error' => $e->getMessage()], 500);
         }
 
         return response()->json([
-            'message' => "Successfully generated payroll for {$generatedCount} employees.",
-            'errors' => $errors
+            'message' => "Payroll generated for {$generatedCount} employees.",
+            'generated_count' => $generatedCount,
+            'errors' => $errors,
         ]);
     }
 
     public function regenerate(Request $request)
     {
+        $this->authorize('manage_payroll');
+
         $request->validate([
-            'payroll_id' => 'required|exists:payrolls,id',
+            'payroll_period_id' => 'required|exists:payroll_periods,id',
+            'employee_id' => 'nullable|exists:employees,id',
         ]);
 
-        $payroll = Payroll::findOrFail($request->payroll_id);
-        
-        if ($payroll->status !== 'Draft') {
-            return response()->json(['message' => 'Can only regenerate Draft payrolls.'], 403);
+        $period = PayrollPeriod::findOrFail($request->payroll_period_id);
+
+        if ($period->status === 'Locked' || $period->status === 'Paid') {
+            return response()->json(['message' => 'Cannot regenerate payroll for a locked or paid period.'], 403);
         }
 
+        $query = Payroll::where('payroll_period_id', $period->id);
+
+        if ($request->has('employee_id')) {
+            $query->where('employee_id', $request->employee_id);
+        }
+
+        $payrolls = $query->get();
+        $regeneratedCount = 0;
+        $errors = [];
+
+        DB::beginTransaction();
         try {
-            $payrollData = $this->payrollService->calculate($payroll->employee, $payroll->payrollPeriod);
-            $payroll->update($payrollData);
-            return response()->json(['message' => 'Payroll regenerated successfully.', 'payroll' => $payroll->fresh()]);
+            foreach ($payrolls as $payroll) {
+                try {
+                    $employee = Employee::findOrFail($payroll->employee_id);
+                    $result = $this->payrollService->calculatePayroll($employee, $period);
+                    $payroll->update([
+                        'basic_pay' => $result['basic_pay'],
+                        'allowances' => json_encode($result['allowances']),
+                        'deductions' => json_encode($result['deductions']),
+                        'net_pay' => $result['net_pay'],
+                    ]);
+                    $regeneratedCount++;
+                } catch (\Exception $e) {
+                    $errors[] = "Payroll {$payroll->id}: {$e->getMessage()}";
+                }
+            }
+            DB::commit();
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Regeneration failed.', 'error' => $e->getMessage()], 500);
+            DB::rollBack();
+            return response()->json(['message' => 'Payroll regeneration failed', 'error' => $e->getMessage()], 500);
         }
+
+        return response()->json([
+            'message' => "Payroll regenerated for {$regeneratedCount} employees.",
+            'regenerated_count' => $regeneratedCount,
+            'errors' => $errors,
+        ]);
     }
 
-    public function approve(Request $request, Payroll $payroll)
+    public function approve($payroll)
     {
-        $payroll->update(['status' => 'Approved']);
-        Log::info("Payroll approved", ['payroll_id' => $payroll->id, 'user_id' => auth()->id() ?? 'system']);
+        $this->authorize('manage_payroll');
+
+        $payroll = Payroll::findOrFail($payroll);
+        $payroll->status = 'Approved';
+        $payroll->approved_at = now();
+        $payroll->save();
+
         return response()->json($payroll);
     }
 
-    public function lock(Request $request, Payroll $payroll)
+    public function lock($payroll)
     {
-        $payroll->update(['status' => 'Locked']);
-        Log::info("Payroll locked", ['payroll_id' => $payroll->id, 'user_id' => auth()->id() ?? 'system']);
+        $this->authorize('manage_payroll');
+
+        $payroll = Payroll::findOrFail($payroll);
+        $payroll->status = 'Locked';
+        $payroll->save();
+
         return response()->json($payroll);
     }
 
-    public function unlock(Request $request, Payroll $payroll)
+    public function unlock($payroll)
     {
-        if ($payroll->status !== 'Locked') {
-            return response()->json(['message' => 'Can only unlock Locked payroll entries.'], 403);
+        $this->authorize('manage_payroll');
+
+        $payroll = Payroll::findOrFail($payroll);
+
+        if ($payroll->status === 'Paid') {
+            return response()->json(['message' => 'Cannot unlock a paid payroll.'], 403);
         }
-        $payroll->update(['status' => 'Approved']);
-        Log::info("Payroll unlocked", ['payroll_id' => $payroll->id, 'user_id' => auth()->id() ?? 'system']);
+
+        $payroll->status = 'Generated';
+        $payroll->save();
+
         return response()->json($payroll);
     }
 
-    public function destroy(Payroll $payroll)
+    public function destroy($payroll)
     {
-        if (!in_array($payroll->status, ['Draft', 'Locked'])) {
-            return response()->json(['message' => 'Can only delete Draft or Locked payroll entries.'], 403);
-        }
+        $this->authorize('manage_payroll');
+
+        $payroll = Payroll::findOrFail($payroll);
         $payroll->delete();
-        return response()->noContent();
+
+        return response()->json(['message' => 'Payroll deleted']);
     }
 }

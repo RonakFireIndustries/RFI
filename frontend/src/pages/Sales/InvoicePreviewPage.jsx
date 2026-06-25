@@ -47,8 +47,8 @@ export default function InvoicePreviewPage() {
   const [showExportSettings, setShowExportSettings] = useState(true);
   const [showCompliance, setShowCompliance] = useState(true);
 
-  const canView = permissions?.includes('view_invoices') || roles?.includes('Super Admin') || roles?.includes('Admin');
-  const canExport = permissions?.includes('view_invoices') || roles?.includes('Super Admin') || roles?.includes('Admin') || roles?.includes('Accountant');
+  const canView = permissions?.includes('view_invoices') || roles?.includes('Admin');
+  const canExport = permissions?.includes('view_invoices') || roles?.includes('Admin') || roles?.includes('Accountant');
 
   const invoice = data?.invoice;
   const company = data?.company;

@@ -8,10 +8,6 @@ import Login from './pages/Auth/Login';
 
 import DashboardLayout from './components/Layout/DashboardLayout';
 
-// Super Admin
-import SuperAdminLogin from './pages/SuperAdmin/SuperAdminLogin';
-import SuperAdminDashboard from './pages/SuperAdmin/SuperAdminDashboard';
-
 // Protected Route Wrapper
 const ProtectedRoute = ({ children }) => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -52,17 +48,6 @@ function App() {
         <UpdatePrompt />
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/superadmin" element={<SuperAdminLogin />} />
-
-          {/* Protected Super Admin Route */}
-          <Route
-            path="/superadmin/dashboard"
-            element={
-              <ProtectedRoute>
-                <SuperAdminDashboard />
-              </ProtectedRoute>
-            }
-          />
 
           {/* Protected Routes */}
           <Route

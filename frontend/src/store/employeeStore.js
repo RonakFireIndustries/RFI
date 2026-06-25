@@ -12,19 +12,26 @@ export const useEmployeeStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       const response = await api.get('/employees', { params });
-      
+
       const payload = response.data || {};
       const payloadData = payload.data || payload;
       const employeesData = payloadData.employees || payloadData.data || payloadData || [];
       const parsedEmployees = Array.isArray(employeesData) ? employeesData : (Array.isArray(employeesData.data) ? employeesData.data : []);
 
 
+      // console.log('[employeeStore] fetched:', parsedEmployees.length, 'employees');
+      // if (parsedEmployees.length > 0) {
+      // console.log('[employeeStore] sample:', parsedEmployees[0]);
+      // console.log('[employeeStore] sample designation:', parsedEmployees[0].designation);
+      // }
+
       set({
         employees: parsedEmployees,
-        pagination: response.data.data.pagination,
+        pagination: payloadData.pagination || response.data?.pagination || null,
         loading: false
       });
     } catch (error) {
+      console.error('[employeeStore] error:', error);
       set({ error: error.message, loading: false });
     }
   },

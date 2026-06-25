@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useSiteStore } from '../../store/siteStore';
 import { useEmployeeStore } from '../../store/employeeStore';
 import { 
   Plus, Edit, Trash2, Search, MapPin, Phone, Mail, User, ShieldAlert,
-  Building, Compass, CheckCircle2, XCircle, Info, ChevronLeft, ChevronRight, X
+  Building, Compass, CheckCircle2, XCircle, Info, ChevronLeft, ChevronRight, X,
+  Package, Users
 } from 'lucide-react';
 import LocationPicker from '../../components/Map/LocationPicker';
+import api from '../../services/api';
 
 export default function Sites() {
   const { 
@@ -22,11 +25,21 @@ export default function Sites() {
     fetchEmployees 
   } = useEmployeeStore();
 
+  const navigate = useNavigate();
+
   // Search & Filter
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage] = useState(10);
+
+  // Per-card date filters
+  const [siteDateFilters, setSiteDateFilters] = useState({});
+
+  // Inventory / Employees modals
+  const [detailModal, setDetailModal] = useState({ type: null, site: null });
+  const [modalData, setModalData] = useState([]);
+  const [modalLoading, setModalLoading] = useState(false);
 
   // Modals
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -48,7 +61,9 @@ export default function Sites() {
     allowed_radius: 100,
     geo_fencing_enabled: false,
     status: 'Active',
-    site_manager_id: ''
+    site_manager_id: '',
+    start_date: '',
+    end_date: ''
   });
 
   const [formErrors, setFormErrors] = useState({});
@@ -57,6 +72,112 @@ export default function Sites() {
     fetchSites({ search, status: statusFilter, page: currentPage, per_page: perPage });
     fetchEmployees({ per_page: 100 });
   }, [search, statusFilter, currentPage]);
+
+  const [geocoding, setGeocoding] = useState(false);
+
+  const tryGeocode = async (query) => {
+    if (!query) return null;
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&addressdetails=1`,
+      { headers: { 'User-Agent': 'RFI-ERP/1.0' } }
+    );
+    const data = await res.json();
+    if (data.length === 0) return null;
+    const addr = data[0].address || {};
+    return {
+      lat: parseFloat(data[0].lat),
+      lon: parseFloat(data[0].lon),
+      city: addr.city || addr.town || addr.village || addr.municipality || addr.county || '',
+      state: addr.state || '',
+      country: addr.country || '',
+      pincode: addr.postcode || ''
+    };
+  };
+
+  const extractPincode = (str) => {
+    const match = str.match(/\b\d{6}\b/);
+    return match ? match[0] : '';
+  };
+
+  const geocodeAddress = async () => {
+    const fullAddress = formData.address || '';
+    const formParts = [formData.city, formData.state, formData.country, formData.pincode].filter(Boolean);
+    const fullQuery = [fullAddress, ...formParts].join(', ').trim();
+    if (!fullQuery) return;
+    setGeocoding(true);
+    try {
+      let result = await tryGeocode(fullQuery);
+      if (!result) {
+        await new Promise(r => setTimeout(r, 1000));
+        const pincode = formData.pincode || extractPincode(fullAddress);
+        if (pincode) result = await tryGeocode(pincode);
+      }
+      if (!result) {
+        await new Promise(r => setTimeout(r, 1000));
+        const simpleParts = [formData.city, formData.state, formData.country].filter(Boolean);
+        if (!simpleParts.length) {
+          const words = fullAddress.split(',').map(s => s.trim()).filter(Boolean);
+          if (words.length >= 2) simpleParts.push(...words.slice(-2));
+        }
+        if (simpleParts.length) result = await tryGeocode(simpleParts.join(', '));
+      }
+      if (result) {
+        setFormData(prev => ({
+          ...prev,
+          latitude: result.lat,
+          longitude: result.lon,
+          city: result.city || prev.city,
+          state: result.state || prev.state,
+          country: result.country || prev.country,
+          pincode: result.pincode || prev.pincode
+        }));
+      } else {
+        alert('Could not find coordinates for this address. Please click on the map to set the location manually.');
+      }
+    } catch (err) {
+      console.error('Geocoding failed:', err);
+      alert('Geocoding service error. Please click on the map to set the location manually.');
+    } finally {
+      setGeocoding(false);
+    }
+  };
+
+  const openInventoryModal = async (site) => {
+    setModalLoading(true);
+    setDetailModal({ type: 'inventory', site });
+    try {
+      const res = await api.get(`/stock/by-location/site/${site.id}`);
+      const items = Array.isArray(res.data) ? res.data : (res.data?.data ?? []);
+      setModalData(items);
+    } catch {
+      setModalData([]);
+    }
+    setModalLoading(false);
+  };
+
+  const openEmployeesModal = async (site) => {
+    setModalLoading(true);
+    setDetailModal({ type: 'employees', site });
+    try {
+      const res = await api.get(`/sites/${site.id}/employees`);
+      setModalData(res.data?.employees || []);
+    } catch {
+      setModalData([]);
+    }
+    setModalLoading(false);
+  };
+
+  const getScheduleStatus = (endDate) => {
+    if (!endDate) return null;
+    return new Date() > new Date(endDate) ? 'Delayed' : 'On Time';
+  };
+
+  const handleDateFilterChange = (siteId, field, value) => {
+    setSiteDateFilters(prev => ({
+      ...prev,
+      [siteId]: { ...(prev[siteId] || {}), [field]: value }
+    }));
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -88,7 +209,9 @@ export default function Sites() {
       allowed_radius: 100,
       geo_fencing_enabled: false,
       status: 'Active',
-      site_manager_id: ''
+      site_manager_id: '',
+      start_date: '',
+      end_date: ''
     });
     setFormErrors({});
     setIsModalOpen(true);
@@ -113,7 +236,9 @@ export default function Sites() {
       allowed_radius: site.allowed_radius || 100,
       geo_fencing_enabled: !!site.geo_fencing_enabled,
       status: site.status || 'Active',
-      site_manager_id: site.site_manager_id || ''
+      site_manager_id: site.site_manager_id || '',
+      start_date: site.start_date || '',
+      end_date: site.end_date || ''
     });
     setFormErrors({});
     setIsModalOpen(true);
@@ -324,36 +449,81 @@ export default function Sites() {
                     </span>
                   </div>
                 </div>
+
+                {/* Persisted Start / End Date + delayed/on-time status */}
+                {(site.start_date || site.end_date) && (
+                  <div className="border-t border-gray-50 pt-3 mt-3">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        {site.start_date && (
+                          <p className="text-xs text-gray-500">
+                            <span className="font-semibold text-gray-600">Start:</span> {site.start_date}
+                          </p>
+                        )}
+                        {site.end_date && (
+                          <p className="text-xs text-gray-500">
+                            <span className="font-semibold text-gray-600">End:</span> {site.end_date}
+                          </p>
+                        )}
+                      </div>
+                      {site.end_date && (
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                          getScheduleStatus(site.end_date) === 'Delayed'
+                            ? 'bg-red-50 text-red-700'
+                            : 'bg-emerald-50 text-emerald-700'
+                        }`}>
+                          {getScheduleStatus(site.end_date)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Card Footer with Manager and Actions */}
-              <div className="bg-gray-50/50 px-6 py-4 border-t border-gray-100 flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center text-xs font-bold">
-                    {site.site_manager?.name ? site.site_manager.name.substring(0, 2).toUpperCase() : 'M'}
+              <div className="bg-gray-50/50 px-6 py-4 border-t border-gray-100 flex flex-col gap-3">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center text-xs font-bold">
+                      {site.site_manager?.name ? site.site_manager.name.substring(0, 2).toUpperCase() : 'M'}
+                    </div>
+                    <div className="text-xs">
+                      <p className="text-gray-400 font-semibold">SITE MANAGER</p>
+                      <p className="font-bold text-gray-800 truncate max-w-[120px]">
+                        {site.site_manager?.name || 'Unassigned'}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-xs">
-                    <p className="text-gray-400 font-semibold">SITE MANAGER</p>
-                    <p className="font-bold text-gray-800 truncate max-w-[120px]">
-                      {site.site_manager?.name || 'Unassigned'}
-                    </p>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => openInventoryModal(site)}
+                      className="p-2 text-gray-600 hover:text-emerald-600 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-gray-100"
+                      title="Show Inventory"
+                    >
+                      <Package className="w-4 h-4" />
+                    </button>
+                    <button 
+                      onClick={() => openEmployeesModal(site)}
+                      className="p-2 text-gray-600 hover:text-indigo-600 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-gray-100"
+                      title="Show Employees"
+                    >
+                      <Users className="w-4 h-4" />
+                    </button>
+                    <button 
+                      onClick={() => openEditModal(site)}
+                      className="p-2 text-gray-600 hover:text-blue-600 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-gray-100"
+                      title="Edit Site"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(site.id)}
+                      className="p-2 text-gray-600 hover:text-red-600 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-gray-100"
+                      title="Delete Site"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
-                </div>
-                <div className="flex gap-2">
-                  <button 
-                    onClick={() => openEditModal(site)}
-                    className="p-2 text-gray-600 hover:text-blue-600 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-gray-100"
-                    title="Edit Site"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </button>
-                  <button 
-                    onClick={() => handleDelete(site.id)}
-                    className="p-2 text-gray-600 hover:text-red-600 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-gray-100"
-                    title="Delete Site"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
                 </div>
               </div>
             </div>
@@ -432,9 +602,11 @@ export default function Sites() {
                     className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select Manager</option>
-                    {employees?.map(emp => (
-                      <option key={emp.id} value={emp.id}>{emp.full_name || emp.name}</option>
-                    ))}
+                    {employees
+                      ?.filter(emp => emp.designation?.name === 'Manager')
+                      .map(emp => (
+                        <option key={emp.id} value={emp.id}>{emp.full_name || emp.name}</option>
+                      ))}
                   </select>
                 </div>
                 <div className="md:col-span-1">
@@ -446,6 +618,32 @@ export default function Sites() {
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
+                </div>
+
+                {/* Start / End Date */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Start Date</label>
+                    <input 
+                      type="date" 
+                      name="start_date"
+                      value={formData.start_date}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    {formErrors.start_date && <p className="text-red-500 text-xs mt-1">{formErrors.start_date}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">End Date</label>
+                    <input 
+                      type="date" 
+                      name="end_date"
+                      value={formData.end_date}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    {formErrors.end_date && <p className="text-red-500 text-xs mt-1">{formErrors.end_date}</p>}
+                  </div>
                 </div>
               </div>
 
@@ -562,13 +760,24 @@ export default function Sites() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Address</label>
-                  <textarea 
-                    name="address"
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    rows="2"
-                    className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  ></textarea>
+                  <div className="flex gap-2">
+                    <textarea 
+                      name="address"
+                      value={formData.address}
+                      onChange={handleInputChange}
+                      rows="2"
+                      className="flex-1 px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    ></textarea>
+                    <button
+                      type="button"
+                      onClick={geocodeAddress}
+                      disabled={geocoding}
+                      className="self-start px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-200 transition-colors border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Fetch coordinates from address"
+                    >
+                      {geocoding ? <span className="w-5 h-5 block animate-spin rounded-full border-2 border-gray-400 border-t-transparent" /> : <Compass className="w-5 h-5" />}
+                    </button>
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
@@ -631,6 +840,117 @@ export default function Sites() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Inventory Detail Modal */}
+      {detailModal.type === 'inventory' && detailModal.site && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="flex justify-between items-center px-6 py-4 border-b border-gray-150">
+              <h2 className="text-xl font-bold text-gray-900">Inventory at {detailModal.site.name}</h2>
+              <button onClick={() => setDetailModal({ type: null, site: null })} className="text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6">
+              {modalLoading ? (
+                <div className="flex justify-center py-10">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              ) : modalData.length === 0 ? (
+                <div className="text-center py-10 text-gray-500">
+                  <Package className="w-10 h-10 mx-auto mb-3 text-gray-300" />
+                  <p className="font-medium">No stock found at this site</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto max-h-80 overflow-y-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-gray-200 text-left text-xs font-bold text-gray-500 uppercase">
+                        <th className="pb-3 pr-4 sticky top-0 bg-white">Product</th>
+                        <th className="pb-3 pr-4 sticky top-0 bg-white">Category</th>
+                        <th className="pb-3 pr-4 text-right sticky top-0 bg-white">Quantity</th>
+                        <th className="pb-3 pr-4 text-right sticky top-0 bg-white">Reserved</th>
+                        <th className="pb-3 text-right sticky top-0 bg-white">Available</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {modalData.map(item => (
+                        <tr key={item.id} className="border-b border-gray-50 hover:bg-gray-50/50">
+                          <td className="py-3 pr-4 font-medium text-gray-800">
+                            {item.product?.name || `Product #${item.product_id}`}
+                          </td>
+                          <td className="py-3 pr-4 text-gray-500">
+                            {item.product?.category?.name || '-'}
+                          </td>
+                          <td className="py-3 pr-4 text-right">{item.quantity}</td>
+                          <td className="py-3 pr-4 text-right text-amber-600">{item.reserved_quantity}</td>
+                          <td className="py-3 text-right text-emerald-600 font-semibold">{item.available_quantity}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Employees Detail Modal */}
+      {detailModal.type === 'employees' && detailModal.site && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="flex justify-between items-center px-6 py-4 border-b border-gray-150">
+              <h2 className="text-xl font-bold text-gray-900">Employees at {detailModal.site.name}</h2>
+              <button onClick={() => setDetailModal({ type: null, site: null })} className="text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6">
+              {modalLoading ? (
+                <div className="flex justify-center py-10">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              ) : modalData.length === 0 ? (
+                <div className="text-center py-10 text-gray-500">
+                  <Users className="w-10 h-10 mx-auto mb-3 text-gray-300" />
+                  <p className="font-medium">No employees assigned to this site</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto max-h-80 overflow-y-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-gray-200 text-left text-xs font-bold text-gray-500 uppercase">
+                        <th className="pb-3 pr-4 sticky top-0 bg-white">Employee</th>
+                        <th className="pb-3 pr-4 sticky top-0 bg-white">Designation</th>
+                        <th className="pb-3 pr-4 sticky top-0 bg-white">Department</th>
+                        <th className="pb-3 sticky top-0 bg-white">Contact</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {modalData.map(emp => (
+                        <tr key={emp.id} className="border-b border-gray-50 hover:bg-gray-50/50">
+                          <td className="py-3 pr-4">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center text-xs font-bold">
+                                {(emp.full_name || emp.name || '?').substring(0, 2).toUpperCase()}
+                              </div>
+                              <span className="font-medium text-gray-800">{emp.full_name || emp.name}</span>
+                            </div>
+                          </td>
+                          <td className="py-3 pr-4 text-gray-500">{emp.designation?.name || emp.designation || '-'}</td>
+                          <td className="py-3 pr-4 text-gray-500">{emp.department?.name || emp.department || '-'}</td>
+                          <td className="py-3 text-gray-500">{emp.contact_number || emp.phone || '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

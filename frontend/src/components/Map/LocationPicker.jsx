@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -11,26 +11,29 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-function LocationMarker({ position, setPosition }) {
+function MapContent({ latitude, longitude, onLocationChange }) {
+  const map = useMap();
+
+  const position = latitude && longitude ? { lat: latitude, lng: longitude } : null;
+
+  useEffect(() => {
+    if (position) {
+      map.flyTo(position, Math.max(map.getZoom(), 15), { duration: 1 });
+    }
+  }, [latitude, longitude]);
+
   useMapEvents({
     click(e) {
-      setPosition(e.latlng);
+      onLocationChange(e.latlng.lat, e.latlng.lng);
     },
   });
 
-  return position === null ? null : (
-    <Marker position={position}></Marker>
-  );
+  return position ? <Marker position={position} /> : null;
 }
 
 export default function LocationPicker({ latitude, longitude, onLocationChange }) {
-  const defaultCenter = [19.0760, 72.8777]; // Default to Mumbai
+  const defaultCenter = [19.0760, 72.8777];
   const center = latitude && longitude ? [latitude, longitude] : defaultCenter;
-  const position = latitude && longitude ? { lat: latitude, lng: longitude } : null;
-
-  const handlePositionChange = (latlng) => {
-    onLocationChange(latlng.lat, latlng.lng);
-  };
 
   return (
     <div className="h-64 w-full rounded-lg overflow-hidden border border-gray-300 relative z-0">
@@ -44,7 +47,11 @@ export default function LocationPicker({ latitude, longitude, onLocationChange }
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <LocationMarker position={position} setPosition={handlePositionChange} />
+        <MapContent
+          latitude={latitude}
+          longitude={longitude}
+          onLocationChange={onLocationChange}
+        />
       </MapContainer>
     </div>
   );

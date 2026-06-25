@@ -1,7 +1,26 @@
+import { useMemo } from 'react';
 import ModuleDetailPage from '../ERP/ModuleDetailPage';
 import { useSuppliersStore } from '../../store/suppliersStore';
+import { useAuthStore } from '../../store/authStore';
+
+const FINANCE_ROLES = ['Admin', 'Accountant'];
 
 export default function SupplierProfile() {
+  const userRoles = useAuthStore((s) => s.roles);
+  const canFinance = userRoles.some((r) => FINANCE_ROLES.includes(r));
+
+  const productColumns = useMemo(() => {
+    const cols = [
+      { header: 'SKU', accessorKey: 'sku' },
+      { header: 'Product', accessorKey: 'name' },
+      { header: 'Category', accessorKey: 'category.name' },
+    ];
+    if (canFinance) {
+      cols.push({ header: 'Selling Price', accessorKey: 'selling_price' });
+    }
+    return cols;
+  }, [canFinance]);
+
   return (
     <ModuleDetailPage
       title={(supplier) => supplier.name || `Supplier #${supplier.id}`}
@@ -19,12 +38,7 @@ export default function SupplierProfile() {
           title: 'Products',
           path: 'products',
           emptyText: 'No products linked to this supplier.',
-          columns: [
-            { header: 'SKU', accessorKey: 'sku' },
-            { header: 'Product', accessorKey: 'name' },
-            { header: 'Category', accessorKey: 'category.name' },
-            { header: 'Selling Price', accessorKey: 'selling_price' },
-          ],
+          columns: productColumns,
         },
         {
           title: 'Purchase Orders',

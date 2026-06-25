@@ -3,7 +3,7 @@ import ModuleDetailPage from '../ERP/ModuleDetailPage';
 import { useProductsStore } from '../../store/productsStore';
 import { useAuthStore } from '../../store/authStore';
 
-const FINANCE_ROLES = ['Super Admin', 'Admin', 'Finance Manager', 'Accountant'];
+const FINANCE_ROLES = ['Admin', 'Accountant'];
 
 export default function ProductDetail() {
   const userRoles = useAuthStore((s) => s.roles);
@@ -14,10 +14,10 @@ export default function ProductDetail() {
       { label: 'SKU', path: 'sku' },
       { label: 'Category', path: 'category.name' },
       { label: 'Supplier', path: 'supplier.name' },
-      { label: 'Purchase Price', path: 'purchase_price' },
       { label: 'Status', path: 'status' },
     ];
     if (canFinance) {
+      flds.splice(3, 0, { label: 'Purchase Price', path: 'purchase_price' });
       flds.splice(4, 0, { label: 'Selling Price', path: 'selling_price' });
     }
     return flds;

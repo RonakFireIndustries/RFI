@@ -8,14 +8,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use NotificationChannels\WebPush\HasPushSubscriptions;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable, HasPushSubscriptions;
+    use HasApiTokens, HasFactory, Notifiable, HasPushSubscriptions, HasRoles;
 
     protected $guard_name = 'web';
 
@@ -58,9 +58,4 @@ class User extends Authenticatable
         return $this->hasOne(Employee::class);
     }
 
-    public function roles(): BelongsToMany
-    {
-        return $this->morphToMany(Role::class, 'model', 'model_has_roles', 'model_id', 'role_id')
-            ->wherePivot('model_type', User::class);
-    }
 }

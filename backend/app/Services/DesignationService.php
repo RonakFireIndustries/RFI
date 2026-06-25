@@ -9,7 +9,7 @@ class DesignationService
 {
     public function getDesignations(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        $query = Designation::with('department');
+        $query = Designation::with('department')->withCount('employees');
 
         if (isset($filters['search']) && $filters['search']) {
             $query->where('name', 'like', '%' . $filters['search'] . '%');

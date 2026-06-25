@@ -128,8 +128,9 @@ class EmployeeSiteAssignmentService
      */
     public function getSiteEmployees(Site $site)
     {
-        return Employee::whereHas('employeeSites', function ($query) use ($site) {
-            $query->where('site_id', $site->id);
-        })->get();
+        return Employee::with(['designation', 'department'])
+            ->whereHas('employeeSites', function ($query) use ($site) {
+                $query->where('site_id', $site->id);
+            })->get();
     }
 }

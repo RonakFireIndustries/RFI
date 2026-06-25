@@ -63,9 +63,17 @@ const buildBlobHeaders = () => {
   return headers;
 };
 
+const buildQueryString = (params) => {
+  if (!params) return '';
+  const entries = Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== '');
+  if (entries.length === 0) return '';
+  return '?' + new URLSearchParams(entries).toString();
+};
+
 const api = {
-  get: async (endpoint) => {
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
+  get: async (endpoint, config) => {
+    const query = buildQueryString(config?.params);
+    const response = await fetch(`${BASE_URL}${endpoint}${query}`, {
       method: 'GET',
       headers: buildHeaders(),
       credentials: 'include',

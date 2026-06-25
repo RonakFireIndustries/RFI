@@ -31,6 +31,8 @@ class StoreSiteRequest extends FormRequest
             'geo_fencing_enabled' => 'boolean',
             'status' => 'required|in:Active,Inactive',
             'site_manager_id' => 'nullable|exists:employees,id',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
         ];
     }
 

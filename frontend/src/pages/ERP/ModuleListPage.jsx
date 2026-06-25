@@ -28,6 +28,7 @@ export default function ModuleListPage({
   searchPlaceholder,
   lookups = {},
   hideView,
+  fetchParams,
 }) {
   const { items, loading, fetchItems, createItem, updateItem, deleteItem } = store();
   const [search, setSearch] = useState('');
@@ -36,8 +37,8 @@ export default function ModuleListPage({
   const [formData, setFormData] = useState({});
 
   useEffect(() => {
-    fetchItems();
-  }, [fetchItems]);
+    fetchItems(fetchParams);
+  }, [fetchItems, fetchParams]);
 
   const openModal = (item = null) => {
     setEditing(item);

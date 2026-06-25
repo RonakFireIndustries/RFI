@@ -7,20 +7,26 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
+use App\Models\ProductStock;
 
 class PurchaseOrderController extends Controller
 {
     public function index()
     {
+        $this->authorize('view_purchase_orders');
+
         return PurchaseOrder::with('items')->get();
     }
 
     public function store(Request $request)
     {
+        $this->authorize('create_purchase_orders');
+
         $request->validate([
             'supplier_id' => 'required|exists:suppliers,id',
             'items' => 'required|array',
-            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.product_id' => 'nullable|exists:products,id',
+            'items.*.custom_product_name' => 'nullable|string|max:255|required_without:items.*.product_id',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.unit_cost' => 'required|numeric|min:0',
             'items.*.gst_rate' => 'nullable|numeric|min:0|max:100',
@@ -42,7 +48,7 @@ class PurchaseOrderController extends Controller
             $po = PurchaseOrder::create([
                 'po_number' => 'PO-' . time(),
                 'supplier_id' => $request->supplier_id,
-                'status' => $request->input('status', 'Pending Approval'),
+                'status' => 'Pending',
                 'requested_by' => Auth::id(),
                 'notes' => $request->notes,
                 'total_amount' => $subtotal,
@@ -54,7 +60,8 @@ class PurchaseOrderController extends Controller
             foreach ($request->items as $item) {
                 PurchaseOrderItem::create([
                     'purchase_order_id' => $po->id,
-                    'product_id' => $item['product_id'],
+                    'product_id' => $item['product_id'] ?: null,
+                    'custom_product_name' => $item['custom_product_name'] ?? null,
                     'quantity' => $item['quantity'],
                     'unit_cost' => $item['unit_cost'],
                     'gst_rate' => $item['gst_rate'] ?? 0,
@@ -71,8 +78,14 @@ class PurchaseOrderController extends Controller
 
     public function approve(Request $request, $id)
     {
+        $this->authorize('view_purchase_orders');
+
         $po = PurchaseOrder::findOrFail($id);
-        
+
+        if ($po->status !== 'Pending Approval' && $po->status !== 'Pending') {
+            return response()->json(['message' => 'Order cannot be approved in current status'], 400);
+        }
+
         $po->status = 'Approved';
         $po->approved_by = Auth::id();
         $po->save();
@@ -80,23 +93,78 @@ class PurchaseOrderController extends Controller
         return response()->json($po);
     }
 
+    public function reject(Request $request, $id)
+    {
+        $this->authorize('view_purchase_orders');
+
+        $po = PurchaseOrder::findOrFail($id);
+
+        if ($po->status !== 'Pending Approval' && $po->status !== 'Pending') {
+            return response()->json(['message' => 'Order cannot be rejected in current status'], 400);
+        }
+
+        $po->status = 'Rejected';
+        $po->save();
+
+        return response()->json($po);
+    }
+
+    /**
+     * Store Manager confirms receipt of goods → inventory is updated.
+     */
+    public function confirmReceipt(Request $request, $id)
+    {
+        $this->authorize('manage_inventory');
+
+        $po = PurchaseOrder::with('items')->findOrFail($id);
+
+        if ($po->status !== 'Approved' && $po->status !== 'Pending') {
+            return response()->json(['message' => 'Order cannot be received in current status'], 400);
+        }
+
+        DB::transaction(function () use ($po) {
+            foreach ($po->items as $item) {
+                $stock = ProductStock::firstOrNew([
+                    'product_id' => $item->product_id,
+                    'location_type' => 'site',
+                    'location_id' => $po->site_id ?? 1,
+                ]);
+                $stock->quantity = ($stock->quantity ?? 0) + $item->quantity;
+                $stock->available_quantity = ($stock->available_quantity ?? 0) + $item->quantity;
+                $stock->save();
+            }
+
+            $po->status = 'Received';
+            $po->received_by = Auth::id();
+            $po->received_at = now();
+            $po->save();
+        });
+
+        return response()->json($po->load('items'));
+    }
+
     public function show($id)
     {
+        $this->authorize('view_purchase_orders');
+
         return PurchaseOrder::with(['items.product', 'supplier'])->findOrFail($id);
     }
 
     public function update(Request $request, $id)
     {
+        $this->authorize('create_purchase_orders');
+
         $po = PurchaseOrder::findOrFail($id);
 
-        if ($po->status !== 'Pending Approval') {
-            return response()->json(['message' => 'Cannot update an approved order'], 400);
+        if ($po->status !== 'Pending') {
+            return response()->json(['message' => 'Cannot update a non-pending order'], 400);
         }
 
         $request->validate([
             'supplier_id' => 'required|exists:suppliers,id',
             'items' => 'required|array',
-            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.product_id' => 'nullable|exists:products,id',
+            'items.*.custom_product_name' => 'nullable|string|max:255|required_without:items.*.product_id',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.unit_cost' => 'required|numeric|min:0',
             'items.*.gst_rate' => 'nullable|numeric|min:0|max:100',
@@ -124,12 +192,12 @@ class PurchaseOrderController extends Controller
                 'gst_type' => $request->gst_type,
             ]);
 
-            // Recreate items
             $po->items()->delete();
             foreach ($request->items as $item) {
                 PurchaseOrderItem::create([
                     'purchase_order_id' => $po->id,
-                    'product_id' => $item['product_id'],
+                    'product_id' => $item['product_id'] ?: null,
+                    'custom_product_name' => $item['custom_product_name'] ?? null,
                     'quantity' => $item['quantity'],
                     'unit_cost' => $item['unit_cost'],
                     'gst_rate' => $item['gst_rate'] ?? 0,
@@ -144,6 +212,8 @@ class PurchaseOrderController extends Controller
 
     public function destroy($id)
     {
+        $this->authorize('manage_inventory');
+
         $po = PurchaseOrder::findOrFail($id);
         $po->items()->delete();
         $po->delete();

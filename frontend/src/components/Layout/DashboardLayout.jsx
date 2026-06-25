@@ -86,7 +86,7 @@ import SettingsPage from '../../pages/Settings/SettingsPage';
 import UserSettingsPage from '../../pages/Settings/UserSettingsPage';
 
 export default function DashboardLayout() {
-  const { user, roles, logout } = useAuthStore();
+  const { user, roles, permissions, logout } = useAuthStore();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -175,8 +175,8 @@ export default function DashboardLayout() {
   }, [searchQuery]);
 
   const canAccess = (itemRoles) => {
-    if (!itemRoles || roles.includes('Super Admin') || roles.includes('Admin')) return true;
-    if (itemRoles.includes('*')) return true;
+    if (!itemRoles) return true;
+    if (roles.includes('Admin') || itemRoles.includes('*')) return true;
     return roles.some(r => itemRoles.includes(r));
   };
 
@@ -262,7 +262,7 @@ export default function DashboardLayout() {
         </div>
 
         <div className="p-4 border-t border-gray-200">
-          {canAccess(['Super Admin', 'Admin']) && (
+          {canAccess(['Admin']) && (
             <Link
               to="/dashboard/settings"
               title={!isSidebarOpen ? 'Settings' : ''}

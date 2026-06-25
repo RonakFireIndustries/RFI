@@ -13,7 +13,7 @@ class DepartmentService
      */
     public function getDepartments(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        $query = Department::query();
+        $query = Department::withCount(['employees', 'designations']);
 
         if (isset($filters['search']) && $filters['search']) {
             $query->where('name', 'like', '%' . $filters['search'] . '%');

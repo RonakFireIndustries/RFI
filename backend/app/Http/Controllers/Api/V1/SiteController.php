@@ -23,11 +23,10 @@ class SiteController extends Controller
         $this->siteService = $siteService;
     }
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('site.view');
+
         $filters = $request->only(['search', 'status']);
         $perPage = (int) $request->input('per_page', 15);
 
@@ -44,12 +43,10 @@ class SiteController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(StoreSiteRequest $request): JsonResponse
     {
-        // StoreSiteRequest handles authorization internally via its authorize method.
+        $this->authorize('site.create');
+
         $site = $this->siteService->createSite($request->validated());
 
         return $this->success('Site created successfully', [
@@ -57,11 +54,10 @@ class SiteController extends Controller
         ], [], 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Site $site): JsonResponse
     {
+        $this->authorize('site.view');
+
         $site->load('manager');
 
         return $this->success('Site retrieved successfully', [
@@ -69,12 +65,10 @@ class SiteController extends Controller
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(UpdateSiteRequest $request, Site $site): JsonResponse
     {
-        // UpdateSiteRequest handles authorization internally via its authorize method.
+        $this->authorize('site.edit');
+
         $site = $this->siteService->updateSite($site, $request->validated());
 
         return $this->success('Site updated successfully', [
@@ -82,14 +76,12 @@ class SiteController extends Controller
         ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Site $site): JsonResponse
     {
+        $this->authorize('site.delete');
+
         $this->siteService->deleteSite($site);
 
         return $this->success('Site deleted successfully');
     }
 }
-

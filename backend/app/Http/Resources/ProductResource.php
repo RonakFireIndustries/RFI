@@ -9,7 +9,7 @@ class ProductResource extends JsonResource
 {
     public static function canManageSalesPrice(Request $request): bool
     {
-        $financeRoles = ['Super Admin', 'Admin', 'Finance Manager', 'Accountant'];
+        $financeRoles = ['Admin', 'Accountant'];
         return $request->user()?->roles->pluck('name')->intersect($financeRoles)->isNotEmpty();
     }
 
@@ -27,8 +27,8 @@ class ProductResource extends JsonResource
             'unit' => $this->whenLoaded('unit'),
             'supplier_id' => $this->supplier_id,
             'supplier' => $this->whenLoaded('supplier'),
-            'purchase_price' => (float) $this->purchase_price,
             $this->mergeWhen(static::canManageSalesPrice($request), [
+                'purchase_price' => (float) $this->purchase_price,
                 'selling_price' => (float) $this->selling_price,
             ]),
             'cost_price' => (float) $this->cost_price,

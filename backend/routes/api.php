@@ -19,7 +19,7 @@ use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\HRController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PermissionController;
-use App\Http\Controllers\AdminController;
+// use App\Http\Controllers\AdminController;
 use App\Http\Controllers\TestController;
 use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\Api\CompanySettingController;
@@ -201,6 +201,8 @@ Route::prefix('v1')->group(function () {
         
         Route::apiResource('purchases/orders', \App\Http\Controllers\PurchaseOrderController::class);
         Route::post('purchases/orders/{id}/approve', [\App\Http\Controllers\PurchaseOrderController::class, 'approve'])->name('orders.approve');
+        Route::post('purchases/orders/{id}/reject', [\App\Http\Controllers\PurchaseOrderController::class, 'reject'])->name('orders.reject');
+        Route::post('purchases/orders/{id}/confirm-receipt', [\App\Http\Controllers\PurchaseOrderController::class, 'confirmReceipt'])->name('orders.confirm-receipt');
         
         Route::apiResource('purchases/grns', \App\Http\Controllers\GoodsReceiptNoteController::class);
         Route::apiResource('purchases/returns', \App\Http\Controllers\PurchaseReturnController::class);
@@ -220,6 +222,8 @@ Route::prefix('v1')->group(function () {
 
         Route::apiResource('sales/orders', \App\Http\Controllers\SalesOrderController::class);
         Route::post('sales/orders/{id}/approve', [\App\Http\Controllers\SalesOrderController::class, 'approve'])->name('orders.approve');
+        Route::post('sales/orders/{id}/reject', [\App\Http\Controllers\SalesOrderController::class, 'reject'])->name('orders.reject');
+        Route::post('sales/orders/{id}/confirm-delivery', [\App\Http\Controllers\SalesOrderController::class, 'confirmDelivery'])->name('orders.confirm-delivery');
 
         Route::apiResource('sales/deliveries', \App\Http\Controllers\DeliveryNoteController::class);
         Route::apiResource('sales/returns', \App\Http\Controllers\SalesReturnController::class);
@@ -246,6 +250,7 @@ Route::prefix('v1')->group(function () {
     Route::apiResource('payroll-periods', PayrollPeriodController::class);
     
     Route::get('/payroll', [PayrollController::class, 'index']);
+    Route::get('/my-payroll', [PayrollController::class, 'myPayroll']);
     Route::get('/payroll/{payroll}', [PayrollController::class, 'show']);
     Route::post('/payroll/generate', [PayrollController::class, 'generate']);
     Route::post('/payroll/regenerate', [PayrollController::class, 'regenerate']);
@@ -283,15 +288,7 @@ Route::prefix('v1')->group(function () {
     Route::delete('/reports-module/schedules/{schedule}', [ReportsModuleController::class, 'destroySchedule']);
     Route::post('/reports-module/schedules/{schedule}/toggle', [ReportsModuleController::class, 'toggleSchedule']);
 
-    // Generic Admin Routes
-    Route::group([], function () {
-        Route::get('/admin/tables', [AdminController::class, 'getTables']);
-        Route::get('/admin/tables/{table}/schema', [AdminController::class, 'getTableSchema']);
-        Route::get('/admin/tables/{table}', [AdminController::class, 'getTableData']);
-        Route::post('/admin/tables/{table}', [AdminController::class, 'createRecord']);
-        Route::put('/admin/tables/{table}/{id}', [AdminController::class, 'updateRecord']);
-        Route::delete('/admin/tables/{table}/{id}', [AdminController::class, 'deleteRecord']);
-    });
+    // Generic Admin Routes (removed - SuperAdmin no longer supported)
 
     // Leave Types
     Route::apiResource('leave-types', LeaveTypeController::class);

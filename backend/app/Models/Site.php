@@ -15,7 +15,8 @@ class Site extends Model
     protected $fillable = [
         'name', 'code', 'client_details', 'address', 'city', 'state',
         'country', 'pincode', 'contact_person', 'phone', 'email',
-        'latitude', 'longitude', 'allowed_radius', 'geo_fencing_enabled', 'status', 'site_manager_id'
+        'latitude', 'longitude', 'allowed_radius', 'geo_fencing_enabled',
+        'status', 'site_manager_id', 'start_date', 'end_date'
     ];
 
     protected $casts = [
@@ -23,6 +24,8 @@ class Site extends Model
         'longitude' => 'decimal:8',
         'allowed_radius' => 'integer',
         'geo_fencing_enabled' => 'boolean',
+        'start_date' => 'date',
+        'end_date' => 'date',
     ];
 
     public function manager(): BelongsTo

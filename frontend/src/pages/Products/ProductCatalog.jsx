@@ -1,16 +1,24 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import ModuleListPage from '../ERP/ModuleListPage';
 import api from '../../services/api';
 import { unwrapList } from '../../services/resourceHelpers';
 import { useProductsStore } from '../../store/productsStore';
 import { useAuthStore } from '../../store/authStore';
 
-const FINANCE_ROLES = ['Super Admin', 'Admin', 'Finance Manager', 'Accountant'];
+const FINANCE_ROLES = ['Admin', 'Accountant'];
 
 export default function ProductCatalog() {
   const [lookups, setLookups] = useState({ categories: [], suppliers: [], sites: [] });
   const userRoles = useAuthStore((s) => s.roles);
   const canFinance = userRoles.some((r) => FINANCE_ROLES.includes(r));
+  const [searchParams] = useSearchParams();
+  const categoryId = searchParams.get('category_id');
+
+  const fetchParams = useMemo(() => {
+    if (categoryId) return { category_id: categoryId };
+    return undefined;
+  }, [categoryId]);
 
   useEffect(() => {
     Promise.all([api.get('/categories'), api.get('/suppliers'), api.get('/sites?per_page=1000')])
@@ -42,20 +50,22 @@ export default function ProductCatalog() {
       { name: 'hsn_code', label: 'HSN Code' },
       { name: 'category_id', label: 'Category', type: 'select', optionsKey: 'categories', emptyAsNull: true },
       { name: 'supplier_id', label: 'Supplier', type: 'select', optionsKey: 'suppliers', emptyAsNull: true },
-      { name: 'purchase_price', label: 'Purchase Price', type: 'number', step: '0.01', required: true },
+    ];
+    if (canFinance) {
+      flds.push({ name: 'purchase_price', label: 'Purchase Price', type: 'number', step: '0.01', required: true });
+      flds.push({ name: 'selling_price', label: 'Selling Price', type: 'number', step: '0.01', required: true });
+    }
+    flds.push(
       { name: 'opening_stock', label: 'Opening Stock', type: 'number', step: '1', defaultValue: 0 },
       { name: 'site_id', label: 'Store At (Site)', type: 'select', optionsKey: 'sites', emptyAsNull: true, placeholder: 'Select site (required if opening stock > 0)' },
       { name: 'status', label: 'Status', type: 'select', defaultValue: 'active', options: [{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }] },
-    ];
-    if (canFinance) {
-      flds.splice(5, 0, { name: 'selling_price', label: 'Selling Price', type: 'number', step: '0.01', required: true });
-    }
+    );
     return flds;
   }, [canFinance]);
 
   return (
     <ModuleListPage
-      title="Products"
+      title={categoryId ? `Products (Category #${categoryId})` : "Products"}
       description="Manage catalog items with category, supplier, and warehouse inventory relationships."
       store={useProductsStore}
       detailBasePath="/dashboard/products"
@@ -63,6 +73,7 @@ export default function ProductCatalog() {
       lookups={lookups}
       columns={columns}
       fields={fields}
+      fetchParams={fetchParams}
     />
   );
 }

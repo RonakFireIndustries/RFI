@@ -4,6 +4,7 @@ import {
   Plus, Search, Download, TrendingUp, Clock, AlertCircle, Filter, ChevronDown, Trash2, FileText, CheckCircle, ShoppingBag, Package, List, Eye
 } from 'lucide-react';
 import api from '../../services/api';
+import ProductSelect from '../../components/Shared/ProductSelect';
 
 export default function PurchaseOrdersPage() {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ export default function PurchaseOrdersPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [suppliers, setSuppliers] = useState([]);
   const [products, setProducts] = useState([]);
-  const [newOrder, setNewOrder] = useState({ supplier_id: '', gst_type: 'cgst', shipping_cost: 0, items: [{ product_id: '', quantity: 1, unit_cost: 0, gst_rate: 18, hsn_code: '' }] });
+  const [newOrder, setNewOrder] = useState({ supplier_id: '', gst_type: 'cgst', shipping_cost: 0, items: [{ product_id: '', custom_product_name: '', quantity: 1, unit_cost: 0, gst_rate: 18, hsn_code: '' }] });
   const [activeTab, setActiveTab] = useState('All Orders');
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 25;
@@ -59,7 +60,7 @@ export default function PurchaseOrdersPage() {
     if (!newOrder.supplier_id) return alert("Please select a Supplier.");
     if (newOrder.items.length === 0) return alert("Please add at least one line item.");
     for (const item of newOrder.items) {
-      if (!item.product_id) return alert("Please select a product for all line items.");
+      if (!item.product_id && !item.custom_product_name) return alert("Please select a product for all line items.");
       if (item.quantity <= 0) return alert("Quantity must be at least 1.");
       if (item.unit_cost < 0) return alert("Unit cost cannot be negative.");
     }
@@ -68,7 +69,7 @@ export default function PurchaseOrdersPage() {
       await api.post('/purchases/orders', { ...newOrder, status });
       setIsModalOpen(false);
       fetchOrders();
-      setNewOrder({ supplier_id: '', gst_type: 'cgst', shipping_cost: 0, items: [{ product_id: '', quantity: 1, unit_cost: 0, gst_rate: 18, hsn_code: '' }] });
+      setNewOrder({ supplier_id: '', gst_type: 'cgst', shipping_cost: 0, items: [{ product_id: '', custom_product_name: '', quantity: 1, unit_cost: 0, gst_rate: 18, hsn_code: '' }] });
     } catch (error) {
       console.error("Error creating PO:", error);
       const msg = error.response?.data?.message || "Failed to create Purchase Order.";
@@ -84,6 +85,17 @@ export default function PurchaseOrdersPage() {
     } catch (error) {
       console.error("Error approving order:", error);
       alert("Failed to approve order.");
+    }
+  };
+
+  const rejectOrder = async (id) => {
+    if (!window.confirm("Are you sure you want to reject this Purchase Order?")) return;
+    try {
+      await api.post(`/purchases/orders/${id}/reject`);
+      fetchOrders();
+    } catch (error) {
+      console.error("Error rejecting order:", error);
+      alert("Failed to reject order.");
     }
   };
 
@@ -343,12 +355,20 @@ export default function PurchaseOrdersPage() {
                           <Eye className="w-5 h-5" />
                         </button>
                         {order.status === 'Pending Approval' && (
-                          <button
-                            onClick={() => approveOrder(order.id)}
-                            className="text-[#1a56db] hover:text-[#1e40af] mr-3 font-semibold"
-                          >
-                            Approve
-                          </button>
+                          <>
+                            <button
+                              onClick={() => approveOrder(order.id)}
+                              className="text-green-600 hover:text-green-800 mr-3 font-semibold"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => rejectOrder(order.id)}
+                              className="text-red-600 hover:text-red-800 mr-3 font-semibold"
+                            >
+                              Reject
+                            </button>
+                          </>
                         )}
                         <button
                           onClick={() => deleteOrder(order.id)}
@@ -407,7 +427,7 @@ export default function PurchaseOrdersPage() {
       {/* Massive Modal for Create PO (Matches Reference Image 1) */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6">
-          <div className="bg-gray-50 rounded-xl shadow-2xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-gray-50 rounded-xl shadow-2xl w-full max-w-7xl h-[95vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             {/* Modal Header */}
             <div className="bg-white px-6 py-4 border-b border-gray-200 flex justify-between items-center">
               <div className="flex items-center text-sm font-semibold text-gray-500 uppercase tracking-wider">
@@ -504,7 +524,7 @@ export default function PurchaseOrdersPage() {
                       </h2>
                       <button
                         type="button"
-                        onClick={() => setNewOrder({ ...newOrder, items: [...newOrder.items, { product_id: '', quantity: 1, unit_cost: 0, gst_rate: 18, hsn_code: '' }] })}
+                        onClick={() => setNewOrder({ ...newOrder, items: [...newOrder.items, { product_id: '', custom_product_name: '', quantity: 1, unit_cost: 0, gst_rate: 18, hsn_code: '' }] })}
                         className="flex items-center text-[#1a56db] font-semibold text-sm hover:text-[#1e40af]"
                       >
                         <Plus className="w-4 h-4 mr-1" /> Add New Product
@@ -528,24 +548,25 @@ export default function PurchaseOrdersPage() {
                           {newOrder.items.map((item, index) => (
                             <tr key={index} className="hover:bg-gray-50/50">
                               <td className="p-4">
-                                <select
-                                  className="w-full bg-transparent border-0 border-b border-gray-200 focus:ring-0 focus:border-[#1a56db] font-semibold text-gray-900 p-0 pb-1"
-                                  value={item.product_id}
-                                  onChange={(e) => {
+                                <ProductSelect
+                                  products={products}
+                                  value={item.product_id || item.custom_product_name}
+                                  onChange={(val) => {
                                     const items = [...newOrder.items];
-                                    const prod = products.find(p => p.id == e.target.value);
-                                    items[index].product_id = e.target.value;
-                                    if (prod) {
-                                      items[index].unit_cost = parseFloat(prod.purchase_price || 0);
-                                      if (prod.hsn_code) items[index].hsn_code = prod.hsn_code;
+                                    items[index].product_id = val.product_id || '';
+                                    items[index].custom_product_name = val.custom_product_name || '';
+                                    if (val.product_id) {
+                                      const prod = products.find(p => p.id == val.product_id);
+                                      if (prod) {
+                                        items[index].unit_cost = parseFloat(prod.purchase_price || 0);
+                                        if (prod.hsn_code) items[index].hsn_code = prod.hsn_code;
+                                      }
+                                      items[index].custom_product_name = '';
                                     }
                                     setNewOrder({ ...newOrder, items });
                                   }}
-                                  required
-                                >
-                                  <option value="">Select Product...</option>
-                                  {products.map(p => <option key={p.id} value={p.id}>{p.sku} - {p.name}</option>)}
-                                </select>
+                                  placeholder="Search product..."
+                                />
                               </td>
                               <td className="p-4">
                                 <input

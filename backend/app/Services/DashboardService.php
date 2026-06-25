@@ -33,25 +33,17 @@ class DashboardService
     protected $employee;
 
     private const ROLE_MAP = [
-        'Super Admin' => 'admin',
         'Admin' => 'admin',
-        'System Admin' => 'it',
-        'General Manager' => 'executive',
-        'HR Manager' => 'hr',
-        'Finance Manager' => 'finance',
-        'Accountant' => 'finance',
-        'Store Manager' => 'inventory',
-        'Warehouse Manager' => 'inventory',
-        'Inventory Staff' => 'inventory',
-        'Production Manager' => 'production',
-        'Workshop Supervisor' => 'production',
-        'Sales Executive' => 'sales',
+        'Manager' => 'admin',
+        'HR' => 'hr',
         'Designer' => 'employee',
+        'Accountant' => 'finance',
+        'Developer' => 'it',
         'Fitter' => 'employee',
         'Welder' => 'employee',
         'Electrician' => 'employee',
         'Helper' => 'employee',
-        'IT Manager' => 'it',
+        'Store Manager' => 'inventory',
     ];
 
     private const DASHBOARD_WIDGETS = [

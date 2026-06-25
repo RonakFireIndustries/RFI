@@ -21,7 +21,6 @@ class StoreProductRequest extends FormRequest
             'category_id' => 'nullable|exists:categories,id',
             'unit_id' => 'nullable|exists:units,id',
             'supplier_id' => 'nullable|exists:suppliers,id',
-            'purchase_price' => 'required|numeric|min:0',
             'cost_price' => 'nullable|numeric|min:0',
             'reorder_level' => 'nullable|numeric|min:0',
             'min_stock' => 'nullable|numeric|min:0',
@@ -33,6 +32,7 @@ class StoreProductRequest extends FormRequest
         ];
 
         if (ProductResource::canManageSalesPrice($this)) {
+            $rules['purchase_price'] = 'required|numeric|min:0';
             $rules['selling_price'] = 'required|numeric|min:0';
         }
 

@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Edit, Trash2, FolderTree, Package, Layers } from 'lucide-react';
 import api from '../../services/api';
 import CategoryFormModal from '../../components/Categories/CategoryFormModal';
 
 export default function CategoryDirectory() {
+  const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -150,7 +152,9 @@ export default function CategoryDirectory() {
                           <Layers className="h-5 w-5" />
                         </div>
                         <div className="ml-4">
-                          <div className="font-bold text-gray-900">{category.name}</div>
+                          <div className="font-bold text-[#1a56db] hover:text-[#1e40af] cursor-pointer" onClick={() => navigate(`/dashboard/products?category_id=${category.id}`)}>
+                            {category.name}
+                          </div>
                           <div className="text-xs text-gray-500 truncate max-w-xs">{category.description || 'No description'}</div>
                         </div>
                       </div>

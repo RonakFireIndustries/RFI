@@ -32,6 +32,8 @@ class AttendanceController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('attendance.view');
+
         $filters = $request->only([
             'employee_id', 'date', 'status', 'site_id', 'shift_id',
             'department_id', 'start_date', 'end_date', 'location_verified'
@@ -47,6 +49,8 @@ class AttendanceController extends Controller
 
     public function store(StoreAttendanceRequest $request): JsonResponse
     {
+        $this->authorize('attendance.create');
+
         $attendance = $this->attendanceService->createAttendance($request->validated());
 
         return $this->success('Attendance created successfully', [
@@ -56,6 +60,8 @@ class AttendanceController extends Controller
 
     public function show(Attendance $attendance): JsonResponse
     {
+        $this->authorize('attendance.view');
+
         $attendance->load(['employee', 'site', 'shift']);
 
         return $this->success('Attendance retrieved successfully', [
@@ -65,6 +71,8 @@ class AttendanceController extends Controller
 
     public function update(UpdateAttendanceRequest $request, Attendance $attendance): JsonResponse
     {
+        $this->authorize('attendance.edit');
+
         $attendance = $this->attendanceService->updateAttendance($attendance, $request->validated());
 
         return $this->success('Attendance updated successfully', [
@@ -74,6 +82,8 @@ class AttendanceController extends Controller
 
     public function destroy(Attendance $attendance): JsonResponse
     {
+        $this->authorize('attendance.delete');
+
         $this->attendanceService->deleteAttendance($attendance);
 
         return $this->success('Attendance deleted successfully');
@@ -81,6 +91,8 @@ class AttendanceController extends Controller
 
     public function checkIn(CheckInRequest $request): JsonResponse
     {
+        $this->authorize('attendance.checkin');
+
         $user = $request->user();
         $employee = $user->employee;
 
@@ -111,6 +123,8 @@ class AttendanceController extends Controller
 
     public function checkOut(CheckOutRequest $request): JsonResponse
     {
+        $this->authorize('attendance.checkout');
+
         $user = $request->user();
         $employee = $user->employee;
 
@@ -163,6 +177,8 @@ class AttendanceController extends Controller
 
     public function locationAudit(Request $request): JsonResponse
     {
+        $this->authorize('attendance.location.audit');
+
         $filters = $request->only([
             'employee_id', 'site_id', 'date', 'start_date', 'end_date',
             'location_verified', 'status'

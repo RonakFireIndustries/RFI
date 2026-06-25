@@ -25,6 +25,8 @@ class EmployeeController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('employee.view');
+
         $filters = $request->only([
             'search', 'department_id', 'designation_id', 'status', 'manager_id'
         ]);
@@ -45,6 +47,8 @@ class EmployeeController extends Controller
 
     public function store(StoreEmployeeRequest $request): JsonResponse
     {
+        $this->authorize('employee.create');
+
         $employee = $this->employeeService->createEmployee($request->validated());
 
         return $this->success('Employee created successfully', [
@@ -54,6 +58,8 @@ class EmployeeController extends Controller
 
     public function show(Employee $employee): JsonResponse
     {
+        $this->authorize('employee.view');
+
         $employee->load(['department', 'designation', 'manager', 'user']);
 
         return $this->success('Employee retrieved successfully', [
@@ -63,6 +69,8 @@ class EmployeeController extends Controller
 
     public function update(UpdateEmployeeRequest $request, Employee $employee): JsonResponse
     {
+        $this->authorize('employee.edit');
+
         $employee = $this->employeeService->updateEmployee($employee, $request->validated());
 
         return $this->success('Employee updated successfully', [
@@ -72,6 +80,8 @@ class EmployeeController extends Controller
 
     public function destroy(Employee $employee): JsonResponse
     {
+        $this->authorize('employee.delete');
+
         $this->employeeService->deleteEmployee($employee);
 
         return $this->success('Employee deleted successfully');
@@ -79,19 +89,23 @@ class EmployeeController extends Controller
 
     public function subordinates(Employee $employee): JsonResponse
     {
-        $subordinates = $employee->subordinates()->with(['department', 'designation'])->get();
+        $this->authorize('employee.view');
+
+        $subordinates = $this->employeeService->getSubordinates($employee);
 
         return $this->success('Subordinates retrieved successfully', [
-            'subordinates' => EmployeeResource::collection($subordinates)
+            'subordinates' => $subordinates
         ]);
     }
 
     public function manager(Employee $employee): JsonResponse
     {
-        $manager = $employee->manager()->with(['department', 'designation'])->first();
+        $this->authorize('employee.view');
+
+        $manager = $this->employeeService->getManager($employee);
 
         return $this->success('Manager retrieved successfully', [
-            'manager' => $manager ? new EmployeeResource($manager) : null
+            'manager' => $manager
         ]);
     }
 }

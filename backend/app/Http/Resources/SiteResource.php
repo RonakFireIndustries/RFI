@@ -27,6 +27,8 @@ class SiteResource extends JsonResource
             'geo_fencing_enabled' => (bool) $this->geo_fencing_enabled,
             'status' => $this->status,
             'site_manager_id' => $this->site_manager_id,
+            'start_date' => $this->start_date?->format('Y-m-d'),
+            'end_date' => $this->end_date?->format('Y-m-d'),
             'site_manager' => $this->whenLoaded('manager', function () {
                 return [
                     'id' => $this->manager?->id,

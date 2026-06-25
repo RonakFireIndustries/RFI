@@ -29,9 +29,14 @@ class DailyReportController extends Controller
         $filters = $request->only(['employee_id', 'site_id', 'date', 'start_date', 'end_date', 'status']);
 
         $user = $request->user();
-        $isManager = $user->roles()->whereIn('name', ['Super Admin', 'Admin', 'HR Manager', 'General Manager', 'Production Manager', 'Workshop Supervisor', 'Design Manager'])->exists();
 
-        if (!$isManager) {
+        $hasGlobalView = $user->can('daily-report.view') && (
+            $user->can('daily-report.approve') ||
+            $user->can('daily-report.reject') ||
+            $user->can('daily-report.rework')
+        );
+
+        if (!$hasGlobalView && !$user->can('daily-report.report.view')) {
             $filters['employee_id'] = $user->employee?->id ?? -1;
         }
 
@@ -53,6 +58,8 @@ class DailyReportController extends Controller
     public function store(StoreDailyReportRequest $request): JsonResponse
     {
         try {
+            $this->authorize('daily-report.create');
+
             $data = $request->validated();
             $data['employee_id'] = $request->user()->employee?->id
                 ?? throw new Exception('No employee profile linked to your account.');
@@ -70,6 +77,8 @@ class DailyReportController extends Controller
 
     public function show(DailyReport $dailyReport): JsonResponse
     {
+        $this->authorize('daily-report.view');
+
         $dailyReport->load(['employee.designation', 'site', 'approver', 'histories.user']);
 
         return $this->success('Daily report retrieved successfully', [
@@ -79,8 +88,12 @@ class DailyReportController extends Controller
 
     public function update(UpdateDailyReportRequest $request, DailyReport $dailyReport): JsonResponse
     {
+        $this->authorize('daily-report.edit');
+
         try {
-            $report = $this->dprService->updateReport($dailyReport, $request->validated());
+            $data = $request->validated();
+
+            $report = $this->dprService->updateReport($dailyReport, $data);
 
             return $this->success('Daily report updated successfully', [
                 'report' => new DailyReportResource($report)
@@ -92,41 +105,59 @@ class DailyReportController extends Controller
 
     public function destroy(DailyReport $dailyReport): JsonResponse
     {
-        $this->dprService->deleteReport($dailyReport);
+        $this->authorize('daily-report.delete');
 
-        return $this->success('Daily report deleted successfully');
+        try {
+            $this->dprService->deleteReport($dailyReport);
+
+            return $this->success('Daily report deleted successfully');
+        } catch (Exception $e) {
+            return $this->error($e->getMessage(), [], 422);
+        }
     }
 
-    public function approve(Request $request, DailyReport $dailyReport): JsonResponse
+    public function approve(DailyReport $dailyReport): JsonResponse
     {
-        $request->validate(['comments' => 'nullable|string']);
+        $this->authorize('daily-report.approve');
 
-        $report = $this->dprService->approve($dailyReport, $request->comments);
+        try {
+            $report = $this->dprService->approveReport($dailyReport, auth()->user());
 
-        return $this->success('Daily report approved successfully', [
-            'report' => new DailyReportResource($report)
-        ]);
+            return $this->success('Daily report approved successfully', [
+                'report' => new DailyReportResource($report)
+            ]);
+        } catch (Exception $e) {
+            return $this->error($e->getMessage(), [], 422);
+        }
     }
 
-    public function reject(Request $request, DailyReport $dailyReport): JsonResponse
+    public function reject(DailyReport $dailyReport): JsonResponse
     {
-        $request->validate(['comments' => 'required|string']);
+        $this->authorize('daily-report.reject');
 
-        $report = $this->dprService->reject($dailyReport, $request->comments);
+        try {
+            $report = $this->dprService->rejectReport($dailyReport, auth()->user());
 
-        return $this->success('Daily report rejected successfully', [
-            'report' => new DailyReportResource($report)
-        ]);
+            return $this->success('Daily report rejected successfully', [
+                'report' => new DailyReportResource($report)
+            ]);
+        } catch (Exception $e) {
+            return $this->error($e->getMessage(), [], 422);
+        }
     }
 
-    public function rework(Request $request, DailyReport $dailyReport): JsonResponse
+    public function rework(DailyReport $dailyReport): JsonResponse
     {
-        $request->validate(['comments' => 'required|string']);
+        $this->authorize('daily-report.rework');
 
-        $report = $this->dprService->rework($dailyReport, $request->comments);
+        try {
+            $report = $this->dprService->reworkReport($dailyReport, auth()->user());
 
-        return $this->success('Rework requested successfully', [
-            'report' => new DailyReportResource($report)
-        ]);
+            return $this->success('Daily report sent for rework successfully', [
+                'report' => new DailyReportResource($report)
+            ]);
+        } catch (Exception $e) {
+            return $this->error($e->getMessage(), [], 422);
+        }
     }
 }

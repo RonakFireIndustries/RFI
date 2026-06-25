@@ -120,9 +120,9 @@ export default function ReportsPage() {
   const [newReportForm, setNewReportForm] = useState({ name: '', description: '', category_id: '', status: 'active' });
   const [scheduleForm, setScheduleForm] = useState({ report_id: '', name: '', frequency: 'daily', format: 'pdf', recipients: '' });
 
-  const canCreate = permissions?.includes('create_reports') || roles?.includes('Super Admin') || roles?.includes('Admin');
-  const canExport = permissions?.includes('export_reports') || roles?.includes('Super Admin') || roles?.includes('Admin');
-  const canSchedule = permissions?.includes('schedule_reports') || roles?.includes('Super Admin') || roles?.includes('Admin');
+  const canCreate = permissions?.includes('create_reports') || roles?.includes('Admin');
+  const canExport = permissions?.includes('export_reports') || roles?.includes('Admin');
+  const canSchedule = permissions?.includes('schedule_reports') || roles?.includes('Admin');
 
   useEffect(() => {
     fetchAll({ per_page: 50 });

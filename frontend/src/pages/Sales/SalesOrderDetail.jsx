@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Eye, Loader2, FileText, Printer } from 'lucide-react';
+import { ArrowLeft, Eye, Loader2, FileText, Printer, CheckCircle, XCircle, Truck } from 'lucide-react';
 import api from '../../services/api';
 
 export default function SalesOrderDetail() {
@@ -28,6 +28,36 @@ export default function SalesOrderDetail() {
     }
   };
 
+  const handleApprove = async () => {
+    if (!window.confirm('Approve this sales order?')) return;
+    try {
+      const res = await api.post(`/sales/orders/${id}/approve`);
+      setOrder(res.data?.data || res.data);
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to approve order.');
+    }
+  };
+
+  const handleReject = async () => {
+    if (!window.confirm('Reject this sales order?')) return;
+    try {
+      const res = await api.post(`/sales/orders/${id}/reject`);
+      setOrder(res.data?.data || res.data);
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to reject order.');
+    }
+  };
+
+  const handleConfirmDelivery = async () => {
+    if (!window.confirm('Confirm delivery? This will deduct stock quantities.')) return;
+    try {
+      const res = await api.post(`/sales/orders/${id}/confirm-delivery`);
+      setOrder(res.data?.data || res.data);
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to confirm delivery.');
+    }
+  };
+
   const formatCurrency = (val) => {
     const num = parseFloat(val || 0);
     return '₹' + num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -35,7 +65,7 @@ export default function SalesOrderDetail() {
   const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '-';
 
   const statusBadge = (s) => {
-    const m = { Paid: 'green', Approved: 'blue', 'Partially Shipped': 'yellow', Shipped: 'purple', Delivered: 'green', Cancelled: 'red', 'Pending Approval': 'orange' };
+    const m = { Paid: 'green', Approved: 'blue', 'Partially Shipped': 'yellow', Shipped: 'purple', Delivered: 'green', Cancelled: 'red', Rejected: 'red', 'Pending Approval': 'orange' };
     const c = m[s] || 'gray';
     return <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-${c}-100 text-${c}-800`}>{s}</span>;
   };
@@ -73,9 +103,26 @@ export default function SalesOrderDetail() {
             </div>
           </div>
         </div>
-        <button onClick={() => window.print()} className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
-          <Printer className="w-4 h-4 mr-1.5" /> Print
-        </button>
+        <div className="flex items-center gap-2">
+          {(order.status === 'Pending Approval' || order.status === 'Pending') && (
+            <>
+              <button onClick={handleApprove} className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700">
+                <CheckCircle className="w-4 h-4 mr-1.5" /> Approve
+              </button>
+              <button onClick={handleReject} className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700">
+                <XCircle className="w-4 h-4 mr-1.5" /> Reject
+              </button>
+            </>
+          )}
+          {order.status === 'Approved' && (
+            <button onClick={handleConfirmDelivery} className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">
+              <Truck className="w-4 h-4 mr-1.5" /> Confirm Delivery
+            </button>
+          )}
+          <button onClick={() => window.print()} className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+            <Printer className="w-4 h-4 mr-1.5" /> Print
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -113,7 +160,7 @@ export default function SalesOrderDetail() {
                   <tr key={item.id} className="text-sm">
                     <td className="py-3 px-3 text-gray-400">{i + 1}</td>
                     <td className="py-3 px-3">
-                      <p className="font-medium text-gray-900">{item.product?.name || `Product #${item.product_id}`}</p>
+                      <p className="font-medium text-gray-900">{item.product?.name || item.custom_product_name || `Product #${item.product_id}`}</p>
                       {item.product?.sku && <p className="text-xs text-gray-400 mt-0.5">SKU: {item.product.sku}</p>}
                     </td>
                     <td className="py-3 px-3 text-center text-gray-500 text-xs">{item.hsn_code || '-'}</td>
