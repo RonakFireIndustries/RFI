@@ -1,19 +1,63 @@
 @import "tailwindcss";
 @config "../tailwind.config.js";
 
+@theme {
+  --color-white: var(--color-surface);
+  --color-gray-50: var(--color-background);
+  --color-gray-100: var(--color-divider);
+  --color-gray-200: var(--color-border);
+  --color-gray-300: var(--color-border);
+  --color-gray-400: var(--color-text-muted);
+  --color-gray-500: var(--color-text-muted);
+  --color-gray-600: var(--color-text-secondary);
+  --color-gray-700: var(--color-text-secondary);
+  --color-gray-800: var(--color-text-primary);
+  --color-gray-900: var(--color-text-primary);
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
+    
+    --color-primary: #2563EB;
+    --color-secondary: #38BDF8;
+    --color-accent: #0EA5E9;
+    --color-background: #F8FAFC;
+    --color-surface: #FFFFFF;
+    --color-text-primary: #0F172A;
+    --color-text-secondary: #475569;
+    --color-text-muted: #64748B;
+    --color-border: #CBD5E1;
+    --color-divider: #E2E8F0;
+    --color-success: #22C55E;
+    --color-warning: #F59E0B;
+    --color-error: #EF4444;
+    --color-info: #3B82F6;
+    --color-hover-primary: #1D4ED8;
+    --color-active-primary: #1E40AF;
   }
 
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    
+    --color-primary: #3B82F6;
+    --color-secondary: #60A5FA;
+    --color-accent: #38BDF8;
+    --color-background: #0F172A;
+    --color-surface: #1E293B;
+    --color-text-primary: #F8FAFC;
+    --color-text-secondary: #CBD5E1;
+    --color-text-muted: #94A3B8;
+    --color-border: #334155;
+    --color-divider: #475569;
+    --color-success: #22C55E;
+    --color-warning: #FBBF24;
+    --color-error: #F87171;
+    --color-info: #60A5FA;
+    --color-hover-primary: #2563EB;
+    --color-active-primary: #1D4ED8;
   }
 }
 
@@ -113,24 +157,16 @@
   }
 }
 
-/* Global Dark Mode Overrides for hardcoded Tailwind classes */
-.dark .bg-white { background-color: #1f2937 !important; }
-.dark .bg-gray-50 { background-color: #111827 !important; }
-.dark .bg-gray-100 { background-color: #374151 !important; }
-.dark .text-gray-900 { color: #f9fafb !important; }
-.dark .text-gray-800 { color: #f3f4f6 !important; }
-.dark .text-gray-700 { color: #e5e7eb !important; }
-.dark .text-gray-600 { color: #d1d5db !important; }
-.dark .text-gray-500 { color: #9ca3af !important; }
-.dark .border-gray-300 { border-color: #4b5563 !important; }
-.dark .border-gray-200 { border-color: #374151 !important; }
-.dark .border-gray-100 { border-color: #1f2937 !important; }
-.dark .divide-gray-200 > :not([hidden]) ~ :not([hidden]) { border-color: #374151 !important; }
-.dark input:not([type="radio"]):not([type="checkbox"]), .dark textarea, .dark select {
-  background-color: #1f2937 !important;
-  color: #f9fafb !important;
-  border-color: #4b5563 !important;
-}
-.dark input::placeholder, .dark textarea::placeholder {
-  color: #9ca3af !important;
+/* Global Theme Overrides for hardcoded primary colors */
+@layer utilities {
+  .bg-\[\#1a56db\] { background-color: var(--color-primary) !important; }
+  .text-\[\#1a56db\] { color: var(--color-primary) !important; }
+  .border-\[\#1a56db\] { border-color: var(--color-primary) !important; }
+  .hover\:bg-\[\#1e40af\]:hover { background-color: var(--color-hover-primary) !important; }
+  .hover\:text-\[\#1e40af\]:hover { color: var(--color-hover-primary) !important; }
+  .hover\:border-\[\#1e40af\]:hover { border-color: var(--color-hover-primary) !important; }
+  .hover\:bg-\[\#1546b5\]:hover { background-color: var(--color-hover-primary) !important; }
+  .focus\:ring-\[\#1a56db\]:focus { --tw-ring-color: var(--color-primary) !important; }
+  .focus\:border-\[\#1a56db\]:focus { border-color: var(--color-primary) !important; }
+  .peer-checked\:bg-\[\#1a56db\]:checked ~ .peer { background-color: var(--color-primary) !important; }
 }

@@ -189,29 +189,43 @@ class SalesOrderController extends Controller
             return response()->json(['message' => 'Order cannot be delivered in current status'], 400);
         }
 
-        DB::transaction(function () use ($so) {
-            foreach ($so->items as $item) {
-                $stock = ProductStock::firstOrNew([
-                    'product_id' => $item->product_id,
-                    'location_type' => 'site',
-                    'location_id' => $so->site_id ?? 1,
-                ]);
+        $locationId = $request->input('location_id');
 
-                $currentQty = $stock->quantity ?? 0;
-                if ($currentQty < $item->quantity) {
-                    throw new \Exception("Insufficient stock for product ID {$item->product_id}");
+        try {
+            DB::transaction(function () use ($so, $locationId) {
+                foreach ($so->items as $item) {
+                    if (is_null($item->product_id)) {
+                        continue;
+                    }
+
+                    $stockQuery = ProductStock::where('product_id', $item->product_id)
+                        ->where('location_type', \App\Models\Site::class);
+
+                    if ($locationId) {
+                        $stockQuery->where('location_id', $locationId);
+                    }
+
+                    $stock = $stockQuery->where('quantity', '>=', $item->quantity)
+                        ->orderBy('quantity')
+                        ->first();
+
+                    if (!$stock) {
+                        throw new \Exception("Insufficient stock for product ID {$item->product_id}");
+                    }
+
+                    $stock->quantity -= $item->quantity;
+                    $stock->available_quantity = max(0, ($stock->available_quantity ?? 0) - $item->quantity);
+                    $stock->save();
                 }
 
-                $stock->quantity = $currentQty - $item->quantity;
-                $stock->available_quantity = ($stock->available_quantity ?? 0) - $item->quantity;
-                $stock->save();
-            }
-
-            $so->status = 'Delivered';
-            $so->delivered_by = Auth::id();
-            $so->delivered_at = now();
-            $so->save();
-        });
+                $so->status = 'Delivered';
+                $so->delivered_by = Auth::id();
+                $so->delivered_at = now();
+                $so->save();
+            });
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
+        }
 
         return response()->json($so->load('items'));
     }

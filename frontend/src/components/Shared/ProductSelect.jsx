@@ -72,7 +72,8 @@ export default function ProductSelect({ products, value, onChange, placeholder =
     if (!query) return;
     const match = products.find(p =>
       p.sku?.toLowerCase() === query.toLowerCase() ||
-      p.name?.toLowerCase() === query.toLowerCase()
+      p.name?.toLowerCase() === query.toLowerCase() ||
+      `${p.sku} - ${p.name}`.toLowerCase() === query.toLowerCase()
     );
     if (match) {
       commitValue(match);

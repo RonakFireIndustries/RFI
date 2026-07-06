@@ -122,23 +122,31 @@ class PurchaseOrderController extends Controller
             return response()->json(['message' => 'Order cannot be received in current status'], 400);
         }
 
-        DB::transaction(function () use ($po) {
-            foreach ($po->items as $item) {
-                $stock = ProductStock::firstOrNew([
-                    'product_id' => $item->product_id,
-                    'location_type' => 'site',
-                    'location_id' => $po->site_id ?? 1,
-                ]);
-                $stock->quantity = ($stock->quantity ?? 0) + $item->quantity;
-                $stock->available_quantity = ($stock->available_quantity ?? 0) + $item->quantity;
-                $stock->save();
-            }
+        try {
+            DB::transaction(function () use ($po) {
+                foreach ($po->items as $item) {
+                    if (is_null($item->product_id)) {
+                        continue;
+                    }
 
-            $po->status = 'Received';
-            $po->received_by = Auth::id();
-            $po->received_at = now();
-            $po->save();
-        });
+                    $stock = ProductStock::firstOrNew([
+                        'product_id' => $item->product_id,
+                        'location_type' => \App\Models\Site::class,
+                        'location_id' => $po->site_id ?? 1,
+                    ]);
+                    $stock->quantity = ($stock->quantity ?? 0) + $item->quantity;
+                    $stock->available_quantity = ($stock->available_quantity ?? 0) + $item->quantity;
+                    $stock->save();
+                }
+
+                $po->status = 'Received';
+                $po->received_by = Auth::id();
+                $po->received_at = now();
+                $po->save();
+            });
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
+        }
 
         return response()->json($po->load('items'));
     }

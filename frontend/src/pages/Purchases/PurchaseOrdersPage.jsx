@@ -127,11 +127,27 @@ export default function PurchaseOrdersPage() {
         </span>
       );
     }
-    if (status === 'Fully Received') {
+    if (status === 'Received' || status === 'Fully Received') {
       return (
         <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
           <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mr-1.5"></span>
           Received
+        </span>
+      );
+    }
+    if (status === 'Rejected' || status === 'Cancelled') {
+      return (
+        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200">
+          <span className="w-1.5 h-1.5 bg-red-500 rounded-full mr-1.5"></span>
+          {status}
+        </span>
+      );
+    }
+    if (status === 'Pending Approval') {
+      return (
+        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-orange-50 text-orange-700 border border-orange-200">
+          <span className="w-1.5 h-1.5 bg-orange-500 rounded-full mr-1.5"></span>
+          Pending Approval
         </span>
       );
     }
