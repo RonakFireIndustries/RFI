@@ -45,13 +45,13 @@ use App\Http\Controllers\InventoryDashboardController;
 
 
 Route::prefix('v1')->group(function () {
-    Route::post('/login', [\App\Http\Controllers\Api\V1\AuthController::class, 'login']);
-    Route::post('/forgot-password', [\App\Http\Controllers\Api\V1\PasswordResetController::class, 'sendResetLinkEmail']);
-    Route::post('/reset-password', [\App\Http\Controllers\Api\V1\PasswordResetController::class, 'reset']);
+    Route::post('/login', [\App\Http\Controllers\Api\V1\AuthController::class, 'login'])->middleware('throttle:login');
+    Route::post('/forgot-password', [\App\Http\Controllers\Api\V1\PasswordResetController::class, 'sendResetLinkEmail'])->middleware('throttle:login');
+    Route::post('/reset-password', [\App\Http\Controllers\Api\V1\PasswordResetController::class, 'reset'])->middleware('throttle:login');
     
     Route::get('/test', [TestController::class, 'test']);
 
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
         Route::get('/user', [\App\Http\Controllers\Api\V1\AuthController::class, 'user']);
         Route::post('/logout', [\App\Http\Controllers\Api\V1\AuthController::class, 'logout']);
         Route::put('/profile', [\App\Http\Controllers\Api\V1\ProfileController::class, 'update']);

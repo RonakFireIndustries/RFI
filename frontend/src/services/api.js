@@ -1,7 +1,10 @@
-// const API_HOST = 'http://localhost:8000';
-const API_HOST = 'https://rfibackend.ronakfire.com';
+const API_HOST = import.meta.env.VITE_API_URL || (
+  window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:8000'
+    : 'https://rfibackend.ronakfire.com'
+);
 
-export const BASE_URL = import.meta.env.DEV ? `/api/v1` : `${API_HOST}/api/v1`;
+export const BASE_URL = `${API_HOST}/api/v1`;
 export const STORAGE_URL = `${API_HOST}/storage`;
 
 const getAuthToken = () => {
@@ -97,10 +100,12 @@ const api = {
       return handleResponse(response);
     } catch (error) {
       if (!window.navigator.onLine || error.message === 'Failed to fetch') {
-        if (!isFormData) {
+        if (!isFormData && endpoint !== '/login' && endpoint !== '/logout') {
           const { enqueueRequest } = await import('./offlineQueue');
           await enqueueRequest({ url: `${BASE_URL}${endpoint}`, method: 'POST', headers, body: JSON.stringify(body) });
           return { data: { offline: true, message: 'Request queued for offline sync' }, meta: { success: true } };
+        } else if (error.message === 'Failed to fetch') {
+          throw new Error('Network error. Unable to connect to the server (or CORS issue).');
         }
       }
       throw error;

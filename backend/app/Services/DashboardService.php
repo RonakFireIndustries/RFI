@@ -33,17 +33,25 @@ class DashboardService
     protected $employee;
 
     private const ROLE_MAP = [
-        'Admin' => 'admin',
-        'Manager' => 'admin',
-        'HR' => 'hr',
-        'Designer' => 'employee',
-        'Accountant' => 'finance',
-        'Developer' => 'it',
-        'Fitter' => 'employee',
-        'Welder' => 'employee',
-        'Electrician' => 'employee',
-        'Helper' => 'employee',
-        'Store Manager' => 'inventory',
+        'Admin'                => 'admin',
+        'System Admin'         => 'admin',
+        'Manager'              => 'admin',
+        'General Manager'      => 'admin',
+        'HR'                   => 'hr',
+        'HR Manager'           => 'hr',
+        'Accountant'           => 'finance',
+        'Finance Manager'      => 'finance',
+        'Store Manager'        => 'inventory',
+        'IT Manager'           => 'it',
+        'Developer'            => 'it',
+        'Production Manager'   => 'production',
+        'Workshop Supervisor'  => 'production',
+        'Design Manager'       => 'employee',
+        'Designer'             => 'employee',
+        'Fitter'               => 'employee',
+        'Welder'               => 'employee',
+        'Electrician'          => 'employee',
+        'Helper'               => 'employee',
     ];
 
     private const DASHBOARD_WIDGETS = [
@@ -836,7 +844,7 @@ class DashboardService
     protected function widgetMyDocuments(): ?array
     {
         if (!$this->employee) return null;
-        $count = Document::where('employee_id', $this->employee->id)->count();
+        $count = $this->employee->documents()->count();
         return ['type' => 'mini_card', 'value' => $count, 'subtitle' => 'Documents on file'];
     }
 
