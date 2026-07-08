@@ -17,8 +17,6 @@ Thumbs.db
 # Build / deploy
 node_modules/
 vendor/
-dist/
-deploy.sh
 
 # Logs
 *.log
