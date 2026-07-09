@@ -163,7 +163,7 @@ export default function InvoicePreviewPage() {
           <XCircle className="w-16 h-16 text-red-300 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-gray-900 mb-2">Access Denied</h2>
           <p className="text-gray-500 mb-6">You do not have permission to view invoices.</p>
-          <button onClick={() => navigate('/dashboard/invoices')} className="text-[#2563eb] hover:underline font-medium">Return to Invoices</button>
+          <button onClick={() => navigate('/dashboard/invoices')} className="text-primary hover:underline font-medium">Return to Invoices</button>
         </div>
       </div>
     );
@@ -201,14 +201,14 @@ export default function InvoicePreviewPage() {
           <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-gray-900 mb-2">{error === 'Invoice could not be located.' ? 'Invoice Not Found' : 'Error'}</h2>
           <p className="text-gray-500 mb-6">{error}</p>
-          <button onClick={() => navigate('/dashboard/invoices')} className="text-[#2563eb] hover:underline font-medium">Return to Invoices</button>
+          <button onClick={() => navigate('/dashboard/invoices')} className="text-primary hover:underline font-medium">Return to Invoices</button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F6FA] pb-10">
+    <div className="min-h-screen bg-muted pb-10">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <button onClick={() => navigate('/dashboard/invoices')} className="p-2 hover:bg-gray-200 rounded-lg transition-colors text-gray-500 hover:text-gray-700">
@@ -239,7 +239,7 @@ export default function InvoicePreviewPage() {
                 <tbody>
                   <tr>
                     <td className="align-top w-3/5">
-                      <h2 className="text-xl font-bold text-[#2563eb]">{company?.name || 'RFI Global ERP'}</h2>
+                      <h2 className="text-xl font-bold text-primary">{company?.name || 'RFI Global ERP'}</h2>
                       {company?.address && <p className="text-xs text-gray-500 mt-1 leading-relaxed">{company.address}</p>}
                       {company?.gst_number && <p className="text-xs text-gray-500 mt-1">GST: {company.gst_number}</p>}
                       {company?.contact_email && <p className="text-xs text-gray-500 mt-1">{company.contact_email}{company?.contact_phone ? ` | ${company.contact_phone}` : ''}</p>}
@@ -358,7 +358,7 @@ export default function InvoicePreviewPage() {
 
                       <div className="pt-3 mt-3 border-t border-gray-200 flex justify-between items-center">
                         <span className="font-bold text-gray-900">Grand Total</span>
-                        <span className="font-bold text-[#2563eb] text-lg">{formatCurrency(invoice?.grand_total)}</span>
+                        <span className="font-bold text-primary text-lg">{formatCurrency(invoice?.grand_total)}</span>
                       </div>
 
                       {parseFloat(invoice?.paid_amount || 0) > 0 && (
@@ -429,7 +429,7 @@ export default function InvoicePreviewPage() {
             </div>
             <div className="p-4 space-y-2.5">
               <button onClick={handleDownloadPDF} disabled={!canExport || downloading}
-                className="w-full inline-flex items-center justify-center px-4 py-2.5 bg-[#2563eb] hover:bg-[#1d4ed8] disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
+                className="w-full inline-flex items-center justify-center px-4 py-2.5 bg-primary hover:bg-primary/90 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
                 {downloading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
                 {downloading ? 'Downloading...' : 'Download PDF'}
               </button>
@@ -461,7 +461,7 @@ export default function InvoicePreviewPage() {
               <div className="p-4 space-y-3">
                 <div>
                   <label className="text-xs font-medium text-gray-500 mb-1.5 block">Paper Size</label>
-                  <select value={paperSize} onChange={e => setPaperSize(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:ring-[#2563eb] focus:border-[#2563eb]">
+                  <select value={paperSize} onChange={e => setPaperSize(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:ring-ring focus:border-ring">
                     <option value="a4">A4</option>
                     <option value="letter">Letter</option>
                     <option value="legal">Legal</option>
@@ -469,19 +469,19 @@ export default function InvoicePreviewPage() {
                 </div>
                 <div className="space-y-2">
                   <label className="flex items-center gap-2.5 cursor-pointer">
-                    <input type="checkbox" checked={showSignature} onChange={e => setShowSignature(e.target.checked)} className="rounded border-gray-300 text-[#2563eb] focus:ring-[#2563eb]" />
+                    <input type="checkbox" checked={showSignature} onChange={e => setShowSignature(e.target.checked)} className="rounded border-gray-300 text-primary focus:ring-ring" />
                     <span className="text-sm text-gray-600">Include Signature</span>
                   </label>
                   <label className="flex items-center gap-2.5 cursor-pointer">
-                    <input type="checkbox" checked={showTaxBreakdown} onChange={e => setShowTaxBreakdown(e.target.checked)} className="rounded border-gray-300 text-[#2563eb] focus:ring-[#2563eb]" />
+                    <input type="checkbox" checked={showTaxBreakdown} onChange={e => setShowTaxBreakdown(e.target.checked)} className="rounded border-gray-300 text-primary focus:ring-ring" />
                     <span className="text-sm text-gray-600">Include Tax Breakdown</span>
                   </label>
                   <label className="flex items-center gap-2.5 cursor-pointer">
-                    <input type="checkbox" checked={showBankDetails} onChange={e => setShowBankDetails(e.target.checked)} className="rounded border-gray-300 text-[#2563eb] focus:ring-[#2563eb]" />
+                    <input type="checkbox" checked={showBankDetails} onChange={e => setShowBankDetails(e.target.checked)} className="rounded border-gray-300 text-primary focus:ring-ring" />
                     <span className="text-sm text-gray-600">Include Bank Details</span>
                   </label>
                   <label className="flex items-center gap-2.5 cursor-pointer">
-                    <input type="checkbox" checked={showPaymentTerms} onChange={e => setShowPaymentTerms(e.target.checked)} className="rounded border-gray-300 text-[#2563eb] focus:ring-[#2563eb]" />
+                    <input type="checkbox" checked={showPaymentTerms} onChange={e => setShowPaymentTerms(e.target.checked)} className="rounded border-gray-300 text-primary focus:ring-ring" />
                     <span className="text-sm text-gray-600">Include Payment Terms</span>
                   </label>
                 </div>
@@ -545,19 +545,19 @@ export default function InvoicePreviewPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Recipient Email</label>
                 <input type="email" value={emailForm.recipient} onChange={e => setEmailForm({ ...emailForm, recipient: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-[#2563eb] focus:border-[#2563eb]"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-ring focus:border-ring"
                   placeholder="customer@example.com" required />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
                 <input type="text" value={emailForm.subject} onChange={e => setEmailForm({ ...emailForm, subject: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-[#2563eb] focus:border-[#2563eb]"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-ring focus:border-ring"
                   placeholder={`Invoice ${invoice?.invoice_number} from ${company?.name || 'RFI Global ERP'}`} />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
                 <textarea value={emailForm.message} onChange={e => setEmailForm({ ...emailForm, message: e.target.value })} rows={4}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-[#2563eb] focus:border-[#2563eb] resize-none"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-ring focus:border-ring resize-none"
                   placeholder="Optional message..." />
               </div>
               {emailResult && (
@@ -569,7 +569,7 @@ export default function InvoicePreviewPage() {
                 <button type="button" onClick={() => { setEmailModal(false); setEmailResult(null); }} disabled={emailing}
                   className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Cancel</button>
                 <button type="submit" disabled={emailing}
-                  className="px-4 py-2 text-sm font-medium text-white bg-[#2563eb] hover:bg-[#1d4ed8] disabled:opacity-50 rounded-lg transition-colors inline-flex items-center">
+                  className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 disabled:opacity-50 rounded-lg transition-colors inline-flex items-center">
                   {emailing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Mail className="w-4 h-4 mr-2" />}
                   {emailing ? 'Sending...' : 'Send Email'}
                 </button>

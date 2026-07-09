@@ -24,7 +24,7 @@ export default function PermissionList() {
         <h1 className="text-2xl font-bold text-gray-900">Permission Management</h1>
         <Link
           to="/dashboard/permissions/create"
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#1a56db] hover:bg-[#1e4ebd]"
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-primary-foreground bg-primary hover:bg-primary/90"
         >
           <Plus className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
           New Permission
@@ -37,7 +37,7 @@ export default function PermissionList() {
             <li key={permission.id}>
               <div className="px-4 py-4 sm:px-6 flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-medium text-[#1a56db]">{permission.name}</h3>
+                  <h3 className="text-lg font-medium text-primary">{permission.name}</h3>
                 </div>
                 <div className="flex items-center space-x-3">
                   <Link to={`/dashboard/permissions/${permission.id}/edit`} className="text-indigo-600 hover:text-indigo-900">

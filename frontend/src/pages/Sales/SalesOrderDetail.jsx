@@ -83,7 +83,7 @@ export default function SalesOrderDetail() {
       <div className="text-center py-20">
         <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
         <h2 className="text-xl font-bold text-gray-900 mb-2">{error || 'Order Not Found'}</h2>
-        <button onClick={() => navigate('/dashboard/sales')} className="text-[#2563eb] hover:underline font-medium mt-4 inline-block">Return to Sales Orders</button>
+        <button onClick={() => navigate('/dashboard/sales')} className="text-primary hover:underline font-medium mt-4 inline-block">Return to Sales Orders</button>
       </div>
     );
   }
@@ -185,7 +185,7 @@ export default function SalesOrderDetail() {
                 {parseFloat(order.shipping_cost || 0) > 0 && <div className="flex justify-between text-gray-500"><span>Shipping</span><span className="font-medium text-gray-900">{formatCurrency(order.shipping_cost)}</span></div>}
                 <div className="pt-3 mt-3 border-t border-gray-200 flex justify-between items-center">
                   <span className="font-bold text-gray-900">Total</span>
-                  <span className="font-bold text-[#2563eb] text-lg">{formatCurrency(order.total_amount)}</span>
+                  <span className="font-bold text-primary text-lg">{formatCurrency(order.total_amount)}</span>
                 </div>
               </div>
             </div>

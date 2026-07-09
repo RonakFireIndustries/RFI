@@ -230,7 +230,7 @@ export default function CompanySettingsPage({ nested }) {
         </section>
 
         <div className="flex justify-end gap-3">
-          <button type="submit" disabled={saving} className="px-6 py-2.5 bg-[#2563eb] text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors">
+          <button type="submit" disabled={saving} className="px-6 py-2.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-colors">
             {saving ? 'Saving...' : 'Save Settings'}
           </button>
         </div>

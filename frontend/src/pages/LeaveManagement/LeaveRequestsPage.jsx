@@ -34,7 +34,7 @@ export default function LeaveRequestsPage() {
       id: 'actions',
       header: 'Actions',
       cell: ({ row }) => (
-        <Link to={`/dashboard/leave-management/requests/${row.original.id}`} className="text-[#1a56db] hover:text-[#1546b5]">
+        <Link to={`/dashboard/leave-management/requests/${row.original.id}`} className="text-primary hover:text-primary/80">
           <Eye className="w-4 h-4" />
         </Link>
       )
@@ -50,7 +50,7 @@ export default function LeaveRequestsPage() {
         </div>
         <Link
           to="/dashboard/leave-management/requests/new"
-          className="inline-flex items-center justify-center sm:w-auto bg-[#1a56db] text-white px-4 py-2 rounded-lg hover:bg-[#1546b5] transition-colors"
+          className="inline-flex items-center justify-center sm:w-auto bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
         >
           <Plus className="w-4 h-4 mr-2" />
           Apply Leave

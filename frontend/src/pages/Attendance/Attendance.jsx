@@ -200,31 +200,31 @@ export default function Attendance() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-[#0B1B36] mb-1">
+          <h1 className="text-3xl font-extrabold text-foreground mb-1">
             Attendance Dashboard
           </h1>
-          <p className="text-[#718096]">
+          <p className="text-muted-foreground">
             Real-time tracking for {currentDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => navigate('/dashboard/my-attendance')}
-            className="inline-flex items-center px-3 py-2 bg-[#0B1B36] text-white rounded-xl hover:bg-[#081428] transition-colors text-sm font-bold gap-1.5"
+            className="inline-flex items-center px-3 py-2 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-colors text-sm font-bold gap-1.5"
           >
             <MapPin className="w-4 h-4" />
             <span className="hidden sm:inline">My Attendance</span>
             <ArrowRight className="w-4 h-4" />
           </button>
-          <div className="flex bg-[#EDF2F7] rounded-lg p-1">
+          <div className="flex bg-muted rounded-lg p-1">
             <button
               onClick={() => setCurrentDate(new Date())}
-              className="px-3 py-1.5 bg-white shadow-sm rounded text-sm font-semibold text-[#1A202C]"
+              className="px-3 py-1.5 bg-card shadow-sm rounded text-sm font-semibold text-foreground"
             >
               Today
             </button>
           </div>
-          <button className="inline-flex items-center justify-center px-3 py-2 bg-white border border-[#CBD5E0] text-[#4A5568] rounded-xl hover:bg-gray-50 transition-colors">
+          <button className="inline-flex items-center justify-center px-3 py-2 bg-card border border-border text-muted-foreground rounded-xl hover:bg-muted transition-colors">
             <Download className="w-4 h-4" />
           </button>
         </div>
@@ -232,68 +232,68 @@ export default function Attendance() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white border-l-4 border-[#0B1B36] rounded-2xl p-6 shadow-sm">
+        <div className="bg-card border-l-4 border-primary rounded-2xl p-6 shadow-sm">
           <div className="flex justify-between items-start mb-2">
-            <span className="text-[10px] font-bold text-[#718096] uppercase tracking-wider">Average Attendance</span>
-            <Users className="w-4 h-4 text-[#A0AEC0]" />
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Average Attendance</span>
+            <Users className="w-4 h-4 text-muted-foreground" />
           </div>
-          <div className="text-3xl font-extrabold text-[#0B1B36] mb-1">{kpis.avg}%</div>
-          <div className="text-xs font-semibold text-[#38A169]">Based on selected day</div>
+          <div className="text-3xl font-extrabold text-foreground mb-1">{kpis.avg}%</div>
+          <div className="text-xs font-semibold text-success">Based on selected day</div>
         </div>
 
-        <div className="bg-white border-l-4 border-[#38A169] rounded-2xl p-6 shadow-sm">
+        <div className="bg-card border-l-4 border-success rounded-2xl p-6 shadow-sm">
           <div className="flex justify-between items-start mb-2">
-            <span className="text-[10px] font-bold text-[#718096] uppercase tracking-wider">Present</span>
-            <CheckCircle className="w-4 h-4 text-[#38A169]" />
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Present</span>
+            <CheckCircle className="w-4 h-4 text-success" />
           </div>
-          <div className="text-3xl font-extrabold text-[#0B1B36] mb-1">{kpis.present + kpis.late}</div>
-          <div className="text-xs font-semibold text-[#718096]">Out of {kpis.total} total</div>
+          <div className="text-3xl font-extrabold text-foreground mb-1">{kpis.present + kpis.late}</div>
+          <div className="text-xs font-semibold text-muted-foreground">Out of {kpis.total} total</div>
         </div>
 
-        <div className="bg-white border-l-4 border-[#E53E3E] rounded-2xl p-6 shadow-sm">
+        <div className="bg-card border-l-4 border-destructive rounded-2xl p-6 shadow-sm">
           <div className="flex justify-between items-start mb-2">
-            <span className="text-[10px] font-bold text-[#718096] uppercase tracking-wider">Absent / Leave</span>
-            <AlertTriangle className="w-4 h-4 text-[#E53E3E]" />
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Absent / Leave</span>
+            <AlertTriangle className="w-4 h-4 text-destructive" />
           </div>
-          <div className="text-3xl font-extrabold text-[#0B1B36] mb-1">{kpis.absent}</div>
-          <div className="text-xs font-semibold text-[#E53E3E]">Requires attention</div>
+          <div className="text-3xl font-extrabold text-foreground mb-1">{kpis.absent}</div>
+          <div className="text-xs font-semibold text-destructive">Requires attention</div>
         </div>
 
-        <div className="bg-white border-l-4 border-[#DD6B20] rounded-2xl p-6 shadow-sm">
+        <div className="bg-card border-l-4 border-warning rounded-2xl p-6 shadow-sm">
           <div className="flex justify-between items-start mb-2">
-            <span className="text-[10px] font-bold text-[#718096] uppercase tracking-wider">Late Arrivals</span>
-            <Clock className="w-4 h-4 text-[#DD6B20]" />
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Late Arrivals</span>
+            <Clock className="w-4 h-4 text-warning" />
           </div>
-          <div className="text-3xl font-extrabold text-[#0B1B36] mb-1">{kpis.late}</div>
-          <div className="text-xs font-semibold text-[#718096]">Recorded</div>
+          <div className="text-3xl font-extrabold text-foreground mb-1">{kpis.late}</div>
+          <div className="text-xs font-semibold text-muted-foreground">Recorded</div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-8 mb-8">
         {/* Heatmap Area */}
-        <div className="xl:col-span-3 bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+        <div className="xl:col-span-3 bg-card border border-border rounded-2xl p-6 shadow-sm">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h2 className="text-lg font-bold text-[#0B1B36]">Monthly Attendance Heatmap</h2>
-              <p className="text-sm text-[#718096]">{currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })} Overview</p>
+              <h2 className="text-lg font-bold text-foreground">Monthly Attendance Heatmap</h2>
+              <p className="text-sm text-muted-foreground">{currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })} Overview</p>
             </div>
             <div className="flex items-center gap-3 text-xs font-semibold">
-              <div className="flex items-center"><div className="w-3 h-3 bg-[#2D3748] rounded mr-1.5" /> Present</div>
-              <div className="flex items-center"><div className="w-3 h-3 bg-[#E53E3E] rounded mr-1.5" /> Absent</div>
-              <div className="flex items-center"><div className="w-3 h-3 bg-[#3182CE] rounded mr-1.5" /> Leave</div>
-              <div className="flex items-center"><div className="w-3 h-3 bg-[#EDF2F7] rounded mr-1.5" /> Off</div>
+              <div className="flex items-center"><div className="w-3 h-3 bg-primary rounded mr-1.5" /> Present</div>
+              <div className="flex items-center"><div className="w-3 h-3 bg-destructive rounded mr-1.5" /> Absent</div>
+              <div className="flex items-center"><div className="w-3 h-3 bg-info rounded mr-1.5" /> Leave</div>
+              <div className="flex items-center"><div className="w-3 h-3 bg-muted rounded mr-1.5" /> Off</div>
             </div>
           </div>
 
           <div className="grid grid-cols-7 gap-1.5 md:gap-2 h-auto min-h-[200px] md:min-h-80">
             {days.map((d, i) => {
-              let bgClass = 'bg-[#2D3748] text-white'; // present (dark blue)
-              if (d.status === 'weekend') bgClass = 'bg-[#EDF2F7] text-[#A0AEC0] border border-dashed border-[#CBD5E0]';
-              if (d.status === 'absent') bgClass = 'bg-[#E53E3E] text-white';
-              if (d.status === 'leave') bgClass = 'bg-[#3182CE] text-white';
-              if (d.status === 'off') bgClass = 'bg-white border border-gray-200 text-gray-400';
+              let bgClass = 'bg-primary text-primary-foreground'; // present
+              if (d.status === 'weekend') bgClass = 'bg-muted text-muted-foreground border border-dashed border-border';
+              if (d.status === 'absent') bgClass = 'bg-destructive text-destructive-foreground';
+              if (d.status === 'leave') bgClass = 'bg-info text-info-foreground';
+              if (d.status === 'off') bgClass = 'bg-card border border-border text-muted-foreground';
 
-              const selectedRing = d.isSelected ? 'ring-2 ring-offset-2 ring-blue-500' : '';
+              const selectedRing = d.isSelected ? 'ring-2 ring-offset-2 ring-ring' : '';
 
               return (
                 <div
@@ -310,34 +310,34 @@ export default function Attendance() {
         </div>
 
         {/* Filters Sidebar */}
-        <div className="bg-[#F7FAFC] border border-gray-200 rounded-2xl p-6 shadow-sm">
-          <h2 className="text-lg font-bold text-[#0B1B36] mb-6 flex items-center">
-            <Filter className="w-5 h-5 mr-2 text-[#718096]" />
+        <div className="bg-muted/50 border border-border rounded-2xl p-6 shadow-sm">
+          <h2 className="text-lg font-bold text-foreground mb-6 flex items-center">
+            <Filter className="w-5 h-5 mr-2 text-muted-foreground" />
             Attendance Filters
           </h2>
 
           <form onSubmit={handleFilterSubmit} className="space-y-5">
             <div>
-              <label className="block text-xs font-bold text-[#718096] mb-1.5">View Month For</label>
+              <label className="block text-xs font-bold text-muted-foreground mb-1.5">View Month For</label>
               <div className="relative">
-                <Calendar className="w-4 h-4 absolute left-3 top-2.5 text-[#A0AEC0]" />
+                <Calendar className="w-4 h-4 absolute left-3 top-2.5 text-muted-foreground" />
                 <input
                   type="date"
                   value={selectedDateString}
                   onChange={(e) => {
                     if (e.target.value) setCurrentDate(new Date(e.target.value));
                   }}
-                  className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm font-semibold bg-white text-[#1A202C]"
+                  className="w-full pl-9 pr-3 py-2 border border-input rounded-lg text-sm font-semibold bg-card text-foreground"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#718096] mb-1.5">Department</label>
+              <label className="block text-xs font-bold text-muted-foreground mb-1.5">Department</label>
               <select
                 value={departmentId}
                 onChange={(e) => setDepartmentId(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-lg text-sm font-semibold bg-white text-[#1A202C]"
+                className="w-full p-2 border border-input rounded-lg text-sm font-semibold bg-card text-foreground"
               >
                 <option value="">All Departments</option>
                 {departments.map(dept => (
@@ -347,11 +347,11 @@ export default function Attendance() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#718096] mb-1.5">Project Site</label>
+              <label className="block text-xs font-bold text-muted-foreground mb-1.5">Project Site</label>
               <select
                 value={siteId}
                 onChange={(e) => setSiteId(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-lg text-sm font-semibold bg-white text-[#1A202C]"
+                className="w-full p-2 border border-input rounded-lg text-sm font-semibold bg-card text-foreground"
               >
                 <option value="">All Sites</option>
                 {sites.map(site => (
@@ -361,11 +361,11 @@ export default function Attendance() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#718096] mb-1.5">Shift</label>
+              <label className="block text-xs font-bold text-muted-foreground mb-1.5">Shift</label>
               <select
                 value={shiftId}
                 onChange={(e) => setShiftId(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-lg text-sm font-semibold bg-white text-[#1A202C]"
+                className="w-full p-2 border border-input rounded-lg text-sm font-semibold bg-card text-foreground"
               >
                 <option value="">All Shifts</option>
                 {shifts.map(shift => (
@@ -374,7 +374,7 @@ export default function Attendance() {
               </select>
             </div>
 
-            <button type="submit" className="w-full py-2.5 mt-2 bg-[#0B1B36] text-white font-bold rounded-lg hover:bg-[#081428] transition-colors flex items-center justify-center">
+            <button type="submit" className="w-full py-2.5 mt-2 bg-primary text-primary-foreground font-bold rounded-lg hover:bg-primary/90 transition-colors flex items-center justify-center">
               {loading ? 'Filtering...' : 'Apply Filters'}
             </button>
           </form>
@@ -382,18 +382,18 @@ export default function Attendance() {
       </div>
 
       {/* Daily Logs Table */}
-      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+      <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-border flex justify-between items-center">
           <div>
-            <h2 className="text-lg font-bold text-[#0B1B36]">Daily Attendance Log</h2>
-            <p className="text-sm text-[#718096]">Detailed check-in records for {currentDate.toLocaleDateString()}</p>
+            <h2 className="text-lg font-bold text-foreground">Daily Attendance Log</h2>
+            <p className="text-sm text-muted-foreground">Detailed check-in records for {currentDate.toLocaleDateString()}</p>
           </div>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-[#F7FAFC] border-b border-gray-200 text-[10px] font-bold text-[#A0AEC0] uppercase tracking-widest">
+              <tr className="bg-muted/50 border-b border-border text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                 <th className="p-4 pl-6 w-10"></th>
                 <th className="p-4 pl-2">Employee</th>
                 <th className="p-4">Check In</th>
@@ -418,17 +418,17 @@ export default function Attendance() {
                 const checkOut = formatDate(log.check_out);
                 const hours = calculateHours(log.check_in, log.check_out);
 
-                let statusBg = 'bg-[#EDF2F7]';
-                let statusText = 'text-[#4A5568]';
+                let statusBg = 'bg-muted';
+                let statusText = 'text-muted-foreground';
                 if (log.status.toLowerCase() === 'present') {
-                  statusBg = 'bg-[#C6F6D5]';
-                  statusText = 'text-[#22543D]';
+                  statusBg = 'bg-success/10';
+                  statusText = 'text-success';
                 } else if (log.status.toLowerCase() === 'late') {
-                  statusBg = 'bg-[#FEEBC8]';
-                  statusText = 'text-[#DD6B20]';
+                  statusBg = 'bg-warning/10';
+                  statusText = 'text-warning';
                 } else if (['absent', 'leave'].includes(log.status.toLowerCase())) {
-                  statusBg = 'bg-[#FED7D7]';
-                  statusText = 'text-[#C53030]';
+                  statusBg = 'bg-destructive/10';
+                  statusText = 'text-destructive';
                 }
 
                 return (
@@ -440,24 +440,24 @@ export default function Attendance() {
                       <td className="p-4 pl-6 w-10">
                         {empId && (
                           <button className="p-1 hover:bg-gray-200 rounded transition-colors">
-                            {isExpanded ? <ChevronDown className="w-4 h-4 text-[#718096]" /> : <ChevronRight className="w-4 h-4 text-[#718096]" />}
+                            {isExpanded ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
                           </button>
                         )}
                       </td>
                       <td className="p-4 pl-2">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-[#EDF2F7] flex items-center justify-center font-bold text-xs text-[#1A202C]">
+                          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center font-bold text-xs text-foreground">
                             {name.charAt(0)}
                           </div>
                           <div>
-                            <div className="font-bold text-[#1A202C] text-sm">{name}</div>
-                            <div className="text-xs text-[#718096]">{role}</div>
+                            <div className="font-bold text-foreground text-sm">{name}</div>
+                            <div className="text-xs text-muted-foreground">{role}</div>
                           </div>
                         </div>
                       </td>
-                      <td className="p-4 text-sm font-bold text-[#1A202C]">{checkIn}</td>
-                      <td className="p-4 text-sm font-bold text-[#1A202C]">{checkOut}</td>
-                      <td className="p-4 text-sm font-bold text-[#1A202C]">{hours}</td>
+                      <td className="p-4 text-sm font-bold text-foreground">{checkIn}</td>
+                      <td className="p-4 text-sm font-bold text-foreground">{checkOut}</td>
+                      <td className="p-4 text-sm font-bold text-foreground">{hours}</td>
                       <td className="p-4 text-right pr-6">
                         <span className={`inline-block px-3 py-1 rounded text-xs font-bold capitalize ${statusBg} ${statusText}`}>
                           {log.status || 'unknown'}
@@ -469,18 +469,18 @@ export default function Attendance() {
                         <td colSpan="6" className="p-0 bg-gray-50">
                           <div className="px-6 py-4 border-t border-b border-gray-200">
                             <div className="flex items-center gap-2 mb-3">
-                              <User className="w-4 h-4 text-[#0B1B36]" />
-                              <h3 className="text-sm font-bold text-[#0B1B36]">
+                              <User className="w-4 h-4 text-foreground" />
+                              <h3 className="text-sm font-bold text-foreground">
                                 {name} — Full Month Attendance
                               </h3>
-                              <span className="text-xs text-[#718096]">
+                              <span className="text-xs text-muted-foreground">
                                 ({expandedEmployeeData.records.length} records)
                               </span>
                             </div>
                             <div className="overflow-x-auto">
                               <table className="w-full text-left border-collapse">
                                 <thead>
-                                  <tr className="text-[9px] font-bold text-[#A0AEC0] uppercase tracking-widest border-b border-gray-300">
+                                  <tr className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest border-b border-gray-300">
                                     <th className="p-2 pl-0">Date</th>
                                     <th className="p-2">Check In</th>
                                     <th className="p-2">Check Out</th>
@@ -494,30 +494,30 @@ export default function Attendance() {
                                     .sort((a, b) => a.date < b.date ? 1 : -1)
                                     .map(rec => {
                                       const locVerified = rec.location_verified;
-                                      let rStatusBg = 'bg-[#EDF2F7]';
-                                      let rStatusText = 'text-[#4A5568]';
+                                      let rStatusBg = 'bg-muted';
+                                      let rStatusText = 'text-muted-foreground';
                                       if (rec.status.toLowerCase() === 'present') {
-                                        rStatusBg = 'bg-[#C6F6D5]';
-                                        rStatusText = 'text-[#22543D]';
+                                        rStatusBg = 'bg-success/10';
+                                        rStatusText = 'text-success';
                                       } else if (rec.status.toLowerCase() === 'late') {
-                                        rStatusBg = 'bg-[#FEEBC8]';
-                                        rStatusText = 'text-[#DD6B20]';
+                                        rStatusBg = 'bg-warning/10';
+                                        rStatusText = 'text-warning';
                                       } else if (['absent', 'leave'].includes(rec.status.toLowerCase())) {
-                                        rStatusBg = 'bg-[#FED7D7]';
-                                        rStatusText = 'text-[#C53030]';
+                                        rStatusBg = 'bg-destructive/10';
+                                        rStatusText = 'text-destructive';
                                       }
                                       return (
                                         <tr key={rec.id} className="hover:bg-white transition-colors">
-                                          <td className="p-2 pl-0 text-sm font-bold text-[#1A202C]">{rec.date}</td>
-                                          <td className="p-2 text-sm text-[#1A202C]">{formatDate(rec.check_in)}</td>
-                                          <td className="p-2 text-sm text-[#1A202C]">{formatDate(rec.check_out)}</td>
-                                          <td className="p-2 text-sm font-bold text-[#1A202C]">{calculateHours(rec.check_in, rec.check_out)}</td>
+                                          <td className="p-2 pl-0 text-sm font-bold text-foreground">{rec.date}</td>
+                                          <td className="p-2 text-sm text-foreground">{formatDate(rec.check_in)}</td>
+                                          <td className="p-2 text-sm text-foreground">{formatDate(rec.check_out)}</td>
+                                          <td className="p-2 text-sm font-bold text-foreground">{calculateHours(rec.check_in, rec.check_out)}</td>
                                           <td className="p-2">
                                             <span className={`inline-block px-2 py-0.5 rounded text-xs font-bold capitalize ${rStatusBg} ${rStatusText}`}>
                                               {rec.status || 'unknown'}
                                             </span>
                                           </td>
-                                          <td className="p-2 text-right pr-0 text-xs text-[#718096]">
+                                          <td className="p-2 text-right pr-0 text-xs text-muted-foreground">
                                             {locVerified ? 'Verified' : 'Not Verified'}
                                           </td>
                                         </tr>

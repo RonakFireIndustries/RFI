@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @config "../tailwind.config.js";
 
+/* ── Ocean Blue Theme Tokens ── */
 @theme {
   --color-white: var(--color-surface);
   --color-gray-50: var(--color-background);
@@ -13,16 +14,37 @@
   --color-gray-700: var(--color-text-secondary);
   --color-gray-800: var(--color-text-primary);
   --color-gray-900: var(--color-text-primary);
+
+  --color-sidebar: var(--color-sidebar-bg);
+  --color-sidebar-foreground: var(--color-sidebar-text);
+  --color-sidebar-active: var(--color-sidebar-active-bg);
+  --color-sidebar-active-foreground: var(--color-sidebar-active-text);
+  --color-sidebar-hover: var(--color-sidebar-hover-bg);
+  --color-sidebar-muted: var(--color-sidebar-muted-text);
+
+  --color-header-bg: var(--color-header-background);
+  --color-header-border: var(--color-header-border-color);
+
+  --color-chart-1: var(--color-chart-primary);
+  --color-chart-2: var(--color-chart-secondary);
+  --color-chart-3: var(--color-chart-accent);
+  --color-chart-4: var(--color-chart-success);
+  --color-chart-5: var(--color-chart-warning);
+  --color-chart-6: var(--color-chart-info);
 }
 
+/* ── Light Mode ── */
 @layer base {
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
-    
+
     --color-primary: #2563EB;
+    --color-primary-foreground: #FFFFFF;
     --color-secondary: #38BDF8;
+    --color-secondary-foreground: #FFFFFF;
     --color-accent: #0EA5E9;
+    --color-accent-foreground: #FFFFFF;
     --color-background: #F8FAFC;
     --color-surface: #FFFFFF;
     --color-text-primary: #0F172A;
@@ -31,20 +53,73 @@
     --color-border: #CBD5E1;
     --color-divider: #E2E8F0;
     --color-success: #22C55E;
+    --color-success-foreground: #FFFFFF;
     --color-warning: #F59E0B;
+    --color-warning-foreground: #FFFFFF;
     --color-error: #EF4444;
+    --color-error-foreground: #FFFFFF;
     --color-info: #3B82F6;
+    --color-info-foreground: #FFFFFF;
     --color-hover-primary: #1D4ED8;
     --color-active-primary: #1E40AF;
+
+    /* Sidebar */
+    --color-sidebar-bg: #FFFFFF;
+    --color-sidebar-text: #475569;
+    --color-sidebar-active-bg: #2563EB;
+    --color-sidebar-active-text: #FFFFFF;
+    --color-sidebar-hover-bg: #F1F5F9;
+    --color-sidebar-muted-text: #94A3B8;
+
+    /* Header */
+    --color-header-background: #FFFFFF;
+    --color-header-border-color: #E2E8F0;
+
+    /* Charts */
+    --color-chart-primary: #2563EB;
+    --color-chart-secondary: #38BDF8;
+    --color-chart-accent: #0EA5E9;
+    --color-chart-success: #22C55E;
+    --color-chart-warning: #F59E0B;
+    --color-chart-info: #3B82F6;
+
+    /* shadcn compat */
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221 83% 53%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 197 94% 60%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 197 89% 47%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 221 83% 53%;
+    --radius: 0.5rem;
+    --chart-1: 221 83% 53%;
+    --chart-2: 197 94% 60%;
+    --chart-3: 197 89% 47%;
+    --chart-4: 142 71% 45%;
+    --chart-5: 38 92% 50%;
   }
 
+  /* ── Dark Mode ── */
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-    
+
     --color-primary: #3B82F6;
+    --color-primary-foreground: #FFFFFF;
     --color-secondary: #60A5FA;
+    --color-secondary-foreground: #FFFFFF;
     --color-accent: #38BDF8;
+    --color-accent-foreground: #0F172A;
     --color-background: #0F172A;
     --color-surface: #1E293B;
     --color-text-primary: #F8FAFC;
@@ -53,11 +128,59 @@
     --color-border: #334155;
     --color-divider: #475569;
     --color-success: #22C55E;
+    --color-success-foreground: #FFFFFF;
     --color-warning: #FBBF24;
-    --color-error: #F87171;
+    --color-warning-foreground: #0F172A;
+    --color-error: #EF4444;
+    --color-error-foreground: #FFFFFF;
     --color-info: #60A5FA;
+    --color-info-foreground: #FFFFFF;
     --color-hover-primary: #2563EB;
     --color-active-primary: #1D4ED8;
+
+    /* Sidebar */
+    --color-sidebar-bg: #1E293B;
+    --color-sidebar-text: #94A3B8;
+    --color-sidebar-active-bg: #3B82F6;
+    --color-sidebar-active-text: #FFFFFF;
+    --color-sidebar-hover-bg: #334155;
+    --color-sidebar-muted-text: #64748B;
+
+    /* Header */
+    --color-header-background: #1E293B;
+    --color-header-border-color: #334155;
+
+    /* Charts */
+    --color-chart-primary: #3B82F6;
+    --color-chart-secondary: #60A5FA;
+    --color-chart-accent: #38BDF8;
+    --color-chart-success: #22C55E;
+    --color-chart-warning: #FBBF24;
+    --color-chart-info: #60A5FA;
+
+    /* shadcn compat */
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 222.2 84% 4.9%;
+    --secondary: 217 91% 67%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 217 33% 18%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 197 89% 47%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 18%;
+    --input: 217 33% 18%;
+    --ring: 224 76% 48%;
+    --chart-1: 217 91% 60%;
+    --chart-2: 217 91% 67%;
+    --chart-3: 197 89% 47%;
+    --chart-4: 142 71% 45%;
+    --chart-5: 38 92% 50%;
   }
 }
 
@@ -69,7 +192,16 @@
     @apply bg-background text-foreground;
     overscroll-behavior-y: contain;
     -webkit-tap-highlight-color: transparent;
+    transition: background-color 250ms ease, color 250ms ease;
   }
+}
+
+/* Smooth theme transitions for all themed elements */
+*, *::before, *::after {
+  transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease, box-shadow 200ms ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none; }
 }
 
 @layer utilities {
@@ -99,7 +231,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #ffffff;
+  background: var(--color-surface, #ffffff);
   transition: opacity 0.4s ease-out;
 }
 .pwa-splash.hidden {
@@ -119,14 +251,14 @@
   margin-top: 16px;
   font-size: 14px;
   font-weight: 600;
-  color: #374151;
+  color: var(--color-text-secondary, #374151);
 }
 .pwa-splash .loader {
   margin-top: 24px;
   width: 32px;
   height: 3px;
   border-radius: 2px;
-  background: #e5e7eb;
+  background: var(--color-border, #e5e7eb);
   overflow: hidden;
 }
 .pwa-splash .loader::after {
@@ -135,7 +267,7 @@
   width: 40%;
   height: 100%;
   border-radius: 2px;
-  background: #1a56db;
+  background: var(--color-primary, #2563EB);
   animation: loader-slide 1.2s ease-in-out infinite;
 }
 @keyframes loader-slide {
@@ -157,16 +289,14 @@
   }
 }
 
-/* Global Theme Overrides for hardcoded primary colors */
+/* Utility classes for theme colors */
 @layer utilities {
-  .bg-\[\#1a56db\] { background-color: var(--color-primary) !important; }
-  .text-\[\#1a56db\] { color: var(--color-primary) !important; }
-  .border-\[\#1a56db\] { border-color: var(--color-primary) !important; }
-  .hover\:bg-\[\#1e40af\]:hover { background-color: var(--color-hover-primary) !important; }
-  .hover\:text-\[\#1e40af\]:hover { color: var(--color-hover-primary) !important; }
-  .hover\:border-\[\#1e40af\]:hover { border-color: var(--color-hover-primary) !important; }
-  .hover\:bg-\[\#1546b5\]:hover { background-color: var(--color-hover-primary) !important; }
-  .focus\:ring-\[\#1a56db\]:focus { --tw-ring-color: var(--color-primary) !important; }
-  .focus\:border-\[\#1a56db\]:focus { border-color: var(--color-primary) !important; }
-  .peer-checked\:bg-\[\#1a56db\]:checked ~ .peer { background-color: var(--color-primary) !important; }
+  .bg-primary-theme { background-color: var(--color-primary); }
+  .text-primary-theme { color: var(--color-primary); }
+  .border-primary-theme { border-color: var(--color-primary); }
+  .bg-primary-subtle { background-color: color-mix(in srgb, var(--color-primary) 10%, transparent); }
+  .text-primary-dark { color: var(--color-active-primary); }
+  .hover\:bg-primary-hover:hover { background-color: var(--color-hover-primary); }
+  .focus\:ring-primary-theme:focus { --tw-ring-color: var(--color-primary); }
+  .focus\:border-primary-theme:focus { border-color: var(--color-primary); }
 }

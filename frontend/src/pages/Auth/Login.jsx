@@ -52,35 +52,35 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-00 p-4 safe-bottom"
+    <div className="min-h-screen flex items-center justify-center bg-background p-4 safe-bottom"
       style={{ paddingTop: 'env(safe-area-inset-top, 1rem)' }}>
       {/* Decorative background shapes */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-blue-200/30 dark:bg-blue-800/10 blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-indigo-200/30 dark:bg-indigo-800/10 blur-3xl" />
-        <div className="absolute top-1/3 -left-20 w-40 h-40 rounded-full bg-cyan-200/20 dark:bg-cyan-800/10 blur-2xl" />
+        <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-primary/5 dark:bg-primary/5 blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-secondary/5 dark:bg-secondary/5 blur-3xl" />
+        <div className="absolute top-1/3 -left-20 w-40 h-40 rounded-full bg-accent/5 dark:bg-accent/5 blur-2xl" />
       </div>
 
-      <Card className="relative w-full max-w-md border-none shadow-2xl shadow-blue-900/10 dark:shadow-black/30 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm">
+      <Card className="relative w-full max-w-md border shadow-2xl shadow-primary/5 dark:shadow-black/30 bg-card/90 backdrop-blur-sm">
         {/* Branding */}
         <div className="pt-10 pb-2 px-8 text-center">
           <div className="flex justify-center mb-4">
             <img src="/logo.png" alt="RFI" className="h-24 w-auto" />
           </div>
-          <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 tracking-tight">
+          <h1 className="text-lg font-bold text-foreground tracking-tight">
             Ronak Fire Industries
           </h1>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 font-medium uppercase tracking-wider">
+          <p className="text-xs text-muted-foreground mt-0.5 font-medium uppercase tracking-wider">
             RFI Management Portal
           </p>
         </div>
 
         {/* Welcome section */}
         <div className="px-8 pt-4 pb-2 text-center">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+          <h2 className="text-xl font-semibold text-foreground">
             Welcome Back
           </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Sign in to your account to continue
           </p>
         </div>
@@ -88,7 +88,7 @@ export default function Login() {
         <form onSubmit={handleLogin}>
           <CardContent className="space-y-4 px-8 pb-8 pt-4">
             {error && (
-              <div className="flex items-center gap-2 p-3 text-sm text-red-600 bg-red-50 dark:bg-red-900/30 dark:text-red-400 rounded-lg border border-red-200 dark:border-red-800/50">
+              <div className="flex items-center gap-2 p-3 text-sm text-destructive bg-destructive/10 rounded-lg border border-destructive/30">
                 <svg className="w-4 h-4 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                 </svg>
@@ -97,11 +97,11 @@ export default function Login() {
             )}
 
             <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <Label htmlFor="email" className="text-sm font-medium text-foreground">
                 Email Address
               </Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                 <Input
                   id="email"
                   type="email"
@@ -109,17 +109,17 @@ export default function Login() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 h-11 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-500/20 text-gray-900 dark:text-gray-100 placeholder:text-gray-100 dark:placeholder:text-gray-100"
+                  className="pl-10 h-11 bg-surface border-input focus:border-ring focus:ring-ring/20 text-foreground placeholder:text-muted-foreground"
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="password" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <Label htmlFor="password" className="text-sm font-medium text-foreground">
                 Password
               </Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none z-10" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10" />
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
@@ -127,12 +127,12 @@ export default function Login() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 pr-10 h-11 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-blue-500/20 text-gray-900 dark:text-gray-100 placeholder:text-gray-100 dark:placeholder:text-gray-100"
+                  className="pl-10 pr-10 h-11 bg-surface border-input focus:border-ring focus:ring-ring/20 text-foreground placeholder:text-muted-foreground"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   tabIndex={-1}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -147,14 +147,14 @@ export default function Login() {
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500/30 cursor-pointer"
+                  className="w-4 h-4 rounded border-input text-primary focus:ring-ring/30 cursor-pointer"
                 />
-                <span className="text-sm text-gray-600 dark:text-gray-400">Remember me</span>
+                <span className="text-sm text-muted-foreground">Remember me</span>
               </label>
               <button
                 type="button"
                 onClick={() => {/* TODO: navigate to forgot password */ }}
-                className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
               >
                 Forgot Password?
               </button>
@@ -163,7 +163,7 @@ export default function Login() {
             {/* Submit */}
             <Button
               type="submit"
-              className="w-full h-11 mt-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold rounded-lg shadow-lg shadow-blue-600/20 hover:shadow-blue-600/30 transition-all duration-200 disabled:opacity-60"
+              className="w-full h-11 mt-2 bg-primary hover:bg-primary/90 active:bg-primary/80 text-primary-foreground font-semibold rounded-lg shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-200 disabled:opacity-60"
               disabled={isLoading}
             >
               {isLoading ? (

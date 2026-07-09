@@ -226,7 +226,7 @@ export default function ReportsPage() {
       {/* Sidebar */}
       <aside className={`${sidebarOpen ? 'w-64' : 'w-0'} transition-all duration-300 bg-white border-r border-gray-200 overflow-hidden flex-shrink-0`}>
         <div className="p-4 border-b border-gray-100">
-          <div className="flex items-center gap-2 text-[#1a56db] mb-1">
+          <div className="flex items-center gap-2 text-primary mb-1">
             <BarChart3 className="w-5 h-5" />
             <span className="font-bold text-sm uppercase tracking-wider">Categories</span>
           </div>
@@ -236,7 +236,7 @@ export default function ReportsPage() {
           <button
             onClick={() => setActiveCategory(null)}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-              !activeCategory ? 'bg-[#1a56db]/10 text-[#1a56db]' : 'text-gray-600 hover:bg-gray-50'
+              !activeCategory ? 'bg-primary/10 text-primary' : 'text-gray-600 hover:bg-gray-50'
             }`}
           >
             <Grid className="w-4 h-4" />
@@ -250,7 +250,7 @@ export default function ReportsPage() {
                 key={cat.id}
                 onClick={() => setActiveCategory(cat.id)}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  activeCategory === cat.id ? 'bg-[#1a56db]/10 text-[#1a56db]' : 'text-gray-600 hover:bg-gray-50'
+                  activeCategory === cat.id ? 'bg-primary/10 text-primary' : 'text-gray-600 hover:bg-gray-50'
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -278,7 +278,7 @@ export default function ReportsPage() {
             </div>
             <div className="flex items-center gap-3 flex-wrap">
               {canCreate && (
-                <button onClick={() => setShowNewReportModal(true)} className="inline-flex items-center px-4 py-2 bg-[#1a56db] hover:bg-[#1e40af] text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
+                <button onClick={() => setShowNewReportModal(true)} className="inline-flex items-center px-4 py-2 bg-primary hover:bg-primary/90 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
                   <Plus className="w-4 h-4 mr-2" /> New Report
                 </button>
               )}
@@ -294,7 +294,7 @@ export default function ReportsPage() {
                 placeholder="Search reports..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-[#1a56db] focus:border-[#1a56db]"
+                className="w-full pl-9 pr-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-ring focus:border-ring"
               />
             </div>
             <div className="flex gap-2 items-center">
@@ -311,10 +311,10 @@ export default function ReportsPage() {
                 {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
               </select>
               <div className="flex border border-gray-300 rounded-lg overflow-hidden">
-                <button onClick={() => setViewMode('grid')} className={`p-2 ${viewMode === 'grid' ? 'bg-gray-100 text-[#1a56db]' : 'bg-white text-gray-400'}`}>
+                <button onClick={() => setViewMode('grid')} className={`p-2 ${viewMode === 'grid' ? 'bg-gray-100 text-primary' : 'bg-white text-gray-400'}`}>
                   <Grid className="w-4 h-4" />
                 </button>
-                <button onClick={() => setViewMode('list')} className={`p-2 ${viewMode === 'list' ? 'bg-gray-100 text-[#1a56db]' : 'bg-white text-gray-400'}`}>
+                <button onClick={() => setViewMode('list')} className={`p-2 ${viewMode === 'list' ? 'bg-gray-100 text-primary' : 'bg-white text-gray-400'}`}>
                   <ListIcon className="w-4 h-4" />
                 </button>
               </div>
@@ -326,7 +326,7 @@ export default function ReportsPage() {
             <button
               onClick={() => setActiveCategory(null)}
               className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                !activeCategory ? 'bg-[#1a56db] text-white shadow-sm' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                !activeCategory ? 'bg-primary text-white shadow-sm' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
               }`}
             >
               All Reports
@@ -338,7 +338,7 @@ export default function ReportsPage() {
                   key={cat.id}
                   onClick={() => setActiveCategory(cat.id)}
                   className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
-                    activeCategory === cat.id ? 'bg-[#1a56db] text-white shadow-sm' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                    activeCategory === cat.id ? 'bg-primary text-white shadow-sm' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -368,7 +368,7 @@ export default function ReportsPage() {
               title={searchQuery || activeCategory ? "No matching reports" : "No reports available"}
               description={searchQuery || activeCategory ? "Try adjusting your search or filter criteria" : "Get started by creating your first report"}
               action={canCreate && !searchQuery && !activeCategory ? (
-                <button onClick={() => setShowNewReportModal(true)} className="inline-flex items-center px-4 py-2 bg-[#1a56db] text-white rounded-lg text-sm font-medium hover:bg-[#1e40af]">
+                <button onClick={() => setShowNewReportModal(true)} className="inline-flex items-center px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90">
                   <Plus className="w-4 h-4 mr-2" /> Create Report
                 </button>
               ) : null}
@@ -418,7 +418,7 @@ export default function ReportsPage() {
                         <button
                           onClick={() => handleGenerate(report)}
                           disabled={generating === report.id}
-                          className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-[#1a56db]/10 text-[#1a56db] rounded-lg text-xs font-semibold hover:bg-[#1a56db]/20 transition-colors disabled:opacity-50"
+                          className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-primary/10 text-primary rounded-lg text-xs font-semibold hover:bg-primary/20 transition-colors disabled:opacity-50"
                         >
                           {generating === report.id ? (
                             <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Generating</>
@@ -466,7 +466,7 @@ export default function ReportsPage() {
                         <td className="px-6 py-4 text-sm text-gray-500">{report.last_generated_at ? new Date(report.last_generated_at).toLocaleDateString() : 'Never'}</td>
                         <td className="px-6 py-4 text-right">
                           {canExport && (
-                            <button onClick={() => handleGenerate(report)} disabled={generating === report.id} className="text-[#1a56db] hover:text-[#1e40af] text-sm font-medium mr-3 disabled:opacity-50">
+                            <button onClick={() => handleGenerate(report)} disabled={generating === report.id} className="text-primary hover:text-primary text-sm font-medium mr-3 disabled:opacity-50">
                               {generating === report.id ? 'Generating...' : 'Generate'}
                             </button>
                           )}
@@ -529,7 +529,7 @@ export default function ReportsPage() {
                       {canExport && gen.status === 'completed' && (
                         <button
                           onClick={() => handleDownload(gen)}
-                          className="ml-2 p-2 text-gray-400 hover:text-[#1a56db] hover:bg-blue-50 rounded-lg transition-colors"
+                          className="ml-2 p-2 text-gray-400 hover:text-primary hover:bg-blue-50 rounded-lg transition-colors"
                           title="Download"
                         >
                           <Download className="w-4 h-4" />
@@ -549,7 +549,7 @@ export default function ReportsPage() {
                   Active Schedules
                 </h3>
                 {canSchedule && (
-                  <button onClick={() => setShowScheduleModal(true)} className="text-xs text-[#1a56db] font-medium hover:underline">
+                  <button onClick={() => setShowScheduleModal(true)} className="text-xs text-primary font-medium hover:underline">
                     + New
                   </button>
                 )}
@@ -612,7 +612,7 @@ export default function ReportsPage() {
               <div className="p-5 space-y-4">
                 <a href="#" className="block p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
                   <div className="flex items-start gap-3">
-                    <BarChart3 className="w-5 h-5 text-[#1a56db] mt-0.5" />
+                    <BarChart3 className="w-5 h-5 text-primary mt-0.5" />
                     <div>
                       <p className="text-sm font-semibold text-gray-900">Getting Started with Reports</p>
                       <p className="text-xs text-gray-600 mt-0.5">Learn how to create, schedule, and export reports</p>
@@ -672,7 +672,7 @@ export default function ReportsPage() {
       {canCreate && (
         <button
           onClick={() => setShowNewReportModal(true)}
-          className="fixed bottom-6 left-6 z-50 w-12 h-12 bg-[#1a56db] hover:bg-[#1e40af] text-white rounded-full shadow-lg flex items-center justify-center transition-colors"
+          className="fixed bottom-6 left-6 z-50 w-12 h-12 bg-primary hover:bg-primary/90 text-white rounded-full shadow-lg flex items-center justify-center transition-colors"
           title="Create Report"
         >
           <Plus className="w-6 h-6" />
@@ -690,22 +690,22 @@ export default function ReportsPage() {
             <form onSubmit={handleCreateReport} className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Report Name *</label>
-                <input type="text" required value={newReportForm.name} onChange={e => setNewReportForm({...newReportForm, name: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-[#1a56db] focus:border-[#1a56db]" placeholder="e.g., Monthly Sales Summary" />
+                <input type="text" required value={newReportForm.name} onChange={e => setNewReportForm({...newReportForm, name: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-ring focus:border-ring" placeholder="e.g., Monthly Sales Summary" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Category *</label>
-                <select required value={newReportForm.category_id} onChange={e => setNewReportForm({...newReportForm, category_id: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-[#1a56db] focus:border-[#1a56db]">
+                <select required value={newReportForm.category_id} onChange={e => setNewReportForm({...newReportForm, category_id: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-ring focus:border-ring">
                   <option value="">Select category...</option>
                   {categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                <textarea value={newReportForm.description} onChange={e => setNewReportForm({...newReportForm, description: e.target.value})} rows={3} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-[#1a56db] focus:border-[#1a56db]" placeholder="Brief description of this report" />
+                <textarea value={newReportForm.description} onChange={e => setNewReportForm({...newReportForm, description: e.target.value})} rows={3} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-ring focus:border-ring" placeholder="Brief description of this report" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                <select value={newReportForm.status} onChange={e => setNewReportForm({...newReportForm, status: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-[#1a56db] focus:border-[#1a56db]">
+                <select value={newReportForm.status} onChange={e => setNewReportForm({...newReportForm, status: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-ring focus:border-ring">
                   <option value="active">Active</option>
                   <option value="draft">Draft</option>
                   <option value="inactive">Inactive</option>
@@ -713,7 +713,7 @@ export default function ReportsPage() {
               </div>
               <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={() => setShowNewReportModal(false)} className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50">Cancel</button>
-                <button type="submit" className="px-4 py-2 bg-[#1a56db] text-white rounded-lg text-sm font-semibold hover:bg-[#1e40af]">Create Report</button>
+                <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90">Create Report</button>
               </div>
             </form>
           </div>
@@ -731,19 +731,19 @@ export default function ReportsPage() {
             <form onSubmit={handleCreateSchedule} className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Report *</label>
-                <select required value={scheduleForm.report_id} onChange={e => setScheduleForm({...scheduleForm, report_id: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-[#1a56db] focus:border-[#1a56db]">
+                <select required value={scheduleForm.report_id} onChange={e => setScheduleForm({...scheduleForm, report_id: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-ring focus:border-ring">
                   <option value="">Select report...</option>
                   {reports?.filter(r => r.status === 'active').map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Schedule Name *</label>
-                <input type="text" required value={scheduleForm.name} onChange={e => setScheduleForm({...scheduleForm, name: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-[#1a56db] focus:border-[#1a56db]" placeholder="e.g., Weekly Sales Report" />
+                <input type="text" required value={scheduleForm.name} onChange={e => setScheduleForm({...scheduleForm, name: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-ring focus:border-ring" placeholder="e.g., Weekly Sales Report" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Frequency</label>
-                  <select value={scheduleForm.frequency} onChange={e => setScheduleForm({...scheduleForm, frequency: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-[#1a56db] focus:border-[#1a56db]">
+                  <select value={scheduleForm.frequency} onChange={e => setScheduleForm({...scheduleForm, frequency: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-ring focus:border-ring">
                     <option value="daily">Daily</option>
                     <option value="weekly">Weekly</option>
                     <option value="monthly">Monthly</option>
@@ -753,7 +753,7 @@ export default function ReportsPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Format</label>
-                  <select value={scheduleForm.format} onChange={e => setScheduleForm({...scheduleForm, format: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-[#1a56db] focus:border-[#1a56db]">
+                  <select value={scheduleForm.format} onChange={e => setScheduleForm({...scheduleForm, format: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-ring focus:border-ring">
                     <option value="pdf">PDF</option>
                     <option value="csv">CSV</option>
                     <option value="xlsx">Excel</option>
@@ -762,11 +762,11 @@ export default function ReportsPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Email Recipients</label>
-                <input type="text" value={scheduleForm.recipients} onChange={e => setScheduleForm({...scheduleForm, recipients: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-[#1a56db] focus:border-[#1a56db]" placeholder="Comma-separated email addresses" />
+                <input type="text" value={scheduleForm.recipients} onChange={e => setScheduleForm({...scheduleForm, recipients: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-ring focus:border-ring" placeholder="Comma-separated email addresses" />
               </div>
               <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={() => setShowScheduleModal(false)} className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50">Cancel</button>
-                <button type="submit" className="px-4 py-2 bg-[#1a56db] text-white rounded-lg text-sm font-semibold hover:bg-[#1e40af]">Create Schedule</button>
+                <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90">Create Schedule</button>
               </div>
             </form>
           </div>

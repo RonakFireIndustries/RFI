@@ -16,7 +16,7 @@ export default defineConfig({
         name: 'RFI Management Suite',
         short_name: 'RFI',
         description: 'Enterprise Resource Planning & Management System',
-        theme_color: '#1a56db',
+        theme_color: '#2563EB',
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'any',

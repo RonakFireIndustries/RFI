@@ -100,7 +100,7 @@ export default function LeaveRequestForm() {
               id="is_half_day"
               checked={formData.is_half_day}
               onChange={(e) => setFormData({ ...formData, is_half_day: e.target.checked })}
-              className="rounded border-gray-300 text-[#1a56db] focus:ring-[#1a56db]"
+              className="rounded border-gray-300 text-primary focus:ring-ring"
             />
             <label htmlFor="is_half_day" className="ml-2 text-sm text-gray-700">This is a half day leave</label>
           </div>
@@ -127,7 +127,7 @@ export default function LeaveRequestForm() {
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 bg-[#1a56db] text-white rounded-lg hover:bg-[#1546b5] disabled:opacity-50"
+              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50"
             >
               {loading ? 'Submitting...' : 'Submit Leave Request'}
             </button>

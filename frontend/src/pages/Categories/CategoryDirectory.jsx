@@ -62,7 +62,7 @@ export default function CategoryDirectory() {
         <div className="flex space-x-3">
           <button 
             onClick={() => { setEditingCategory(null); setIsModalOpen(true); }}
-            className="inline-flex items-center px-4 py-2 bg-[#1a56db] hover:bg-[#1e40af] text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
+            className="inline-flex items-center px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium rounded-lg transition-colors shadow-sm"
           >
             <Plus className="w-4 h-4 mr-2" />
             New Category
@@ -111,7 +111,7 @@ export default function CategoryDirectory() {
             <input
               type="text"
               placeholder="Search categories..."
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-[#1a56db] focus:border-[#1a56db] text-sm"
+              className="block w-full pl-10 pr-3 py-2 border border-input rounded-lg focus:ring-primary focus:border-primary text-sm"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -133,7 +133,7 @@ export default function CategoryDirectory() {
               {loading ? (
                 <tr>
                   <td colSpan="5" className="px-6 py-12 text-center">
-                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#1a56db]"></div>
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                     <p className="mt-2 text-sm text-gray-500">Loading categories...</p>
                   </td>
                 </tr>
@@ -152,7 +152,7 @@ export default function CategoryDirectory() {
                           <Layers className="h-5 w-5" />
                         </div>
                         <div className="ml-4">
-                          <div className="font-bold text-[#1a56db] hover:text-[#1e40af] cursor-pointer" onClick={() => navigate(`/dashboard/products?category_id=${category.id}`)}>
+                          <div className="font-bold text-primary hover:text-primary/80 cursor-pointer" onClick={() => navigate(`/dashboard/products?category_id=${category.id}`)}>
                             {category.name}
                           </div>
                           <div className="text-xs text-gray-500 truncate max-w-xs">{category.description || 'No description'}</div>
@@ -184,7 +184,7 @@ export default function CategoryDirectory() {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button 
                         onClick={() => handleEdit(category)}
-                        className="text-[#1a56db] hover:text-[#1e40af] mr-4 transition-colors"
+                        className="text-primary hover:text-primary/80 mr-4 transition-colors"
                       >
                         <Edit className="w-5 h-5" />
                       </button>

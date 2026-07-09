@@ -68,7 +68,7 @@ export default function UserAccess() {
               <div 
                 key={user.id} 
                 onClick={() => handleSelectUser(user)}
-                className={`p-3 rounded-md cursor-pointer transition-colors border ${selectedUser?.id === user.id ? 'bg-[#e1effe] border-[#1a56db]' : 'border-gray-200 hover:bg-gray-50'}`}
+                className={`p-3 rounded-md cursor-pointer transition-colors border ${selectedUser?.id === user.id ? 'bg-primary/10 border-primary/30' : 'border-gray-200 hover:bg-gray-50'}`}
               >
                 <div className="font-medium text-gray-900">{user.full_name ? `${user.full_name}` : user.name}</div>
                 <div className="text-sm text-gray-500">{user.email}</div>
@@ -102,13 +102,13 @@ export default function UserAccess() {
                     multiple
                     value={selectedRoles}
                     onChange={(e) => setSelectedRoles(Array.from(e.target.selectedOptions, option => option.value))}
-                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-[#1a56db] focus:border-[#1a56db] sm:text-sm rounded-md"
+                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-ring focus:border-ring sm:text-sm rounded-md"
                   >
                     {allRoles.filter(r => !userRoles.find(ur => ur.id === r.id)).map(role => (
                       <option key={role.id} value={role.name}>{role.name}</option>
                     ))}
                   </select>
-                  <button onClick={handleSaveRoles} className="mt-1 inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#1a56db] hover:bg-[#1e4ebd]">
+                  <button onClick={handleSaveRoles} className="mt-1 inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-primary/90">
                     Add
                   </button>
                 </div>
@@ -135,13 +135,13 @@ export default function UserAccess() {
                     multiple
                     value={selectedPerms}
                     onChange={(e) => setSelectedPerms(Array.from(e.target.selectedOptions, option => option.value))}
-                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-[#1a56db] focus:border-[#1a56db] sm:text-sm rounded-md"
+                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-ring focus:border-ring sm:text-sm rounded-md"
                   >
                     {allPermissions.filter(p => !userPermissions.find(up => up.name === p.name)).map(perm => (
                       <option key={perm.id} value={perm.name}>{perm.name}</option>
                     ))}
                   </select>
-                  <button onClick={handleSavePermissions} className="mt-1 inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#1a56db] hover:bg-[#1e4ebd]">
+                  <button onClick={handleSavePermissions} className="mt-1 inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-primary/90">
                     Add
                   </button>
                 </div>

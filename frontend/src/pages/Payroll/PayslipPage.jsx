@@ -112,7 +112,7 @@ const PayslipPage = () => {
           </table>
 
           <table className="w-full text-[13px] border-collapse border border-black">
-            <thead className="bg-[#f2f2f2]">
+            <thead className="bg-muted">
               <tr className="border-b border-black">
                 <th className="font-normal p-1 text-center border-r border-black w-[25%]">Days Description</th>
                 <th className="font-normal p-1 text-center border-r border-black w-[25%]">Rate Per Month</th>

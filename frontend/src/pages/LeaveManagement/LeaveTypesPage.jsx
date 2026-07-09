@@ -34,7 +34,7 @@ export default function LeaveTypesPage() {
           <h1 className="text-2xl font-bold text-gray-800">Leave Types</h1>
           <p className="text-gray-500 text-sm mt-1">Configure organizational leave rules.</p>
         </div>
-        <button className="flex items-center bg-[#1a56db] text-white px-4 py-2 rounded-lg hover:bg-[#1546b5] transition-colors">
+        <button className="flex items-center bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors">
           <Plus className="w-4 h-4 mr-2" />
           Add Leave Type
         </button>

@@ -83,7 +83,7 @@ export default function PermissionManagement() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <Loader2 className="w-10 h-10 animate-spin text-[#1a56db]" />
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
       </div>
     );
   }
@@ -92,7 +92,7 @@ export default function PermissionManagement() {
     <div className="space-y-6 pb-12">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
         <div>
-          <div className="inline-flex items-center gap-2 mb-2 rounded-full bg-[#eff6ff] px-3 py-1 text-sm font-medium text-[#1d4ed8]">
+          <div className="inline-flex items-center gap-2 mb-2 rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
             <Shield className="w-4 h-4" />
             Permission Management
           </div>
@@ -114,7 +114,7 @@ export default function PermissionManagement() {
                 onClick={() => handleRoleChange(role.name)}
                 className={`w-full text-left px-4 py-3 rounded-2xl transition ${
                   selectedRole?.name === role.name
-                    ? 'bg-[#1a56db] text-white shadow-sm'
+                    ? 'bg-primary text-primary-foreground shadow-sm'
                     : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
                 }`}
               >
@@ -145,7 +145,7 @@ export default function PermissionManagement() {
                 onClick={() => togglePermission(permission)}
                 className={`flex items-center justify-between w-full rounded-2xl border px-4 py-3 text-left transition ${
                   assignedPermissions.includes(permission)
-                    ? 'border-[#1a56db] bg-[#eff6ff] text-[#1a56db]'
+                    ? 'border-primary bg-primary/10 text-primary'
                     : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'
                 }`}
               >
@@ -163,7 +163,7 @@ export default function PermissionManagement() {
               type="button"
               onClick={handleSave}
               disabled={saving || !selectedRole}
-              className="inline-flex items-center justify-center rounded-2xl bg-[#1a56db] px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center justify-center rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {saving ? 'Saving...' : 'Save Role Defaults'}
             </button>

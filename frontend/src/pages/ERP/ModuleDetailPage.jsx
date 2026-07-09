@@ -20,7 +20,7 @@ export default function ModuleDetailPage({ title, store, backPath, fields, secti
   return (
     <div className="space-y-5 pb-10">
       <div>
-        <Link to={backPath} className="text-sm font-medium text-[#1a56db] hover:underline">Back to list</Link>
+        <Link to={backPath} className="text-sm font-medium text-primary hover:underline">Back to list</Link>
         <h1 className="mt-2 text-2xl font-bold text-gray-900">{title(selected)}</h1>
       </div>
 

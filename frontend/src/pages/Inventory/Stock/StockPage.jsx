@@ -92,7 +92,7 @@ export default function StockPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search stock..."
-          className="w-full rounded-md border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm focus:border-[#1a56db] focus:outline-none focus:ring-1 focus:ring-[#1a56db]"
+          className="w-full rounded-md border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
         />
       </div>
 

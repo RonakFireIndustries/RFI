@@ -81,7 +81,7 @@ export default function DocumentUploadModal({ employeeId, document = null, onClo
               required
               value={documentType}
               onChange={(e) => setDocumentType(e.target.value)}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[#1a56db] focus:ring-1 focus:ring-[#1a56db]"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-ring focus:ring-1 focus:ring-ring"
             >
               <option value="">Select Type</option>
               {DOCUMENT_TYPES.map(type => (
@@ -99,7 +99,7 @@ export default function DocumentUploadModal({ employeeId, document = null, onClo
               accept=".pdf,.jpg,.jpeg,.png,.webp"
               onChange={(e) => setFile(e.target.files[0])}
               required={!document}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[#1a56db] focus:ring-1 focus:ring-[#1a56db]"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-ring focus:ring-1 focus:ring-ring"
             />
             <p className="text-xs text-gray-500 mt-1">Max 10MB. Allowed: PDF, JPG, PNG, WEBP</p>
           </div>
@@ -110,7 +110,7 @@ export default function DocumentUploadModal({ employeeId, document = null, onClo
               type="date"
               value={expiryDate}
               onChange={(e) => setExpiryDate(e.target.value)}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[#1a56db] focus:ring-1 focus:ring-[#1a56db]"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-ring focus:ring-1 focus:ring-ring"
             />
           </div>
 
@@ -120,13 +120,13 @@ export default function DocumentUploadModal({ employeeId, document = null, onClo
               value={remarks}
               onChange={(e) => setRemarks(e.target.value)}
               rows="2"
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[#1a56db] focus:ring-1 focus:ring-[#1a56db]"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-ring focus:ring-1 focus:ring-ring"
             />
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border rounded-md">Cancel</button>
-            <button type="submit" disabled={loading} className="px-4 py-2 text-sm font-semibold text-white bg-[#1a56db] hover:bg-blue-700 rounded-md disabled:opacity-50">
+            <button type="submit" disabled={loading} className="px-4 py-2 text-sm font-semibold text-white bg-primary hover:bg-primary/90 rounded-md disabled:opacity-50">
               {loading ? 'Saving...' : 'Save'}
             </button>
           </div>

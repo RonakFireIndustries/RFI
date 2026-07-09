@@ -75,7 +75,7 @@ export default function InvoiceList() {
         <div className="flex flex-wrap gap-2">
           <Link
             to="/dashboard/invoices/create"
-            className="inline-flex items-center px-4 py-2 bg-[#1a56db] hover:bg-[#1e40af] text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
+            className="inline-flex items-center px-4 py-2 bg-primary hover:bg-primary/90 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
           >
             <Plus className="w-4 h-4 mr-2" />
             Create Invoice
@@ -124,7 +124,7 @@ export default function InvoiceList() {
             <input
               type="text"
               placeholder="Search by invoice # or customer..."
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-[#1a56db] focus:border-[#1a56db] text-sm"
+              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-ring focus:border-ring text-sm"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -153,7 +153,7 @@ export default function InvoiceList() {
               {loading ? (
                 <tr>
                   <td colSpan="6" className="px-6 py-12 text-center">
-                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#1a56db]"></div>
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary/30"></div>
                     <p className="mt-2 text-sm text-gray-500">Loading invoices...</p>
                   </td>
                 </tr>
@@ -167,7 +167,7 @@ export default function InvoiceList() {
                 filteredInvoices.map((invoice) => (
                   <tr key={invoice.id} className="hover:bg-gray-50 transition-colors group">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <Link to={`/dashboard/invoices/${invoice.id}`} className="font-bold text-[#1a56db] hover:underline">
+                      <Link to={`/dashboard/invoices/${invoice.id}`} className="font-bold text-primary hover:underline">
                         {invoice.invoice_number}
                       </Link>
                     </td>

@@ -56,17 +56,17 @@ export default function DashboardRenderer() {
     <div className="space-y-6 pb-12">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{dashboardInfo.title}</h1>
-          <p className="text-sm text-gray-500">{dashboardInfo.subtitle}</p>
+          <h1 className="text-2xl font-bold text-foreground">{dashboardInfo.title}</h1>
+          <p className="text-sm text-muted-foreground">{dashboardInfo.subtitle}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button className="inline-flex items-center px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+          <button className="inline-flex items-center px-3 py-2 bg-card border border-input rounded-md text-sm font-medium text-foreground hover:bg-muted">
             <Download className="w-4 h-4 mr-2" />
             Export Report
           </button>
           <button
             onClick={() => navigate('/dashboard/sales')}
-            className="inline-flex items-center px-3 py-2 bg-[#1a56db] text-white rounded-md text-sm font-medium hover:bg-blue-700"
+            className="inline-flex items-center px-3 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90"
           >
             <Plus className="w-4 h-4 mr-2" />
             New Transaction
@@ -96,7 +96,7 @@ export default function DashboardRenderer() {
 
       {quick_actions?.length > 0 && <DashboardQuickActions quickActions={quick_actions} />}
 
-      <div className="text-center text-xs text-gray-400 font-medium tracking-wider mt-12 mb-4">
+      <div className="text-center text-xs text-muted-foreground font-medium tracking-wider mt-12 mb-4">
         &copy; 2024 NEXUS INTELLIGENCE SYSTEMS &bull; PLATFORM V4.2.0
       </div>
     </div>

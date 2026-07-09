@@ -136,7 +136,7 @@ export default function ModuleListPage({
           <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
           <p className="mt-1 text-sm text-gray-500">{description}</p>
         </div>
-        <button type="button" onClick={() => openModal()} className="inline-flex items-center justify-center gap-2 rounded-md bg-[#1a56db] px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+        <button type="button" onClick={() => openModal()} className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90">
           <Plus className="h-4 w-4" />
           Add
         </button>
@@ -148,7 +148,7 @@ export default function ModuleListPage({
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder={searchPlaceholder}
-          className="w-full rounded-md border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm focus:border-[#1a56db] focus:outline-none focus:ring-1 focus:ring-[#1a56db]"
+          className="w-full rounded-md border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
         />
       </div>
 
@@ -173,7 +173,7 @@ export default function ModuleListPage({
               {fields.map((field) => 
                 field.type === 'heading' ? (
                   <div key={field.label} className="col-span-full border-b border-gray-200 pb-2 pt-6">
-                    <h3 className="text-sm font-semibold uppercase tracking-wider text-[#1a56db]">{field.label}</h3>
+                    <h3 className="text-sm font-semibold uppercase tracking-wider text-primary">{field.label}</h3>
                   </div>
                 ) : (
                 <label key={field.name} className={field.fullWidth ? 'sm:col-span-2' : ''}>
@@ -183,7 +183,7 @@ export default function ModuleListPage({
                       required={field.required}
                       value={formData[field.name] ?? ''}
                       onChange={(event) => setFormData((current) => ({ ...current, [field.name]: event.target.value }))}
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[#1a56db] focus:outline-none focus:ring-1 focus:ring-[#1a56db]"
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
                     >
                       <option value="">{field.placeholder || `Select ${field.label}`}</option>
                       {(lookups[field.optionsKey] || field.options || []).map((option, index) => (
@@ -198,7 +198,7 @@ export default function ModuleListPage({
                       type="file"
                       accept={field.accept}
                       onChange={(event) => setFormData((current) => ({ ...current, [field.name]: event.target.files[0] }))}
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[#1a56db] focus:outline-none focus:ring-1 focus:ring-[#1a56db]"
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   ) : (
                     <input
@@ -207,7 +207,7 @@ export default function ModuleListPage({
                       step={field.step}
                       value={formData[field.name] ?? ''}
                       onChange={(event) => setFormData((current) => ({ ...current, [field.name]: event.target.value }))}
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[#1a56db] focus:outline-none focus:ring-1 focus:ring-[#1a56db]"
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   )}
                 </label>
@@ -216,7 +216,7 @@ export default function ModuleListPage({
               </div>
               <div className="flex shrink-0 justify-end gap-3 border-t border-gray-100 bg-gray-50 p-4 rounded-b-lg">
                 <button type="button" onClick={closeModal} className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
-                <button type="submit" className="rounded-md bg-[#1a56db] px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">Save</button>
+                <button type="submit" className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90">Save</button>
               </div>
             </form>
           </div>

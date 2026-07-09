@@ -50,7 +50,7 @@ export default function InvoicePreview() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1a56db]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary/30"></div>
       </div>
     );
   }
@@ -60,7 +60,7 @@ export default function InvoicePreview() {
       <div className="text-center py-20">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Invoice Not Found</h2>
         <p className="text-gray-500 mb-6">The invoice you are looking for does not exist or has been deleted.</p>
-        <button onClick={() => navigate('/dashboard/invoices')} className="text-[#1a56db] hover:underline font-medium">
+        <button onClick={() => navigate('/dashboard/invoices')} className="text-primary hover:underline font-medium">
           Return to Invoices
         </button>
       </div>
@@ -92,7 +92,7 @@ export default function InvoicePreview() {
           <button 
             onClick={handleDownloadPDF}
             disabled={downloading}
-            className="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-2 bg-[#1a56db] hover:bg-[#1e40af] text-white text-sm font-medium rounded-lg transition-colors shadow-sm disabled:opacity-70"
+            className="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-2 bg-primary hover:bg-primary/90 text-white text-sm font-medium rounded-lg transition-colors shadow-sm disabled:opacity-70"
           >
             {downloading ? <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <Download className="w-4 h-4 mr-2" />}
             {downloading ? 'Downloading...' : 'Download PDF'}
@@ -107,7 +107,7 @@ export default function InvoicePreview() {
           {/* Header */}
           <div className="flex justify-between items-start border-b-2 border-gray-100 pb-8 mb-8">
             <div>
-              <h2 className="text-3xl font-black text-[#1a56db] tracking-tighter">RFI ERP</h2>
+              <h2 className="text-3xl font-black text-primary tracking-tighter">RFI ERP</h2>
               <div className="mt-4 text-gray-500 text-sm">
               </div>
             </div>
@@ -222,7 +222,7 @@ export default function InvoicePreview() {
   
                 <div className="pt-4 mt-4 border-t border-gray-200 flex justify-between items-center">
                   <span className="font-bold text-gray-900">Grand Total</span>
-                  <span className="font-black text-[#1a56db] text-xl">
+                  <span className="font-black text-primary text-xl">
                     ₹{parseFloat(invoice.grand_total).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                   </span>
                 </div>

@@ -109,7 +109,7 @@ export default function ProductSelect({ products, value, onChange, placeholder =
         onClick={() => updatePosition()}
         onBlur={handleBlur}
         placeholder={placeholder}
-        className="w-full bg-transparent border-0 border-b border-gray-200 focus:ring-0 focus:border-[#1a56db] font-semibold text-gray-900 p-0 pb-1"
+        className="w-full bg-transparent border-0 border-b border-border focus:ring-0 focus:border-primary font-semibold text-foreground p-0 pb-1"
         autoComplete="off"
       />
       {open && createPortal(

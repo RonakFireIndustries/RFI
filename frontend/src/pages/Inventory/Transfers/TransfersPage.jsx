@@ -78,14 +78,14 @@ export default function TransfersPage() {
           <h1 className="text-2xl font-bold text-gray-900">Stock Transfers</h1>
           <p className="mt-1 text-sm text-gray-500">Transfer stock between locations</p>
         </div>
-        <button onClick={() => setIsModalOpen(true)} className="inline-flex items-center gap-2 rounded-md bg-[#1a56db] px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+        <button onClick={() => setIsModalOpen(true)} className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90">
           <Plus className="h-4 w-4" /> New Transfer
         </button>
       </div>
 
       <div className="relative max-w-md">
         <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search transfers..." className="w-full rounded-md border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm focus:border-[#1a56db] focus:outline-none focus:ring-1 focus:ring-[#1a56db]" />
+        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search transfers..." className="w-full rounded-md border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring" />
       </div>
 
       {loading ? (
@@ -136,7 +136,7 @@ export default function TransfersPage() {
               </div>
               <div className="flex justify-end gap-3">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Cancel</button>
-                <button type="submit" disabled={submitting} className="rounded-md bg-[#1a56db] px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
+                <button type="submit" disabled={submitting} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50">
                   {submitting ? 'Processing...' : 'Create Transfer'}
                 </button>
               </div>

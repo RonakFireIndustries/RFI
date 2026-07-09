@@ -196,7 +196,7 @@ export default function LeaveApprovalPage() {
                 <textarea
                   value={comments}
                   onChange={(e) => setComments(e.target.value)}
-                  className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-[#1a56db] focus:border-[#1a56db]"
+                  className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-ring focus:border-ring"
                   rows="3"
                   placeholder="Enter approval or rejection comments..."
                 />

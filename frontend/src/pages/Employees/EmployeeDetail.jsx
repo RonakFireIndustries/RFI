@@ -119,11 +119,11 @@ export default function EmployeeDetail() {
     {
       title: 'Uploaded Documents',
       fields: [
-        { label: 'Profile Photo', render: (e) => e.photo_path ? <a href={`${STORAGE_URL}/${e.photo_path}`} target="_blank" rel="noopener noreferrer" className="text-[#1a56db] hover:underline font-semibold flex items-center gap-1">View Photo</a> : '-' },
-        { label: 'Resume', render: (e) => e.resume_path ? <a href={`${STORAGE_URL}/${e.resume_path}`} target="_blank" rel="noopener noreferrer" className="text-[#1a56db] hover:underline font-semibold flex items-center gap-1">View Resume</a> : '-' },
-        { label: 'Aadhaar Card', render: (e) => e.aadhaar_path ? <a href={`${STORAGE_URL}/${e.aadhaar_path}`} target="_blank" rel="noopener noreferrer" className="text-[#1a56db] hover:underline font-semibold flex items-center gap-1">View Aadhaar</a> : '-' },
-        { label: 'PAN Card', render: (e) => e.pan_path ? <a href={`${STORAGE_URL}/${e.pan_path}`} target="_blank" rel="noopener noreferrer" className="text-[#1a56db] hover:underline font-semibold flex items-center gap-1">View PAN</a> : '-' },
-        { label: 'Offer Letter', render: (e) => e.offer_letter_path ? <a href={`${STORAGE_URL}/${e.offer_letter_path}`} target="_blank" rel="noopener noreferrer" className="text-[#1a56db] hover:underline font-semibold flex items-center gap-1">View Offer Letter</a> : '-' },
+        { label: 'Profile Photo', render: (e) => e.photo_path ? <a href={`${STORAGE_URL}/${e.photo_path}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-semibold flex items-center gap-1">View Photo</a> : '-' },
+        { label: 'Resume', render: (e) => e.resume_path ? <a href={`${STORAGE_URL}/${e.resume_path}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-semibold flex items-center gap-1">View Resume</a> : '-' },
+        { label: 'Aadhaar Card', render: (e) => e.aadhaar_path ? <a href={`${STORAGE_URL}/${e.aadhaar_path}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-semibold flex items-center gap-1">View Aadhaar</a> : '-' },
+        { label: 'PAN Card', render: (e) => e.pan_path ? <a href={`${STORAGE_URL}/${e.pan_path}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-semibold flex items-center gap-1">View PAN</a> : '-' },
+        { label: 'Offer Letter', render: (e) => e.offer_letter_path ? <a href={`${STORAGE_URL}/${e.offer_letter_path}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-semibold flex items-center gap-1">View Offer Letter</a> : '-' },
       ]
     }
   ];
@@ -211,7 +211,7 @@ export default function EmployeeDetail() {
   return (
     <div className="space-y-5 pb-10">
       <div>
-        <Link to="/dashboard/employees" className="text-sm font-medium text-[#1a56db] hover:underline">Back to list</Link>
+        <Link to="/dashboard/employees" className="text-sm font-medium text-primary hover:underline">Back to list</Link>
         <h1 className="mt-2 text-2xl font-bold text-gray-900">{title}</h1>
       </div>
 
@@ -219,43 +219,43 @@ export default function EmployeeDetail() {
         <nav className="-mb-px flex space-x-8">
           <button
             onClick={() => setActiveTab('profile')}
-            className={`whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'profile' ? 'border-[#1a56db] text-[#1a56db]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+            className={`whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'profile' ? 'border-primary/30 text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
           >
             Profile Overview
           </button>
           <button
             onClick={() => setActiveTab('sites')}
-            className={`whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'sites' ? 'border-[#1a56db] text-[#1a56db]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+            className={`whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'sites' ? 'border-primary/30 text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
           >
             Site Allocation & History
           </button>
           <button
             onClick={() => setActiveTab('documents')}
-            className={`whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'documents' ? 'border-[#1a56db] text-[#1a56db]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+            className={`whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'documents' ? 'border-primary/30 text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
           >
             Other Documents
           </button>
           <button
             onClick={() => setActiveTab('attendance')}
-            className={`whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'attendance' ? 'border-[#1a56db] text-[#1a56db]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+            className={`whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'attendance' ? 'border-primary/30 text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
           >
             Attendance
           </button>
           <button
             onClick={() => setActiveTab('history')}
-            className={`whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'history' ? 'border-[#1a56db] text-[#1a56db]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+            className={`whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'history' ? 'border-primary/30 text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
           >
             Document History
           </button>
           <button
             onClick={() => setActiveTab('daily_reports')}
-            className={`whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'daily_reports' ? 'border-[#1a56db] text-[#1a56db]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+            className={`whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'daily_reports' ? 'border-primary/30 text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
           >
             Daily Reports
           </button>
           <button
             onClick={() => setActiveTab('leave')}
-            className={`whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'leave' ? 'border-[#1a56db] text-[#1a56db]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+            className={`whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'leave' ? 'border-primary/30 text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
           >
             Leave
           </button>
@@ -308,7 +308,7 @@ export default function EmployeeDetail() {
                   setErrors({});
                   setIsAssignModalOpen(true);
                 }}
-                className="flex items-center text-xs font-bold bg-[#1a56db] text-white px-3 py-1.5 rounded-lg hover:bg-[#1546b5] transition-colors"
+                className="flex items-center text-xs font-bold bg-primary text-white px-3 py-1.5 rounded-lg hover:bg-primary/90 transition-colors"
               >
                 <Plus className="w-3.5 h-3.5 mr-1" />
                 Assign to Site
@@ -534,7 +534,7 @@ export default function EmployeeDetail() {
               <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wider">Daily Progress Reports</h3>
               <Link 
                 to={`/dashboard/daily-reports/new`}
-                className="flex items-center text-xs font-bold bg-[#1a56db] text-white px-3 py-1.5 rounded-lg hover:bg-[#1546b5] transition-colors"
+                className="flex items-center text-xs font-bold bg-primary text-white px-3 py-1.5 rounded-lg hover:bg-primary/90 transition-colors"
               >
                 <Plus className="w-3.5 h-3.5 mr-1" />
                 Add Report
@@ -677,7 +677,7 @@ export default function EmployeeDetail() {
                 </button>
                 <button 
                   type="submit" 
-                  className="px-4 py-2 bg-[#1a56db] text-white rounded-lg text-xs hover:bg-[#1546b5] font-semibold"
+                  className="px-4 py-2 bg-primary text-white rounded-lg text-xs hover:bg-primary/90 font-semibold"
                 >
                   Assign Site
                 </button>
@@ -755,7 +755,7 @@ export default function EmployeeDetail() {
                 </button>
                 <button 
                   type="submit" 
-                  className="px-4 py-2 bg-[#1a56db] text-white rounded-lg text-xs hover:bg-[#1546b5] font-semibold"
+                  className="px-4 py-2 bg-primary text-white rounded-lg text-xs hover:bg-primary/90 font-semibold"
                 >
                   Confirm Transfer
                 </button>

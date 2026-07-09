@@ -224,7 +224,7 @@ export default function SalesOrdersPage() {
           </button>
           <button 
             onClick={() => setIsModalOpen(true)}
-            className="inline-flex items-center px-4 py-2 bg-[#1a56db] hover:bg-[#1e40af] text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
+            className="inline-flex items-center px-4 py-2 bg-primary hover:bg-primary/90 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
           >
             <Plus className="w-4 h-4 mr-2" />
             New Sales Order
@@ -276,7 +276,7 @@ export default function SalesOrdersPage() {
                 onClick={() => setActiveTab(tab)}
                 className={`whitespace-nowrap px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === tab
-                    ? 'border-[#1a56db] text-[#1a56db]'
+                    ? 'border-primary/30 text-primary'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
@@ -292,7 +292,7 @@ export default function SalesOrdersPage() {
                 placeholder="Search SO #..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 pr-3 py-1.5 bg-white border border-gray-300 rounded-md text-sm focus:ring-[#1a56db] focus:border-[#1a56db] w-40"
+                className="pl-9 pr-3 py-1.5 bg-white border border-gray-300 rounded-md text-sm focus:ring-ring focus:border-ring w-40"
               />
             </div>
             <button className="inline-flex items-center px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-md transition-colors">
@@ -324,7 +324,7 @@ export default function SalesOrdersPage() {
               {loading ? (
                 <tr>
                   <td colSpan="7" className="px-6 py-12 text-center">
-                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#1a56db]"></div>
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary/30"></div>
                     <p className="mt-2 text-sm text-gray-500">Loading sales orders...</p>
                   </td>
                 </tr>
@@ -373,7 +373,7 @@ export default function SalesOrdersPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
                         onClick={() => navigate(`/dashboard/sales/${order.id}`)}
-                        className="text-gray-400 hover:text-[#1a56db] mr-3"
+                        className="text-gray-400 hover:text-primary mr-3"
                         title="Preview Order"
                       >
                         <Eye className="w-5 h-5" />
@@ -428,7 +428,7 @@ export default function SalesOrdersPage() {
                   onClick={() => setCurrentPage(page)}
                   className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
                     currentPage === page
-                      ? 'bg-[#1a56db] text-white'
+                      ? 'bg-primary text-white'
                       : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                   }`}
                 >
@@ -456,7 +456,7 @@ export default function SalesOrdersPage() {
             {/* Modal Header */}
             <div className="bg-white px-6 py-4 border-b border-gray-200 flex justify-between items-center">
               <div className="flex items-center text-sm font-semibold text-gray-500 uppercase tracking-wider">
-                <button onClick={() => setIsModalOpen(false)} className="text-[#1a56db] hover:underline mr-2">&larr; SALES ORDERS</button>
+                <button onClick={() => setIsModalOpen(false)} className="text-primary hover:underline mr-2">&larr; SALES ORDERS</button>
                 / NEW
               </div>
               <div className="flex items-center space-x-3">
@@ -466,7 +466,7 @@ export default function SalesOrdersPage() {
                 </span>
                 <button 
                   onClick={handleCreateSO}
-                  className="inline-flex items-center px-6 py-2 bg-[#1a56db] hover:bg-[#1e40af] text-white text-sm font-bold rounded-lg shadow-sm transition-colors"
+                  className="inline-flex items-center px-6 py-2 bg-primary hover:bg-primary/90 text-white text-sm font-bold rounded-lg shadow-sm transition-colors"
                 >
                   Submit for Approval
                 </button>
@@ -484,14 +484,14 @@ export default function SalesOrdersPage() {
                   {/* Customer Details Card */}
                   <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                     <h2 className="flex items-center text-lg font-bold text-gray-900 mb-6">
-                      <FileText className="w-5 h-5 text-[#1a56db] mr-2" />
+                      <FileText className="w-5 h-5 text-primary mr-2" />
                       Customer Details
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-sm font-medium text-gray-600 mb-1">Select Customer</label>
                         <select 
-                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#1a56db] focus:border-transparent transition-all"
+                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
                           value={newOrder.customer_id}
                           onChange={(e) => setNewOrder({...newOrder, customer_id: e.target.value})}
                           required
@@ -504,7 +504,7 @@ export default function SalesOrdersPage() {
                         <label className="block text-sm font-medium text-gray-600 mb-1">Order Date</label>
                         <input 
                           type="date"
-                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#1a56db] focus:border-transparent transition-all"
+                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
                           defaultValue={new Date().toISOString().split('T')[0]}
                         />
                       </div>
@@ -512,13 +512,13 @@ export default function SalesOrdersPage() {
                         <label className="block text-sm font-medium text-gray-600 mb-1">Expected Delivery</label>
                         <input 
                           type="date"
-                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#1a56db] focus:border-transparent transition-all"
+                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-600 mb-1">GST Type</label>
                         <select 
-                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#1a56db] focus:border-transparent transition-all"
+                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
                           value={newOrder.gst_type}
                           onChange={(e) => setNewOrder({...newOrder, gst_type: e.target.value})}
                         >
@@ -532,7 +532,7 @@ export default function SalesOrdersPage() {
                           type="number"
                           step="0.01"
                           min="0"
-                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#1a56db] focus:border-transparent transition-all"
+                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
                           value={newOrder.shipping_cost}
                           onChange={(e) => setNewOrder({...newOrder, shipping_cost: e.target.value})}
                         />
@@ -544,13 +544,13 @@ export default function SalesOrdersPage() {
                   <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                     <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                       <h2 className="flex items-center text-lg font-bold text-gray-900">
-                        <List className="w-5 h-5 text-[#1a56db] mr-2" />
+                        <List className="w-5 h-5 text-primary mr-2" />
                         Line Items
                       </h2>
                       <button 
                         type="button"
                         onClick={() => setNewOrder({...newOrder, items: [...newOrder.items, { product_id: '', custom_product_name: '', quantity: 1, unit_price: 0, gst_rate: 18, hsn_code: '' }]})}
-                        className="flex items-center text-[#1a56db] font-semibold text-sm hover:text-[#1e40af]"
+                        className="flex items-center text-primary font-semibold text-sm hover:text-primary"
                       >
                         <Plus className="w-4 h-4 mr-1" /> Add New Product
                       </button>
@@ -599,7 +599,7 @@ export default function SalesOrdersPage() {
                                 <input
                                   type="number"
                                   min="1"
-                                  className="w-full text-center bg-transparent border-0 border-b border-gray-200 focus:ring-0 focus:border-[#1a56db] p-0 pb-1"
+                                  className="w-full text-center bg-transparent border-0 border-b border-gray-200 focus:ring-0 focus:border-primary/30 p-0 pb-1"
                                   value={item.quantity}
                                   onChange={(e) => {
                                     const items = [...newOrder.items];
@@ -614,7 +614,7 @@ export default function SalesOrdersPage() {
                                   type="number"
                                   step="0.01"
                                   min="0"
-                                  className="w-full text-right bg-transparent border-0 border-b border-gray-200 focus:ring-0 focus:border-[#1a56db] p-0 pb-1"
+                                  className="w-full text-right bg-transparent border-0 border-b border-gray-200 focus:ring-0 focus:border-primary/30 p-0 pb-1"
                                   value={item.unit_price}
                                   onChange={(e) => {
                                     const items = [...newOrder.items];
@@ -627,7 +627,7 @@ export default function SalesOrdersPage() {
                               <td className="p-4">
                                 <input
                                   type="text"
-                                  className="w-full text-center bg-transparent border-0 border-b border-gray-200 focus:ring-0 focus:border-[#1a56db] p-0 pb-1 text-xs font-mono"
+                                  className="w-full text-center bg-transparent border-0 border-b border-gray-200 focus:ring-0 focus:border-primary/30 p-0 pb-1 text-xs font-mono"
                                   value={item.hsn_code}
                                   onChange={(e) => {
                                     const items = [...newOrder.items];
@@ -639,7 +639,7 @@ export default function SalesOrdersPage() {
                               </td>
                               <td className="p-4">
                                 <select
-                                  className="w-full bg-transparent border-0 border-b border-gray-200 focus:ring-0 focus:border-[#1a56db] p-0 pb-1 text-center font-semibold"
+                                  className="w-full bg-transparent border-0 border-b border-gray-200 focus:ring-0 focus:border-primary/30 p-0 pb-1 text-center font-semibold"
                                   value={item.gst_rate}
                                   onChange={(e) => {
                                     const items = [...newOrder.items];
@@ -680,7 +680,7 @@ export default function SalesOrdersPage() {
                 {/* Right Column */}
                 <div className="w-full lg:w-80 xl:w-96 space-y-6">
                   {/* Blue Summary Card */}
-                  <div className="bg-[#1a56db] rounded-xl shadow-md p-6 text-white relative overflow-hidden">
+                  <div className="bg-primary rounded-xl shadow-md p-6 text-white relative overflow-hidden">
                     <div className="absolute right-0 top-0 opacity-10 p-4">
                       <FileText className="w-24 h-24" />
                     </div>
@@ -720,7 +720,7 @@ export default function SalesOrdersPage() {
                         <FileText className="w-4 h-4 text-gray-400 mr-2" /> Internal Remarks
                       </h3>
                       <textarea 
-                        className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm focus:ring-[#1a56db] focus:border-[#1a56db]"
+                        className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm focus:ring-ring focus:border-ring"
                         rows="3"
                         placeholder="Add any internal processing notes..."
                       ></textarea>
@@ -730,7 +730,7 @@ export default function SalesOrdersPage() {
                       <h3 className="flex items-center text-sm font-bold text-gray-800 mb-3">
                         <FileText className="w-4 h-4 text-gray-400 mr-2" /> Terms & Conditions
                       </h3>
-                      <select className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm focus:ring-[#1a56db] focus:border-[#1a56db]">
+                      <select className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm focus:ring-ring focus:border-ring">
                         <option>Standard Net 30</option>
                         <option>Net 60</option>
                         <option>Due on Receipt</option>
@@ -745,7 +745,7 @@ export default function SalesOrdersPage() {
                     <button 
                       type="button"
                       onClick={(e) => handleCreateSO(e, 'Draft')}
-                      className="w-full px-4 py-3 bg-white border-2 border-gray-200 text-[#1a56db] font-bold rounded-lg hover:bg-gray-50 transition-colors"
+                      className="w-full px-4 py-3 bg-white border-2 border-gray-200 text-primary font-bold rounded-lg hover:bg-gray-50 transition-colors"
                     >
                       Save as Draft
                     </button>

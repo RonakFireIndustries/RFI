@@ -111,7 +111,7 @@ export default function StockRequestsPage() {
             <option value="issued">Issued</option>
             <option value="received">Received</option>
           </select>
-          <button onClick={() => setIsModalOpen(true)} className="inline-flex items-center gap-2 rounded-md bg-[#1a56db] px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+          <button onClick={() => setIsModalOpen(true)} className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90">
             <Plus className="h-4 w-4" /> New Request
           </button>
         </div>
@@ -119,7 +119,7 @@ export default function StockRequestsPage() {
 
       <div className="relative max-w-md">
         <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search requests..." className="w-full rounded-md border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm focus:border-[#1a56db] focus:outline-none focus:ring-1 focus:ring-[#1a56db]" />
+        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search requests..." className="w-full rounded-md border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring" />
       </div>
 
       {loading ? (
@@ -176,7 +176,7 @@ export default function StockRequestsPage() {
               </div>
               <div className="flex justify-end gap-3">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Cancel</button>
-                <button type="submit" className="rounded-md bg-[#1a56db] px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">Submit Request</button>
+                <button type="submit" className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90">Submit Request</button>
               </div>
             </form>
           </div>

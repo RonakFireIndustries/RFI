@@ -181,7 +181,7 @@ export default function DashboardLayout() {
   };
 
     return (
-    <div className="min-h-screen bg-gray-50 flex font-sans text-gray-800">
+    <div className="min-h-screen bg-background flex font-sans text-foreground">
       {/* Mobile backdrop */}
       {isMobileMenuOpen && (
         <div
@@ -192,17 +192,17 @@ export default function DashboardLayout() {
 
       {/* Sticky Sidebar */}
       <div className={`
-        fixed left-0 top-0 h-screen bg-white border-r border-gray-200 flex flex-col z-50 transition-all duration-300
+        fixed left-0 top-0 h-screen bg-sidebar border-r border-border flex flex-col z-50 transition-all duration-300
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
         md:translate-x-0
         ${isSidebarOpen ? 'w-64' : 'w-20'}
         print:hidden
       `}>
-        <div className="h-16 flex items-center justify-between px-6 border-b border-gray-200">
+        <div className="h-16 flex items-center justify-between px-6 border-b border-border">
           {isSidebarOpen ? (
             <div className="flex items-center gap-3 min-w-0">
               <img src="/logo.png" alt="RFI" className="h-10 w-auto max-w-full object-contain shrink-0" />
-              <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wider leading-tight">Management Suite</span>
+              <span className="text-[10px] text-sidebar-muted font-medium uppercase tracking-wider leading-tight">Management Suite</span>
             </div>
           ) : (
             <img src="/logo.png" alt="RFI" className="max-h-8 max-w-full w-auto h-auto object-contain" />
@@ -215,7 +215,7 @@ export default function DashboardLayout() {
                 setIsSidebarOpen(!isSidebarOpen);
               }
             }}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-sidebar-muted hover:text-sidebar-foreground"
           >
             {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -231,7 +231,7 @@ export default function DashboardLayout() {
               return (
                 <div key={index} className="flex flex-col">
                   {isSidebarOpen && (
-                    <h3 className="px-3 mb-2 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                    <h3 className="px-3 mb-2 text-[11px] font-bold text-sidebar-muted uppercase tracking-wider">
                       {category.title}
                     </h3>
                   )}
@@ -244,11 +244,11 @@ export default function DashboardLayout() {
                             to={item.path}
                             title={!isSidebarOpen ? item.name : ''}
                             className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive
-                              ? 'bg-[#1a56db] text-white'
-                              : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                              ? 'bg-sidebar-active text-sidebar-active-foreground'
+                              : 'text-sidebar-foreground hover:bg-sidebar-hover hover:text-foreground'
                               }`}
                           >
-                            <item.icon className={`w-5 h-5 flex-shrink-0 ${!isSidebarOpen ? '' : 'mr-3'} ${isActive ? 'text-white' : 'text-gray-400'}`} />
+                            <item.icon className={`w-5 h-5 flex-shrink-0 ${!isSidebarOpen ? '' : 'mr-3'} ${isActive ? 'text-sidebar-active-foreground' : 'text-sidebar-muted'}`} />
                             {isSidebarOpen && <span>{item.name}</span>}
                           </Link>
                         </li>
@@ -261,14 +261,14 @@ export default function DashboardLayout() {
           </div>
         </div>
 
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-border">
           {canAccess(['Admin']) && (
             <Link
               to="/dashboard/settings"
               title={!isSidebarOpen ? 'Settings' : ''}
               className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${location.pathname.startsWith('/dashboard/settings')
-                ? 'bg-[#1a56db] text-white'
-                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                ? 'bg-sidebar-active text-sidebar-active-foreground'
+                : 'text-sidebar-foreground hover:bg-sidebar-hover hover:text-foreground'
                 }`}
             >
               <Settings className="w-5 h-5 flex-shrink-0" />
@@ -279,23 +279,23 @@ export default function DashboardLayout() {
             <button
               onClick={handleInstall}
               title={!isSidebarOpen ? 'Install' : ''}
-              className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors w-full"
+              className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-sidebar-foreground hover:bg-sidebar-hover hover:text-foreground transition-colors w-full"
             >
               <Download className="w-5 h-5 flex-shrink-0" />
               {isSidebarOpen && <span className="ml-3">Install</span>}
             </button>
           )}
         </div>
-        <div className="p-4 border-t border-gray-200 bg-gray-50 flex items-center justify-center">
-          <div className="w-8 h-8 rounded-full bg-[#e1effe] text-[#1a56db] flex items-center justify-center font-bold flex-shrink-0">
+        <div className="p-4 border-t border-border bg-background flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold flex-shrink-0">
             {user?.name?.substring(0, 2).toUpperCase() || 'JD'}
           </div>
           {isSidebarOpen && (
             <div className="flex-1 min-w-0 ml-3">
-              <p className="text-sm font-medium text-gray-900 truncate">
+              <p className="text-sm font-medium text-foreground truncate">
                 {user?.name || 'John Doe'}
               </p>
-              <p className="text-xs text-gray-500 truncate">
+              <p className="text-xs text-muted-foreground truncate">
                 {roles?.[0] || 'User'}
               </p>
             </div>
@@ -307,20 +307,20 @@ export default function DashboardLayout() {
       <div className={`flex-1 flex flex-col min-w-0 overflow-hidden transition-all duration-300 ${isSidebarOpen ? 'md:ml-64' : 'md:ml-20'} print:ml-0 print:w-full`}>
         <OfflineBanner />
         {/* Top Navbar */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-6 z-10 sticky top-0 print:hidden">
+        <header className="h-16 bg-header-bg border-b border-header-border flex items-center justify-between px-4 md:px-6 z-10 sticky top-0 print:hidden">
           <div className="flex items-center flex-1 min-w-0">
             <button
               onClick={() => setIsMobileMenuOpen(true)}
-              className="md:hidden mr-2 text-gray-400 hover:text-gray-600 flex-shrink-0"
+              className="md:hidden mr-2 text-muted-foreground hover:text-foreground flex-shrink-0"
             >
               <Menu className="w-5 h-5" />
             </button>
             <div className="w-full max-w-md lg:max-w-2xl relative" ref={searchRef}>
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-gray-400" />
+                <Search className="h-4 w-4 text-muted-foreground" />
               </div>
               <input
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-gray-50 placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-[#1a56db] focus:border-[#1a56db] sm:text-sm transition duration-150 ease-in-out"
+                className="block w-full pl-10 pr-3 py-2 border border-input rounded-md leading-5 bg-muted placeholder-muted-foreground focus:outline-none focus:placeholder-muted-foreground focus:ring-1 focus:ring-ring focus:border-ring sm:text-sm transition duration-150 ease-in-out"
                 placeholder="Search anything (Ctrl+K)"
                 type="search"
                 value={searchQuery}
@@ -334,16 +334,16 @@ export default function DashboardLayout() {
               />
 
               {showResults && searchQuery.length >= 2 && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-md shadow-lg border border-gray-200 overflow-hidden z-50">
+                <div className="absolute top-full left-0 right-0 mt-1 bg-card rounded-md shadow-lg border border-border overflow-hidden z-50">
                   <div className="max-h-96 overflow-y-auto">
                     {isSearching ? (
-                      <div className="p-4 text-center text-sm text-gray-500">Searching...</div>
+                      <div className="p-4 text-center text-sm text-muted-foreground">Searching...</div>
                     ) : searchResults.length > 0 ? (
                       <ul>
                         {searchResults.map((result, idx) => (
                           <li key={`${result.type}-${result.id}-${idx}`}>
                             <button
-                              className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 focus:outline-none focus:bg-gray-50"
+                              className="w-full text-left px-4 py-3 hover:bg-muted border-b border-border last:border-b-0 focus:outline-none focus:bg-muted"
                               onClick={() => {
                                 setShowResults(false);
                                 setSearchQuery('');
@@ -352,10 +352,10 @@ export default function DashboardLayout() {
                             >
                               <div className="flex justify-between items-start">
                                 <div>
-                                  <p className="text-sm font-medium text-gray-900">{result.title}</p>
-                                  <p className="text-xs text-gray-500 mt-0.5">{result.subtitle}</p>
+                                  <p className="text-sm font-medium text-foreground">{result.title}</p>
+                                  <p className="text-xs text-muted-foreground mt-0.5">{result.subtitle}</p>
                                 </div>
-                                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-1 bg-gray-100 text-gray-600 rounded">
+                                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-1 bg-muted text-muted-foreground rounded">
                                   {result.type}
                                 </span>
                               </div>
@@ -364,7 +364,7 @@ export default function DashboardLayout() {
                         ))}
                       </ul>
                     ) : (
-                      <div className="p-4 text-center text-sm text-gray-500">No results found for "{searchQuery}"</div>
+                      <div className="p-4 text-center text-sm text-muted-foreground">No results found for "{searchQuery}"</div>
                     )}
                   </div>
                 </div>
@@ -373,22 +373,22 @@ export default function DashboardLayout() {
           </div>
           <div className="ml-2 md:ml-4 flex items-center space-x-2 md:space-x-4">
 
-            <button className="text-gray-400 hover:text-gray-500">
+            <button className="text-muted-foreground hover:text-foreground">
               <span className="sr-only">View notifications</span>
               <Bell className="h-5 w-5" />
             </button>
-            <button className="text-gray-400 hover:text-gray-500">
+            <button className="text-muted-foreground hover:text-foreground">
               <span className="sr-only">Help</span>
               <HelpCircle className="h-5 w-5" />
             </button>
-            <Link to="/dashboard/user-settings" className="text-gray-400 hover:text-gray-500">
+            <Link to="/dashboard/user-settings" className="text-muted-foreground hover:text-foreground">
               <span className="sr-only">User Settings</span>
               <User className="h-5 w-5" />
             </Link>
-            <div className="relative border-l border-gray-200 pl-4">
+            <div className="relative border-l border-border pl-4">
               <button
                 onClick={logout}
-                className="flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 focus:outline-none"
+                className="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground focus:outline-none"
               >
                 <LogOut className="h-5 w-5 mr-1" />
                 <span className="hidden sm:block">Logout</span>
@@ -398,7 +398,7 @@ export default function DashboardLayout() {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto bg-gray-50/50 p-3 sm:p-4 md:p-6 safe-bottom">
+        <main className="flex-1 overflow-y-auto bg-background p-3 sm:p-4 md:p-6 safe-bottom">
           <div className="max-w-7xl mx-auto">
             <Routes>
               <Route index element={<DashboardRenderer />} />

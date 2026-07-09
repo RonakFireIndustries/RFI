@@ -26,8 +26,8 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-        <p className="text-sm text-gray-500 mt-1">Manage your application preferences and company configuration.</p>
+        <h1 className="text-2xl font-bold text-foreground">Settings</h1>
+        <p className="text-sm text-muted-foreground mt-1">Manage your application preferences and company configuration.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-6">
@@ -42,23 +42,23 @@ export default function SettingsPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`w-full text-left px-4 py-3 rounded-xl transition-colors ${
                   isActive
-                    ? 'bg-blue-50 border border-blue-200'
-                    : 'hover:bg-gray-50 border border-transparent'
+                    ? 'bg-primary/10 border border-primary/30'
+                    : 'hover:bg-muted border border-transparent'
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <div className={`shrink-0 w-9 h-9 rounded-lg flex items-center justify-center ${
-                    isActive ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-500'
+                    isActive ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
                   }`}>
                     <Icon className="w-4 h-4" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-semibold ${isActive ? 'text-blue-700' : 'text-gray-800'}`}>
+                    <p className={`text-sm font-semibold ${isActive ? 'text-primary' : 'text-foreground'}`}>
                       {tab.label}
                     </p>
-                    <p className="text-xs text-gray-400 truncate">{tab.desc}</p>
+                    <p className="text-xs text-muted-foreground truncate">{tab.desc}</p>
                   </div>
-                  <ChevronRight className={`w-4 h-4 shrink-0 ${isActive ? 'text-blue-500' : 'text-gray-300'}`} />
+                  <ChevronRight className={`w-4 h-4 shrink-0 ${isActive ? 'text-primary' : 'text-border'}`} />
                 </div>
               </button>
             );
@@ -68,14 +68,14 @@ export default function SettingsPage() {
         {/* Content */}
         <div>
           {activeTab === 'appearance' && (
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
+            <div className="bg-card rounded-xl border border-border shadow-sm p-6 space-y-6">
               <div>
-                <h2 className="text-lg font-bold text-gray-900">Appearance</h2>
-                <p className="text-sm text-gray-500">Customize how the application looks.</p>
+                <h2 className="text-lg font-bold text-foreground">Appearance</h2>
+                <p className="text-sm text-muted-foreground">Customize how the application looks.</p>
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">Theme</label>
+                <label className="block text-sm font-semibold text-foreground mb-3">Theme</label>
                 <div className="grid grid-cols-2 gap-3">
                   {themeOptions.map(opt => {
                     const Icon = opt.icon;

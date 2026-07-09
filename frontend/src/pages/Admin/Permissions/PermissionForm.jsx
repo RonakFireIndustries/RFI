@@ -54,7 +54,7 @@ export default function PermissionForm() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. module.action"
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[#1a56db] focus:border-[#1a56db] sm:text-sm"
+              className="mt-1 block w-full border border-input rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
               required
             />
           </div>
@@ -70,7 +70,7 @@ export default function PermissionForm() {
             <button
               type="submit"
               disabled={loading}
-              className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#1a56db] hover:bg-[#1e4ebd] focus:outline-none"
+              className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none"
             >
               {loading ? 'Saving...' : 'Save Permission'}
             </button>

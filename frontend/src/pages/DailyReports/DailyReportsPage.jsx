@@ -107,7 +107,7 @@ export default function DailyReportsPage() {
         </div>
         <Link 
           to="/dashboard/daily-reports/new"
-          className="inline-flex items-center justify-center gap-2 rounded-md bg-[#1a56db] px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 shadow-sm"
+          className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 shadow-sm"
         >
           <Plus className="h-4 w-4" />
           Submit Report
@@ -121,14 +121,14 @@ export default function DailyReportsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by employee..."
-            className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm focus:border-[#1a56db] focus:ring-1 focus:ring-[#1a56db]"
+            className="w-full rounded-lg border border-input bg-card py-2 pl-9 pr-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary"
           />
         </div>
         <div className="w-full md:w-64">
           <select 
             value={siteId}
             onChange={(e) => setSiteId(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#1a56db] focus:ring-1 focus:ring-[#1a56db]"
+            className="w-full rounded-lg border border-input px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary"
           >
             <option value="">All Sites</option>
             {sites.map(site => (
@@ -140,7 +140,7 @@ export default function DailyReportsPage() {
           <select 
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#1a56db] focus:ring-1 focus:ring-[#1a56db]"
+            className="w-full rounded-lg border border-input px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary"
           >
             <option value="">All Statuses</option>
             <option value="Draft">Draft</option>

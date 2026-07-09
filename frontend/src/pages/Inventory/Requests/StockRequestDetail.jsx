@@ -43,7 +43,7 @@ export default function StockRequestDetail() {
   return (
     <div className="space-y-5 pb-10">
       <div>
-        <Link to="/dashboard/inventory/requests" className="text-sm font-medium text-[#1a56db] hover:underline">← Back to Requests</Link>
+        <Link to="/dashboard/inventory/requests" className="text-sm font-medium text-primary hover:underline">← Back to Requests</Link>
         <h1 className="mt-2 text-2xl font-bold text-gray-900">Stock Request #{selected.request_number}</h1>
       </div>
 

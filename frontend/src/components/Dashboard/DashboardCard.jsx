@@ -11,9 +11,9 @@ const iconMap = {
 };
 
 const trendColors = {
-  up: 'text-green-600',
-  down: 'text-red-600',
-  neutral: 'text-gray-500',
+  up: 'text-success',
+  down: 'text-destructive-foreground',
+  neutral: 'text-muted-foreground',
 };
 
 const trendIcons = {
@@ -32,21 +32,21 @@ export default function DashboardCard({ card }) {
   return (
     <div
       onClick={() => card.link ? navigate(card.link) : undefined}
-      className={`bg-white rounded-xl shadow-sm border ${isAlert ? 'border-red-200' : 'border-gray-100'} p-6 flex flex-col justify-between relative overflow-hidden ${card.link ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
+      className={`bg-card rounded-xl shadow-sm border ${isAlert ? 'border-destructive/30' : 'border-border'} p-6 flex flex-col justify-between relative overflow-hidden ${card.link ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
     >
       {isAlert && (
-        <div className="absolute top-0 right-0 p-4 opacity-10 text-red-500">
+        <div className="absolute top-0 right-0 p-4 opacity-10 text-destructive">
           <AlertTriangle className="w-16 h-16" />
         </div>
       )}
       <div className="flex justify-between items-start mb-4 relative z-10">
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 truncate">{card.name}</p>
-          <h3 className="text-2xl font-bold text-gray-900">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1 truncate">{card.name}</p>
+          <h3 className="text-2xl font-bold text-foreground">
             {card.prefix}{card.value}
           </h3>
         </div>
-        <div className={`p-2 rounded-lg shrink-0 ml-3 ${isAlert ? 'bg-red-50 text-red-500' : 'bg-blue-50 text-[#1a56db]'}`}>
+        <div className={`p-2 rounded-lg shrink-0 ml-3 ${isAlert ? 'bg-destructive/10 text-destructive' : 'bg-primary/10 text-primary'}`}>
           <Icon className="w-5 h-5" />
         </div>
       </div>
@@ -57,7 +57,7 @@ export default function DashboardCard({ card }) {
               <TrendIcon className="w-3 h-3 mr-1" />
             </span>
           )}
-          <span className={`text-sm ${isAlert ? 'text-red-600 font-semibold' : 'text-gray-500'}`}>
+          <span className={`text-sm ${isAlert ? 'text-destructive font-semibold' : 'text-muted-foreground'}`}>
             {card.subtitle}
           </span>
         </div>

@@ -217,7 +217,7 @@ export default function RoleConfigurationPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: '#F5F6FA' }}>
+    <div className="min-h-screen" className="bg-muted">
       <div className="max-w-7xl mx-auto p-6">
         <div className="flex items-center justify-between mb-6">
           <div>

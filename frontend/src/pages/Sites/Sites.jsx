@@ -300,12 +300,12 @@ export default function Sites() {
       {/* Header section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-[#0B1B36] tracking-tight">Construction Sites</h1>
+          <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Construction Sites</h1>
           <p className="text-gray-500 mt-1">Manage project locations, contact persons, geographic coordinates, and managers.</p>
         </div>
         <button 
           onClick={openAddModal}
-          className="inline-flex items-center justify-center w-full sm:w-auto px-5 py-3 bg-[#1a56db] text-white rounded-xl font-semibold hover:bg-[#1546b5] transition-all shadow-md shadow-blue-200"
+          className="inline-flex items-center justify-center w-full sm:w-auto px-5 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary/90 transition-all shadow-md shadow-blue-200"
         >
           <Plus className="w-5 h-5 mr-2" />
           Add New Site
@@ -834,7 +834,7 @@ export default function Sites() {
                 </button>
                 <button 
                   type="submit"
-                  className="px-5 py-2 bg-[#1a56db] text-white rounded-lg text-sm hover:bg-[#1546b5] transition-colors font-semibold"
+                  className="px-5 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary/90 transition-colors font-semibold"
                 >
                   {editingSite ? 'Save Changes' : 'Create Site'}
                 </button>

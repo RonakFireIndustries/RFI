@@ -28,7 +28,7 @@ export default function RoleList() {
         <h1 className="text-2xl font-bold text-gray-900">Role Management</h1>
         <Link
           to="/dashboard/roles/create"
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#1a56db] hover:bg-[#1e4ebd]"
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary/90"
         >
           <Plus className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
           New Role
@@ -41,7 +41,7 @@ export default function RoleList() {
             <li key={role.id}>
               <div className="px-4 py-4 sm:px-6 flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-medium text-[#1a56db]">{role.name}</h3>
+                  <h3 className="text-lg font-medium text-primary">{role.name}</h3>
                   <div className="mt-1 flex flex-wrap gap-1">
                     {role.permissions?.map((p) => (
                       <span key={p.id} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">

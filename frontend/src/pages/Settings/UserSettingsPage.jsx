@@ -143,7 +143,7 @@ export default function UserSettingsPage() {
               <button
                 type="submit"
                 disabled={profileSaving}
-                className="flex items-center gap-2 px-6 py-2.5 bg-[#2563eb] text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-colors"
               >
                 {profileSaving ? <Loader className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 {profileSaving ? 'Saving...' : 'Save Profile'}
@@ -200,7 +200,7 @@ export default function UserSettingsPage() {
               <button
                 type="submit"
                 disabled={passwordSaving}
-                className="flex items-center gap-2 px-6 py-2.5 bg-[#2563eb] text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-colors"
               >
                 {passwordSaving ? <Loader className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 {passwordSaving ? 'Changing...' : 'Change Password'}
