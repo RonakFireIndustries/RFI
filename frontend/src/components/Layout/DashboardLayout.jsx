@@ -3,7 +3,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useState, useEffect, useRef } from 'react';
 import api from '../../services/api';
 import { 
-  Menu, X, Bell, LogOut, ChevronDown, 
+  Menu, X, LogOut, ChevronDown, 
   Home, Users, Settings, Package, ShoppingCart, 
   FileText, Activity, ShieldAlert, Truck, ChevronLeft,
   ChevronRight, ArrowLeft, ArrowRight, Wallet, Calculator,
@@ -57,6 +57,8 @@ import PayrollDashboardPage from '../../pages/Payroll/PayrollDashboardPage';
 import EmployeePayrollPage from '../../pages/Payroll/EmployeePayrollPage';
 import PayslipPage from '../../pages/Payroll/PayslipPage';
 import Sites from '@/pages/Sites/Sites';
+import NotificationBell from '../Notifications/NotificationBell';
+import NotificationsPage from '../../pages/Notifications/NotificationsPage';
 import ShiftListPage from '../../pages/Attendance/ShiftListPage';
 import DailyReportsPage from '../../pages/DailyReports/DailyReportsPage';
 import DailyReportDetail from '../../pages/DailyReports/DailyReportDetail';
@@ -373,10 +375,7 @@ export default function DashboardLayout() {
           </div>
           <div className="ml-2 md:ml-4 flex items-center space-x-2 md:space-x-4">
 
-            <button className="text-muted-foreground hover:text-foreground">
-              <span className="sr-only">View notifications</span>
-              <Bell className="h-5 w-5" />
-            </button>
+            <NotificationBell />
             <button className="text-muted-foreground hover:text-foreground">
               <span className="sr-only">Help</span>
               <HelpCircle className="h-5 w-5" />
@@ -470,6 +469,7 @@ export default function DashboardLayout() {
               <Route path="permissions-list/:id/edit" element={<PermissionForm />} />
               <Route path="user-access" element={<UserAccess />} />
               <Route path="sites" element={<Sites />} />
+              <Route path="notifications" element={<NotificationsPage />} />
             </Routes>
           </div>
         </main>
