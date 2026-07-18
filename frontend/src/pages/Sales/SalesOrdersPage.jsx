@@ -5,6 +5,8 @@ import {
 } from 'lucide-react';
 import api from '../../services/api';
 import ProductSelect from '../../components/Shared/ProductSelect';
+import LocationPicker from '../../components/Map/LocationPicker';
+import { MapPin } from 'lucide-react';
 
 export default function SalesOrdersPage() {
   const navigate = useNavigate();
@@ -14,7 +16,7 @@ export default function SalesOrdersPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [customers, setCustomers] = useState([]);
   const [products, setProducts] = useState([]);
-  const [newOrder, setNewOrder] = useState({ customer_id: '', gst_type: 'cgst', shipping_cost: 0, items: [{ product_id: '', custom_product_name: '', quantity: 1, unit_price: 0, gst_rate: 18, hsn_code: '' }] });
+  const [newOrder, setNewOrder] = useState({ customer_id: '', gst_type: 'cgst', shipping_cost: 0, delivery_latitude: null, delivery_longitude: null, items: [{ product_id: '', custom_product_name: '', quantity: 1, unit_price: 0, gst_rate: 18, hsn_code: '' }] });
   const [activeTab, setActiveTab] = useState('All Orders');
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 25;
@@ -69,7 +71,7 @@ export default function SalesOrdersPage() {
       await api.post('/sales/orders', { ...newOrder, status });
       setIsModalOpen(false);
       fetchOrders();
-      setNewOrder({ customer_id: '', gst_type: 'cgst', shipping_cost: '0', items: [{ product_id: '', custom_product_name: '', quantity: 1, unit_price: 0, gst_rate: 18, hsn_code: '' }] });
+      setNewOrder({ customer_id: '', gst_type: 'cgst', shipping_cost: '0', delivery_latitude: null, delivery_longitude: null, items: [{ product_id: '', custom_product_name: '', quantity: 1, unit_price: 0, gst_rate: 18, hsn_code: '' }] });
     } catch (error) {
       console.error("Error creating SO:", error);
       const msg = error.response?.data?.message || "Failed to create Sales Order.";
@@ -538,6 +540,27 @@ export default function SalesOrdersPage() {
                         />
                       </div>
                     </div>
+                  </div>
+
+                  {/* Delivery Location Card */}
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <h2 className="flex items-center text-lg font-bold text-gray-900 mb-4">
+                      <MapPin className="w-5 h-5 text-primary mr-2" />
+                      Delivery Location
+                    </h2>
+                    <p className="text-xs text-gray-500 mb-3">Click on the map to set the delivery location for this order.</p>
+                    <LocationPicker
+                      latitude={newOrder.delivery_latitude}
+                      longitude={newOrder.delivery_longitude}
+                      onLocationChange={(lat, lng) => setNewOrder({...newOrder, delivery_latitude: lat, delivery_longitude: lng})}
+                    />
+                    {newOrder.delivery_latitude && newOrder.delivery_longitude && (
+                      <div className="flex items-center justify-between mt-3 text-xs text-gray-500">
+                        <span>Lat: {newOrder.delivery_latitude.toFixed(6)}, Lng: {newOrder.delivery_longitude.toFixed(6)}</span>
+                        <button type="button" onClick={() => setNewOrder({...newOrder, delivery_latitude: null, delivery_longitude: null})}
+                          className="text-red-500 hover:text-red-700 font-medium">Clear</button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Line Items Card */}

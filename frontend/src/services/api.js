@@ -1,8 +1,4 @@
-const API_HOST = import.meta.env.VITE_API_URL || (
-  window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? 'http://localhost:8000'
-    : 'https://rfibackend.ronakfire.com'
-);
+const API_HOST = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export const BASE_URL = `${API_HOST}/api/v1`;
 export const STORAGE_URL = `${API_HOST}/storage`;

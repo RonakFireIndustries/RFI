@@ -122,6 +122,7 @@ Route::prefix('v1')->group(function () {
 
     // Sites / Construction
     Route::apiResource('sites', \App\Http\Controllers\Api\V1\SiteController::class);
+    Route::apiResource('buildings', \App\Http\Controllers\Api\V1\BuildingController::class);
     Route::get('employees/{employee}/sites', [\App\Http\Controllers\Api\V1\EmployeeSiteAssignmentController::class, 'index']);
     Route::get('employees/{employee}/sites/history', [\App\Http\Controllers\Api\V1\EmployeeSiteAssignmentController::class, 'history']);
     Route::post('employees/{employee}/sites', [\App\Http\Controllers\Api\V1\EmployeeSiteAssignmentController::class, 'assign']);
@@ -303,6 +304,25 @@ Route::prefix('v1')->group(function () {
     Route::post('leave-requests/{leave}/approve', [LeaveController::class, 'approve']);
     Route::post('leave-requests/{leave}/reject', [LeaveController::class, 'reject']);
     Route::post('leave-requests/{leave}/cancel', [LeaveController::class, 'cancel']);
+
+    // Notifications
+    Route::get('/notifications/unread-count', [\App\Http\Controllers\Api\V1\NotificationController::class, 'unreadCount']);
+    Route::put('/notifications/read-all', [\App\Http\Controllers\Api\V1\NotificationController::class, 'markAllRead']);
+    Route::get('/notifications', [\App\Http\Controllers\Api\V1\NotificationController::class, 'index']);
+    Route::post('/notifications/send', [\App\Http\Controllers\Api\V1\NotificationController::class, 'send']);
+    Route::put('/notifications/{notification}/read', [\App\Http\Controllers\Api\V1\NotificationController::class, 'markRead']);
+    Route::delete('/notifications/{notification}', [\App\Http\Controllers\Api\V1\NotificationController::class, 'destroy']);
+
+    // Chat
+    Route::get('/chat/channels', [\App\Http\Controllers\Api\V1\ChatController::class, 'channels']);
+    Route::post('/chat/channels', [\App\Http\Controllers\Api\V1\ChatController::class, 'storeChannel']);
+    Route::post('/chat/channels/{channel}/members', [\App\Http\Controllers\Api\V1\ChatController::class, 'addMembers']);
+    Route::delete('/chat/channels/{channel}/members/{userId}', [\App\Http\Controllers\Api\V1\ChatController::class, 'removeMember']);
+    Route::get('/chat/channels/{channel}/messages', [\App\Http\Controllers\Api\V1\ChatController::class, 'messages']);
+    Route::post('/chat/channels/{channel}/messages', [\App\Http\Controllers\Api\V1\ChatController::class, 'sendMessage']);
+    Route::post('/chat/channels/{channel}/read', [\App\Http\Controllers\Api\V1\ChatController::class, 'markRead']);
+    Route::post('/chat/channels/{channel}/typing', [\App\Http\Controllers\Api\V1\ChatController::class, 'typing']);
+    Route::get('/chat/channels/{channel}/members', [\App\Http\Controllers\Api\V1\ChatController::class, 'members']);
 
     // My Leave Requests (employee self-service)
     Route::get('/my-leave-requests', [LeaveController::class, 'myLeaves']);

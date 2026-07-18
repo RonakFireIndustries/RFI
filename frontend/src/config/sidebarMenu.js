@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Users, Calendar, ClipboardList, MapPin, Clock, FileText, Briefcase,
   DollarSign, Layers, Package, Boxes, Warehouse, ShoppingCart, Shield, Settings, Sliders,
-  Ruler, GitCompare, Move3D, FileSpreadsheet, FileClock, FileInput,
+  Ruler, GitCompare, Move3D, FileSpreadsheet, FileClock, FileInput, Building2, MessageSquare,
 } from 'lucide-react';
 
 export const menuCategories = [
@@ -39,6 +39,7 @@ export const menuCategories = [
       { name: 'Departments', path: '/dashboard/departments', icon: Layers, roles: ['Admin', 'HR'] },
       { name: 'Designations', path: '/dashboard/designations', icon: Briefcase, roles: ['Admin', 'HR'] },
       { name: 'Sites', path: '/dashboard/sites', icon: MapPin, roles: ['Admin', 'Manager', 'HR'] },
+      { name: 'Buildings', path: '/dashboard/buildings', icon: Building2, roles: ['Admin', 'Manager', 'HR', 'Sales'] },
     ],
   },
   {
@@ -64,6 +65,12 @@ export const menuCategories = [
       { name: 'Purchases', path: '/dashboard/purchases', icon: ClipboardList, roles: ['Admin', 'Accountant', 'Store Manager'] },
       { name: 'Sales', path: '/dashboard/sales', icon: ClipboardList, roles: ['Admin', 'Accountant', 'Store Manager'] },
       { name: 'Invoices', path: '/dashboard/invoices', icon: FileText, roles: ['Admin', 'Accountant'] },
+    ],
+  },
+  {
+    title: 'Communication',
+    items: [
+      { name: 'Chat', path: '/dashboard/chat', icon: MessageSquare, roles: ['*'] },
     ],
   },
   {

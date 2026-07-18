@@ -11,6 +11,7 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    ->withBroadcasting(__DIR__.'/../routes/channels.php', ['middleware' => ['auth:sanctum']])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append([
             \Illuminate\Http\Middleware\HandleCors::class,
@@ -19,6 +20,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->api(append: [
             \App\Http\Middleware\ApiResponseWrapper::class,
             \App\Http\Middleware\SecurityHeaders::class,
+        ]);
+
+        $middleware->validateCsrfTokens(except: [
+            'broadcasting/*',
         ]);
 
         $middleware->alias([

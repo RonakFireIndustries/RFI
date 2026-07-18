@@ -57,6 +57,8 @@ import PayrollDashboardPage from '../../pages/Payroll/PayrollDashboardPage';
 import EmployeePayrollPage from '../../pages/Payroll/EmployeePayrollPage';
 import PayslipPage from '../../pages/Payroll/PayslipPage';
 import Sites from '@/pages/Sites/Sites';
+import Buildings from '@/pages/Buildings/Buildings';
+import ChatPage from '@/pages/Chat/ChatPage';
 import NotificationBell from '../Notifications/NotificationBell';
 import NotificationsPage from '../../pages/Notifications/NotificationsPage';
 import ShiftListPage from '../../pages/Attendance/ShiftListPage';
@@ -469,6 +471,8 @@ export default function DashboardLayout() {
               <Route path="permissions-list/:id/edit" element={<PermissionForm />} />
               <Route path="user-access" element={<UserAccess />} />
               <Route path="sites" element={<Sites />} />
+              <Route path="buildings" element={<Buildings />} />
+              <Route path="chat" element={<ChatPage />} />
               <Route path="notifications" element={<NotificationsPage />} />
             </Routes>
           </div>

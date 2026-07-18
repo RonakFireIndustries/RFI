@@ -1,13 +1,14 @@
 <?php
-header('Access-Control-Allow-Origin: https://www.rfi.ronakfire.com');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Origin, Content-Type, Accept, Authorization, X-Requested-With, X-XSRF-TOKEN');
-header('Access-Control-Allow-Credentials: true');
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit();
-}
+// CORS is handled by Laravel middleware (config/cors.php)
+// Production CORS headers (uncomment for production deployment):
+// header('Access-Control-Allow-Origin: https://www.rfi.ronakfire.com');
+// header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+// header('Access-Control-Allow-Headers: Origin, Content-Type, Accept, Authorization, X-Requested-With, X-XSRF-TOKEN');
+// header('Access-Control-Allow-Credentials: true');
+// if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+//     http_response_code(200);
+//     exit();
+// }
 
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
