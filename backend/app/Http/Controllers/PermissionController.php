@@ -11,6 +11,7 @@ class PermissionController extends Controller
 {
     public function index(): JsonResponse
     {
+        $this->authorize('manage_permissions');
         $permissions = Permission::all();
         return response()->json([
             'success' => true,
@@ -20,6 +21,7 @@ class PermissionController extends Controller
 
     public function store(PermissionStoreRequest $request): JsonResponse
     {
+        $this->authorize('manage_permissions');
         $permission = Permission::create(['name' => $request->name, 'guard_name' => 'web']);
 
         return response()->json([
@@ -39,6 +41,7 @@ class PermissionController extends Controller
 
     public function update(PermissionUpdateRequest $request, Permission $permission): JsonResponse
     {
+        $this->authorize('manage_permissions');
         $permission->update(['name' => $request->name]);
 
         return response()->json([
@@ -50,6 +53,7 @@ class PermissionController extends Controller
 
     public function destroy(Permission $permission): JsonResponse
     {
+        $this->authorize('manage_permissions');
         $permission->delete();
 
         return response()->json([

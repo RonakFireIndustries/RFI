@@ -14,12 +14,14 @@ class InvoiceController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('view_invoices');
         $invoices = Invoice::with(['customer', 'creator'])->orderBy('created_at', 'desc')->get();
         return response()->json($invoices);
     }
 
     public function store(Request $request)
     {
+        $this->authorize('create_invoices');
         $validated = $request->validate([
             'customer_id' => 'required|exists:customers,id',
             'sales_order_id' => 'nullable|exists:sales_orders,id',
@@ -122,14 +124,16 @@ class InvoiceController extends Controller
 
     public function show(Invoice $invoice)
     {
+        $this->authorize('view_invoices');
         $invoice->load(['customer', 'items.product', 'creator']);
         return response()->json($invoice);
     }
 
     public function update(Request $request, Invoice $invoice)
     {
+        $this->authorize('update_invoices');
         $validated = $request->validate([
-            'status' => 'sometimes|string',
+            'status' => 'sometimes|string|in:draft,sent,paid,overdue,cancelled',
             'payment_date' => 'nullable|date',
             'paid_amount' => 'nullable|numeric|min:0'
         ]);
@@ -141,6 +145,7 @@ class InvoiceController extends Controller
 
     public function destroy(Invoice $invoice)
     {
+        $this->authorize('delete_invoices');
         $invoice->delete();
         return response()->json(null, 204);
     }

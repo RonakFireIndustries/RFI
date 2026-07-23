@@ -6,7 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class PurchaseOrder extends Model
 {
-    protected $guarded = [];
+    protected $fillable = [
+        'po_number', 'supplier_id', 'total_amount', 'status', 'requested_by',
+        'approved_by', 'notes', 'tax_amount', 'shipping_cost', 'gst_type',
+        'gst_rate', 'received_by', 'received_at',
+    ];
 
     public function items()
     {

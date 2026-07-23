@@ -106,6 +106,11 @@ class ChatController extends Controller
 
     public function addMembers(Request $request, ChatChannel $channel): JsonResponse
     {
+        $user = $request->user();
+        if (!$channel->members()->where('users.id', $user->id)->exists()) {
+            return $this->error('You are not a member of this channel', [], 403);
+        }
+
         $validated = $request->validate([
             'member_ids' => ['required', 'array', 'min:1'],
             'member_ids.*' => ['exists:users,id'],
@@ -124,6 +129,15 @@ class ChatController extends Controller
 
     public function removeMember(Request $request, ChatChannel $channel, int $userId): JsonResponse
     {
+        $user = $request->user();
+        if (!$channel->members()->where('users.id', $user->id)->exists()) {
+            return $this->error('You are not a member of this channel', [], 403);
+        }
+
+        if (!$channel->members()->where('users.id', $userId)->exists()) {
+            return $this->error('User is not a member of this channel', [], 404);
+        }
+
         $channel->members()->detach($userId);
         return $this->success('Member removed');
     }

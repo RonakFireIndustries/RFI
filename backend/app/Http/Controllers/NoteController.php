@@ -10,6 +10,8 @@ class NoteController extends Controller
 {
     public function store(Request $request)
     {
+        $this->authorize('manage_inventory');
+
         $validated = $request->validate([
             'note' => 'required|string',
             'notable_id' => 'required|integer',
@@ -25,7 +27,14 @@ class NoteController extends Controller
 
     public function destroy($id)
     {
+        $this->authorize('manage_inventory');
+
         $note = Note::findOrFail($id);
+
+        if ($note->created_by !== Auth::id()) {
+            return response()->json(['message' => 'Unauthorized to delete this note'], 403);
+        }
+
         $note->delete();
         
         return response()->noContent();

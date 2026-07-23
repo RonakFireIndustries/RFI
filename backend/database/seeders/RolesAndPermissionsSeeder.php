@@ -61,6 +61,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'inventory.requests.view', 'inventory.requests.create', 'inventory.requests.approve',
             'inventory.transfers.view', 'inventory.transfers.create', 'inventory.transfers.approve',
             'inventory.dashboard.view',
+            'view reports', 'create reports', 'update reports', 'delete reports', 'export reports', 'schedule reports',
         ];
 
         $permissions = array_values(array_unique(array_merge($legacyPermissions, $policyPermissions)));
@@ -121,7 +122,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'daily-report.view', 'daily-report.report.view',
             'attendance.view', 'view_attendance',
             'leave.view',
-            'view reports',
+            'view reports', 'create reports', 'update reports', 'export reports',
         ]);
 
         // Store Manager: full inventory operations
@@ -156,6 +157,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'employee.view', 'view_employees',
                     'view_products', 'view_categories',
                     'salary-structure.view',
+                    'create reports', 'export reports',
         ]);
 
         // HR: unchanged
@@ -177,6 +179,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'daily-report.submit', 'daily-report.approve', 'daily-report.reject', 'daily-report.rework', 'daily-report.report.view',
             'leave.view', 'leave.create', 'leave.approve', 'leave.reject', 'leave.balance.view',
             'leave-type.view', 'leave-type.create', 'leave-type.edit',
+            'create reports', 'update reports',
         ]);
 
         // Employee: self-service (own attendance, daily reports, payroll, leaves)

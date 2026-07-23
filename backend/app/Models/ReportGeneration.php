@@ -6,7 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class ReportGeneration extends Model
 {
-    protected $guarded = [];
+    protected $fillable = [
+        'report_id', 'schedule_id', 'file_name', 'file_type', 'file_path',
+        'file_size', 'generated_by', 'generated_at', 'parameters', 'status',
+        'error_message',
+    ];
 
     protected $casts = [
         'parameters' => 'array',

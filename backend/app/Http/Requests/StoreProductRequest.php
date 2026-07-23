@@ -18,6 +18,8 @@ class StoreProductRequest extends FormRequest
             'sku' => 'nullable|string|unique:products,sku',
             'product_code' => 'nullable|string|max:100',
             'name' => 'required|string|max:255',
+            'hsn_code' => 'nullable|string|max:255',
+            'dimension' => 'nullable|string|max:255',
             'category_id' => 'nullable|exists:categories,id',
             'unit_id' => 'nullable|exists:units,id',
             'supplier_id' => 'nullable|exists:suppliers,id',

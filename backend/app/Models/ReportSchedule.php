@@ -6,7 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class ReportSchedule extends Model
 {
-    protected $guarded = [];
+    protected $fillable = [
+        'report_id', 'name', 'frequency', 'config', 'next_run_at',
+        'last_run_at', 'status', 'created_by', 'recipients', 'format',
+    ];
 
     protected $casts = [
         'config' => 'array',

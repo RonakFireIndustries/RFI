@@ -12,6 +12,7 @@ export default function ProductDetail() {
   const fields = useMemo(() => {
     const flds = [
       { label: 'SKU', path: 'sku' },
+      { label: 'Dimension', path: 'dimension' },
       { label: 'Category', path: 'category.name' },
       { label: 'Supplier', path: 'supplier.name' },
       { label: 'Status', path: 'status' },

@@ -2,8 +2,6 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
-// EmployeeController imported from Api\V1 below
 use App\Http\Controllers\Api\V1\DesignationController;
 use App\Http\Controllers\Api\V1\ShiftController;
 use App\Http\Controllers\Api\V1\AttendanceController;
@@ -13,18 +11,13 @@ use App\Http\Controllers\Api\V1\LeaveBalanceController;
 use App\Http\Controllers\Api\V1\LeaveController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\CustomerController;
-use App\Http\Controllers\SalesController;
-use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\Api\InvoiceController;
-use App\Http\Controllers\HRController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PermissionController;
-// use App\Http\Controllers\AdminController;
 use App\Http\Controllers\TestController;
 use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\Api\CompanySettingController;
 use App\Http\Controllers\Api\RoleConfigController;
-// Removed old Department/Designation/Employee controller imports
 use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ProductController;
@@ -49,7 +42,7 @@ Route::prefix('v1')->group(function () {
     Route::post('/forgot-password', [\App\Http\Controllers\Api\V1\PasswordResetController::class, 'sendResetLinkEmail'])->middleware('throttle:login');
     Route::post('/reset-password', [\App\Http\Controllers\Api\V1\PasswordResetController::class, 'reset'])->middleware('throttle:login');
     
-    Route::get('/test', [TestController::class, 'test']);
+    Route::get('/test', [TestController::class, 'test'])->middleware('role:Admin');
 
     Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
         Route::get('/user', [\App\Http\Controllers\Api\V1\AuthController::class, 'user']);
@@ -133,12 +126,6 @@ Route::prefix('v1')->group(function () {
 
     Route::apiResource('employee-sites', \App\Http\Controllers\EmployeeSiteController::class)->only(['index','store','destroy']);
 
-    // Shifts & Attendance
-    Route::apiResource('shifts', ShiftController::class);
-    Route::apiResource('attendances', AttendanceController::class);
-    Route::post('attendance/check-in', [AttendanceController::class, 'checkIn']);
-    Route::post('attendance/check-out', [AttendanceController::class, 'checkOut']);
-
     // Daily Reports
     Route::apiResource('daily-reports', DailyReportController::class);
     Route::post('daily-reports/{daily_report}/approve', [DailyReportController::class, 'approve']);
@@ -160,7 +147,7 @@ Route::prefix('v1')->group(function () {
     Route::delete('/inventory/{inventory}', [InventoryController::class, 'destroy']);
 
     // Inventory Categories & Products
-    Route::apiResource('categories', \App\Http\Controllers\CategoryController::class);
+    Route::apiResource('categories', \App\Http\Controllers\Api\CategoryController::class);
     Route::apiResource('products', ProductController::class);
 
     // Inventory Locations (using sites - polymorphic)
@@ -232,16 +219,11 @@ Route::prefix('v1')->group(function () {
 
     Route::apiResource('suppliers', SupplierController::class);
     Route::apiResource('customers', CustomerController::class);
-    Route::apiResource('invoices', InvoiceController::class);
-    Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'generatePDF']);
+    Route::apiResource('invoices', \App\Http\Controllers\Api\InvoiceController::class);
+    Route::get('/invoices/{invoice}/pdf', [\App\Http\Controllers\Api\InvoiceController::class, 'generatePDF']);
     Route::get('/invoices/{invoice}/preview', [\App\Http\Controllers\Api\InvoicePreviewController::class, 'preview']);
     Route::get('/invoices/{invoice}/validate', [\App\Http\Controllers\Api\InvoicePreviewController::class, 'validateInvoice']);
-    Route::post('/invoices/{invoice}/email', [\App\Http\Controllers\Api\InvoicePreviewController::class, 'email']);
-
-    // HR Additions
-    Route::get('/leaves', [HRController::class, 'leaves']);
-    Route::post('/leaves', [HRController::class, 'requestLeave']);
-    Route::get('/tasks', [HRController::class, 'tasks']);
+    Route::post('/invoices/{invoice}/email', [\App\Http\Controllers\Api\InvoicePreviewController::class, 'email'])->middleware('throttle:sensitive');
 
     // HR Organization Structure
     Route::apiResource('departments', \App\Http\Controllers\Api\V1\DepartmentController::class);
@@ -253,7 +235,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/payroll', [PayrollController::class, 'index']);
     Route::get('/my-payroll', [PayrollController::class, 'myPayroll']);
     Route::get('/payroll/{payroll}', [PayrollController::class, 'show']);
-    Route::post('/payroll/generate', [PayrollController::class, 'generate']);
+    Route::post('/payroll/generate', [PayrollController::class, 'generate'])->middleware('throttle:sensitive');
     Route::post('/payroll/regenerate', [PayrollController::class, 'regenerate']);
     Route::post('/payroll/{payroll}/approve', [PayrollController::class, 'approve']);
     Route::post('/payroll/{payroll}/lock', [PayrollController::class, 'lock']);
@@ -309,7 +291,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/notifications/unread-count', [\App\Http\Controllers\Api\V1\NotificationController::class, 'unreadCount']);
     Route::put('/notifications/read-all', [\App\Http\Controllers\Api\V1\NotificationController::class, 'markAllRead']);
     Route::get('/notifications', [\App\Http\Controllers\Api\V1\NotificationController::class, 'index']);
-    Route::post('/notifications/send', [\App\Http\Controllers\Api\V1\NotificationController::class, 'send']);
+    Route::post('/notifications/send', [\App\Http\Controllers\Api\V1\NotificationController::class, 'send'])->middleware('throttle:notifications');
     Route::put('/notifications/{notification}/read', [\App\Http\Controllers\Api\V1\NotificationController::class, 'markRead']);
     Route::delete('/notifications/{notification}', [\App\Http\Controllers\Api\V1\NotificationController::class, 'destroy']);
 

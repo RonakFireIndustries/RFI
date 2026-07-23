@@ -12,6 +12,7 @@ class PayslipController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('view_payroll');
         $query = Payslip::with(['payroll.employee', 'payroll.payrollPeriod']);
         
         if ($request->has('employee_id')) {
@@ -25,11 +26,13 @@ class PayslipController extends Controller
 
     public function show(Payslip $payslip)
     {
+        $this->authorize('view_payroll');
         return response()->json($payslip->load(['payroll.employee.department', 'payroll.employee.designation', 'payroll.payrollPeriod']));
     }
 
     public function generate(Request $request, Payroll $payroll)
     {
+        $this->authorize('manage_payroll');
         if ($payroll->status === 'Draft' || $payroll->status === 'Processing') {
             return response()->json(['message' => 'Cannot generate payslip for payrolls that are not approved.'], 403);
         }
@@ -51,6 +54,7 @@ class PayslipController extends Controller
 
     public function download(Payslip $payslip)
     {
+        $this->authorize('view_payroll');
         Log::info("Payslip downloaded/viewed", ['payslip_id' => $payslip->id, 'user_id' => auth()->id() ?? 'system']);
         
         // If a physical file exists:

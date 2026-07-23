@@ -9,6 +9,8 @@ class InventoryLocationController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('inventory.locations.view');
+
         $sites = Site::select('id', 'name', 'address', 'created_at', 'updated_at')
             ->get()
             ->map(fn($s) => [
@@ -28,6 +30,8 @@ class InventoryLocationController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize('inventory.locations.create');
+
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'type' => 'required|in:site',

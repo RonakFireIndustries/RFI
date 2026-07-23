@@ -15,15 +15,21 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie', 'broadcasting/*'],
+    'paths' => ['api/*', 'sanctum/csrf-cookie'],
 
-    'allowed_methods' => ['*'],
+    'allowed_methods' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 
-    'allowed_origins' => ['https://rfi.ronakfire.com', 'https://www.rfi.ronakfire.com', 'http://rfibackend.ronakfire.com', 'https://rfibackend.ronakfire.com'],
+    'allowed_origins' => [
+        'https://rfi.ronakfire.com',
+        'https://www.rfi.ronakfire.com',
+        'https://rfibackend.ronakfire.com',
+        'http://localhost:5173',
+        'http://localhost:8000',
+    ],
 
     'allowed_origins_patterns' => [],
 
-    'allowed_headers' => ['*'],
+    'allowed_headers' => ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
 
     'exposed_headers' => [],
 

@@ -22,11 +22,13 @@ class DeliveryNoteController extends Controller
 
     public function index()
     {
+        $this->authorize('view_sales_orders');
         return DeliveryNote::with(['items.product'])->get();
     }
 
     public function store(Request $request)
     {
+        $this->authorize('create_sales_orders');
         $request->validate([
             'sales_order_id' => 'required|exists:sales_orders,id',
             'delivery_date' => 'required|date',

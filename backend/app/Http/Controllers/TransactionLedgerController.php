@@ -16,6 +16,8 @@ class TransactionLedgerController extends Controller
 
     public function index(Request $request)
     {
+        $this->authorize('inventory.transactions.view');
+
         $query = TransactionLedger::with(['product', 'locationable', 'toLocationable', 'creator']);
 
         if ($request->has('location_type') && $request->has('location_id')) {
@@ -45,6 +47,8 @@ class TransactionLedgerController extends Controller
 
     public function store(StoreTransactionRequest $request)
     {
+        $this->authorize('inventory.transactions.create');
+
         $data = $request->validated();
 
         try {
@@ -72,6 +76,8 @@ class TransactionLedgerController extends Controller
 
     public function show(TransactionLedger $transactionLedger)
     {
+        $this->authorize('inventory.transactions.view');
+
         return new TransactionLedgerResource(
             $transactionLedger->load(['product', 'locationable', 'toLocationable', 'creator'])
         );
@@ -79,6 +85,8 @@ class TransactionLedgerController extends Controller
 
     public function summary(Request $request)
     {
+        $this->authorize('inventory.transactions.view');
+
         $query = TransactionLedger::query();
 
         if ($request->has('location_type') && $request->has('location_id')) {

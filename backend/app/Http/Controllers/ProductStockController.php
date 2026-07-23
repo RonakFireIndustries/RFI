@@ -10,6 +10,8 @@ class ProductStockController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('inventory.stock.view');
+
         $query = ProductStock::with(['product.category', 'product.unit', 'locationable']);
 
         if ($request->has('location_type') && $request->has('location_id')) {
@@ -31,11 +33,15 @@ class ProductStockController extends Controller
 
     public function show(ProductStock $stock)
     {
+        $this->authorize('inventory.stock.view');
+
         return new ProductStockResource($stock->load(['product.category', 'product.unit', 'locationable']));
     }
 
     public function byProduct($productId)
     {
+        $this->authorize('inventory.stock.view');
+
         return ProductStockResource::collection(
             ProductStock::with('locationable')
                 ->where('product_id', $productId)
@@ -45,8 +51,14 @@ class ProductStockController extends Controller
 
     public function byLocation($locationType, $locationId)
     {
+        $this->authorize('inventory.stock.view');
+
         $typeMap = ['site' => 'App\\Models\\Site'];
-        $type = $typeMap[$locationType] ?? $locationType;
+        $type = $typeMap[$locationType] ?? null;
+
+        if (!$type) {
+            return response()->json(['message' => 'Invalid location type'], 400);
+        }
 
         return ProductStockResource::collection(
             ProductStock::with('product.category')

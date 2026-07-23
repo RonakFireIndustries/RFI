@@ -11,11 +11,12 @@ class CustomerController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('view_customers');
         $query = Customer::with(['salesOrders.products', 'payments']);
 
         // Search
         if ($request->has('search')) {
-            $search = $request->search;
+            $search = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $request->search);
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
@@ -43,6 +44,8 @@ class CustomerController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize('create_customers');
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'nullable|email|unique:customers,email',
@@ -57,6 +60,8 @@ class CustomerController extends Controller
 
     public function show($id)
     {
+        $this->authorize('view_customers');
+
         $customer = Customer::with(['salesOrders.products', 'payments', 'notes.creator', 'documents.uploader'])->findOrFail($id);
         
         $soSum = $customer->salesOrders->sum('total_amount');
@@ -72,6 +77,8 @@ class CustomerController extends Controller
 
     public function update(Request $request, $id)
     {
+        $this->authorize('update_customers');
+
         $customer = Customer::findOrFail($id);
         
         $validated = $request->validate([
@@ -88,6 +95,8 @@ class CustomerController extends Controller
 
     public function destroy($id)
     {
+        $this->authorize('delete_customers');
+
         $customer = Customer::findOrFail($id);
         $customer->delete();
         return response()->noContent();

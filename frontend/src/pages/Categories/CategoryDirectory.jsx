@@ -44,10 +44,12 @@ export default function CategoryDirectory() {
     setIsModalOpen(true);
   };
 
-  const filteredCategories = categories.filter(c => 
-    c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (c.description && c.description.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const filteredCategories = categories
+    .filter(c =>
+      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (c.description && c.description.toLowerCase().includes(searchQuery.toLowerCase()))
+    )
+    .filter((c, i, arr) => arr.findIndex(x => x.id === c.id) === i);
 
   const totalProducts = categories.reduce((sum, cat) => sum + (cat.products_count || 0), 0);
   const activeCategories = categories.filter(c => c.status === 'Active').length;

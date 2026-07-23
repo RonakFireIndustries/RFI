@@ -17,6 +17,7 @@ class RoleConfigController extends Controller
 {
     public function scopes()
     {
+        $this->authorize('manage_roles');
         $scopes = PermissionScope::orderBy('level')->get();
         if ($scopes->isEmpty()) {
             $defaults = [
@@ -38,12 +39,14 @@ class RoleConfigController extends Controller
 
     public function templates()
     {
+        $this->authorize('manage_roles');
         $templates = RoleTemplate::where('is_active', true)->get();
         return response()->json(['success' => true, 'data' => $templates]);
     }
 
     public function applyTemplate(Request $request, Role $role)
     {
+        $this->authorize('manage_roles');
         $request->validate(['template_id' => 'required|exists:role_templates,id']);
         $template = RoleTemplate::findOrFail($request->template_id);
         if (!$template->permissions) {
@@ -60,12 +63,14 @@ class RoleConfigController extends Controller
 
     public function exceptions()
     {
+        $this->authorize('manage_roles');
         $exceptions = SystemException::all();
         return response()->json(['success' => true, 'data' => $exceptions]);
     }
 
     public function updateException(Request $request, SystemException $exception)
     {
+        $this->authorize('manage_roles');
         $validated = $request->validate([
             'is_enabled' => 'sometimes|boolean',
             'requires_approval' => 'sometimes|boolean',
@@ -82,6 +87,7 @@ class RoleConfigController extends Controller
 
     public function auditSettings(Request $request, Role $role)
     {
+        $this->authorize('manage_roles');
         $settings = AuditSetting::firstOrCreate(
             ['configurable_type' => 'role', 'configurable_id' => $role->id],
             [
@@ -97,6 +103,7 @@ class RoleConfigController extends Controller
 
     public function updateAuditSettings(Request $request, Role $role)
     {
+        $this->authorize('manage_roles');
         $validated = $request->validate([
             'logging_verbosity' => 'sometimes|in:low,medium,high,critical',
             'retention_days' => 'sometimes|integer|min:1|max:3650',
@@ -117,6 +124,7 @@ class RoleConfigController extends Controller
 
     public function roleSummary(Role $role)
     {
+        $this->authorize('manage_roles');
         $role->load('permissions');
         $userCount = User::role($role->name)->count();
         $totalNodes = $role->permissions->count();
@@ -164,6 +172,7 @@ class RoleConfigController extends Controller
 
     public function permissionsByModule()
     {
+        $this->authorize('manage_roles');
         $all = Permission::all();
         $grouped = [];
         foreach ($all as $perm) {
@@ -176,6 +185,7 @@ class RoleConfigController extends Controller
 
     public function dependencies()
     {
+        $this->authorize('manage_roles');
         $deps = DB::table('permission_dependencies')
             ->join('permissions as p1', 'permission_dependencies.permission_id', '=', 'p1.id')
             ->join('permissions as p2', 'permission_dependencies.depends_on_permission_id', '=', 'p2.id')

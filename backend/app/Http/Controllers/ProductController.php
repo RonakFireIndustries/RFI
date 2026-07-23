@@ -13,6 +13,8 @@ class ProductController extends Controller
 {
     public function index()
     {
+        $this->authorize('view_products');
+
         return ProductResource::collection(
             Product::with(['category', 'supplier', 'unit', 'stock.locationable'])->get()
         );
@@ -20,6 +22,8 @@ class ProductController extends Controller
 
     public function store(StoreProductRequest $request, InventoryService $inventoryService)
     {
+        $this->authorize('create_products');
+
         $data = $request->validated();
         if (!ProductResource::canManageSalesPrice($request)) {
             unset($data['selling_price']);
@@ -47,11 +51,15 @@ class ProductController extends Controller
 
     public function show(Product $product)
     {
+        $this->authorize('view_products');
+
         return new ProductResource($product->load(['category', 'supplier', 'unit', 'stock.locationable']));
     }
 
     public function update(UpdateProductRequest $request, Product $product)
     {
+        $this->authorize('update_products');
+
         $data = $request->validated();
         if (!ProductResource::canManageSalesPrice($request)) {
             unset($data['selling_price']);
@@ -62,6 +70,8 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
+        $this->authorize('delete_products');
+
         $product->delete();
         return response()->noContent();
     }

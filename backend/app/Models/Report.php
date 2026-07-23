@@ -6,7 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Report extends Model
 {
-    protected $guarded = [];
+    protected $fillable = [
+        'category_id', 'name', 'slug', 'description', 'icon', 'route',
+        'api_endpoint', 'status', 'created_by', 'last_generated_at',
+        'parameters', 'sort_order',
+    ];
 
     protected $casts = [
         'parameters' => 'array',

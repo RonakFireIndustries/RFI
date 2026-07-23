@@ -95,9 +95,12 @@ export default function CategoryFormModal({ isOpen, onClose, onSuccess, category
               onChange={(e) => setFormData({...formData, parent_id: e.target.value})}
             >
               <option value="">None (Root Category)</option>
-              {categories.filter(c => c.id !== category?.id).map(c => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
+              {categories
+                .filter((c, i, arr) => arr.findIndex(x => x.id === c.id) === i)
+                .filter(c => c.id !== category?.id)
+                .map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
             </select>
           </div>
 

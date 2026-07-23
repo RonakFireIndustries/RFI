@@ -12,12 +12,16 @@ class InventoryController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('view_inventory');
+
         $query = Inventory::with(['product.category', 'product.supplier', 'warehouse']);
         return InventoryResource::collection($query->get());
     }
 
     public function store(Request $request)
     {
+        $this->authorize('manage_inventory');
+
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:0',
@@ -33,11 +37,15 @@ class InventoryController extends Controller
 
     public function show(Inventory $inventory)
     {
+        $this->authorize('view_inventory');
+
         return new InventoryResource($inventory->load(['product.category', 'product.supplier', 'warehouse', 'transactions']));
     }
 
     public function update(Request $request, Inventory $inventory)
     {
+        $this->authorize('manage_inventory');
+
         $validated = $request->validate([
             'product_id' => 'sometimes|exists:products,id',
             'quantity' => 'sometimes|integer|min:0',
@@ -50,6 +58,8 @@ class InventoryController extends Controller
 
     public function destroy(Inventory $inventory)
     {
+        $this->authorize('manage_inventory');
+
         $inventory->delete();
 
         return response()->noContent();
@@ -57,6 +67,8 @@ class InventoryController extends Controller
 
     public function transaction(Request $request)
     {
+        $this->authorize('manage_inventory');
+
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
             'type' => 'required|string|in:purchase,sale,return,damage,transfer_in,transfer_out,adjustment',
@@ -112,6 +124,8 @@ class InventoryController extends Controller
 
     public function transactions(Request $request)
     {
+        $this->authorize('view_inventory');
+
         $query = InventoryTransaction::with(['inventory.product', 'user']);
         
         return $query->latest()->get();

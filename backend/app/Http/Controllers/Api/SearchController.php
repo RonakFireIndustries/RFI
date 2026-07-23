@@ -13,6 +13,11 @@ use App\Models\PurchaseOrder;
 
 class SearchController extends Controller
 {
+    private function escapeLike(string $value): string
+    {
+        return str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $value);
+    }
+
     public function search(Request $request)
     {
         $query = $request->query('q');
@@ -21,13 +26,18 @@ class SearchController extends Controller
             return response()->json([]);
         }
 
+        if (strlen($query) > 100) {
+            return response()->json([]);
+        }
+
+        $safe = $this->escapeLike($query);
         $results = [];
 
         // 1. Customers
-        $customersQuery = Customer::where(function($q) use ($query) {
-            $q->where('name', 'like', "%{$query}%")
-              ->orWhere('email', 'like', "%{$query}%")
-              ->orWhere('phone', 'like', "%{$query}%");
+        $customersQuery = Customer::where(function($q) use ($safe) {
+            $q->where('name', 'like', "%{$safe}%")
+              ->orWhere('email', 'like', "%{$safe}%")
+              ->orWhere('phone', 'like', "%{$safe}%");
         });
         
         $customers = $customersQuery->limit(5)->get();
@@ -42,10 +52,10 @@ class SearchController extends Controller
         }
 
         // 2. Suppliers
-        $suppliersQuery = Supplier::where(function($q) use ($query) {
-            $q->where('name', 'like', "%{$query}%")
-              ->orWhere('email', 'like', "%{$query}%")
-              ->orWhere('phone', 'like', "%{$query}%");
+        $suppliersQuery = Supplier::where(function($q) use ($safe) {
+            $q->where('name', 'like', "%{$safe}%")
+              ->orWhere('email', 'like', "%{$safe}%")
+              ->orWhere('phone', 'like', "%{$safe}%");
         });
         
         $suppliers = $suppliersQuery->limit(5)->get();
@@ -60,8 +70,8 @@ class SearchController extends Controller
         }
 
         // 3. Products
-        $products = Product::where('name', 'like', "%{$query}%")
-                           ->orWhere('sku', 'like', "%{$query}%")
+        $products = Product::where('name', 'like', "%{$safe}%")
+                           ->orWhere('sku', 'like', "%{$safe}%")
                            ->limit(5)->get();
         foreach ($products as $p) {
             $results[] = [
@@ -74,7 +84,7 @@ class SearchController extends Controller
         }
 
         // 4. Invoices
-        $invoicesQuery = Invoice::where('invoice_number', 'like', "%{$query}%");
+        $invoicesQuery = Invoice::where('invoice_number', 'like', "%{$safe}%");
         
         $invoices = $invoicesQuery->limit(5)->get();
         foreach ($invoices as $i) {
@@ -88,7 +98,7 @@ class SearchController extends Controller
         }
 
         // 5. Sales Orders
-        $salesOrdersQuery = SalesOrder::where('order_number', 'like', "%{$query}%");
+        $salesOrdersQuery = SalesOrder::where('order_number', 'like', "%{$safe}%");
         
         $salesOrders = $salesOrdersQuery->limit(5)->get();
         foreach ($salesOrders as $so) {
@@ -102,7 +112,7 @@ class SearchController extends Controller
         }
 
         // 6. Purchase Orders
-        $purchaseOrdersQuery = PurchaseOrder::where('po_number', 'like', "%{$query}%");
+        $purchaseOrdersQuery = PurchaseOrder::where('po_number', 'like', "%{$safe}%");
         
         $purchaseOrders = $purchaseOrdersQuery->limit(5)->get();
         foreach ($purchaseOrders as $po) {

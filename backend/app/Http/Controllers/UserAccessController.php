@@ -12,6 +12,7 @@ class UserAccessController extends Controller
 {
     public function getRoles(User $user): JsonResponse
     {
+        $this->authorize('manage_users');
         return response()->json([
             'success' => true,
             'data' => $user->roles
@@ -20,6 +21,7 @@ class UserAccessController extends Controller
 
     public function assignRole(Request $request, User $user): JsonResponse
     {
+        $this->authorize('manage_users');
         $request->validate([
             'roles' => 'required|array',
             'roles.*' => 'exists:roles,name',
@@ -37,6 +39,7 @@ class UserAccessController extends Controller
 
     public function removeRole(User $user, $roleId): JsonResponse
     {
+        $this->authorize('manage_users');
         $role = Role::findOrFail($roleId);
         
         if ($role->name === 'Super Admin' && $user->id === 1) { // Basic safeguard
@@ -56,6 +59,7 @@ class UserAccessController extends Controller
 
     public function getPermissions(User $user): JsonResponse
     {
+        $this->authorize('manage_users');
         $permissions = $user->roles->flatMap->permissions->unique('id');
         
         return response()->json([
@@ -66,6 +70,7 @@ class UserAccessController extends Controller
 
     public function assignPermission(Request $request, User $user): JsonResponse
     {
+        $this->authorize('manage_users');
         $request->validate([
             'permissions' => 'required|array',
             'permissions.*' => 'exists:permissions,name',
@@ -86,6 +91,7 @@ class UserAccessController extends Controller
 
     public function removePermission(User $user, $permissionId): JsonResponse
     {
+        $this->authorize('manage_users');
         $permission = Permission::findOrFail($permissionId);
         foreach ($user->roles as $role) {
             $role->permissions()->detach($permission->id);

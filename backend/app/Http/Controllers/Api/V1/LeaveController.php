@@ -26,6 +26,7 @@ class LeaveController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('leave.view');
         $filters = $request->only(['employee_id', 'status', 'leave_type_id']);
         
         // All authenticated users can view leaves
@@ -46,6 +47,7 @@ class LeaveController extends Controller
 
     public function store(StoreLeaveRequest $request): JsonResponse
     {
+        $this->authorize('leave.create');
         try {
             $leave = $this->service->createLeave($request->validated());
             $leave->load(['employee.user', 'employee.department', 'leaveType', 'approver']);
@@ -89,6 +91,7 @@ class LeaveController extends Controller
 
     public function approve(Request $request, Leave $leave): JsonResponse
     {
+        $this->authorize('leave.approve');
         $request->validate(['comments' => 'nullable|string']);
 
         try {
@@ -104,6 +107,7 @@ class LeaveController extends Controller
 
     public function reject(Request $request, Leave $leave): JsonResponse
     {
+        $this->authorize('leave.reject');
         $request->validate(['comments' => 'required|string']);
 
         $updatedLeave = $this->service->reject($leave, $request->comments);

@@ -11,11 +11,12 @@ class SupplierController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('view_suppliers');
         $query = Supplier::with(['products.category', 'purchaseOrders', 'payments']);
 
         // Search
         if ($request->has('search')) {
-            $search = $request->search;
+            $search = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $request->search);
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
@@ -43,6 +44,8 @@ class SupplierController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize('create_suppliers');
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'nullable|email',
@@ -57,6 +60,8 @@ class SupplierController extends Controller
 
     public function show($id)
     {
+        $this->authorize('view_suppliers');
+
         $supplier = Supplier::with(['products.category', 'purchaseOrders', 'payments', 'notes.creator', 'documents.uploader'])->findOrFail($id);
         
         $poSum = $supplier->purchaseOrders->sum('total_amount');
@@ -71,6 +76,8 @@ class SupplierController extends Controller
 
     public function update(Request $request, $id)
     {
+        $this->authorize('update_suppliers');
+
         $supplier = Supplier::findOrFail($id);
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -86,6 +93,8 @@ class SupplierController extends Controller
 
     public function destroy($id)
     {
+        $this->authorize('delete_suppliers');
+
         $supplier = Supplier::findOrFail($id);
         $supplier->delete();
         return response()->noContent();

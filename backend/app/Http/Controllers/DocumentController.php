@@ -11,6 +11,8 @@ class DocumentController extends Controller
 {
     public function store(Request $request)
     {
+        $this->authorize('document.create');
+
         $request->validate([
             'file' => 'required|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240', // max 10MB
             'documentable_id' => 'required|integer',
@@ -35,6 +37,8 @@ class DocumentController extends Controller
 
     public function download($id)
     {
+        $this->authorize('document.download');
+
         $document = Document::findOrFail($id);
         
         if (Storage::disk('public')->exists($document->file_path)) {
@@ -46,7 +50,13 @@ class DocumentController extends Controller
 
     public function destroy($id)
     {
+        $this->authorize('document.delete');
+
         $document = Document::findOrFail($id);
+
+        if ($document->uploaded_by !== Auth::id()) {
+            return response()->json(['message' => 'Unauthorized to delete this document'], 403);
+        }
         
         if (Storage::disk('public')->exists($document->file_path)) {
             Storage::disk('public')->delete($document->file_path);

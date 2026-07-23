@@ -21,17 +21,23 @@ export default function ProductCatalog() {
   }, [categoryId]);
 
   useEffect(() => {
-    Promise.all([api.get('/categories'), api.get('/suppliers'), api.get('/sites?per_page=1000')])
-      .then(([categories, suppliers, sites]) => {
-        setLookups({ categories: unwrapList(categories.data), suppliers: unwrapList(suppliers.data), sites: unwrapList(sites.data) });
-      })
-      .catch((error) => console.error('Failed to load product lookups', error));
+    const fetchLookups = async () => {
+      const results = await Promise.allSettled([
+        api.get('/categories'),
+        api.get('/suppliers'),
+        api.get('/sites?per_page=1000'),
+      ]);
+      const get = (idx) => results[idx].status === 'fulfilled' ? unwrapList(results[idx].value.data) : [];
+      setLookups({ categories: get(0), suppliers: get(1), sites: get(2) });
+    };
+    fetchLookups();
   }, []);
 
   const columns = useMemo(() => {
     const cols = [
       { header: 'SKU', accessor: 'sku' },
       { header: 'Product', accessor: 'name' },
+      { header: 'Dimension', accessor: 'dimension' },
       { header: 'Category', accessor: 'category.name' },
       { header: 'Supplier', accessor: 'supplier.name' },
       { header: 'Stock', cellValue: (row) => row.total_stock ?? 0 },
@@ -48,6 +54,7 @@ export default function ProductCatalog() {
       { name: 'sku', label: 'SKU (leave empty for auto-generate)' },
       { name: 'name', label: 'Product Name', required: true },
       { name: 'hsn_code', label: 'HSN Code' },
+      { name: 'dimension', label: 'Dimension' },
       { name: 'category_id', label: 'Category', type: 'select', optionsKey: 'categories', emptyAsNull: true },
       { name: 'supplier_id', label: 'Supplier', type: 'select', optionsKey: 'suppliers', emptyAsNull: true },
     ];

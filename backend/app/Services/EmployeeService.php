@@ -69,10 +69,11 @@ class EmployeeService
 
             // Phase 5: Employee User Linking (if requested auto creation)
             if (isset($data['create_user_account']) && $data['create_user_account']) {
+                $tempPassword = \Illuminate\Support\Str::random(16);
                 $user = User::create([
                     'name' => $data['full_name'],
                     'email' => strtolower(str_replace(' ', '.', $data['full_name'])) . '@ronakfire.com',
-                    'password' => Hash::make('password123'),
+                    'password' => Hash::make($tempPassword),
                 ]);
                 
                 // Assign role based on designation name, explicit role field, or default

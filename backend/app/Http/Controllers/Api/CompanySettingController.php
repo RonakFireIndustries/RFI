@@ -11,6 +11,7 @@ class CompanySettingController extends Controller
 {
     public function show()
     {
+        $this->authorize('manage settings');
         $settings = CompanySetting::first();
         if (!$settings) {
             $settings = CompanySetting::create([]);
@@ -23,6 +24,7 @@ class CompanySettingController extends Controller
 
     public function update(Request $request)
     {
+        $this->authorize('manage settings');
         $settings = CompanySetting::first();
         if (!$settings) {
             $settings = CompanySetting::create([]);
