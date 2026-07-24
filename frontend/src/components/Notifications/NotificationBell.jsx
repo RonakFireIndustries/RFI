@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Bell, CheckCheck, X, Loader2, Clock } from 'lucide-react';
 import { useNotificationStore } from '../../store/notificationStore';
+import { useAuthStore } from '../../store/authStore';
 
 const TYPE_STYLES = {
   info: 'bg-primary/10 text-primary',
@@ -14,6 +15,7 @@ export default function NotificationBell() {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
 
   const {
     notifications,
@@ -24,12 +26,22 @@ export default function NotificationBell() {
     markAllRead,
     startPolling,
     stopPolling,
+    listenForNotifications,
+    stopListeningForNotifications,
   } = useNotificationStore();
 
   useEffect(() => {
-    startPolling(15000);
-    return () => stopPolling();
-  }, [startPolling, stopPolling]);
+    if (user?.id) {
+      listenForNotifications(user.id);
+    }
+    startPolling(30000);
+    return () => {
+      if (user?.id) {
+        stopListeningForNotifications(user.id);
+      }
+      stopPolling();
+    };
+  }, [user?.id, listenForNotifications, stopListeningForNotifications, startPolling, stopPolling]);
 
   useEffect(() => {
     if (open) {

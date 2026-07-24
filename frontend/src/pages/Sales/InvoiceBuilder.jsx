@@ -175,12 +175,12 @@ export default function InvoiceBuilder() {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Customer *</label>
+                <label className="block text-sm font-semibold text-color-white">Customer *</label>
                 <select
                   required
-                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-ring focus:border-ring transition-all outline-none bg-white"
+                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-ring focus:border-ring transition-all outline-none bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   value={formData.customer_id}
-                  onChange={(e) => setFormData({...formData, customer_id: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
                 >
                   <option value="">Select a customer</option>
                   {customers.map(c => (
@@ -188,50 +188,50 @@ export default function InvoiceBuilder() {
                   ))}
                 </select>
               </div>
-              
+
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Due Date</label>
+                <label className="block text-sm font-semibold text-color-white">Due Date</label>
                 <input
                   type="date"
-                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-ring focus:border-ring transition-all outline-none"
+                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-ring focus:border-ring transition-all outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   value={formData.due_date}
-                  onChange={(e) => setFormData({...formData, due_date: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
                 />
               </div>
 
               <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1">GST Type</label>
-                        <select
-                          className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-ring focus:border-ring transition-all outline-none bg-white"
-                          value={formData.gst_type}
-                          onChange={(e) => setFormData({...formData, gst_type: e.target.value})}
-                        >
-                          <option value="cgst">CGST + SGST (Intra-State)</option>
-                          <option value="igst">IGST (Inter-State)</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1">GST Rate (%)</label>
-                        <select
-                          className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-ring focus:border-ring transition-all outline-none bg-white"
-                          value={formData.gst_rate}
-                          onChange={(e) => setFormData({...formData, gst_rate: e.target.value})}
-                        >
-                          <option value="0">0%</option>
-                          <option value="5">5%</option>
-                          <option value="12">12%</option>
-                          <option value="18">18%</option>
-                          <option value="28">28%</option>
-                        </select>
-                      </div>
+                <label className="block text-sm font-semibold text-color-white">GST Type</label>
+                <select
+                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-ring focus:border-ring transition-all outline-none bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  value={formData.gst_type}
+                  onChange={(e) => setFormData({ ...formData, gst_type: e.target.value })}
+                >
+                  <option value="cgst">CGST + SGST (Intra-State)</option>
+                  <option value="igst">IGST (Inter-State)</option>
+                </select>
+              </div>
 
               <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1">Status</label>
+                <label className="block text-sm font-semibold text-color-white">GST Rate (%)</label>
                 <select
-                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-ring focus:border-ring transition-all outline-none bg-white"
+                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-ring focus:border-ring transition-all outline-none bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  value={formData.gst_rate}
+                  onChange={(e) => setFormData({ ...formData, gst_rate: e.target.value })}
+                >
+                  <option value="0">0%</option>
+                  <option value="5">5%</option>
+                  <option value="12">12%</option>
+                  <option value="18">18%</option>
+                  <option value="28">28%</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-color-white">Status</label>
+                <select
+                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-ring focus:border-ring transition-all outline-none bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   value={formData.status}
-                  onChange={(e) => setFormData({...formData, status: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                 >
                   <option value="Draft">Draft</option>
                   <option value="Sent">Sent</option>
@@ -250,25 +250,25 @@ export default function InvoiceBuilder() {
                 GST at {formData.gst_rate || 0}% ({formData.gst_type === 'igst' ? 'IGST' : 'CGST+SGST'})
               </div>
             </div>
-            
+
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                    <tr className="bg-white border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                        <th className="p-4 w-[35%]">Product / Description</th>
-                        <th className="p-4 w-[15%]">HSN</th>
-                        <th className="p-4 w-[12%]">Qty</th>
-                        <th className="p-4 w-[15%]">Rate (₹)</th>
-                        <th className="p-4 w-[15%] text-right">Total</th>
-                        <th className="p-4 w-[5%]"></th>
-                      </tr>
+                  <tr className="bg-white border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    <th className="p-4 w-[35%]">Product / Description</th>
+                    <th className="p-4 w-[15%]">HSN</th>
+                    <th className="p-4 w-[12%]">Qty</th>
+                    <th className="p-4 w-[15%]">Rate (₹)</th>
+                    <th className="p-4 w-[15%] text-right">Total</th>
+                    <th className="p-4 w-[5%]"></th>
+                  </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 bg-white">
                   {items.map((item, index) => (
                     <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
                       <td className="p-4 align-top space-y-2">
                         <select
-                          className="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-ring focus:border-ring"
+                          className="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-ring focus:border-ring dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                           value={item.product_id}
                           onChange={(e) => handleItemChange(item.id, 'product_id', e.target.value)}
                         >
@@ -280,7 +280,7 @@ export default function InvoiceBuilder() {
                         <input
                           type="text"
                           placeholder="Description..."
-                          className="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-ring focus:border-ring"
+                          className="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-ring focus:border-ring dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                           value={item.item_description}
                           onChange={(e) => handleItemChange(item.id, 'item_description', e.target.value)}
                           required
@@ -290,7 +290,7 @@ export default function InvoiceBuilder() {
                         <input
                           type="text"
                           placeholder="HSN"
-                          className="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-ring focus:border-ring"
+                          className="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-ring focus:border-ring dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                           value={item.hsn_code}
                           onChange={(e) => handleItemChange(item.id, 'hsn_code', e.target.value)}
                         />
@@ -299,7 +299,7 @@ export default function InvoiceBuilder() {
                         <input
                           type="number"
                           min="1"
-                          className="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-ring focus:border-ring"
+                          className="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-ring focus:border-ring dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                           value={item.quantity}
                           onChange={(e) => handleItemChange(item.id, 'quantity', e.target.value)}
                           required
@@ -310,14 +310,14 @@ export default function InvoiceBuilder() {
                           type="number"
                           min="0"
                           step="0.01"
-                          className="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-ring focus:border-ring"
+                          className="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-ring focus:border-ring dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                           value={item.unit_price}
                           onChange={(e) => handleItemChange(item.id, 'unit_price', e.target.value)}
                           required
                         />
                       </td>
                       <td className="p-4 align-top text-right font-medium text-gray-900">
-                        ₹{((parseFloat(item.quantity) || 0) * (parseFloat(item.unit_price) || 0)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                        ₹{((parseFloat(item.quantity) || 0) * (parseFloat(item.unit_price) || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                       <td className="p-4 align-top text-center">
                         <button
@@ -333,7 +333,7 @@ export default function InvoiceBuilder() {
                 </tbody>
               </table>
             </div>
-            
+
             <div className="p-4 border-t border-gray-200 bg-gray-50">
               <button
                 type="button"
@@ -350,38 +350,38 @@ export default function InvoiceBuilder() {
         <div className="space-y-6">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h2 className="text-lg font-bold text-gray-900 mb-4">Summary</h2>
-            
+
             <div className="space-y-3 text-sm">
               <div className="flex justify-between text-gray-600">
                 <span>Subtotal</span>
-                <span className="font-medium text-gray-900">₹{totals.subtotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                <span className="font-medium text-gray-900">₹{totals.subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
-              
+
               {totals.cgst_total > 0 && (
                 <div className="flex justify-between text-gray-600">
                   <span>CGST</span>
-                  <span className="font-medium text-gray-900">₹{totals.cgst_total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                  <span className="font-medium text-gray-900">₹{totals.cgst_total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>
               )}
-              
+
               {totals.sgst_total > 0 && (
                 <div className="flex justify-between text-gray-600">
                   <span>SGST</span>
-                  <span className="font-medium text-gray-900">₹{totals.sgst_total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                  <span className="font-medium text-gray-900">₹{totals.sgst_total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>
               )}
-              
+
               {totals.igst_total > 0 && (
                 <div className="flex justify-between text-gray-600">
                   <span>IGST</span>
-                  <span className="font-medium text-gray-900">₹{totals.igst_total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                  <span className="font-medium text-gray-900">₹{totals.igst_total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>
               )}
 
               <div className="pt-3 mt-3 border-t border-gray-200 flex justify-between items-center">
                 <span className="font-bold text-gray-900 text-base">Grand Total</span>
                 <span className="font-bold text-primary text-xl">
-                  ₹{totals.grand_total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                  ₹{totals.grand_total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               </div>
             </div>
@@ -391,21 +391,21 @@ export default function InvoiceBuilder() {
             <h2 className="text-lg font-bold text-gray-900 mb-4">Additional Info</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Notes (Internal/Customer)</label>
+                <label className="block text-sm font-semibold text-color-white">Notes (Internal/Customer)</label>
                 <textarea
-                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-ring focus:border-ring transition-all outline-none resize-none"
+                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-ring focus:border-ring transition-all outline-none resize-none dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   rows="3"
                   value={formData.notes}
-                  onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 ></textarea>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Terms & Conditions</label>
+                <label className="block text-sm font-semibold text-color-white">Terms & Conditions</label>
                 <textarea
-                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-ring focus:border-ring transition-all outline-none resize-none"
+                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-ring focus:border-ring transition-all outline-none resize-none dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   rows="4"
                   value={formData.terms}
-                  onChange={(e) => setFormData({...formData, terms: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, terms: e.target.value })}
                 ></textarea>
               </div>
             </div>

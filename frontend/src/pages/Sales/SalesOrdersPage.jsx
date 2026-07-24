@@ -493,7 +493,7 @@ export default function SalesOrdersPage() {
                       <div>
                         <label className="block text-sm font-medium text-gray-600 mb-1">Select Customer</label>
                         <select 
-                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-ring focus:border-transparent transition-all dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                           value={newOrder.customer_id}
                           onChange={(e) => setNewOrder({...newOrder, customer_id: e.target.value})}
                           required
@@ -506,7 +506,7 @@ export default function SalesOrdersPage() {
                         <label className="block text-sm font-medium text-gray-600 mb-1">Order Date</label>
                         <input 
                           type="date"
-                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-ring focus:border-transparent transition-all dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                           defaultValue={new Date().toISOString().split('T')[0]}
                         />
                       </div>
@@ -514,13 +514,13 @@ export default function SalesOrdersPage() {
                         <label className="block text-sm font-medium text-gray-600 mb-1">Expected Delivery</label>
                         <input 
                           type="date"
-                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-ring focus:border-transparent transition-all dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-600 mb-1">GST Type</label>
                         <select 
-                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-ring focus:border-transparent transition-all dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                           value={newOrder.gst_type}
                           onChange={(e) => setNewOrder({...newOrder, gst_type: e.target.value})}
                         >
@@ -534,7 +534,7 @@ export default function SalesOrdersPage() {
                           type="number"
                           step="0.01"
                           min="0"
-                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-ring focus:border-transparent transition-all dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                           value={newOrder.shipping_cost}
                           onChange={(e) => setNewOrder({...newOrder, shipping_cost: e.target.value})}
                         />
@@ -662,7 +662,7 @@ export default function SalesOrdersPage() {
                               </td>
                               <td className="p-4">
                                 <select
-                                  className="w-full bg-transparent border-0 border-b border-gray-200 focus:ring-0 focus:border-primary/30 p-0 pb-1 text-center font-semibold"
+                                  className="w-full bg-transparent border-0 border-b border-gray-200 focus:ring-0 focus:border-primary/30 p-0 pb-1 text-center font-semibold dark:text-white"
                                   value={item.gst_rate}
                                   onChange={(e) => {
                                     const items = [...newOrder.items];
@@ -743,7 +743,7 @@ export default function SalesOrdersPage() {
                         <FileText className="w-4 h-4 text-gray-400 mr-2" /> Internal Remarks
                       </h3>
                       <textarea 
-                        className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm focus:ring-ring focus:border-ring"
+                        className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm focus:ring-ring focus:border-ring dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                         rows="3"
                         placeholder="Add any internal processing notes..."
                       ></textarea>
@@ -753,7 +753,7 @@ export default function SalesOrdersPage() {
                       <h3 className="flex items-center text-sm font-bold text-gray-800 mb-3">
                         <FileText className="w-4 h-4 text-gray-400 mr-2" /> Terms & Conditions
                       </h3>
-                      <select className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm focus:ring-ring focus:border-ring">
+                      <select className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm focus:ring-ring focus:border-ring dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                         <option>Standard Net 30</option>
                         <option>Net 60</option>
                         <option>Due on Receipt</option>

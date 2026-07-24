@@ -2,6 +2,7 @@ import {
   LayoutDashboard, Users, Calendar, ClipboardList, MapPin, Clock, FileText, Briefcase,
   DollarSign, Layers, Package, Boxes, Warehouse, ShoppingCart, Shield, Settings, Sliders,
   Ruler, GitCompare, Move3D, FileSpreadsheet, FileClock, FileInput, Building2, MessageSquare,
+  TrendingUp, Target, Bell, BarChart3,
 } from 'lucide-react';
 
 export const menuCategories = [
@@ -39,7 +40,17 @@ export const menuCategories = [
       { name: 'Departments', path: '/dashboard/departments', icon: Layers, roles: ['Admin', 'HR'] },
       { name: 'Designations', path: '/dashboard/designations', icon: Briefcase, roles: ['Admin', 'HR'] },
       { name: 'Sites', path: '/dashboard/sites', icon: MapPin, roles: ['Admin', 'Manager', 'HR'] },
+    ],
+  },
+  {
+    title: 'Sales & Survey',
+    items: [
       { name: 'Buildings', path: '/dashboard/buildings', icon: Building2, roles: ['Admin', 'Manager', 'HR', 'Sales'] },
+      { name: 'Sales Dashboard', path: '/dashboard/sales-dashboard', icon: BarChart3, roles: ['Admin', 'Sales', 'Manager'] },
+      { name: 'Buildings Map', path: '/dashboard/buildings-map', icon: MapPin, roles: ['Admin', 'Sales', 'Manager'] },
+      { name: 'Site Visits', path: '/dashboard/site-visits', icon: Calendar, roles: ['Admin', 'Sales', 'Manager'] },
+      { name: 'Opportunities', path: '/dashboard/opportunities', icon: Target, roles: ['Admin', 'Sales', 'Manager'] },
+      { name: 'Follow-ups', path: '/dashboard/follow-ups', icon: Bell, roles: ['Admin', 'Sales', 'Manager'] },
     ],
   },
   {

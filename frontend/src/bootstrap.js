@@ -9,13 +9,11 @@ export function getEcho() {
   if (echoInstance) return echoInstance;
 
   echoInstance = new Echo({
-    broadcaster: 'reverb',
-    key: import.meta.env.VITE_REVERB_APP_KEY || 'local',
-    wsHost: import.meta.env.VITE_REVERB_HOST || 'localhost',
-    wsPort: import.meta.env.VITE_REVERB_PORT || 8080,
-    wssPort: import.meta.env.VITE_REVERB_PORT || 8080,
-    forceTLS: import.meta.env.VITE_REVERB_SCHEME === 'https' || import.meta.env.VITE_REVERB_PORT === '443',
-    enabledTransports: import.meta.env.VITE_REVERB_SCHEME === 'https' ? ['wss'] : ['ws', 'wss'],
+    broadcaster: 'pusher',
+    key: import.meta.env.VITE_PUSHER_APP_KEY,
+    cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
+    forceTLS: true,
+    enabledTransports: ['ws', 'wss'],
     authEndpoint: `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/broadcasting/auth`,
     auth: {
       headers: {

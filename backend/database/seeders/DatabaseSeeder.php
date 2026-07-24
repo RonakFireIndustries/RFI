@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             RolesAndPermissionsSeeder::class,
             DashboardWidgetSeeder::class,
             InventorySeeder::class,
+            BuildingStatusSeeder::class,
         ]);
     }
 }

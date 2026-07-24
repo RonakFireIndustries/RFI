@@ -10,9 +10,9 @@
         "barryvdh/laravel-dompdf": "*",
         "laravel-notification-channels/webpush": "^11.0",
         "laravel/framework": "^12.0",
-        "laravel/reverb": "*",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
+        "pusher/pusher-php-server": "*",
         "spatie/laravel-permission": "^6.25"
     },
     "require-dev": {

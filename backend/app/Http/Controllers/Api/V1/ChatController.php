@@ -9,6 +9,8 @@ use App\Models\ChatMessageRead;
 use App\Events\MessageSent;
 use App\Events\UserTyping;
 use App\Events\MessageRead as MessageReadEvent;
+use App\Services\NotificationService;
+use Illuminate\Support\Str;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -222,6 +224,19 @@ class ChatController extends Controller
         $message->load(['user', 'replyTo.user', 'reads']);
 
         broadcast(new MessageSent($message));
+
+        $channel->load('members');
+        foreach ($channel->members as $member) {
+            if ($member->id !== $request->user()->id) {
+                NotificationService::create(
+                    $member->id,
+                    $request->user()->name . ' sent a message in ' . $channel->name,
+                    $message->message ? Str::limit($message->message, 100) : 'Sent a file',
+                    'info',
+                    '/dashboard/chat',
+                );
+            }
+        }
 
         return $this->success('Message sent', ['message' => $this->formatMessage($message, $request->user())], [], 201);
     }

@@ -309,6 +309,76 @@ Route::prefix('v1')->group(function () {
     // My Leave Requests (employee self-service)
     Route::get('/my-leave-requests', [LeaveController::class, 'myLeaves']);
     Route::post('/my-leave-requests', [LeaveController::class, 'myStore']);
+
+    // ==================== Sales & Building Survey Module ====================
+
+    // Dashboard Stats
+    Route::get('/sales/dashboard', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'dashboardStats']);
+
+    // Building Statuses
+    Route::get('/building-statuses', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'statuses']);
+    Route::post('/buildings/{building}/statuses', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'assignStatus']);
+    Route::delete('/buildings/{building}/statuses/{buildingStatus}', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'removeStatus']);
+
+    // Building Wings
+    Route::get('/buildings/{building}/wings', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'wings']);
+    Route::post('/buildings/{building}/wings', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'storeWing']);
+    Route::put('/buildings/{building}/wings/{wing}', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'updateWing']);
+    Route::delete('/buildings/{building}/wings/{wing}', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'destroyWing']);
+
+    // Fire Systems
+    Route::get('/buildings/{building}/fire-systems', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'fireSystems']);
+    Route::post('/buildings/{building}/fire-systems', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'storeFireSystem']);
+    Route::put('/buildings/{building}/fire-systems/{fireSystem}', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'updateFireSystem']);
+    Route::delete('/buildings/{building}/fire-systems/{fireSystem}', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'destroyFireSystem']);
+
+    // Building Contacts
+    Route::get('/buildings/{building}/contacts', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'contacts']);
+    Route::post('/buildings/{building}/contacts', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'storeContact']);
+    Route::put('/buildings/{building}/contacts/{contact}', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'updateContact']);
+    Route::delete('/buildings/{building}/contacts/{contact}', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'destroyContact']);
+
+    // Site Visits
+    Route::get('/site-visits', [\App\Http\Controllers\Api\V1\SiteVisitController::class, 'index']);
+    Route::post('/site-visits', [\App\Http\Controllers\Api\V1\SiteVisitController::class, 'store']);
+    Route::get('/site-visits/{siteVisit}', [\App\Http\Controllers\Api\V1\SiteVisitController::class, 'show']);
+    Route::put('/site-visits/{siteVisit}', [\App\Http\Controllers\Api\V1\SiteVisitController::class, 'update']);
+    Route::delete('/site-visits/{siteVisit}', [\App\Http\Controllers\Api\V1\SiteVisitController::class, 'destroy']);
+    Route::post('/site-visits/{siteVisit}/photos', [\App\Http\Controllers\Api\V1\SiteVisitController::class, 'uploadPhotos']);
+    Route::delete('/site-visits/{siteVisit}/photos/{photo}', [\App\Http\Controllers\Api\V1\SiteVisitController::class, 'deletePhoto']);
+    Route::post('/site-visits/{siteVisit}/voice-notes', [\App\Http\Controllers\Api\V1\SiteVisitController::class, 'uploadVoiceNotes']);
+    Route::delete('/site-visits/{siteVisit}/voice-notes/{voiceNote}', [\App\Http\Controllers\Api\V1\SiteVisitController::class, 'deleteVoiceNote']);
+
+    // Opportunities
+    Route::get('/opportunities', [\App\Http\Controllers\Api\V1\OpportunityController::class, 'index']);
+    Route::post('/opportunities', [\App\Http\Controllers\Api\V1\OpportunityController::class, 'store']);
+    Route::get('/opportunities/{opportunity}', [\App\Http\Controllers\Api\V1\OpportunityController::class, 'show']);
+    Route::put('/opportunities/{opportunity}', [\App\Http\Controllers\Api\V1\OpportunityController::class, 'update']);
+    Route::delete('/opportunities/{opportunity}', [\App\Http\Controllers\Api\V1\OpportunityController::class, 'destroy']);
+
+    // Follow-ups
+    Route::get('/follow-ups', [\App\Http\Controllers\Api\V1\FollowUpController::class, 'index']);
+    Route::post('/follow-ups', [\App\Http\Controllers\Api\V1\FollowUpController::class, 'store']);
+    Route::get('/follow-ups/{followUp}', [\App\Http\Controllers\Api\V1\FollowUpController::class, 'show']);
+    Route::put('/follow-ups/{followUp}', [\App\Http\Controllers\Api\V1\FollowUpController::class, 'update']);
+    Route::delete('/follow-ups/{followUp}', [\App\Http\Controllers\Api\V1\FollowUpController::class, 'destroy']);
+    Route::post('/follow-ups/{followUp}/complete', [\App\Http\Controllers\Api\V1\FollowUpController::class, 'markComplete']);
+    Route::get('/my-follow-ups', [\App\Http\Controllers\Api\V1\FollowUpController::class, 'myFollowUps']);
+
+    // Sales Documents
+    Route::get('/sales-documents', [\App\Http\Controllers\Api\V1\SalesDocumentController::class, 'index']);
+    Route::post('/sales-documents', [\App\Http\Controllers\Api\V1\SalesDocumentController::class, 'store']);
+    Route::get('/sales-documents/{salesDocument}', [\App\Http\Controllers\Api\V1\SalesDocumentController::class, 'show']);
+    Route::get('/sales-documents/{salesDocument}/download', [\App\Http\Controllers\Api\V1\SalesDocumentController::class, 'download']);
+    Route::delete('/sales-documents/{salesDocument}', [\App\Http\Controllers\Api\V1\SalesDocumentController::class, 'destroy']);
+
+    // Activity Logs
+    Route::get('/activity-logs', [\App\Http\Controllers\Api\V1\ActivityLogController::class, 'index']);
+
+    // Reports
+    Route::get('/reports/building/{building}', [\App\Http\Controllers\Api\V1\ReportController::class, 'buildingReport']);
+    Route::get('/reports/opportunities', [\App\Http\Controllers\Api\V1\ReportController::class, 'opportunityReport']);
+
 });
 
 });

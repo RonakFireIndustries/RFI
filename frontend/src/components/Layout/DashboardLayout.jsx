@@ -1,4 +1,4 @@
-import { Link, useLocation, Outlet, Routes, Route, useNavigate } from 'react-router-dom';
+import { Link, useLocation, Outlet, Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useState, useEffect, useRef } from 'react';
 import api from '../../services/api';
@@ -74,6 +74,19 @@ import LeaveApprovalPage from '../../pages/LeaveManagement/LeaveApprovalPage';
 import MyLeaveRequestsPage from '../../pages/LeaveManagement/MyLeaveRequestsPage';
 import MyLeaveRequestForm from '../../pages/LeaveManagement/MyLeaveRequestForm';
 import MyLeaveDetailPage from '../../pages/LeaveManagement/MyLeaveDetailPage';
+
+// Sales & Building Survey Module
+import SalesDashboard from '../../pages/Sales/SalesDashboard';
+import SiteVisits from '../../pages/Sales/SiteVisits';
+import SiteVisitDetail from '../../pages/Sales/SiteVisitDetail';
+import NewSiteVisit from '../../pages/Sales/NewSiteVisit';
+import Opportunities from '../../pages/Sales/Opportunities';
+import OpportunityDetail from '../../pages/Sales/OpportunityDetail';
+import NewOpportunity from '../../pages/Sales/NewOpportunity';
+import FollowUps from '../../pages/Sales/FollowUps';
+import NewFollowUp from '../../pages/Sales/NewFollowUp';
+import BuildingSurveyDetail from '../../pages/Sales/BuildingDetail';
+import BuildingsMap from '../../pages/Sales/components/BuildingsMap';
 
 // Inventory Management Pages
 import LocationsPage from '../../pages/Inventory/Locations/LocationsPage';
@@ -472,6 +485,18 @@ export default function DashboardLayout() {
               <Route path="user-access" element={<UserAccess />} />
               <Route path="sites" element={<Sites />} />
               <Route path="buildings" element={<Buildings />} />
+              <Route path="buildings/new" element={<Navigate to="/dashboard/buildings" replace />} />
+              <Route path="buildings/:id" element={<BuildingSurveyDetail />} />
+              <Route path="sales-dashboard" element={<SalesDashboard />} />
+              <Route path="buildings-map" element={<BuildingsMap />} />
+              <Route path="site-visits" element={<SiteVisits />} />
+              <Route path="site-visits/new" element={<NewSiteVisit />} />
+              <Route path="site-visits/:id" element={<SiteVisitDetail />} />
+              <Route path="opportunities" element={<Opportunities />} />
+              <Route path="opportunities/new" element={<NewOpportunity />} />
+              <Route path="opportunities/:id" element={<OpportunityDetail />} />
+              <Route path="follow-ups" element={<FollowUps />} />
+              <Route path="follow-ups/new" element={<NewFollowUp />} />
               <Route path="chat" element={<ChatPage />} />
               <Route path="notifications" element={<NotificationsPage />} />
             </Routes>

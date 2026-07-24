@@ -5,7 +5,7 @@ import api from '../../services/api';
 import {
   ArrowLeft, Download, Printer, Mail, CheckCircle, AlertTriangle, XCircle,
   Settings, FileText, Banknote, Signature, ChevronDown, ChevronUp,
-  Eye,   EyeOff, Search, ExternalLink, RefreshCw, Loader2, Trash2
+  Eye, EyeOff, Search, ExternalLink, RefreshCw, Loader2, Trash2
 } from 'lucide-react';
 
 const statusStyles = {
@@ -461,7 +461,7 @@ export default function InvoicePreviewPage() {
               <div className="p-4 space-y-3">
                 <div>
                   <label className="text-xs font-medium text-gray-500 mb-1.5 block">Paper Size</label>
-                  <select value={paperSize} onChange={e => setPaperSize(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:ring-ring focus:border-ring">
+                  <select value={paperSize} onChange={e => setPaperSize(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:ring-ring focus:border-ring dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                     <option value="a4">A4</option>
                     <option value="letter">Letter</option>
                     <option value="legal">Legal</option>
@@ -543,21 +543,21 @@ export default function InvoicePreviewPage() {
             </div>
             <form onSubmit={handleEmail} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Recipient Email</label>
+                <label className="block text-sm font-medium text-color-white">Recipient Email</label>
                 <input type="email" value={emailForm.recipient} onChange={e => setEmailForm({ ...emailForm, recipient: e.target.value })}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-ring focus:border-ring"
                   placeholder="customer@example.com" required />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                <label className="block text-sm font-medium text-color-white">Subject</label>
                 <input type="text" value={emailForm.subject} onChange={e => setEmailForm({ ...emailForm, subject: e.target.value })}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-ring focus:border-ring"
                   placeholder={`Invoice ${invoice?.invoice_number} from ${company?.name || 'RFI Global ERP'}`} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                <label className="block text-sm font-medium text-color-white">Message</label>
                 <textarea value={emailForm.message} onChange={e => setEmailForm({ ...emailForm, message: e.target.value })} rows={4}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-ring focus:border-ring resize-none"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-ring focus:border-ring resize-none dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   placeholder="Optional message..." />
               </div>
               {emailResult && (

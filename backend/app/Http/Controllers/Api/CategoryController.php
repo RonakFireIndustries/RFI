@@ -21,12 +21,14 @@ class CategoryController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:255',
             'status' => 'required|string|in:Active,Inactive',
             'parent_id' => 'nullable|exists:categories,id',
         ]);
 
-        $validated['created_by'] = Auth::id();
+        if (Auth::id()) {
+            $validated['created_by'] = Auth::id();
+        }
 
         $category = Category::create($validated);
 
@@ -44,7 +46,7 @@ class CategoryController extends Controller
     {
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:255',
             'status' => 'sometimes|string|in:Active,Inactive',
             'parent_id' => 'nullable|exists:categories,id',
         ]);

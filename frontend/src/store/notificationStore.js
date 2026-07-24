@@ -1,5 +1,8 @@
 import { create } from 'zustand';
 import { notificationService } from '../services/notificationService';
+import { getEcho } from '../bootstrap';
+
+let echoChannel = null;
 
 export const useNotificationStore = create((set, get) => ({
   notifications: [],
@@ -25,6 +28,13 @@ export const useNotificationStore = create((set, get) => ({
     } catch {
       // silent fail for count
     }
+  },
+
+  addNotification: (notification) => {
+    set((state) => ({
+      notifications: [notification, ...state.notifications],
+      unreadCount: state.unreadCount + (notification.is_read ? 0 : 1),
+    }));
   },
 
   markRead: async (id) => {
@@ -54,7 +64,42 @@ export const useNotificationStore = create((set, get) => ({
     }));
   },
 
-  startPolling: (interval = 15000) => {
+  listenForNotifications: (userId) => {
+    if (!userId) return;
+
+    try {
+      const echo = getEcho();
+      echoChannel = echo.private(`user.${userId}`);
+
+      echoChannel.listen('.notification.created', (event) => {
+        get().addNotification({
+          id: event.id || Date.now(),
+          title: event.title,
+          message: event.message,
+          type: event.type,
+          link: event.link,
+          is_read: false,
+          created_at: event.created_at || new Date().toISOString(),
+        });
+      });
+    } catch (err) {
+      console.warn('WebSocket notification listener failed, falling back to polling:', err);
+    }
+  },
+
+  stopListeningForNotifications: (userId) => {
+    if (echoChannel) {
+      try {
+        const echo = getEcho();
+        echo.leave(`user.${userId}`);
+      } catch {
+        // ignore cleanup errors
+      }
+      echoChannel = null;
+    }
+  },
+
+  startPolling: (interval = 30000) => {
     const { polling } = get();
     if (polling) return;
     set({ polling: true });
