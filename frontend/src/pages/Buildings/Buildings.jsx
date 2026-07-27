@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useBuildingStore } from '../../store/buildingStore';
 import { useSiteStore } from '../../store/siteStore';
+import MapPicker from '../../components/MapPicker';
 import {
   Plus, Edit, Trash2, Search, MapPin, Building2, Info, X, Compass,
   Shield, Flame, Hammer, User, Phone, FileText, ChevronDown, ChevronUp
@@ -394,6 +395,22 @@ export default function Buildings() {
                       <input type="number" step="any" name="longitude" value={formData.longitude} onChange={handleInputChange} placeholder="e.g. 72.8777" className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                     </div>
                   </div>
+                  <MapPicker
+                    value={{ latitude: formData.latitude, longitude: formData.longitude }}
+                    onChange={(coords) => {
+                      setFormData(prev => ({
+                        ...prev,
+                        latitude: coords.latitude || prev.latitude,
+                        longitude: coords.longitude || prev.longitude,
+                        address: coords.address || prev.address,
+                        city: coords.city || prev.city,
+                        state: coords.state || prev.state,
+                        country: coords.country || prev.country,
+                        pincode: coords.pincode || prev.pincode,
+                      }));
+                      setFormErrors({});
+                    }}
+                  />
                 </div>
               </div>
 
