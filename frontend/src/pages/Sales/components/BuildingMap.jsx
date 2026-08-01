@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { MapPin, AlertTriangle, BarChart3 } from 'lucide-react';
 import { useMapUsageTracker, useSessionToken } from '../../../hooks/useGoogleMapsOptimizer';
 
+const GOOGLE_MAPS_LIBRARIES = ['places'];
+
 const mapContainerStyle = {
   width: '100%',
   height: '600px',
@@ -241,7 +243,7 @@ export default function BuildingMap({ buildings = [], onBuildingSelect, height }
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: apiKey || '',
     preventGoogleFontsLoading: true,
-    libraries: ['places'],
+    libraries: GOOGLE_MAPS_LIBRARIES,
   });
 
   if (!apiKey) return <NoApiKeyState height={height} />;

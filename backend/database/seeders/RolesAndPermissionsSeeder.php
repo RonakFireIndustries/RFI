@@ -61,6 +61,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'inventory.requests.view', 'inventory.requests.create', 'inventory.requests.approve',
             'inventory.transfers.view', 'inventory.transfers.create', 'inventory.transfers.approve',
             'inventory.dashboard.view',
+            'building.view', 'building.create', 'building.edit', 'building.delete',
             'view reports', 'create reports', 'update reports', 'delete reports', 'export reports', 'schedule reports',
         ];
 
@@ -122,6 +123,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'daily-report.view', 'daily-report.report.view',
             'attendance.view', 'view_attendance',
             'leave.view',
+            'building.view',
             'view reports', 'create reports', 'update reports', 'export reports',
         ]);
 

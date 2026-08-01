@@ -3,6 +3,7 @@ import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import { MapPin, Search, Loader2, Crosshair, X } from 'lucide-react';
 import { useMapUsageTracker, useSessionToken } from '../hooks/useGoogleMapsOptimizer';
 
+const GOOGLE_MAPS_LIBRARIES = ['places'];
 const mapContainerStyle = { width: '100%', height: '350px', borderRadius: '12px' };
 const defaultCenter = { lat: 19.0760, lng: 72.8777 };
 const mapOptions = {
@@ -275,7 +276,7 @@ export default function MapPicker({ value, onChange }) {
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: apiKey || '',
     preventGoogleFontsLoading: true,
-    libraries: ['places'],
+    libraries: GOOGLE_MAPS_LIBRARIES,
   });
 
   if (!apiKey) {
