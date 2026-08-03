@@ -45,4 +45,10 @@ class SiteVisit extends Model
     {
         return $this->hasMany(SalesDocument::class);
     }
+
+    public function activityLogs(): HasMany
+    {
+        return $this->hasMany(ActivityLog::class, 'loggable_id')
+            ->where('loggable_type', self::class);
+    }
 }

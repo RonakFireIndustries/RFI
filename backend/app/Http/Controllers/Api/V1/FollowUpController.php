@@ -25,9 +25,9 @@ class FollowUpController extends Controller
             $query->where('user_id', $request->user()->id);
         }
 
-        if ($request->filled('status')) {
+        if ($request->filled('status') && $request->status !== 'All') {
             $query->where('status', $request->status);
-        } else {
+        } elseif (! $request->filled('status')) {
             $query->where('status', 'Pending');
         }
 

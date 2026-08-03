@@ -1,5 +1,6 @@
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
+import { config } from './config/environment';
 
 window.Pusher = Pusher;
 
@@ -10,11 +11,11 @@ export function getEcho() {
 
   echoInstance = new Echo({
     broadcaster: 'pusher',
-    key: import.meta.env.VITE_PUSHER_APP_KEY,
-    cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
+    key: config.PUSHER_APP_KEY,
+    cluster: config.PUSHER_APP_CLUSTER,
     forceTLS: true,
     enabledTransports: ['ws', 'wss'],
-    authEndpoint: `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/broadcasting/auth`,
+    authEndpoint: `${config.API_URL}/broadcasting/auth`,
     auth: {
       headers: {
         Authorization: `Bearer ${getToken()}`,

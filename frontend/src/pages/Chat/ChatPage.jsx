@@ -3,6 +3,7 @@ import { useChatStore } from '../../store/chatStore';
 import { useAuthStore } from '../../store/authStore';
 import { useEmployeeStore } from '../../store/employeeStore';
 import { getEcho } from '../../bootstrap';
+import { config } from '../../config/environment';
 import api from '../../services/api';
 import {
   Send, Paperclip, X, Reply, Search, Plus, Users, CheckCheck, Check,
@@ -351,10 +352,10 @@ export default function ChatPage() {
                           : 'bg-gray-100 text-gray-900 rounded-bl-md'
                       } ${msg.reply_to ? 'rounded-t-none' : ''}`}>
                         {msg.type === 'image' && msg.file_path && (
-                          <img src={`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/storage/${msg.file_path}`} alt="Shared" className="rounded-lg max-w-full mb-1 max-h-60 object-cover" />
+                          <img src={`${config.API_URL}/storage/${msg.file_path}`} alt="Shared" className="rounded-lg max-w-full mb-1 max-h-60 object-cover" />
                         )}
                         {msg.type === 'file' && msg.file_path && (
-                            <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/storage/${msg.file_path}`} target="_blank" rel="noopener noreferrer"
+                            <a href={`${config.API_URL}/storage/${msg.file_path}`} target="_blank" rel="noopener noreferrer"
                             className={`flex items-center gap-2 text-sm underline ${msg.is_mine ? 'text-white/90' : 'text-primary'}`}>
                             <FileText className="w-4 h-4" />
                             {msg.file_name || 'Download'}

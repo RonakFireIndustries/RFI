@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import { MapPin, Search, Loader2, Crosshair, X } from 'lucide-react';
 import { useMapUsageTracker, useSessionToken } from '../hooks/useGoogleMapsOptimizer';
+import { config } from '../config/environment';
 
 const GOOGLE_MAPS_LIBRARIES = ['places'];
 const mapContainerStyle = { width: '100%', height: '350px', borderRadius: '12px' };
@@ -209,7 +210,7 @@ function GoogleMapPicker({ value, onChange }) {
 
   return (
     <div className="space-y-3">
-      <form onSubmit={handleSearchSubmit} className="flex gap-2">
+      <div className="flex gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
@@ -217,15 +218,25 @@ function GoogleMapPicker({ value, onChange }) {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSearchSubmit(e);
+              }
+            }}
             placeholder="Search address or place..."
             className="w-full pl-9 pr-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
+        <button type="button" onClick={handleSearchSubmit} disabled={searching} className="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1.5 whitespace-nowrap">
+          <Search className="w-4 h-4" />
+          Search
+        </button>
         <button type="button" onClick={handleUseMyLocation} className="px-3 py-2 border border-gray-250 rounded-lg text-sm text-gray-600 hover:bg-gray-50 flex items-center gap-1.5 whitespace-nowrap" title="Use my current location">
           <Crosshair className="w-4 h-4" />
           Current
         </button>
-      </form>
+      </div>
 
       <div className="relative rounded-xl overflow-hidden border border-gray-200">
         <GoogleMap
@@ -270,7 +281,7 @@ function GoogleMapPicker({ value, onChange }) {
 }
 
 export default function MapPicker({ value, onChange }) {
-  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+  const apiKey = config.GOOGLE_MAPS_API_KEY;
   const [loaded, setLoaded] = useState(false);
 
   const { isLoaded, loadError } = useJsApiLoader({
@@ -284,7 +295,7 @@ export default function MapPicker({ value, onChange }) {
       <div className="border border-dashed border-gray-300 rounded-xl p-6 text-center bg-gray-50">
         <MapPin className="w-8 h-8 text-gray-400 mx-auto mb-2" />
         <p className="text-sm text-gray-500">Google Maps API key not configured</p>
-        <p className="text-xs text-gray-400 mt-1">Set VITE_GOOGLE_MAPS_API_KEY in .env</p>
+        <p className="text-xs text-gray-400 mt-1">Set GOOGLE_MAPS_API_KEY in src/config/environment.js</p>
       </div>
     );
   }

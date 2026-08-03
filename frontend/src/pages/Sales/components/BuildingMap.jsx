@@ -1,8 +1,9 @@
-import { useState, useCallback, useEffect, useMemo, memo, lazy, Suspense } from 'react';
+import { useState, useCallback, useEffect, useMemo, memo, lazy, Suspense, useRef } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow, MarkerClusterer } from '@react-google-maps/api';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, AlertTriangle, BarChart3 } from 'lucide-react';
 import { useMapUsageTracker, useSessionToken } from '../../../hooks/useGoogleMapsOptimizer';
+import { config } from '../../../config/environment';
 
 const GOOGLE_MAPS_LIBRARIES = ['places'];
 
@@ -18,11 +19,11 @@ const defaultCenter = {
 };
 
 const MARKER_COLORS = {
-  red: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
-  yellow: 'http://maps.google.com/mapfiles/ms/icons/yellow-dot.png',
-  green: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png',
-  blue: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png',
-  gray: 'http://maps.google.com/mapfiles/ms/icons/gray-dot.png',
+  red: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+  yellow: 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png',
+  green: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
+  blue: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+  gray: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
 };
 
 const STATUS_COLOR_MAP = {
@@ -134,7 +135,7 @@ function NoApiKeyState({ height }) {
       <div className="text-center text-gray-500">
         <MapPin className="w-12 h-12 mx-auto mb-3 text-gray-300" />
         <p>Google Maps API key not configured</p>
-        <p className="text-xs mt-1">Set VITE_GOOGLE_MAPS_API_KEY in .env</p>
+        <p className="text-xs mt-1">Set GOOGLE_MAPS_API_KEY in src/config/environment.js</p>
       </div>
     </div>
   );
@@ -145,10 +146,24 @@ function GoogleMapsLoaded({ buildings, onBuildingSelect, height, usageTracker })
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [mapCenter, setMapCenter] = useState(defaultCenter);
   const [mapInstance, setMapInstance] = useState(null);
+  const mapRef = useRef(null);
   const { getToken } = useSessionToken();
 
-  useEffect(() => {
+  const centerOnBuildings = useCallback(() => {
     const located = buildings.filter(b => b.latitude && b.longitude);
+    if (located.length === 0) return;
+
+    const map = mapRef.current;
+    if (map && window.google?.maps?.LatLngBounds) {
+      const bounds = new window.google.maps.LatLngBounds();
+      located.forEach(b => bounds.extend({ lat: parseFloat(b.latitude), lng: parseFloat(b.longitude) }));
+      map.fitBounds(bounds);
+      if (located.length === 1) {
+        map.setZoom(14);
+      }
+      return;
+    }
+
     if (located.length === 1) {
       setMapCenter({ lat: parseFloat(located[0].latitude), lng: parseFloat(located[0].longitude) });
     } else if (located.length > 1) {
@@ -158,10 +173,16 @@ function GoogleMapsLoaded({ buildings, onBuildingSelect, height, usageTracker })
     }
   }, [buildings]);
 
+  useEffect(() => {
+    centerOnBuildings();
+  }, [centerOnBuildings, mapInstance]);
+
   const handleMapLoad = useCallback((map) => {
+    mapRef.current = map;
     setMapInstance(map);
     usageTracker.trackMapLoad();
-  }, [usageTracker]);
+    centerOnBuildings();
+  }, [usageTracker, centerOnBuildings]);
 
   const handleMarkerClick = useCallback((building) => {
     setSelectedBuilding(building);
@@ -237,7 +258,7 @@ function GoogleMapsLoaded({ buildings, onBuildingSelect, height, usageTracker })
 }
 
 export default function BuildingMap({ buildings = [], onBuildingSelect, height }) {
-  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+  const apiKey = config.GOOGLE_MAPS_API_KEY;
   const usageTracker = useMapUsageTracker();
 
   const { isLoaded, loadError } = useJsApiLoader({

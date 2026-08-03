@@ -9,6 +9,6 @@ Broadcast::channel('chat.{channelId}', function ($user, $channelId) {
     return $channel->members()->where('users.id', $user->id)->exists();
 });
 
-Broadcast::channel('private/user.{userId}', function ($user, $userId) {
+Broadcast::channel('user.{userId}', function ($user, $userId) {
     return (int) $user->id === (int) $userId;
 });

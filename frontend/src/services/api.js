@@ -1,4 +1,6 @@
-const API_HOST = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+import { config } from '../config/environment';
+
+const API_HOST = config.API_URL;
 
 export const BASE_URL = `${API_HOST}/api/v1`;
 export const STORAGE_URL = `${API_HOST}/storage`;

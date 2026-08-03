@@ -1,8 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Filter, TrendingUp, Calendar, Building2, MoreVertical, Edit2, Trash2, Eye } from 'lucide-react';
+import { Plus, Search, Building2, ChevronRight, ChevronDown, MapPin, TrendingUp } from 'lucide-react';
 import { useOpportunityStore } from '../../store/opportunityStore';
-import { useBuildingStore } from '../../store/buildingStore';
 import { format } from 'date-fns';
 
 const STAGES = ['Prospect', 'Follow-Up', 'Quotation Sent', 'Negotiation', 'Won', 'Lost'];
@@ -18,26 +17,51 @@ const STAGE_COLORS = {
 export default function Opportunities() {
   const navigate = useNavigate();
   const { items: opportunities, loading, fetchItems } = useOpportunityStore();
-  const { items: buildings, fetchItems: fetchBuildings } = useBuildingStore();
   const [search, setSearch] = useState('');
   const [stageFilter, setStageFilter] = useState('');
   const [viewMode, setViewMode] = useState('list');
+  const [expanded, setExpanded] = useState({});
 
   useEffect(() => {
     fetchItems({ search, stage: stageFilter });
-    fetchBuildings();
-  }, [fetchItems, fetchBuildings, search, stageFilter]);
+  }, [fetchItems, search, stageFilter]);
 
   const formatCurrency = (val) => {
     if (!val) return '-';
     return `₹${parseFloat(val).toLocaleString('en-IN')}`;
   };
 
+  const groups = useMemo(() => {
+    const map = new Map();
+    (opportunities || []).forEach(opp => {
+      const building = opp.building;
+      const key = building?.id ?? 'unknown';
+      if (!map.has(key)) {
+        map.set(key, {
+          key,
+          id: building?.id ?? null,
+          name: building?.name || 'Unknown Building',
+          address: [building?.address, building?.area, building?.city].filter(Boolean).join(', '),
+          opportunities: [],
+        });
+      }
+      map.get(key).opportunities.push(opp);
+    });
+    return Array.from(map.values())
+      .map(group => ({
+        ...group,
+        opportunities: group.opportunities.sort((a, b) => new Date(b.expected_closing_date || 0) - new Date(a.expected_closing_date || 0)),
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [opportunities]);
+
   const groupedOpportunities = {};
   STAGES.forEach(s => { groupedOpportunities[s] = []; });
   (opportunities || []).forEach(opp => {
     if (groupedOpportunities[opp.stage]) groupedOpportunities[opp.stage].push(opp);
   });
+
+  const toggle = (key) => setExpanded(prev => ({ ...prev, [key]: !prev[key] }));
 
   return (
     <div className="space-y-6">
@@ -72,41 +96,64 @@ export default function Opportunities() {
       {loading ? (
         <div className="flex items-center justify-center h-40"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600" /></div>
       ) : viewMode === 'list' ? (
-        <div className="bg-white rounded-lg border overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Building</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stage</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Value</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Probability</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Expected Close</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {(opportunities || []).length === 0 ? (
-                <tr><td colSpan={7} className="px-4 py-12 text-center text-gray-500">No opportunities found</td></tr>
-              ) : (opportunities || []).map(opp => (
-                <tr key={opp.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3">
-                    <button onClick={() => navigate(`/dashboard/opportunities/${opp.id}`)} className="text-sm font-medium text-red-600 hover:text-red-700">{opp.name}</button>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{opp.building?.name || '-'}</td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${STAGE_COLORS[opp.stage] || ''}`}>{opp.stage}</span>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-900">{formatCurrency(opp.estimated_value)}</td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{opp.probability}%</td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{opp.expected_closing_date ? format(new Date(opp.expected_closing_date), 'dd MMM yyyy') : '-'}</td>
-                  <td className="px-4 py-3 text-right">
-                    <button onClick={() => navigate(`/dashboard/opportunities/${opp.id}`)} className="text-gray-400 hover:text-gray-600"><Eye className="w-4 h-4" /></button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {groups.length === 0 ? (
+            <div className="col-span-full text-center py-12 text-gray-500">No opportunities found</div>
+          ) : groups.map(group => {
+            const totalValue = group.opportunities.reduce((sum, opp) => sum + (parseFloat(opp.estimated_value) || 0), 0);
+            const isOpen = !!expanded[group.key];
+            return (
+              <div key={group.key} className="bg-white border rounded-lg overflow-hidden">
+                <button onClick={() => toggle(group.key)} className="w-full text-left p-4 hover:bg-gray-50 transition-colors">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center">
+                        <Building2 className="w-5 h-5 text-red-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">{group.name}</p>
+                        <p className="text-sm text-gray-500 mt-0.5">{group.address || 'No address'}</p>
+                      </div>
+                    </div>
+                    <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                  </div>
+                  <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
+                    <span className="flex items-center gap-1"><TrendingUp className="w-3 h-3" />{group.opportunities.length} {group.opportunities.length === 1 ? 'opportunity' : 'opportunities'}</span>
+                    <span className="flex items-center gap-1"><TrendingUp className="w-3 h-3" />{formatCurrency(totalValue)}</span>
+                  </div>
+                </button>
+
+                {isOpen && (
+                  <div className="border-t bg-gray-50">
+                    {group.opportunities.map(opp => (
+                      <button key={opp.id} onClick={() => navigate(`/dashboard/opportunities/${opp.id}`)}
+                        className="w-full text-left px-4 py-3 border-b last:border-b-0 hover:bg-gray-100 transition-colors">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-medium text-gray-900 truncate">{opp.name}</p>
+                              <span className={`flex-shrink-0 inline-flex px-2 py-0.5 text-[11px] font-medium rounded-full border ${STAGE_COLORS[opp.stage] || ''}`}>{opp.stage}</span>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              {formatCurrency(opp.estimated_value)} • {opp.probability != null ? `${opp.probability}%` : ''} • {opp.expected_closing_date ? `Closes ${format(new Date(opp.expected_closing_date), 'dd MMM yyyy')}` : ''}
+                            </p>
+                            {opp.work_types?.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-1.5">
+                                {opp.work_types.slice(0, 3).map((wt, i) => (
+                                  <span key={i} className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">{wt.work_type}</span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       ) : (
         /* Pipeline View */
