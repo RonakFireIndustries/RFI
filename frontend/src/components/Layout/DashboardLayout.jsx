@@ -28,10 +28,9 @@ import DesignationsPage from '../../pages/Designations/DesignationsPage';
 import PermissionManagement from '../../pages/Admin/PermissionManagement';
 import RoleList from '../../pages/Admin/Roles/RoleList';
 import RoleForm from '../../pages/Admin/Roles/RoleForm';
-import RoleConfigurationPage from '../../pages/Admin/RoleConfigurationPage';
+import AccessControl from '../../pages/Admin/AccessControl';
 import PermissionList from '../../pages/Admin/Permissions/PermissionList';
 import PermissionForm from '../../pages/Admin/Permissions/PermissionForm';
-import UserAccess from '../../pages/Admin/UserAccess/UserAccess';
 import { usePwaInstall } from '@/hooks/usePwaInstall';
 import OfflineBanner from '../Pwa/OfflineBanner';
 import InstallBanner from '../Pwa/InstallBanner';
@@ -90,6 +89,7 @@ import BuildingsMap from '../../pages/Sales/components/BuildingsMap';
 
 // Inventory Management Pages
 import LocationsPage from '../../pages/Inventory/Locations/LocationsPage';
+import LocationDetail from '../../pages/Inventory/Locations/LocationDetail';
 import UnitsPage from '../../pages/Inventory/Units/UnitsPage';
 import ConversionsPage from '../../pages/Inventory/Conversions/ConversionsPage';
 import StockPage from '../../pages/Inventory/Stock/StockPage';
@@ -420,6 +420,7 @@ export default function DashboardLayout() {
               <Route path="inventory/:id" element={<InventoryDetail />} />
               <Route path="inventory/dashboard" element={<InventoryDashboard />} />
               <Route path="inventory/locations" element={<LocationsPage />} />
+              <Route path="inventory/locations/:id" element={<LocationDetail />} />
               <Route path="inventory/units" element={<UnitsPage />} />
               <Route path="inventory/conversions" element={<ConversionsPage />} />
               <Route path="inventory/stock" element={<StockPage />} />
@@ -474,7 +475,7 @@ export default function DashboardLayout() {
               <Route path="reports" element={<ReportsPage />} />
               <Route path="settings" element={<SettingsPage />} />
               <Route path="user-settings" element={<UserSettingsPage />} />
-              <Route path="role-configuration" element={<RoleConfigurationPage />} />
+              <Route path="access-control" element={<AccessControl />} />
               <Route path="permissions" element={<PermissionManagement />} />
               <Route path="roles" element={<RoleList />} />
               <Route path="roles/create" element={<RoleForm />} />
@@ -482,7 +483,6 @@ export default function DashboardLayout() {
               <Route path="permissions-list" element={<PermissionList />} />
               <Route path="permissions-list/create" element={<PermissionForm />} />
               <Route path="permissions-list/:id/edit" element={<PermissionForm />} />
-              <Route path="user-access" element={<UserAccess />} />
               <Route path="sites" element={<Sites />} />
               <Route path="buildings" element={<Buildings />} />
               <Route path="buildings/new" element={<Navigate to="/dashboard/buildings" replace />} />

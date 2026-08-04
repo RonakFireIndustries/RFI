@@ -28,7 +28,9 @@ export default function ModuleListPage({
   searchPlaceholder,
   lookups = {},
   hideView,
+  readOnly,
   fetchParams,
+  renderItems,
 }) {
   const { items, loading, fetchItems, createItem, updateItem, deleteItem } = store();
   const [search, setSearch] = useState('');
@@ -93,41 +95,52 @@ export default function ModuleListPage({
     }
   };
 
-  const tableColumns = useMemo(() => [
-    ...columns.map((column) => ({
-      accessorFn: (row) => column.accessor ? getPathValue(row, column.accessor) : column.cellValue?.(row),
-      id: column.id || column.accessor || column.header,
-      header: column.header,
-      cell: ({ row }) => column.cell ? column.cell(row.original) : (column.accessor ? getPathValue(row.original, column.accessor) : (column.cellValue?.(row.original) ?? '')),
-    })),
-    {
-      id: 'actions',
-      header: 'Actions',
-      enableSorting: false,
-      cell: ({ row }) => (
-        <div className="flex justify-end gap-2">
-          {!hideView && (
-            <Link className="rounded-md border border-gray-200 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50" to={`${detailBasePath}/${row.original.id}`}>
-              View
-            </Link>
-          )}
-          <button type="button" className="rounded-md p-1.5 text-blue-600 hover:bg-blue-50" onClick={() => openModal(row.original)} title="Edit">
-            <Edit2 className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            className="rounded-md p-1.5 text-red-600 hover:bg-red-50"
-            onClick={() => {
-              if (window.confirm(`Delete ${title.slice(0, -1).toLowerCase()}?`)) deleteItem(row.original.id);
-            }}
-            title="Delete"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
-        </div>
-      ),
-    },
-  ], [columns, deleteItem, detailBasePath, fields, title, updateItem]);
+  const tableColumns = useMemo(() => {
+    const cols = [
+      ...columns.map((column) => ({
+        accessorFn: (row) => column.accessor ? getPathValue(row, column.accessor) : column.cellValue?.(row),
+        id: column.id || column.accessor || column.header,
+        header: column.header,
+        cell: ({ row }) => column.cell ? column.cell(row.original) : (column.accessor ? getPathValue(row.original, column.accessor) : (column.cellValue?.(row.original) ?? '')),
+      })),
+    ];
+    if (!readOnly) {
+      cols.push({
+        id: 'actions',
+        header: 'Actions',
+        enableSorting: false,
+        cell: ({ row }) => (
+          <div className="flex justify-end gap-2">
+            {!hideView && (
+              <Link className="rounded-md border border-gray-200 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50" to={`${detailBasePath}/${row.original.id}`}>
+                View
+              </Link>
+            )}
+            <button type="button" className="rounded-md p-1.5 text-blue-600 hover:bg-blue-50" onClick={() => openModal(row.original)} title="Edit">
+              <Edit2 className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              className="rounded-md p-1.5 text-red-600 hover:bg-red-50"
+              onClick={() => {
+                if (window.confirm(`Delete ${title.slice(0, -1).toLowerCase()}?`)) deleteItem(row.original.id);
+              }}
+              title="Delete"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
+        ),
+      });
+    }
+    return cols;
+  }, [columns, deleteItem, detailBasePath, fields, title, updateItem, readOnly, hideView]);
+
+  const filteredItems = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return items;
+    return items.filter((item) => JSON.stringify(item).toLowerCase().includes(query));
+  }, [items, search]);
 
   return (
     <div className="space-y-5 pb-10">
@@ -154,8 +167,10 @@ export default function ModuleListPage({
 
       {loading ? (
         <div className="rounded-lg border border-gray-200 bg-white p-8 text-center text-sm text-gray-500">Loading {title.toLowerCase()}...</div>
+      ) : renderItems ? (
+        renderItems(filteredItems, { openModal, deleteItem, detailBasePath, title })
       ) : (
-        <DataTable columns={tableColumns} data={items} globalFilter={search} onGlobalFilterChange={setSearch} />
+        <DataTable columns={tableColumns} data={filteredItems} globalFilter={search} onGlobalFilterChange={setSearch} />
       )}
 
       {isModalOpen && (

@@ -12,6 +12,7 @@ export const useAccessStore = create((set) => ({
     try {
       const response = await api.get(`/users/${userId}/roles`);
       set({ userRoles: response.data, loading: false });
+      return response.data;
     } catch (error) {
       set({ error, loading: false });
       throw error;
@@ -23,6 +24,7 @@ export const useAccessStore = create((set) => ({
     try {
       const response = await api.post(`/users/${userId}/roles`, { roles });
       set({ userRoles: response.data, loading: false });
+      return response.data;
     } catch (error) {
       set({ error, loading: false });
       throw error;
@@ -33,10 +35,12 @@ export const useAccessStore = create((set) => ({
     set({ loading: true, error: null });
     try {
       await api.delete(`/users/${userId}/roles/${roleId}`);
-      set((state) => ({
-        userRoles: state.userRoles.filter((r) => r.id !== roleId),
-        loading: false,
-      }));
+      let remaining = [];
+      set((state) => {
+        remaining = state.userRoles.filter((r) => r.id !== roleId);
+        return { userRoles: remaining, loading: false };
+      });
+      return remaining;
     } catch (error) {
       set({ error, loading: false });
       throw error;
@@ -48,6 +52,7 @@ export const useAccessStore = create((set) => ({
     try {
       const response = await api.get(`/users/${userId}/permissions`);
       set({ userPermissions: response.data, loading: false });
+      return response.data;
     } catch (error) {
       set({ error, loading: false });
       throw error;
@@ -59,6 +64,7 @@ export const useAccessStore = create((set) => ({
     try {
       const response = await api.post(`/users/${userId}/permissions`, { permissions });
       set({ userPermissions: response.data, loading: false });
+      return response.data;
     } catch (error) {
       set({ error, loading: false });
       throw error;
@@ -69,10 +75,12 @@ export const useAccessStore = create((set) => ({
     set({ loading: true, error: null });
     try {
       await api.delete(`/users/${userId}/permissions/${permissionId}`);
-      set((state) => ({
-        userPermissions: state.userPermissions.filter((p) => p.id !== permissionId),
-        loading: false,
-      }));
+      let remaining = [];
+      set((state) => {
+        remaining = state.userPermissions.filter((p) => p.id !== permissionId);
+        return { userPermissions: remaining, loading: false };
+      });
+      return remaining;
     } catch (error) {
       set({ error, loading: false });
       throw error;

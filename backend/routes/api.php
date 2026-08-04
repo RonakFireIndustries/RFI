@@ -76,9 +76,11 @@ Route::prefix('v1')->group(function () {
     Route::put('/role-config/roles/{role}/audit', [RoleConfigController::class, 'updateAuditSettings']);
     Route::get('/role-config/roles/{role}/summary', [RoleConfigController::class, 'roleSummary']);
     Route::get('/role-config/permissions-by-module', [RoleConfigController::class, 'permissionsByModule']);
+    Route::get('/role-config/permissions-report', [RoleConfigController::class, 'permissionsReport']);
     Route::get('/role-config/dependencies', [RoleConfigController::class, 'dependencies']);
 
     // User Access Management
+    Route::get('/users', [UserAccessController::class, 'index']);
     Route::get('/users/{user}/roles', [UserAccessController::class, 'getRoles']);
     Route::post('/users/{user}/roles', [UserAccessController::class, 'assignRole']);
     Route::delete('/users/{user}/roles/{role}', [UserAccessController::class, 'removeRole']);
@@ -153,6 +155,9 @@ Route::prefix('v1')->group(function () {
     // Inventory Locations (using sites - polymorphic)
     Route::get('/locations', [InventoryLocationController::class, 'index']);
     Route::post('/locations', [InventoryLocationController::class, 'store']);
+    Route::get('/locations/{location}', [InventoryLocationController::class, 'show']);
+    Route::put('/locations/{location}', [InventoryLocationController::class, 'update']);
+    Route::delete('/locations/{location}', [InventoryLocationController::class, 'destroy']);
 
     // Units
     Route::apiResource('units', UnitController::class);

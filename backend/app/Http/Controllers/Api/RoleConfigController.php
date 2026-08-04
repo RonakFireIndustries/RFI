@@ -12,6 +12,7 @@ use App\Models\AuditSetting;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class RoleConfigController extends Controller
 {
@@ -181,6 +182,48 @@ class RoleConfigController extends Controller
             $grouped[$module][] = $perm;
         }
         return response()->json(['success' => true, 'data' => $grouped]);
+    }
+
+    public function permissionsReport()
+    {
+        $this->authorize('manage_roles');
+
+        $roles = Role::with('permissions')->orderBy('name')->get()->map(function ($role) {
+            $modules = [];
+            foreach ($role->permissions as $perm) {
+                $parts = explode('.', $perm->name);
+                $module = $parts[0] ?? 'general';
+                $action = $parts[1] ?? 'view';
+                if (!isset($modules[$module])) {
+                    $modules[$module] = ['view' => false, 'create' => false, 'edit' => false, 'delete' => false, 'other' => []];
+                }
+                if (in_array($action, ['view', 'create', 'edit', 'delete'])) {
+                    $modules[$module][$action] = true;
+                } else {
+                    $modules[$module]['other'][] = $perm->name;
+                }
+            }
+            ksort($modules);
+
+            $count = $role->permissions->count();
+            $accessLevel = $count > 40 ? 'Full System' : ($count > 25 ? 'Advanced' : ($count > 10 ? 'Standard' : ($count > 3 ? 'Limited' : ($count > 0 ? 'Basic' : 'No Access'))));
+
+            return [
+                'name' => $role->name,
+                'guard' => $role->guard_name,
+                'count' => $count,
+                'access_level' => $accessLevel,
+                'modules' => $modules,
+            ];
+        });
+
+        $pdf = Pdf::loadView('reports.role_permissions', [
+            'roles' => $roles,
+            'generated_at' => now()->format('d M Y, h:i A'),
+        ]);
+        $pdf->setPaper('a4', 'landscape');
+
+        return $pdf->stream('role-permissions-report-' . now()->format('Y-m-d') . '.pdf');
     }
 
     public function dependencies()

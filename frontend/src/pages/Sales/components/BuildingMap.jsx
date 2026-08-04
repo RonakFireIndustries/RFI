@@ -194,7 +194,7 @@ function GoogleMapsLoaded({ buildings, onBuildingSelect, height, usageTracker })
   }, []);
 
   const handleViewDetails = useCallback((building) => {
-    navigate(`/buildings/${building.id}`);
+    navigate(`/dashboard/buildings/${building.id}`);
   }, [navigate]);
 
   const locatedBuildings = useMemo(() =>

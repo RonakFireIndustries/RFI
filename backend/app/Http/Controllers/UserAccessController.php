@@ -10,6 +10,38 @@ use Illuminate\Http\JsonResponse;
 
 class UserAccessController extends Controller
 {
+    public function index(Request $request): JsonResponse
+    {
+        $this->authorize('manage_users');
+
+        $users = User::with(['roles:id,name', 'employee:id,user_id,emp_id,full_name,department_id,designation_id', 'employee.department:id,name', 'employee.designation:id,name'])
+            ->when($request->search, fn ($q) => $q->where('name', 'like', "%{$request->search}%"))
+            ->orderBy('name')
+            ->get();
+
+        $data = $users->map(fn (User $user) => [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'employee' => $user->employee ? [
+                'id' => $user->employee->id,
+                'emp_id' => $user->employee->emp_id,
+                'department' => $user->employee->department?->name,
+                'designation' => $user->employee->designation?->name,
+            ] : null,
+            'roles' => $user->roles->map(fn (Role $role) => [
+                'id' => $role->id,
+                'name' => $role->name,
+            ]),
+            'permissions_count' => $user->getDirectPermissions()->count(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+        ]);
+    }
+
     public function getRoles(User $user): JsonResponse
     {
         $this->authorize('manage_users');
@@ -28,7 +60,7 @@ class UserAccessController extends Controller
         ]);
 
         $roleIds = Role::whereIn('name', $request->roles)->pluck('id')->toArray();
-        $user->roles()->sync($roleIds);
+        $user->roles()->syncWithoutDetaching($roleIds);
 
         return response()->json([
             'success' => true,
@@ -60,8 +92,8 @@ class UserAccessController extends Controller
     public function getPermissions(User $user): JsonResponse
     {
         $this->authorize('manage_users');
-        $permissions = $user->roles->flatMap->permissions->unique('id');
-        
+        $permissions = $user->getDirectPermissions();
+
         return response()->json([
             'success' => true,
             'data' => $permissions
@@ -76,16 +108,12 @@ class UserAccessController extends Controller
             'permissions.*' => 'exists:permissions,name',
         ]);
 
-        $perms = Permission::whereIn('name', $request->permissions)->get();
-        $roles = $user->roles;
-        foreach ($roles as $role) {
-            $role->permissions()->syncWithoutDetaching($perms->pluck('id')->toArray());
-        }
+        $user->givePermissionTo($request->permissions);
 
         return response()->json([
             'success' => true,
             'message' => 'Permissions assigned successfully',
-            'data' => $user->fresh()->roles->flatMap->permissions->unique('id')
+            'data' => $user->getDirectPermissions()
         ]);
     }
 
@@ -93,9 +121,7 @@ class UserAccessController extends Controller
     {
         $this->authorize('manage_users');
         $permission = Permission::findOrFail($permissionId);
-        foreach ($user->roles as $role) {
-            $role->permissions()->detach($permission->id);
-        }
+        $user->revokePermissionTo($permission);
 
         return response()->json([
             'success' => true,

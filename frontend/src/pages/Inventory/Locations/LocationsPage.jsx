@@ -49,10 +49,7 @@ export default function LocationsPage() {
         { name: 'code', label: 'Code', type: 'text', required: true },
         {
           name: 'type', label: 'Type', type: 'select', required: true, options: [
-            { value: 'warehouse', name: 'Warehouse' },
             { value: 'site', name: 'Site' },
-            { value: 'workshop', name: 'Workshop' },
-            { value: 'store', name: 'Store' },
           ]
         },
         { label: 'Contact Information', type: 'heading' },

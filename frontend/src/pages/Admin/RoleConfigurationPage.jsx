@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import api from '../../services/api';
 import {
   Shield, Save, RotateCcw, ChevronDown, ChevronRight,
@@ -14,7 +14,6 @@ function Skeleton({ className = '' }) {
 export default function RoleConfigurationPage() {
   const [roles, setRoles] = useState([]);
   const [permissions, setPermissions] = useState([]);
-  const [scopes, setScopes] = useState([]);
   const [templates, setTemplates] = useState([]);
   const [exceptions, setExceptions] = useState([]);
   const [deps, setDeps] = useState([]);
@@ -24,25 +23,37 @@ export default function RoleConfigurationPage() {
   const [auditSettings, setAuditSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [expandedModules, setExpandedModules] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('permissions');
   const [expandedExceptions, setExpandedExceptions] = useState({});
+  const [notice, setNotice] = useState(null);
+  const searchInputRef = useRef(null);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
-      const [rolesRes, permsRes, scopesRes, templatesRes, exceptionsRes, depsRes] = await Promise.all([
+      const [rolesRes, permsRes, templatesRes, exceptionsRes, depsRes] = await Promise.all([
         api.get('/roles'),
         api.get('/role-config/permissions-by-module'),
-        api.get('/role-config/scopes'),
         api.get('/role-config/templates'),
         api.get('/role-config/exceptions'),
         api.get('/role-config/dependencies').catch(() => ({ data: [] })),
       ]);
       setRoles(rolesRes.data || []);
       setPermissions(permsRes.data || {});
-      setScopes(scopesRes.data || []);
       setTemplates(templatesRes.data || []);
       setExceptions(exceptionsRes.data || []);
       setDeps(depsRes.data || []);
@@ -50,7 +61,6 @@ export default function RoleConfigurationPage() {
       console.error('Failed to load configuration data', err);
       setRoles([]);
       setPermissions({});
-      setScopes([]);
       setTemplates([]);
       setExceptions([]);
       setDeps([]);
@@ -124,12 +134,11 @@ export default function RoleConfigurationPage() {
       });
       setExceptions(prev => prev.map(e => e.id === ex.id ? (data.data || { ...e, is_enabled: !e.is_enabled }) : e));
     } catch (err) {
-      alert('Failed to update exception');
+      setNotice({ type: 'error', text: err.response?.data?.message || 'Failed to update exception' });
     }
   };
 
-  const handleSavePermissions = async () => {
-    if (!selectedRole) return;
+  const handleSavePermissions = async () => {    if (!selectedRole) return;
     setSaving(true);
     try {
       await api.put(`/roles/${selectedRole.id}`, { name: selectedRole.name, permissions: assignedPerms });
@@ -139,9 +148,9 @@ export default function RoleConfigurationPage() {
       setRoles(rolesRes.data || []);
       const updatedRole = (rolesRes.data || []).find(r => r.id === selectedRole.id);
       if (updatedRole) setSelectedRole(updatedRole);
-      alert('Permissions saved successfully');
+      setNotice({ type: 'success', text: `Permissions saved for "${selectedRole.name}"` });
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to save permissions');
+      setNotice({ type: 'error', text: err.response?.data?.message || 'Failed to save permissions' });
     } finally {
       setSaving(false);
     }
@@ -150,7 +159,28 @@ export default function RoleConfigurationPage() {
   const handleDiscard = () => {
     if (!selectedRole) return;
     setAssignedPerms(selectedRole.permissions?.map(p => p.name) || []);
-    alert('Changes discarded');
+    setNotice({ type: 'success', text: 'Changes discarded' });
+  };
+
+  const handleDownloadReport = async () => {
+    setDownloading(true);
+    try {
+      const blob = await api.getBlob('/role-config/permissions-report');
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `role-permissions-report-${new Date().toISOString().slice(0, 10)}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      setNotice({ type: 'success', text: 'Report downloaded as a PDF file.' });
+    } catch (err) {
+      console.error('Failed to download report', err);
+      setNotice({ type: 'error', text: err.response?.data?.message || 'Failed to download report. Please try again.' });
+    } finally {
+      setDownloading(false);
+    }
   };
 
   const handleApplyTemplate = async (templateId) => {
@@ -159,9 +189,9 @@ export default function RoleConfigurationPage() {
       const { data } = await api.post(`/role-config/roles/${selectedRole.id}/apply-template`, { template_id: templateId });
       const updated = data.data || data;
       setAssignedPerms(updated.permissions?.map(p => p.name) || []);
-      alert('Template applied successfully');
+      setNotice({ type: 'success', text: 'Template applied successfully' });
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to apply template');
+      setNotice({ type: 'error', text: err.response?.data?.message || 'Failed to apply template' });
     }
   };
 
@@ -170,9 +200,9 @@ export default function RoleConfigurationPage() {
     try {
       const { data } = await api.put(`/role-config/roles/${selectedRole.id}/audit`, auditSettings);
       setAuditSettings(data.data || auditSettings);
-      alert('Audit settings saved');
+      setNotice({ type: 'success', text: 'Audit settings saved' });
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to save audit settings');
+      setNotice({ type: 'error', text: err.response?.data?.message || 'Failed to save audit settings' });
     }
   };
 
@@ -217,7 +247,7 @@ export default function RoleConfigurationPage() {
   }
 
   return (
-    <div className="min-h-screen" className="bg-muted">
+    <div className="min-h-screen bg-muted">
       <div className="max-w-7xl mx-auto p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -229,16 +259,57 @@ export default function RoleConfigurationPage() {
               Role Configuration & Permissions
             </h1>
           </div>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Quick search (Ctrl + K)"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm w-64 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-            />
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleDownloadReport}
+              disabled={downloading}
+              className="inline-flex items-center gap-1.5 px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"
+            >
+              {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+              {downloading ? 'Generating...' : 'Download PDF'}
+            </button>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Quick search (Ctrl + K)"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm w-64 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              />
+            </div>
           </div>
+        </div>
+
+        {notice && (
+          <div
+            className={`mb-6 px-4 py-3 rounded-lg border text-sm flex items-center justify-between ${
+              notice.type === 'success'
+                ? 'bg-green-50 border-green-200 text-green-800'
+                : 'bg-red-50 border-red-200 text-red-800'
+            }`}
+          >
+            <span>{notice.text}</span>
+            <button
+              type="button"
+              onClick={() => setNotice(null)}
+              className="ml-4 text-xs underline hover:opacity-70"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm px-5 py-4 mb-6">
+          <p className="text-sm text-gray-600">
+            A <strong>role</strong> is a job position, like &ldquo;Sales Manager&rdquo;. Pick a role
+            on the left, then tick the boxes for what people in that position may do. Ticking a
+            higher action (like <strong>Delete</strong>) automatically enables the actions it needs
+            (like <strong>Read</strong>). When you&apos;re happy with the choices, press{' '}
+            <strong>Save Changes</strong>.
+          </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4 sm:gap-6">
@@ -268,7 +339,7 @@ export default function RoleConfigurationPage() {
                       </span>
                     </div>
                     <p className="text-xs text-gray-400 mt-0.5">
-                      {role.guard_name || 'web'} · {role.permissions?.length || 0} permissions
+                      {role.permissions?.length || 0} permission{role.permissions?.length === 1 ? '' : 's'}
                     </p>
                   </button>
                 )))}
@@ -313,7 +384,7 @@ export default function RoleConfigurationPage() {
                     <div>
                       <h2 className="text-xl font-bold text-gray-900">{selectedRole.name}</h2>
                       <p className="text-sm text-gray-500 mt-1">
-                        Role-based access control configuration
+                        Tick what people in this position are allowed to do, then save your changes.
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -384,7 +455,8 @@ export default function RoleConfigurationPage() {
                     <div className="px-5 py-4 border-b border-gray-100">
                       <h3 className="text-sm font-semibold text-gray-900">Permission Matrix</h3>
                       <p className="text-xs text-gray-400 mt-0.5">
-                        Configure module-level permissions. Granting a higher permission automatically enables required lower permissions.
+                        Read = can view, Create = can add new, Edit = can change existing, Delete = can remove.
+                        Turning on a higher action automatically turns on the actions it needs.
                       </p>
                     </div>
                     <div className="overflow-x-auto">
@@ -393,10 +465,9 @@ export default function RoleConfigurationPage() {
                           <tr className="border-b border-gray-100 bg-gray-50">
                             <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Module</th>
                             <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Read</th>
-                            <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Write</th>
+                            <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Create</th>
                             <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Edit</th>
                             <th className="text-center px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Delete</th>
-                            <th className="text-left px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Scope</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
@@ -427,6 +498,7 @@ export default function RoleConfigurationPage() {
                                     {hasView && (
                                       <input
                                         type="checkbox"
+                                        title="Can view this module's data"
                                         checked={perms.some(p => isActionPermitted(p.name))}
                                         onChange={() => {
                                           const viewPerm = perms.find(p => p.name.endsWith('.view') || p.name.includes('view'))?.name || perms[0]?.name;
@@ -440,6 +512,7 @@ export default function RoleConfigurationPage() {
                                     {hasCreate && (
                                       <input
                                         type="checkbox"
+                                        title="Can create new records in this module"
                                         checked={perms.some(p => isActionPermitted(p.name) && (p.name.endsWith('.create') || p.name.endsWith('_create')))}
                                         onChange={() => {
                                           const createPerm = perms.find(p => p.name.endsWith('.create') || p.name.endsWith('_create'))?.name;
@@ -453,6 +526,7 @@ export default function RoleConfigurationPage() {
                                     {hasEdit && (
                                       <input
                                         type="checkbox"
+                                        title="Can edit existing records in this module"
                                         checked={perms.some(p => isActionPermitted(p.name) && (p.name.endsWith('.edit') || p.name.endsWith('_update') || p.name.endsWith('_edit')))}
                                         onChange={() => {
                                           const editPerm = perms.find(p => p.name.endsWith('.edit') || p.name.endsWith('_update'))?.name;
@@ -466,6 +540,7 @@ export default function RoleConfigurationPage() {
                                     {hasDelete && (
                                       <input
                                         type="checkbox"
+                                        title="Can delete records in this module"
                                         checked={perms.some(p => isActionPermitted(p.name) && (p.name.endsWith('.delete') || p.name.endsWith('_delete')))}
                                         onChange={() => {
                                           const deletePerm = perms.find(p => p.name.endsWith('.delete') || p.name.endsWith('_delete'))?.name;
@@ -474,13 +549,6 @@ export default function RoleConfigurationPage() {
                                         className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                                       />
                                     )}
-                                  </td>
-                                  <td className="px-3 py-3">
-                                    <select className="text-xs border border-gray-200 rounded px-2 py-1 text-gray-600 focus:ring-1 focus:ring-blue-500 outline-none" defaultValue="organization">
-                                      {scopes.map(s => (
-                                        <option key={s.id} value={s.name}>{s.label}</option>
-                                      ))}
-                                    </select>
                                   </td>
                                 </tr>
                               );
@@ -542,7 +610,7 @@ export default function RoleConfigurationPage() {
                                     try {
                                       await api.put(`/role-config/exceptions/${ex.id}`, { requires_approval: !ex.requires_approval });
                                       setExceptions(prev => prev.map(e => e.id === ex.id ? { ...e, requires_approval: !e.requires_approval } : e));
-                                    } catch (err) { alert('Update failed'); }
+                                    } catch (err) { setNotice({ type: 'error', text: 'Update failed' }); }
                                   }}
                                   className="w-3.5 h-3.5 text-blue-600 border-gray-300 rounded"
                                 />

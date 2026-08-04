@@ -3,21 +3,36 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Category;
 use App\Models\Supplier;
 use App\Http\Resources\ProductResource;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use App\Services\InventoryService;
+use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $this->authorize('view_products');
 
-        return ProductResource::collection(
-            Product::with(['category', 'supplier', 'unit', 'stock.locationable'])->get()
-        );
+        $query = Product::with(['category', 'supplier', 'unit', 'stock.locationable']);
+
+        if ($categoryId = (int) $request->query('category_id')) {
+            $query->whereIn('category_id', $this->categoryAndDescendants($categoryId));
+        }
+
+        return ProductResource::collection($query->get());
+    }
+
+    private function categoryAndDescendants(int $categoryId): array
+    {
+        $ids = [$categoryId];
+        foreach (Category::where('parent_id', $categoryId)->pluck('id')->all() as $childId) {
+            $ids = array_merge($ids, $this->categoryAndDescendants($childId));
+        }
+        return $ids;
     }
 
     public function store(StoreProductRequest $request, InventoryService $inventoryService)
