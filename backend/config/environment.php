@@ -19,6 +19,10 @@ return [
             'DB_USERNAME' => 'root',
             'DB_PASSWORD' => '',
 
+            'SESSION_DRIVER' => 'file',
+            'CACHE_STORE' => 'file',
+            'QUEUE_CONNECTION' => 'sync',
+
             'PUSHER_APP_ID' => '2179433',
             'PUSHER_APP_KEY' => 'c81c2da2537855f4f133',
             'PUSHER_APP_SECRET' => '8ca8526fb416cd008bf4',
@@ -38,6 +42,10 @@ return [
             'DB_DATABASE' => 'a17590e4_erp_db',
             'DB_USERNAME' => 'a17590e4_root',
             'DB_PASSWORD' => 'Predator@6565',
+
+            'SESSION_DRIVER' => 'file',
+            'CACHE_STORE' => 'file',
+            'QUEUE_CONNECTION' => 'sync',
 
             'PUSHER_APP_ID' => '2179433',
             'PUSHER_APP_KEY' => 'c81c2da2537855f4f133',

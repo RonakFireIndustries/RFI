@@ -26,6 +26,10 @@ class EnvironmentSwitchProvider extends ServiceProvider
             'database.connections.mysql.username' => $env['DB_USERNAME'] ?? config('database.connections.mysql.username'),
             'database.connections.mysql.password' => $env['DB_PASSWORD'] ?? config('database.connections.mysql.password'),
 
+            'session.driver' => $env['SESSION_DRIVER'] ?? config('session.driver'),
+            'cache.default' => $env['CACHE_STORE'] ?? config('cache.default'),
+            'queue.default' => $env['QUEUE_CONNECTION'] ?? config('queue.default'),
+
             'filesystems.disks.local.url' => rtrim($env['APP_URL'] ?? config('app.url'), '/').'/storage',
 
             'broadcasting.connections.pusher.key' => $env['PUSHER_APP_KEY'] ?? config('broadcasting.connections.pusher.key'),
