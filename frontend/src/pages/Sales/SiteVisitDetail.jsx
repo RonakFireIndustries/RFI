@@ -183,20 +183,20 @@ export default function SiteVisitDetail() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-color-white">Visit Date</label>
-                  <input type="date" value={form.visit_date} onChange={e => setForm({ ...form, visit_date: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+                  <input type="date" value={form.visit_date} onChange={e => setForm({ ...form, visit_date: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-color-white">Purpose</label>
-                  <input type="text" value={form.purpose} onChange={e => setForm({ ...form, purpose: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="e.g. Initial survey" />
+                  <input type="text" value={form.purpose} onChange={e => setForm({ ...form, purpose: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="e.g. Initial survey" />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-color-white">Discussion Notes</label>
-                <textarea value={form.discussion_notes} onChange={e => setForm({ ...form, discussion_notes: e.target.value })} rows={6} className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+                <textarea value={form.discussion_notes} onChange={e => setForm({ ...form, discussion_notes: e.target.value })} rows={6} className="w-full px-3 py-2 border rounded-lg text-sm" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-color-white">Next Follow-up Date</label>
-                <input type="date" value={form.next_followup_date} onChange={e => setForm({ ...form, next_followup_date: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+                <input type="date" value={form.next_followup_date} onChange={e => setForm({ ...form, next_followup_date: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" />
               </div>
             </div>
           ) : (

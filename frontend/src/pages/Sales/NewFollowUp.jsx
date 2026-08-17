@@ -57,13 +57,13 @@ export default function NewFollowUp() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-color-white">Type *</label>
-            <select required value={form.type} onChange={e => setForm({ ...form, type: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+            <select required value={form.type} onChange={e => setForm({ ...form, type: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm">
               {FOLLOWUP_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-color-white">Building</label>
-            <select value={form.building_id} onChange={e => setForm({ ...form, building_id: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+            <select value={form.building_id} onChange={e => setForm({ ...form, building_id: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm">
               <option value="">Select Building</option>
               {(buildings || []).map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
             </select>
@@ -72,7 +72,7 @@ export default function NewFollowUp() {
 
         <div>
           <label className="block text-sm font-medium text-color-white">Related Opportunity</label>
-          <select value={form.opportunity_id} onChange={e => setForm({ ...form, opportunity_id: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+          <select value={form.opportunity_id} onChange={e => setForm({ ...form, opportunity_id: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm">
             <option value="">None</option>
             {(opportunities || []).map(o => <option key={o.id} value={o.id}>{o.name} ({o.building?.name || 'No building'})</option>)}
           </select>
@@ -81,17 +81,17 @@ export default function NewFollowUp() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-color-white">Reminder Date *</label>
-            <input type="date" required value={form.reminder_date} onChange={e => setForm({ ...form, reminder_date: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+            <input type="date" required value={form.reminder_date} onChange={e => setForm({ ...form, reminder_date: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" />
           </div>
           <div>
             <label className="block text-sm font-medium text-color-white">Reminder Time</label>
-            <input type="time" value={form.reminder_time} onChange={e => setForm({ ...form, reminder_time: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+            <input type="time" value={form.reminder_time} onChange={e => setForm({ ...form, reminder_time: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" />
           </div>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-color-white">Notes</label>
-          <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={3} className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="What needs to be done..." />
+          <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={3} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="What needs to be done..." />
         </div>
 
         <div className="flex justify-end gap-2 pt-4">

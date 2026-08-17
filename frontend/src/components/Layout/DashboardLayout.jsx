@@ -10,7 +10,7 @@ import {
   LifeBuoy, Fingerprint, Calendar, DollarSign, PenTool, Key,
   Shield, Network, HardHat, FileSignature, MapPin, Search, Plus,
   LayoutDashboard, ShoppingBag, Layers, Building, Factory, Pickaxe, UserCheck, 
-  HelpCircle, MoreVertical, Sliders, Moon, Sun, User, Palette, 
+  HelpCircle, MoreVertical, Sliders, User, 
   Lock, Globe, BellRing, Database, Smartphone, ShieldCheck, Mail, WifiOff, Download
 } from 'lucide-react';
 import { menuCategories } from '../../config/sidebarMenu';

@@ -461,7 +461,7 @@ export default function InvoicePreviewPage() {
               <div className="p-4 space-y-3">
                 <div>
                   <label className="text-xs font-medium text-gray-500 mb-1.5 block">Paper Size</label>
-                  <select value={paperSize} onChange={e => setPaperSize(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:ring-ring focus:border-ring dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                  <select value={paperSize} onChange={e => setPaperSize(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:ring-ring focus:border-ring">
                     <option value="a4">A4</option>
                     <option value="letter">Letter</option>
                     <option value="legal">Legal</option>
@@ -557,7 +557,7 @@ export default function InvoicePreviewPage() {
               <div>
                 <label className="block text-sm font-medium text-color-white">Message</label>
                 <textarea value={emailForm.message} onChange={e => setEmailForm({ ...emailForm, message: e.target.value })} rows={4}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-ring focus:border-ring resize-none dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-ring focus:border-ring resize-none"
                   placeholder="Optional message..." />
               </div>
               {emailResult && (

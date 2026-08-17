@@ -114,7 +114,7 @@ export default function ProductSelect({ products, value, onChange, placeholder =
       />
       {open && createPortal(
         <div
-          style={{ position: 'fixed', top: pos.top, left: pos.left, width: pos.width }}
+          style={{ position: 'fixed', top: pos.top, left: pos.left, width: Math.max(pos.width, 360) }}
           className="z-[9999] bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
         >
           {filtered.length === 0 ? (
@@ -129,6 +129,7 @@ export default function ProductSelect({ products, value, onChange, placeholder =
                 }`}
               >
                 <span className="font-medium">{p.sku}</span> - {p.name}
+                {p.dimension && <span className="ml-1.5 text-xs text-gray-500">({p.dimension})</span>}
               </div>
             ))
           )}

@@ -3,7 +3,7 @@
 return [
 
     // Flip this value between 'development' and 'production' to switch the whole backend.
-    'active' => 'production',
+    'active' => 'development',
 
     'environments' => [
 

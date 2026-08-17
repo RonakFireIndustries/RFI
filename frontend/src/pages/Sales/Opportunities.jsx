@@ -83,7 +83,7 @@ export default function Opportunities() {
             className="w-full pl-10 pr-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500" />
         </div>
         <select value={stageFilter} onChange={e => setStageFilter(e.target.value)}
-          className="px-3 py-2 border rounded-lg text-sm bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+          className="px-3 py-2 border rounded-lg text-sm bg-white">
           <option value="">All Stages</option>
           {STAGES.map(s => <option key={s} value={s}>{s}</option>)}
         </select>

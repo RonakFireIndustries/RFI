@@ -56,7 +56,7 @@ export default function FollowUps() {
             </button>
           ))}
         </div>
-        <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="px-3 py-2 border rounded-lg text-sm bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+        <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="px-3 py-2 border rounded-lg text-sm bg-white">
           <option value="">All Types</option>
           <option value="Call">Call</option>
           <option value="Email">Email</option>

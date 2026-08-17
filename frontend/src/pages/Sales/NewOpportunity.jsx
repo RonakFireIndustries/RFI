@@ -66,14 +66,14 @@ export default function NewOpportunity() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-color-white mb-1">Building</label>
-            <select value={form.building_id} onChange={e => setForm({ ...form, building_id: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+            <select value={form.building_id} onChange={e => setForm({ ...form, building_id: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm">
               <option value="">Select Building</option>
               {(buildings || []).map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
             </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-color-white">Stage</label>
-            <select value={form.stage} onChange={e => setForm({ ...form, stage: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+            <select value={form.stage} onChange={e => setForm({ ...form, stage: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm">
               {STAGES.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
@@ -82,7 +82,7 @@ export default function NewOpportunity() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-color-white">Estimated Value (₹)</label>
-            <input type="number" value={form.estimated_value} onChange={e => setForm({ ...form, estimated_value: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0" />
+            <input type="number" value={form.estimated_value} onChange={e => setForm({ ...form, estimated_value: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="0" />
           </div>
           <div>
             <label className="block text-sm font-medium text-color-white">Probability ({form.probability}%)</label>
@@ -92,7 +92,7 @@ export default function NewOpportunity() {
 
         <div>
           <label className="block text-sm font-medium text-color-white">Expected Closing Date</label>
-          <input type="date" value={form.expected_closing_date} onChange={e => setForm({ ...form, expected_closing_date: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+          <input type="date" value={form.expected_closing_date} onChange={e => setForm({ ...form, expected_closing_date: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" />
         </div>
 
         <div>
@@ -106,7 +106,7 @@ export default function NewOpportunity() {
             ))}
           </div>
           <div className="flex gap-2">
-            <select value={newWorkType} onChange={e => setNewWorkType(e.target.value)} className="flex-1 px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+            <select value={newWorkType} onChange={e => setNewWorkType(e.target.value)} className="flex-1 px-3 py-2 border rounded-lg text-sm">
               <option value="">Select work type</option>
               {WORK_TYPES.filter(wt => !workTypes.includes(wt)).map(wt => <option key={wt} value={wt}>{wt}</option>)}
             </select>
@@ -116,7 +116,7 @@ export default function NewOpportunity() {
 
         <div>
           <label className="block text-sm font-medium text-color-white">Notes</label>
-          <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={3} className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Additional notes..." />
+          <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={3} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="Additional notes..." />
         </div>
 
         <div className="flex justify-end gap-2 pt-4">

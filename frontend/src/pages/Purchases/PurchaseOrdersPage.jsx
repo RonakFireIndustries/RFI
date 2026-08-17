@@ -14,7 +14,9 @@ export default function PurchaseOrdersPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [suppliers, setSuppliers] = useState([]);
   const [products, setProducts] = useState([]);
-  const [newOrder, setNewOrder] = useState({ supplier_id: '', gst_type: 'cgst', shipping_cost: 0, items: [{ product_id: '', custom_product_name: '', quantity: 1, unit_cost: 0, gst_rate: 18, hsn_code: '' }] });
+  const [categories, setCategories] = useState([]);
+  const [sites, setSites] = useState([]);
+  const [newOrder, setNewOrder] = useState({ supplier_id: '', site_id: '', gst_type: 'cgst', shipping_cost: 0, other_cost: 0, other_cost_note: '', terms_conditions: '', items: [{ category_id: '', product_id: '', custom_product_name: '', quantity: 1, unit_cost: 0, gst_rate: 18, hsn_code: '' }] });
   const [activeTab, setActiveTab] = useState('All Orders');
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 25;
@@ -30,12 +32,17 @@ export default function PurchaseOrdersPage() {
 
   const fetchData = async () => {
     try {
-      const [suppRes, prodRes] = await Promise.all([
+      const [suppRes, prodRes, catRes, siteRes] = await Promise.all([
         api.get('/suppliers'),
-        api.get('/products')
+        api.get('/products'),
+        api.get('/categories'),
+        api.get('/sites?per_page=1000')
       ]);
       setSuppliers(suppRes.data.data || suppRes.data);
       setProducts(prodRes.data.data || prodRes.data);
+      setCategories(catRes.data.data || catRes.data);
+      const siteData = siteRes.data?.data || siteRes.data;
+      setSites(Array.isArray(siteData) ? siteData : (siteData?.sites || []));
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -69,7 +76,7 @@ export default function PurchaseOrdersPage() {
       await api.post('/purchases/orders', { ...newOrder, status });
       setIsModalOpen(false);
       fetchOrders();
-      setNewOrder({ supplier_id: '', gst_type: 'cgst', shipping_cost: 0, items: [{ product_id: '', custom_product_name: '', quantity: 1, unit_cost: 0, gst_rate: 18, hsn_code: '' }] });
+      setNewOrder({ supplier_id: '', site_id: '', gst_type: 'cgst', shipping_cost: 0, other_cost: 0, other_cost_note: '', terms_conditions: '', items: [{ category_id: '', product_id: '', custom_product_name: '', quantity: 1, unit_cost: 0, gst_rate: 18, hsn_code: '' }] });
     } catch (error) {
       console.error("Error creating PO:", error);
       const msg = error.response?.data?.message || "Failed to create Purchase Order.";
@@ -443,7 +450,7 @@ export default function PurchaseOrdersPage() {
       {/* Massive Modal for Create PO (Matches Reference Image 1) */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6">
-          <div className="bg-gray-50 rounded-xl shadow-2xl w-full max-w-7xl h-[95vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-gray-50 rounded-xl shadow-2xl w-full max-w-[90rem] h-[95vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             {/* Modal Header */}
             <div className="bg-white px-6 py-4 border-b border-gray-200 flex justify-between items-center">
               <div className="flex items-center text-sm font-semibold text-gray-500 uppercase tracking-wider">
@@ -528,6 +535,38 @@ export default function PurchaseOrdersPage() {
                           onChange={(e) => setNewOrder({ ...newOrder, shipping_cost: parseFloat(e.target.value) || 0 })}
                         />
                       </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Drop-off Site</label>
+                        <select
+                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+                          value={newOrder.site_id}
+                          onChange={(e) => setNewOrder({ ...newOrder, site_id: e.target.value })}
+                        >
+                          <option value="">Select Drop-off Site</option>
+                          {sites.map(s => <option key={s.id} value={s.id}>{s.name}{s.city ? ` (${s.city})` : ''}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Other Cost (₹)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+                          value={newOrder.other_cost}
+                          onChange={(e) => setNewOrder({ ...newOrder, other_cost: parseFloat(e.target.value) || 0 })}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Other Cost Note</label>
+                        <input
+                          type="text"
+                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+                          value={newOrder.other_cost_note}
+                          onChange={(e) => setNewOrder({ ...newOrder, other_cost_note: e.target.value })}
+                          placeholder="e.g. freight, packing, insurance"
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -540,7 +579,7 @@ export default function PurchaseOrdersPage() {
                       </h2>
                       <button
                         type="button"
-                        onClick={() => setNewOrder({ ...newOrder, items: [...newOrder.items, { product_id: '', custom_product_name: '', quantity: 1, unit_cost: 0, gst_rate: 18, hsn_code: '' }] })}
+                        onClick={() => setNewOrder({ ...newOrder, items: [...newOrder.items, { category_id: '', product_id: '', custom_product_name: '', quantity: 1, unit_cost: 0, gst_rate: 18, hsn_code: '' }] })}
                         className="flex items-center text-primary font-semibold text-sm hover:text-primary"
                       >
                         <Plus className="w-4 h-4 mr-1" /> Add New Product
@@ -551,6 +590,7 @@ export default function PurchaseOrdersPage() {
                       <table className="w-full text-left border-collapse">
                         <thead>
                           <tr className="bg-gray-50 border-b border-gray-200 text-xs uppercase tracking-wider text-gray-500 font-bold">
+                            <th className="p-4 w-40">Category</th>
                             <th className="p-4">Product Code / Name</th>
                             <th className="p-4 w-24 text-center">Quantity</th>
                             <th className="p-4 w-32 text-right">Unit Price</th>
@@ -564,8 +604,24 @@ export default function PurchaseOrdersPage() {
                           {newOrder.items.map((item, index) => (
                             <tr key={index} className="hover:bg-gray-50/50">
                               <td className="p-4">
+                                <select
+                                  className="w-full bg-transparent border-0 border-b border-gray-200 focus:ring-0 focus:border-ring text-sm p-0 pb-1"
+                                  value={item.category_id}
+                                  onChange={(e) => {
+                                    const items = [...newOrder.items];
+                                    items[index].category_id = e.target.value;
+                                    items[index].product_id = '';
+                                    items[index].custom_product_name = '';
+                                    setNewOrder({ ...newOrder, items });
+                                  }}
+                                >
+                                  <option value="">All Categories</option>
+                                  {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                </select>
+                              </td>
+                              <td className="p-4">
                                 <ProductSelect
-                                  products={products}
+                                  products={item.category_id ? products.filter(p => p.category_id == item.category_id) : products}
                                   value={item.product_id || item.custom_product_name}
                                   onChange={(val) => {
                                     const items = [...newOrder.items];
@@ -576,6 +632,7 @@ export default function PurchaseOrdersPage() {
                                       if (prod) {
                                         items[index].unit_cost = parseFloat(prod.purchase_price || 0);
                                         if (prod.hsn_code) items[index].hsn_code = prod.hsn_code;
+                                        if (prod.category_id) items[index].category_id = prod.category_id;
                                       }
                                       items[index].custom_product_name = '';
                                     }
@@ -692,10 +749,16 @@ export default function PurchaseOrdersPage() {
                         <span>Shipping Cost</span>
                         <span className="font-medium text-white">₹{(newOrder.shipping_cost || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                       </div>
+                      {parseFloat(newOrder.other_cost || 0) > 0 && (
+                        <div className="flex justify-between border-b border-blue-500/50 pb-4">
+                          <span>Other Cost</span>
+                          <span className="font-medium text-white">₹{(newOrder.other_cost || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                        </div>
+                      )}
                       <div className="flex justify-between items-center pt-2">
                         <span className="text-base text-white">Total Amount</span>
                         <span className="text-2xl font-bold text-white">
-                          ₹{(newOrder.items.reduce((sum, item) => sum + (item.quantity * item.unit_cost * (1 + (item.gst_rate || 0) / 100)), 0) + (newOrder.shipping_cost || 0)).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          ₹{(newOrder.items.reduce((sum, item) => sum + (item.quantity * item.unit_cost * (1 + (item.gst_rate || 0) / 100)), 0) + (newOrder.shipping_cost || 0) + (newOrder.other_cost || 0)).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </span>
                       </div>
                       <p className="text-[10px] uppercase tracking-wider opacity-60 text-right mt-1">Currency: INR (Indian Rupee)</p>
@@ -719,11 +782,13 @@ export default function PurchaseOrdersPage() {
                       <h3 className="flex items-center text-sm font-bold text-gray-800 mb-3">
                         <FileText className="w-4 h-4 text-gray-400 mr-2" /> Terms & Conditions
                       </h3>
-                      <select className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm focus:ring-ring focus:border-ring">
-                        <option>Standard Net 30</option>
-                        <option>Net 60</option>
-                        <option>Due on Receipt</option>
-                      </select>
+                      <textarea
+                        className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm focus:ring-ring focus:border-ring"
+                        rows="3"
+                        value={newOrder.terms_conditions}
+                        onChange={(e) => setNewOrder({ ...newOrder, terms_conditions: e.target.value })}
+                        placeholder="Enter custom terms and conditions for this order..."
+                      ></textarea>
                     </div>
 
                     <div className="flex items-start p-4 bg-red-50 text-red-800 rounded-lg text-sm border border-red-100">

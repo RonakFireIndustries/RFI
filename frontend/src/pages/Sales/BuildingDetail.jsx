@@ -174,7 +174,7 @@ export default function BuildingDetail() {
           </span>
         ))}
         {editing && statuses.filter(s => !(building.statuses || []).find(bs => bs.id === s.id)).length > 0 && (
-          <select onChange={e => { if (e.target.value) handleAssignStatus(parseInt(e.target.value)); e.target.value = ''; }} className="px-3 py-1 border rounded-full text-sm bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+          <select onChange={e => { if (e.target.value) handleAssignStatus(parseInt(e.target.value)); e.target.value = ''; }} className="px-3 py-1 border rounded-full text-sm bg-white">
             <option value="">+ Add Status</option>
             {statuses.filter(s => !(building.statuses || []).find(bs => bs.id === s.id)).map(s => (
               <option key={s.id} value={s.id}>{s.name}</option>
@@ -232,7 +232,7 @@ export default function BuildingDetail() {
                 <Field label="Fire Safety Type" value={form.fire_safety_type} onChange={v => setForm({ ...form, fire_safety_type: v })} />
                 <div>
                   <label className="block text-sm font-medium text-color-white">Fire NOC Status</label>
-                  <select value={form.fire_noc_status} onChange={e => setForm({ ...form, fire_noc_status: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                  <select value={form.fire_noc_status} onChange={e => setForm({ ...form, fire_noc_status: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm">
                     {['Unknown', 'Applied', 'Approved', 'Expired', 'Rejected'].map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
@@ -324,11 +324,11 @@ function WingsTab({ wings, buildingId, reload, editing }) {
       {showForm && (
         <div className="bg-white border rounded-lg p-4 space-y-3">
           <div className="grid grid-cols-5 gap-3">
-            <input placeholder="Name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-            <input placeholder="Floors" type="number" value={form.floors} onChange={e => setForm({ ...form, floors: e.target.value })} className="px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-            <input placeholder="Flats/Floor" type="number" value={form.flats_per_floor} onChange={e => setForm({ ...form, flats_per_floor: e.target.value })} className="px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-            <input placeholder="Config (e.g. 2BHK)" value={form.flat_configuration} onChange={e => setForm({ ...form, flat_configuration: e.target.value })} className="px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-            <input placeholder="Total Flats" type="number" value={form.total_flats} onChange={e => setForm({ ...form, total_flats: e.target.value })} className="px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+            <input placeholder="Name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
+            <input placeholder="Floors" type="number" value={form.floors} onChange={e => setForm({ ...form, floors: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
+            <input placeholder="Flats/Floor" type="number" value={form.flats_per_floor} onChange={e => setForm({ ...form, flats_per_floor: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
+            <input placeholder="Config (e.g. 2BHK)" value={form.flat_configuration} onChange={e => setForm({ ...form, flat_configuration: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
+            <input placeholder="Total Flats" type="number" value={form.total_flats} onChange={e => setForm({ ...form, total_flats: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
           </div>
           <div className="flex gap-2">
             <button onClick={handleSave} className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm">{editingId ? 'Update' : 'Save'}</button>
@@ -397,16 +397,16 @@ function FireSystemsTab({ systems, buildingId, reload, editing }) {
       {showForm && (
         <div className="bg-white border rounded-lg p-4 space-y-3">
           <div className="grid grid-cols-4 gap-3">
-            <select value={form.system_type} onChange={e => setForm({ ...form, system_type: e.target.value })} className="px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+            <select value={form.system_type} onChange={e => setForm({ ...form, system_type: e.target.value })} className="px-3 py-2 border rounded-lg text-sm">
               <option value="">Type</option>
               {FIRE_SYSTEM_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
-            <input placeholder="Sub Type" value={form.sub_type} onChange={e => setForm({ ...form, sub_type: e.target.value })} className="px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-            <input placeholder="Quantity" type="number" value={form.quantity} onChange={e => setForm({ ...form, quantity: e.target.value })} className="px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-            <input placeholder="Brand" value={form.brand} onChange={e => setForm({ ...form, brand: e.target.value })} className="px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-            <input placeholder="Capacity" value={form.capacity} onChange={e => setForm({ ...form, capacity: e.target.value })} className="px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-            <input placeholder="Installation Year" type="number" value={form.installation_year} onChange={e => setForm({ ...form, installation_year: e.target.value })} className="px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-            <input placeholder="Last Tested" type="date" value={form.last_testing_date} onChange={e => setForm({ ...form, last_testing_date: e.target.value })} className="px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+            <input placeholder="Sub Type" value={form.sub_type} onChange={e => setForm({ ...form, sub_type: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
+            <input placeholder="Quantity" type="number" value={form.quantity} onChange={e => setForm({ ...form, quantity: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
+            <input placeholder="Brand" value={form.brand} onChange={e => setForm({ ...form, brand: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
+            <input placeholder="Capacity" value={form.capacity} onChange={e => setForm({ ...form, capacity: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
+            <input placeholder="Installation Year" type="number" value={form.installation_year} onChange={e => setForm({ ...form, installation_year: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
+            <input placeholder="Last Tested" type="date" value={form.last_testing_date} onChange={e => setForm({ ...form, last_testing_date: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
           </div>
           <div className="flex gap-2">
             <button onClick={handleSave} className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm">{editingId ? 'Update' : 'Save'}</button>
@@ -477,16 +477,16 @@ function ContactsTab({ contacts, buildingId, reload, editing }) {
       {showForm && (
         <div className="bg-white border rounded-lg p-4 space-y-3">
           <div className="grid grid-cols-3 gap-3">
-            <input placeholder="Full Name" value={form.full_name} onChange={e => setForm({ ...form, full_name: e.target.value })} className="px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-            <input placeholder="Role (e.g. Secretary)" value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} className="px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-            <select value={form.role_category} onChange={e => setForm({ ...form, role_category: e.target.value })} className="px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+            <input placeholder="Full Name" value={form.full_name} onChange={e => setForm({ ...form, full_name: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
+            <input placeholder="Role (e.g. Secretary)" value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
+            <select value={form.role_category} onChange={e => setForm({ ...form, role_category: e.target.value })} className="px-3 py-2 border rounded-lg text-sm">
               {CONTACT_CATEGORIES.map(c => <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>)}
             </select>
-            <input placeholder="Mobile" value={form.mobile_number} onChange={e => setForm({ ...form, mobile_number: e.target.value })} className="px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-            <input placeholder="WhatsApp" value={form.whatsapp_number} onChange={e => setForm({ ...form, whatsapp_number: e.target.value })} className="px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-            <input placeholder="Email" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+            <input placeholder="Mobile" value={form.mobile_number} onChange={e => setForm({ ...form, mobile_number: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
+            <input placeholder="WhatsApp" value={form.whatsapp_number} onChange={e => setForm({ ...form, whatsapp_number: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
+            <input placeholder="Email" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
           </div>
-          <textarea placeholder="Notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+          <textarea placeholder="Notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} className="w-full px-3 py-2 border rounded-lg text-sm" />
           <div className="flex gap-2">
             <button onClick={handleSave} className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm">{editingId ? 'Update' : 'Save'}</button>
             <button onClick={() => { setShowForm(false); setEditingId(null); }} className="px-3 py-1.5 border rounded-lg text-sm">Cancel</button>

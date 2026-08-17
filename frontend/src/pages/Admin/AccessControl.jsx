@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, Fragment } from 'react';
 import api from '../../services/api';
 import { useAccessStore } from '../../store/accessStore';
 import {
@@ -136,6 +136,7 @@ function GrantModal({ module, employeeName, actions, initialChecked, onSave, onC
 export default function AccessControl() {
   const [users, setUsers] = useState([]);
   const [permissions, setPermissions] = useState({});
+  const [roles, setRoles] = useState([]);
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [dialogModule, setDialogModule] = useState(null);
@@ -145,7 +146,14 @@ export default function AccessControl() {
   const [notice, setNotice] = useState(null);
   const [busy, setBusy] = useState(false);
 
-  const { userPermissions, fetchUserPermissions, assignPermissions, removePermission } = useAccessStore();
+  const {
+    userPermissions,
+    userRoles,
+    fetchUserPermissions,
+    fetchUserRoles,
+    assignPermissions,
+    removePermission,
+  } = useAccessStore();
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
@@ -164,6 +172,12 @@ export default function AccessControl() {
   }, []);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  useEffect(() => {
+    api.get('/roles')
+      .then(res => setRoles(res.data || []))
+      .catch(() => setRoles([]));
+  }, []);
 
   const selectedUser = useMemo(
     () => users.find(u => u.id === selectedUserId) || null,
@@ -202,19 +216,47 @@ export default function AccessControl() {
 
   const userPermNames = useMemo(() => userPermissions.map(p => p.name), [userPermissions]);
 
-  const actionsForModule = (module) => {
+  const rolePermNames = useMemo(() => {
+    const names = new Set();
+    for (const userRole of userRoles) {
+      const role = roles.find(r => String(r.id) === String(userRole.id));
+      for (const perm of role?.permissions || []) names.add(perm.name);
+    }
+    return names;
+  }, [roles, userRoles]);
+
+  const roleNamesForModule = (module) => {
+    const entries = moduleActions[module] || {};
+    const permIds = new Set(Object.values(entries).flat().map(p => p.id));
+    const roleNames = new Set();
+    for (const userRole of userRoles) {
+      const role = roles.find(r => String(r.id) === String(userRole.id));
+      if ((role?.permissions || []).some(p => permIds.has(p.id))) roleNames.add(role.name);
+    }
+    return [...roleNames];
+  };
+
+  const directActionsForModule = (module) => {
     const entries = moduleActions[module] || {};
     return ACTION_ORDER.filter(action =>
       entries[action] && entries[action].some(p => userPermNames.includes(p.name)),
     );
   };
 
-  const hasAccess = (module) => actionsForModule(module).length > 0;
+  const roleActionsForModule = (module) => {
+    const entries = moduleActions[module] || {};
+    return ACTION_ORDER.filter(action =>
+      entries[action] && entries[action].some(p => rolePermNames.has(p.name)),
+    );
+  };
+
+  const hasAccess = (module) =>
+    directActionsForModule(module).length > 0 || roleActionsForModule(module).length > 0;
 
   const grantedModules = useMemo(
-    () => modules.filter(m => actionsForModule(m).length > 0),
+    () => modules.filter(m => hasAccess(m)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [modules, userPermissions],
+    [modules, userPermissions, userRoles],
   );
 
   const selectUser = async (user) => {
@@ -222,7 +264,10 @@ export default function AccessControl() {
     setSelectedUserId(user.id);
     setBusy(true);
     try {
-      await fetchUserPermissions(user.id);
+      await Promise.all([
+        fetchUserPermissions(user.id),
+        fetchUserRoles(user.id),
+      ]);
     } catch (err) {
       setNotice({ type: 'error', text: getErrorMessage(err, "Could not load this person's access.") });
     } finally {
@@ -233,13 +278,13 @@ export default function AccessControl() {
   const openDialog = (module) => {
     if (!moduleActions[module]) return;
     setDialogModule(module);
-    setDialogChecks(actionsForModule(module));
+    setDialogChecks(directActionsForModule(module));
   };
 
   const saveDialog = async () => {
     if (!selectedUser || !dialogModule) return;
     const entries = moduleActions[dialogModule] || {};
-    const current = actionsForModule(dialogModule);
+    const current = directActionsForModule(dialogModule);
     const toAdd = dialogChecks.filter(a => !current.includes(a))
       .map(a => (entries[a] || []).find(p => p.name.includes('.')) || (entries[a] || [])[0])
       .filter(Boolean);
@@ -488,26 +533,42 @@ export default function AccessControl() {
                       </h4>
                       <div className="flex flex-wrap gap-2">
                         {grantedModules.map(module => {
-                          const actions = actionsForModule(module);
+                          const direct = directActionsForModule(module);
+                          const role = roleActionsForModule(module);
                           return (
-                            <span
-                              key={module}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm bg-blue-50 text-blue-800 border border-blue-200"
-                            >
-                              {moduleLabel(module)}
-                              <span className="text-[11px] text-blue-500">
-                                {actions.map(a => ACTION_META[a].label).join(', ')}
-                              </span>
-                              <button
-                                type="button"
-                                disabled={busy}
-                                onClick={() => removeModule(module)}
-                                title={`Remove all ${moduleLabel(module)} access`}
-                                className="text-blue-400 hover:text-red-500 disabled:opacity-50"
-                              >
-                                <X className="w-4 h-4" />
-                              </button>
-                            </span>
+                            <Fragment key={module}>
+                              {direct.length > 0 && (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm bg-blue-50 text-blue-800 border border-blue-200">
+                                  {moduleLabel(module)}
+                                  <span className="text-[11px] text-blue-500">
+                                    {direct.map(a => ACTION_META[a].label).join(', ')}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    disabled={busy}
+                                    onClick={() => removeModule(module)}
+                                    title={`Remove all ${moduleLabel(module)} access`}
+                                    className="text-blue-400 hover:text-red-500 disabled:opacity-50"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                </span>
+                              )}
+                              {role.length > 0 && (
+                                <span
+                                  title={`Granted via role${roleNamesForModule(module).length > 0 ? `: ${roleNamesForModule(module).join(', ')}` : ''} — inherited from role, not removable here`}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm bg-amber-50 text-amber-800 border border-amber-200"
+                                >
+                                  {moduleLabel(module)}
+                                  <span className="text-[10px] font-medium uppercase text-amber-600">
+                                    via role
+                                  </span>
+                                  <span className="text-[11px] text-amber-500">
+                                    {role.map(a => ACTION_META[a].label).join(', ')}
+                                  </span>
+                                </span>
+                              )}
+                            </Fragment>
                           );
                         })}
                       </div>

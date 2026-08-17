@@ -178,7 +178,7 @@ export default function InvoiceBuilder() {
                 <label className="block text-sm font-semibold text-color-white">Customer *</label>
                 <select
                   required
-                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-ring focus:border-ring transition-all outline-none bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-ring focus:border-ring transition-all outline-none bg-white"
                   value={formData.customer_id}
                   onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
                 >
@@ -193,7 +193,7 @@ export default function InvoiceBuilder() {
                 <label className="block text-sm font-semibold text-color-white">Due Date</label>
                 <input
                   type="date"
-                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-ring focus:border-ring transition-all outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-ring focus:border-ring transition-all outline-none"
                   value={formData.due_date}
                   onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
                 />
@@ -202,7 +202,7 @@ export default function InvoiceBuilder() {
               <div>
                 <label className="block text-sm font-semibold text-color-white">GST Type</label>
                 <select
-                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-ring focus:border-ring transition-all outline-none bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-ring focus:border-ring transition-all outline-none bg-white"
                   value={formData.gst_type}
                   onChange={(e) => setFormData({ ...formData, gst_type: e.target.value })}
                 >
@@ -214,7 +214,7 @@ export default function InvoiceBuilder() {
               <div>
                 <label className="block text-sm font-semibold text-color-white">GST Rate (%)</label>
                 <select
-                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-ring focus:border-ring transition-all outline-none bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-ring focus:border-ring transition-all outline-none bg-white"
                   value={formData.gst_rate}
                   onChange={(e) => setFormData({ ...formData, gst_rate: e.target.value })}
                 >
@@ -229,7 +229,7 @@ export default function InvoiceBuilder() {
               <div>
                 <label className="block text-sm font-semibold text-color-white">Status</label>
                 <select
-                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-ring focus:border-ring transition-all outline-none bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-ring focus:border-ring transition-all outline-none bg-white"
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                 >
@@ -268,7 +268,7 @@ export default function InvoiceBuilder() {
                     <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
                       <td className="p-4 align-top space-y-2">
                         <select
-                          className="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-ring focus:border-ring dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                          className="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-ring focus:border-ring"
                           value={item.product_id}
                           onChange={(e) => handleItemChange(item.id, 'product_id', e.target.value)}
                         >
@@ -280,7 +280,7 @@ export default function InvoiceBuilder() {
                         <input
                           type="text"
                           placeholder="Description..."
-                          className="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-ring focus:border-ring dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                          className="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-ring focus:border-ring"
                           value={item.item_description}
                           onChange={(e) => handleItemChange(item.id, 'item_description', e.target.value)}
                           required
@@ -290,7 +290,7 @@ export default function InvoiceBuilder() {
                         <input
                           type="text"
                           placeholder="HSN"
-                          className="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-ring focus:border-ring dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                          className="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-ring focus:border-ring"
                           value={item.hsn_code}
                           onChange={(e) => handleItemChange(item.id, 'hsn_code', e.target.value)}
                         />
@@ -299,7 +299,7 @@ export default function InvoiceBuilder() {
                         <input
                           type="number"
                           min="1"
-                          className="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-ring focus:border-ring dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                          className="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-ring focus:border-ring"
                           value={item.quantity}
                           onChange={(e) => handleItemChange(item.id, 'quantity', e.target.value)}
                           required
@@ -310,7 +310,7 @@ export default function InvoiceBuilder() {
                           type="number"
                           min="0"
                           step="0.01"
-                          className="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-ring focus:border-ring dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                          className="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-ring focus:border-ring"
                           value={item.unit_price}
                           onChange={(e) => handleItemChange(item.id, 'unit_price', e.target.value)}
                           required
@@ -393,7 +393,7 @@ export default function InvoiceBuilder() {
               <div>
                 <label className="block text-sm font-semibold text-color-white">Notes (Internal/Customer)</label>
                 <textarea
-                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-ring focus:border-ring transition-all outline-none resize-none dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-ring focus:border-ring transition-all outline-none resize-none"
                   rows="3"
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
@@ -402,7 +402,7 @@ export default function InvoiceBuilder() {
               <div>
                 <label className="block text-sm font-semibold text-color-white">Terms & Conditions</label>
                 <textarea
-                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-ring focus:border-ring transition-all outline-none resize-none dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-ring focus:border-ring transition-all outline-none resize-none"
                   rows="4"
                   value={formData.terms}
                   onChange={(e) => setFormData({ ...formData, terms: e.target.value })}

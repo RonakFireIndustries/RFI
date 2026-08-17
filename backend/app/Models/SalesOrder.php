@@ -6,9 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 class SalesOrder extends Model
 {
     protected $fillable = [
-        'so_number', 'customer_id', 'total_amount', 'status', 'created_by',
+        'so_number', 'customer_id', 'site_id', 'total_amount', 'status', 'created_by',
         'approved_by', 'notes', 'tax_amount', 'discount_amount',
-        'shipping_cost', 'gst_type', 'gst_rate', 'delivered_by', 'delivered_at',
+        'shipping_cost', 'other_cost', 'other_cost_note',
+        'gst_type', 'gst_rate', 'delivered_by', 'delivered_at',
+        'terms_conditions',
     ];
 
     public function items()
@@ -21,10 +23,20 @@ class SalesOrder extends Model
         return $this->belongsTo(Customer::class);
     }
 
+    public function site()
+    {
+        return $this->belongsTo(Site::class);
+    }
+
     public function products()
     {
         return $this->belongsToMany(Product::class, 'sales_order_items')
             ->withPivot(['quantity', 'unit_price'])
             ->withTimestamps();
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class, 'sales_order_id');
     }
 }

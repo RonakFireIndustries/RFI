@@ -5,8 +5,6 @@ import {
 } from 'lucide-react';
 import api from '../../services/api';
 import ProductSelect from '../../components/Shared/ProductSelect';
-import LocationPicker from '../../components/Map/LocationPicker';
-import { MapPin } from 'lucide-react';
 
 export default function SalesOrdersPage() {
   const navigate = useNavigate();
@@ -16,7 +14,9 @@ export default function SalesOrdersPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [customers, setCustomers] = useState([]);
   const [products, setProducts] = useState([]);
-  const [newOrder, setNewOrder] = useState({ customer_id: '', gst_type: 'cgst', shipping_cost: 0, delivery_latitude: null, delivery_longitude: null, items: [{ product_id: '', custom_product_name: '', quantity: 1, unit_price: 0, gst_rate: 18, hsn_code: '' }] });
+  const [categories, setCategories] = useState([]);
+  const [sites, setSites] = useState([]);
+  const [newOrder, setNewOrder] = useState({ customer_id: '', site_id: '', gst_type: 'cgst', shipping_cost: 0, other_cost: 0, other_cost_note: '', terms_conditions: '', items: [{ category_id: '', product_id: '', custom_product_name: '', quantity: 1, unit_price: 0, gst_rate: 18, hsn_code: '' }] });
   const [activeTab, setActiveTab] = useState('All Orders');
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 25;
@@ -32,12 +32,17 @@ export default function SalesOrdersPage() {
 
   const fetchData = async () => {
     try {
-      const [custRes, prodRes] = await Promise.all([
+      const [custRes, prodRes, catRes, siteRes] = await Promise.all([
         api.get('/customers'),
-        api.get('/products')
+        api.get('/products'),
+        api.get('/categories'),
+        api.get('/sites?per_page=1000')
       ]);
       setCustomers(custRes.data.data || custRes.data);
       setProducts(prodRes.data.data || prodRes.data);
+      setCategories(catRes.data.data || catRes.data);
+      const siteData = siteRes.data?.data || siteRes.data;
+      setSites(Array.isArray(siteData) ? siteData : (siteData?.sites || []));
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -71,7 +76,7 @@ export default function SalesOrdersPage() {
       await api.post('/sales/orders', { ...newOrder, status });
       setIsModalOpen(false);
       fetchOrders();
-      setNewOrder({ customer_id: '', gst_type: 'cgst', shipping_cost: '0', delivery_latitude: null, delivery_longitude: null, items: [{ product_id: '', custom_product_name: '', quantity: 1, unit_price: 0, gst_rate: 18, hsn_code: '' }] });
+      setNewOrder({ customer_id: '', site_id: '', gst_type: 'cgst', shipping_cost: '0', other_cost: 0, other_cost_note: '', terms_conditions: '', items: [{ category_id: '', product_id: '', custom_product_name: '', quantity: 1, unit_price: 0, gst_rate: 18, hsn_code: '' }] });
     } catch (error) {
       console.error("Error creating SO:", error);
       const msg = error.response?.data?.message || "Failed to create Sales Order.";
@@ -454,7 +459,7 @@ export default function SalesOrdersPage() {
       {/* Massive Modal for Create SO */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6">
-          <div className="bg-gray-50 rounded-xl shadow-2xl w-full max-w-7xl h-[95vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-gray-50 rounded-xl shadow-2xl w-full max-w-[90rem] h-[95vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             {/* Modal Header */}
             <div className="bg-white px-6 py-4 border-b border-gray-200 flex justify-between items-center">
               <div className="flex items-center text-sm font-semibold text-gray-500 uppercase tracking-wider">
@@ -493,7 +498,7 @@ export default function SalesOrdersPage() {
                       <div>
                         <label className="block text-sm font-medium text-gray-600 mb-1">Select Customer</label>
                         <select 
-                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-ring focus:border-transparent transition-all dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
                           value={newOrder.customer_id}
                           onChange={(e) => setNewOrder({...newOrder, customer_id: e.target.value})}
                           required
@@ -506,7 +511,7 @@ export default function SalesOrdersPage() {
                         <label className="block text-sm font-medium text-gray-600 mb-1">Order Date</label>
                         <input 
                           type="date"
-                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-ring focus:border-transparent transition-all dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
                           defaultValue={new Date().toISOString().split('T')[0]}
                         />
                       </div>
@@ -514,13 +519,13 @@ export default function SalesOrdersPage() {
                         <label className="block text-sm font-medium text-gray-600 mb-1">Expected Delivery</label>
                         <input 
                           type="date"
-                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-ring focus:border-transparent transition-all dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-600 mb-1">GST Type</label>
                         <select 
-                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-ring focus:border-transparent transition-all dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
                           value={newOrder.gst_type}
                           onChange={(e) => setNewOrder({...newOrder, gst_type: e.target.value})}
                         >
@@ -534,33 +539,44 @@ export default function SalesOrdersPage() {
                           type="number"
                           step="0.01"
                           min="0"
-                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-ring focus:border-transparent transition-all dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
                           value={newOrder.shipping_cost}
                           onChange={(e) => setNewOrder({...newOrder, shipping_cost: e.target.value})}
                         />
                       </div>
-                    </div>
-                  </div>
-
-                  {/* Delivery Location Card */}
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <h2 className="flex items-center text-lg font-bold text-gray-900 mb-4">
-                      <MapPin className="w-5 h-5 text-primary mr-2" />
-                      Delivery Location
-                    </h2>
-                    <p className="text-xs text-gray-500 mb-3">Click on the map to set the delivery location for this order.</p>
-                    <LocationPicker
-                      latitude={newOrder.delivery_latitude}
-                      longitude={newOrder.delivery_longitude}
-                      onLocationChange={(lat, lng) => setNewOrder({...newOrder, delivery_latitude: lat, delivery_longitude: lng})}
-                    />
-                    {newOrder.delivery_latitude && newOrder.delivery_longitude && (
-                      <div className="flex items-center justify-between mt-3 text-xs text-gray-500">
-                        <span>Lat: {newOrder.delivery_latitude.toFixed(6)}, Lng: {newOrder.delivery_longitude.toFixed(6)}</span>
-                        <button type="button" onClick={() => setNewOrder({...newOrder, delivery_latitude: null, delivery_longitude: null})}
-                          className="text-red-500 hover:text-red-700 font-medium">Clear</button>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Drop-off Site</label>
+                        <select
+                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+                          value={newOrder.site_id}
+                          onChange={(e) => setNewOrder({...newOrder, site_id: e.target.value})}
+                        >
+                          <option value="">Select Drop-off Site</option>
+                          {sites.map(s => <option key={s.id} value={s.id}>{s.name}{s.city ? ` (${s.city})` : ''}</option>)}
+                        </select>
                       </div>
-                    )}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Other Cost (₹)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+                          value={newOrder.other_cost}
+                          onChange={(e) => setNewOrder({...newOrder, other_cost: parseFloat(e.target.value) || 0})}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Other Cost Note</label>
+                        <input
+                          type="text"
+                          className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+                          value={newOrder.other_cost_note}
+                          onChange={(e) => setNewOrder({...newOrder, other_cost_note: e.target.value})}
+                          placeholder="e.g. freight, packing, insurance"
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   {/* Line Items Card */}
@@ -572,7 +588,7 @@ export default function SalesOrdersPage() {
                       </h2>
                       <button 
                         type="button"
-                        onClick={() => setNewOrder({...newOrder, items: [...newOrder.items, { product_id: '', custom_product_name: '', quantity: 1, unit_price: 0, gst_rate: 18, hsn_code: '' }]})}
+                        onClick={() => setNewOrder({...newOrder, items: [...newOrder.items, { category_id: '', product_id: '', custom_product_name: '', quantity: 1, unit_price: 0, gst_rate: 18, hsn_code: '' }]})}
                         className="flex items-center text-primary font-semibold text-sm hover:text-primary"
                       >
                         <Plus className="w-4 h-4 mr-1" /> Add New Product
@@ -583,6 +599,7 @@ export default function SalesOrdersPage() {
                       <table className="w-full text-left border-collapse">
                         <thead>
                           <tr className="bg-gray-50 border-b border-gray-200 text-xs uppercase tracking-wider text-gray-500 font-bold">
+                            <th className="p-4 w-40">Category</th>
                             <th className="p-4">Product Code / Name</th>
                             <th className="p-4 w-24 text-center">Quantity</th>
                             <th className="p-4 w-28 text-right">Unit Price</th>
@@ -598,8 +615,24 @@ export default function SalesOrdersPage() {
                             return (
                             <tr key={index} className="hover:bg-gray-50/50">
                               <td className="p-4">
+                                <select
+                                  className="w-full bg-transparent border-0 border-b border-gray-200 focus:ring-0 focus:border-primary/30 p-0 pb-1 text-sm"
+                                  value={item.category_id}
+                                  onChange={(e) => {
+                                    const items = [...newOrder.items];
+                                    items[index].category_id = e.target.value;
+                                    items[index].product_id = '';
+                                    items[index].custom_product_name = '';
+                                    setNewOrder({...newOrder, items});
+                                  }}
+                                >
+                                  <option value="">All Categories</option>
+                                  {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                </select>
+                              </td>
+                              <td className="p-4">
                                 <ProductSelect
-                                  products={products}
+                                  products={item.category_id ? products.filter(p => p.category_id == item.category_id) : products}
                                   value={item.product_id || item.custom_product_name}
                                   onChange={(val) => {
                                     const items = [...newOrder.items];
@@ -610,6 +643,7 @@ export default function SalesOrdersPage() {
                                       if (prod) {
                                         items[index].unit_price = parseFloat(prod.selling_price || 0);
                                         items[index].hsn_code = prod.hsn_code || '';
+                                        if (prod.category_id) items[index].category_id = prod.category_id;
                                       }
                                       items[index].custom_product_name = '';
                                     }
@@ -662,7 +696,7 @@ export default function SalesOrdersPage() {
                               </td>
                               <td className="p-4">
                                 <select
-                                  className="w-full bg-transparent border-0 border-b border-gray-200 focus:ring-0 focus:border-primary/30 p-0 pb-1 text-center font-semibold dark:text-white"
+                                  className="w-full bg-transparent border-0 border-b border-gray-200 focus:ring-0 focus:border-primary/30 p-0 pb-1 text-center font-semibold"
                                   value={item.gst_rate}
                                   onChange={(e) => {
                                     const items = [...newOrder.items];
@@ -726,10 +760,16 @@ export default function SalesOrdersPage() {
                         <span>Shipping</span>
                         <span className="font-medium text-white">₹{parseFloat(newOrder.shipping_cost || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                       </div>
+                      {parseFloat(newOrder.other_cost || 0) > 0 && (
+                        <div className="flex justify-between border-b border-blue-500/50 pb-4">
+                          <span>Other Cost</span>
+                          <span className="font-medium text-white">₹{(newOrder.other_cost || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                        </div>
+                      )}
                       <div className="flex justify-between items-center pt-2">
                         <span className="text-base text-white">Total Amount</span>
                         <span className="text-2xl font-bold text-white">
-                          ₹{(newOrder.items.reduce((sum, item) => sum + (item.quantity * item.unit_price * (1 + (item.gst_rate || 0) / 100)), 0) + parseFloat(newOrder.shipping_cost || 0)).toLocaleString(undefined, {minimumFractionDigits: 2})}
+                          ₹{(newOrder.items.reduce((sum, item) => sum + (item.quantity * item.unit_price * (1 + (item.gst_rate || 0) / 100)), 0) + parseFloat(newOrder.shipping_cost || 0) + (newOrder.other_cost || 0)).toLocaleString(undefined, {minimumFractionDigits: 2})}
                         </span>
                       </div>
                       <p className="text-[10px] uppercase tracking-wider opacity-60 text-right mt-1">Currency: INR (Indian Rupee)</p>
@@ -743,7 +783,7 @@ export default function SalesOrdersPage() {
                         <FileText className="w-4 h-4 text-gray-400 mr-2" /> Internal Remarks
                       </h3>
                       <textarea 
-                        className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm focus:ring-ring focus:border-ring dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm focus:ring-ring focus:border-ring"
                         rows="3"
                         placeholder="Add any internal processing notes..."
                       ></textarea>
@@ -753,11 +793,13 @@ export default function SalesOrdersPage() {
                       <h3 className="flex items-center text-sm font-bold text-gray-800 mb-3">
                         <FileText className="w-4 h-4 text-gray-400 mr-2" /> Terms & Conditions
                       </h3>
-                      <select className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm focus:ring-ring focus:border-ring dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                        <option>Standard Net 30</option>
-                        <option>Net 60</option>
-                        <option>Due on Receipt</option>
-                      </select>
+                      <textarea
+                        className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm focus:ring-ring focus:border-ring"
+                        rows="3"
+                        value={newOrder.terms_conditions}
+                        onChange={(e) => setNewOrder({ ...newOrder, terms_conditions: e.target.value })}
+                        placeholder="Enter custom terms and conditions for this order..."
+                      ></textarea>
                     </div>
 
                     <div className="flex items-start p-4 bg-red-50 text-red-800 rounded-lg text-sm border border-red-100">

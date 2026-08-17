@@ -56,12 +56,12 @@ export default function Login() {
       style={{ paddingTop: 'env(safe-area-inset-top, 1rem)' }}>
       {/* Decorative background shapes */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-primary/5 dark:bg-primary/5 blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-secondary/5 dark:bg-secondary/5 blur-3xl" />
-        <div className="absolute top-1/3 -left-20 w-40 h-40 rounded-full bg-accent/5 dark:bg-accent/5 blur-2xl" />
+        <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-primary/5 blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-secondary/5 blur-3xl" />
+        <div className="absolute top-1/3 -left-20 w-40 h-40 rounded-full bg-accent/5 blur-2xl" />
       </div>
 
-      <Card className="relative w-full max-w-md border shadow-2xl shadow-primary/5 dark:shadow-black/30 bg-card/90 backdrop-blur-sm">
+      <Card className="relative w-full max-w-md border shadow-2xl shadow-primary/5 bg-card/90 backdrop-blur-sm">
         {/* Branding */}
         <div className="pt-10 pb-2 px-8 text-center">
           <div className="flex justify-center mb-4">

@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Users, Calendar, ClipboardList, MapPin, Clock, FileText, Briefcase,
   DollarSign, Layers, Package, Boxes, Warehouse, ShoppingCart, Shield, Settings,
-  Ruler, GitCompare, Move3D, FileSpreadsheet, FileClock, FileInput, Building2, MessageSquare,
+  Ruler, GitCompare, Move3D, FileSpreadsheet, FileClock, FileInput, Building2,
   TrendingUp, Target, Bell, BarChart3,
 } from 'lucide-react';
 
@@ -27,10 +27,10 @@ export const menuCategories = [
   {
     title: 'Payroll',
     items: [
-      { name: 'Payroll Dashboard', path: '/dashboard/payroll', icon: DollarSign, roles: ['Admin', 'Accountant', 'HR'] },
-      { name: 'Salary Structures', path: '/dashboard/salary-structures', icon: DollarSign, roles: ['Admin', 'Accountant', 'HR'] },
-      { name: 'Payroll Periods', path: '/dashboard/period-payroll', icon: Calendar, roles: ['Admin', 'Accountant'] },
-      { name: 'Process Payroll', path: '/dashboard/process-payroll', icon: ClipboardList, roles: ['Admin', 'Accountant'] },
+      { name: 'Payroll Dashboard', path: '/dashboard/payroll', icon: DollarSign, roles: ['Admin', 'Accountant', 'HR', 'Finance Manager'] },
+      { name: 'Salary Structures', path: '/dashboard/salary-structures', icon: DollarSign, roles: ['Admin', 'Accountant', 'HR', 'Finance Manager'] },
+      { name: 'Payroll Periods', path: '/dashboard/period-payroll', icon: Calendar, roles: ['Admin', 'Accountant', 'Finance Manager'] },
+      { name: 'Process Payroll', path: '/dashboard/process-payroll', icon: ClipboardList, roles: ['Admin', 'Accountant', 'Finance Manager'] },
       { name: 'My Payroll', path: '/dashboard/my-payroll', icon: FileText, roles: ['*'] },
     ],
   },
@@ -57,7 +57,7 @@ export const menuCategories = [
     title: 'Inventory',
     items: [
       { name: 'Dashboard', path: '/dashboard/inventory', icon: LayoutDashboard, roles: ['Admin', 'Store Manager', 'Manager'] },
-      { name: 'Products', path: '/dashboard/products', icon: Boxes, roles: ['Admin', 'Store Manager', 'Manager', 'Accountant'] },
+      { name: 'Products', path: '/dashboard/products', icon: Boxes, roles: ['Admin', 'Store Manager', 'Manager', 'Accountant', 'Finance Manager'] },
       { name: 'Categories', path: '/dashboard/categories', icon: Layers, roles: ['Admin', 'Store Manager'] },
       { name: 'Locations', path: '/dashboard/inventory/locations', icon: MapPin, roles: ['Admin', 'Store Manager', 'Manager'] },
       { name: 'Units', path: '/dashboard/inventory/units', icon: Ruler, roles: ['Admin', 'Store Manager'] },
@@ -71,17 +71,11 @@ export const menuCategories = [
   {
     title: 'Sales & Purchases',
     items: [
-      { name: 'Customers', path: '/dashboard/customers', icon: Users, roles: ['Admin', 'Accountant'] },
-      { name: 'Suppliers', path: '/dashboard/suppliers', icon: ShoppingCart, roles: ['Admin', 'Accountant'] },
-      { name: 'Purchases', path: '/dashboard/purchases', icon: ClipboardList, roles: ['Admin', 'Accountant', 'Store Manager'] },
-      { name: 'Sales', path: '/dashboard/sales', icon: ClipboardList, roles: ['Admin', 'Accountant', 'Store Manager'] },
-      { name: 'Invoices', path: '/dashboard/invoices', icon: FileText, roles: ['Admin', 'Accountant'] },
-    ],
-  },
-  {
-    title: 'Communication',
-    items: [
-      { name: 'Chat', path: '/dashboard/chat', icon: MessageSquare, roles: ['*'] },
+      { name: 'Customers', path: '/dashboard/customers', icon: Users, roles: ['Admin', 'Accountant', 'Finance Manager'] },
+      { name: 'Suppliers', path: '/dashboard/suppliers', icon: ShoppingCart, roles: ['Admin', 'Accountant', 'Finance Manager'] },
+      { name: 'Purchases', path: '/dashboard/purchases', icon: ClipboardList, roles: ['Admin', 'Accountant', 'Store Manager', 'Finance Manager'] },
+      { name: 'Sales', path: '/dashboard/sales', icon: ClipboardList, roles: ['Admin', 'Accountant', 'Store Manager', 'Finance Manager'] },
+      { name: 'Invoices', path: '/dashboard/invoices', icon: FileText, roles: ['Admin', 'Accountant', 'Finance Manager'] },
     ],
   },
   {

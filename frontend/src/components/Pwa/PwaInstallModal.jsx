@@ -9,13 +9,13 @@ export default function PwaInstallModal() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 p-4 pb-6">
-      <div className="mx-auto max-w-md bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 flex items-center gap-4">
+      <div className="mx-auto max-w-md bg-white rounded-xl shadow-2xl border border-gray-200 p-4 flex items-center gap-4">
         <img src="/logo.png" alt="RFI" className="shrink-0 w-10 h-10 object-contain" />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <p className="text-sm font-semibold text-gray-900">
             Install RFI App
           </p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+          <p className="text-xs text-gray-500 truncate">
             Add to your home screen for a better experience
           </p>
         </div>
@@ -24,7 +24,7 @@ export default function PwaInstallModal() {
         </Button>
         <button
           onClick={handleDismiss}
-          className="shrink-0 p-1 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          className="shrink-0 p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
         >
           <X className="w-4 h-4" />
         </button>

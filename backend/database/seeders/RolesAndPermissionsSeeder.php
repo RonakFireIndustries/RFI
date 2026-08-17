@@ -148,7 +148,7 @@ class RolesAndPermissionsSeeder extends Seeder
         ]);
 
         // Accountant: payroll + purchase/sales orders (no inventory update)
-        Role::findByName('Accountant')->syncPermissions([
+        $accountantPermissions = [
             'view dashboard', 'view reports',
             'view_payroll', 'manage_payroll',
             'view_purchase_orders', 'create_purchase_orders',
@@ -160,7 +160,15 @@ class RolesAndPermissionsSeeder extends Seeder
                     'view_products', 'view_categories',
                     'salary-structure.view',
                     'create reports', 'export reports',
-        ]);
+        ];
+
+        Role::findByName('Accountant')->syncPermissions($accountantPermissions);
+
+        // Finance Manager: same accounting/finance access as Accountant
+        $financeManager = Role::findByName('Finance Manager');
+        if ($financeManager) {
+            $financeManager->givePermissionTo($accountantPermissions);
+        }
 
         // HR: unchanged
         Role::findByName('HR')->syncPermissions([

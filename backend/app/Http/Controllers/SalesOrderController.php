@@ -24,6 +24,7 @@ class SalesOrderController extends Controller
 
         $request->validate([
             'customer_id' => 'required|exists:customers,id',
+            'site_id' => 'nullable|exists:sites,id',
             'items' => 'required|array',
             'items.*.product_id' => 'nullable|exists:products,id',
             'items.*.custom_product_name' => 'nullable|string|max:255|required_without:items.*.product_id',
@@ -33,6 +34,9 @@ class SalesOrderController extends Controller
             'items.*.hsn_code' => 'nullable|string|max:20',
             'gst_type' => 'nullable|string|in:cgst,sgst,igst',
             'shipping_cost' => 'nullable|numeric|min:0',
+            'other_cost' => 'nullable|numeric|min:0',
+            'other_cost_note' => 'nullable|string|max:255',
+            'terms_conditions' => 'nullable|string',
         ]);
 
         $so = DB::transaction(function () use ($request) {
@@ -48,12 +52,16 @@ class SalesOrderController extends Controller
             $so = SalesOrder::create([
                 'so_number' => 'SO-' . time(),
                 'customer_id' => $request->customer_id,
+                'site_id' => $request->site_id ?: null,
                 'status' => 'Pending',
                 'created_by' => Auth::id(),
                 'notes' => $request->notes,
+                'terms_conditions' => $request->terms_conditions,
                 'total_amount' => $subtotal,
                 'tax_amount' => $taxAmount,
                 'shipping_cost' => $request->shipping_cost ?? 0,
+                'other_cost' => $request->other_cost ?? 0,
+                'other_cost_note' => $request->other_cost_note ?? null,
                 'gst_type' => $request->gst_type,
             ]);
 
@@ -80,7 +88,9 @@ class SalesOrderController extends Controller
     {
         $this->authorize('view_sales_orders');
 
-        return SalesOrder::with(['items.product', 'customer'])->findOrFail($id);
+        return SalesOrder::with(['items.product', 'customer', 'site', 'payments'])
+            ->withSum('payments as paid_amount', 'amount')
+            ->findOrFail($id);
     }
 
     public function update(Request $request, $id)
@@ -95,6 +105,7 @@ class SalesOrderController extends Controller
 
         $request->validate([
             'customer_id' => 'required|exists:customers,id',
+            'site_id' => 'nullable|exists:sites,id',
             'items' => 'required|array',
             'items.*.product_id' => 'nullable|exists:products,id',
             'items.*.custom_product_name' => 'nullable|string|max:255|required_without:items.*.product_id',
@@ -104,6 +115,9 @@ class SalesOrderController extends Controller
             'items.*.hsn_code' => 'nullable|string|max:20',
             'gst_type' => 'nullable|string|in:cgst,sgst,igst',
             'shipping_cost' => 'nullable|numeric|min:0',
+            'other_cost' => 'nullable|numeric|min:0',
+            'other_cost_note' => 'nullable|string|max:255',
+            'terms_conditions' => 'nullable|string',
         ]);
 
         DB::transaction(function () use ($request, $so) {
@@ -118,10 +132,14 @@ class SalesOrderController extends Controller
 
             $so->update([
                 'customer_id' => $request->customer_id,
+                'site_id' => $request->site_id ?: null,
                 'notes' => $request->notes,
+                'terms_conditions' => $request->terms_conditions,
                 'total_amount' => $subtotal,
                 'tax_amount' => $taxAmount,
                 'shipping_cost' => $request->shipping_cost ?? 0,
+                'other_cost' => $request->other_cost ?? 0,
+                'other_cost_note' => $request->other_cost_note ?? null,
                 'gst_type' => $request->gst_type,
             ]);
 
@@ -178,6 +196,7 @@ class SalesOrderController extends Controller
 
     /**
      * Store Manager confirms delivery of goods → inventory is updated.
+     * Accepts partial delivery per line item via `items` payload: [{ id, delivered_qty }].
      */
     public function confirmDelivery(Request $request, $id)
     {
@@ -185,40 +204,63 @@ class SalesOrderController extends Controller
 
         $so = SalesOrder::with('items')->findOrFail($id);
 
-        if ($so->status !== 'Approved' && $so->status !== 'Pending') {
+        if ($so->status !== 'Approved' && $so->status !== 'Pending' && $so->status !== 'Partially Delivered') {
             return response()->json(['message' => 'Order cannot be delivered in current status'], 400);
         }
+
+        $request->validate([
+            'items' => 'required|array',
+            'items.*.id' => 'required|integer',
+            'items.*.delivered_qty' => 'required|integer|min:0',
+        ]);
 
         $locationId = $request->input('location_id');
 
         try {
-            DB::transaction(function () use ($so, $locationId) {
+            DB::transaction(function () use ($so, $request, $locationId) {
+                $deliveredById = collect($request->items)->keyBy('id');
+                $allFullyDelivered = true;
+
                 foreach ($so->items as $item) {
-                    if (is_null($item->product_id)) {
-                        continue;
+                    $entry = $deliveredById->get($item->id);
+                    $remaining = $item->quantity - ($item->delivered_quantity ?? 0);
+                    $deliveredNow = $entry ? (int) $entry['delivered_qty'] : $remaining;
+                    $itemLabel = $item->product?->name ?? $item->custom_product_name ?? "Item #{$item->id}";
+
+                    if ($deliveredNow < 0 || $deliveredNow > $remaining) {
+                        throw new \Exception("Delivered quantity for item '{$itemLabel}' exceeds ordered quantity");
                     }
 
-                    $stockQuery = ProductStock::where('product_id', $item->product_id)
-                        ->where('location_type', \App\Models\Site::class);
+                    if ($deliveredNow > 0 && !is_null($item->product_id)) {
+                        $stockQuery = ProductStock::where('product_id', $item->product_id)
+                            ->where('location_type', \App\Models\Site::class);
 
-                    if ($locationId) {
-                        $stockQuery->where('location_id', $locationId);
+                        if ($locationId) {
+                            $stockQuery->where('location_id', $locationId);
+                        }
+
+                        $stock = $stockQuery->where('quantity', '>=', $deliveredNow)
+                            ->orderBy('quantity')
+                            ->first();
+
+                        if (!$stock) {
+                            throw new \Exception("Insufficient stock for product ID {$item->product_id}");
+                        }
+
+                        $stock->quantity -= $deliveredNow;
+                        $stock->available_quantity = max(0, ($stock->available_quantity ?? 0) - $deliveredNow);
+                        $stock->save();
                     }
 
-                    $stock = $stockQuery->where('quantity', '>=', $item->quantity)
-                        ->orderBy('quantity')
-                        ->first();
+                    $item->delivered_quantity = ($item->delivered_quantity ?? 0) + $deliveredNow;
+                    $item->save();
 
-                    if (!$stock) {
-                        throw new \Exception("Insufficient stock for product ID {$item->product_id}");
+                    if (($item->delivered_quantity ?? 0) < $item->quantity) {
+                        $allFullyDelivered = false;
                     }
-
-                    $stock->quantity -= $item->quantity;
-                    $stock->available_quantity = max(0, ($stock->available_quantity ?? 0) - $item->quantity);
-                    $stock->save();
                 }
 
-                $so->status = 'Delivered';
+                $so->status = $allFullyDelivered ? 'Fully Delivered' : 'Partially Delivered';
                 $so->delivered_by = Auth::id();
                 $so->delivered_at = now();
                 $so->save();

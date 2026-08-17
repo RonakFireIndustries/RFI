@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
-import { useTheme } from '../../contexts/ThemeContext';
-import { Loader, Moon, Sun, Monitor, User, Key, Save } from 'lucide-react';
+import { Loader, User, Key, Save } from 'lucide-react';
 
 export default function UserSettingsPage() {
   const { user, setUser } = useAuthStore();
-  const { theme, toggleTheme } = useTheme();
 
   // Profile Form State
   const [profileForm, setProfileForm] = useState({
@@ -67,52 +65,22 @@ export default function UserSettingsPage() {
     }
   };
 
-  const inputClass = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:focus:border-blue-400';
-  const labelClass = 'block text-xs font-medium text-gray-600 mb-1 dark:text-gray-400';
+  const inputClass = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none';
+  const labelClass = 'block text-xs font-medium text-gray-600 mb-1';
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-xl font-bold text-gray-800 dark:text-white mb-6">User Settings</h1>
-      <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">
+      <h1 className="text-xl font-bold text-gray-800 mb-6">User Settings</h1>
+      <p className="text-sm text-gray-500 mb-8">
         Manage your profile settings, change your password, and customize your app experience.
       </p>
 
       <div className="space-y-8">
-        {/* Appearance Settings */}
-        <section className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-          <div className="flex items-center gap-2 mb-4">
-            <Monitor className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-            <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Appearance</h2>
-          </div>
-          <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
-            <div>
-              <p className="text-sm font-medium text-gray-800 dark:text-white">Theme</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Toggle between light and dark mode</p>
-            </div>
-            <button
-              onClick={toggleTheme}
-              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-            >
-              {theme === 'dark' ? (
-                <>
-                  <Sun className="w-4 h-4 text-amber-500" />
-                  <span>Light Mode</span>
-                </>
-              ) : (
-                <>
-                  <Moon className="w-4 h-4 text-blue-500" />
-                  <span>Dark Mode</span>
-                </>
-              )}
-            </button>
-          </div>
-        </section>
-
         {/* Profile Settings */}
-        <section className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+        <section className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
-            <User className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-            <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Profile Information</h2>
+            <User className="w-5 h-5 text-gray-500" />
+            <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Profile Information</h2>
           </div>
           <form onSubmit={handleProfileSubmit}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -153,10 +121,10 @@ export default function UserSettingsPage() {
         </section>
 
         {/* Change Password */}
-        <section className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+        <section className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
-            <Key className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-            <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Change Password</h2>
+            <Key className="w-5 h-5 text-gray-500" />
+            <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Change Password</h2>
           </div>
           <form onSubmit={handlePasswordSubmit}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">

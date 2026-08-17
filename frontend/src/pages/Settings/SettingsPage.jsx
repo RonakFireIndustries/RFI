@@ -1,27 +1,18 @@
 import { useState } from 'react';
-import { useTheme } from '../../contexts/ThemeContext';
 import ChangePasswordModal from '../../components/Settings/ChangePasswordModal';
 import CompanySettingsPage from './CompanySettingsPage';
 import {
-  Palette, Lock, Building2, Sun, Moon, Monitor,
-  ChevronRight, Shield, User, Globe, Smartphone
+  Lock, Building2, ChevronRight, Shield, User, Globe, Smartphone
 } from 'lucide-react';
 
 const tabs = [
-  { id: 'appearance', label: 'Appearance', icon: Palette, desc: 'Theme, layout preferences' },
   { id: 'account', label: 'Account', icon: Lock, desc: 'Password, security' },
   { id: 'company', label: 'Company', icon: Building2, desc: 'Business info, bank details, signature' },
 ];
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState('appearance');
-  const { theme, toggleTheme, setTheme } = useTheme();
+  const [activeTab, setActiveTab] = useState('account');
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-
-  const themeOptions = [
-    { value: 'light', icon: Sun, label: 'Light' },
-    { value: 'dark', icon: Moon, label: 'Dark' },
-  ];
 
   return (
     <div className="space-y-6">
@@ -67,56 +58,6 @@ export default function SettingsPage() {
 
         {/* Content */}
         <div>
-          {activeTab === 'appearance' && (
-            <div className="bg-card rounded-xl border border-border shadow-sm p-6 space-y-6">
-              <div>
-                <h2 className="text-lg font-bold text-foreground">Appearance</h2>
-                <p className="text-sm text-muted-foreground">Customize how the application looks.</p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-foreground mb-3">Theme</label>
-                <div className="grid grid-cols-2 gap-3">
-                  {themeOptions.map(opt => {
-                    const Icon = opt.icon;
-                    const selected = theme === opt.value;
-                    return (
-                      <button
-                        key={opt.value}
-                        onClick={() => setTheme(opt.value)}
-                        className={`flex items-center gap-3 px-4 py-3.5 rounded-xl border-2 transition-colors ${
-                          selected
-                            ? 'border-blue-500 bg-blue-50'
-                            : 'border-gray-200 hover:border-gray-300 bg-white'
-                        }`}
-                      >
-                        <div className={`shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${
-                          selected ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-500'
-                        }`}>
-                          <Icon className="w-5 h-5" />
-                        </div>
-                        <div className="text-left">
-                          <p className={`text-sm font-semibold ${selected ? 'text-blue-700' : 'text-gray-800'}`}>
-                            {opt.label}
-                          </p>
-                          <p className="text-xs text-gray-400">{opt.value === 'light' ? 'Light background, dark text' : 'Dark background, light text'}</p>
-                        </div>
-                        {selected && <div className="ml-auto w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center"><div className="w-2 h-2 rounded-full bg-white" /></div>}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-gray-100">
-                <div className="flex items-center gap-2 text-xs text-gray-400">
-                  <Monitor className="w-3.5 h-3.5" />
-                  Auto-switches based on system preference if set via browser/OS.
-                </div>
-              </div>
-            </div>
-          )}
-
           {activeTab === 'account' && (
             <div className="space-y-4">
               <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">

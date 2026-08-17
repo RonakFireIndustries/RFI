@@ -113,24 +113,24 @@ export default function OpportunityDetail() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-color-white">Name</label>
-                  <input type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+                  <input type="text" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-color-white">Building</label>
-                  <select value={form.building_id || ''} onChange={e => setForm({ ...form, building_id: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                  <select value={form.building_id || ''} onChange={e => setForm({ ...form, building_id: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm">
                     <option value="">Select Building</option>
                     {(buildings || []).map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-color-white">Stage</label>
-                  <select value={form.stage} onChange={e => setForm({ ...form, stage: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                  <select value={form.stage} onChange={e => setForm({ ...form, stage: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm">
                     {STAGES.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-color-white">Estimated Value (₹)</label>
-                  <input type="number" value={form.estimated_value} onChange={e => setForm({ ...form, estimated_value: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+                  <input type="number" value={form.estimated_value} onChange={e => setForm({ ...form, estimated_value: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-color-white">Probability ({form.probability}%)</label>
@@ -138,11 +138,11 @@ export default function OpportunityDetail() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-color-white">Expected Closing Date</label>
-                  <input type="date" value={form.expected_closing_date} onChange={e => setForm({ ...form, expected_closing_date: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+                  <input type="date" value={form.expected_closing_date} onChange={e => setForm({ ...form, expected_closing_date: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" />
                 </div>
                 <div className="col-span-2">
                   <label className="block text-sm font-medium text-color-white">Notes</label>
-                  <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={3} className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+                  <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={3} className="w-full px-3 py-2 border rounded-lg text-sm" />
                 </div>
 
                 {(form.stage === 'Won' || form.stage === 'Lost') && (
@@ -151,18 +151,18 @@ export default function OpportunityDetail() {
                       <>
                         <div>
                           <label className="block text-sm font-medium text-color-white">Actual Final Value (₹)</label>
-                          <input type="number" value={form.actual_final_value} onChange={e => setForm({ ...form, actual_final_value: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+                          <input type="number" value={form.actual_final_value} onChange={e => setForm({ ...form, actual_final_value: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" />
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-color-white">Project Start Date</label>
-                          <input type="date" value={form.project_start_date} onChange={e => setForm({ ...form, project_start_date: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+                          <input type="date" value={form.project_start_date} onChange={e => setForm({ ...form, project_start_date: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" />
                         </div>
                       </>
                     )}
                     {form.stage === 'Lost' && (
                       <div className="col-span-2">
                         <label className="block text-sm font-medium text-color-white">Lost Reason</label>
-                        <textarea value={form.lost_reason} onChange={e => setForm({ ...form, lost_reason: e.target.value })} rows={2} className="w-full px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+                        <textarea value={form.lost_reason} onChange={e => setForm({ ...form, lost_reason: e.target.value })} rows={2} className="w-full px-3 py-2 border rounded-lg text-sm" />
                       </div>
                     )}
                   </>
@@ -194,7 +194,7 @@ export default function OpportunityDetail() {
             </div>
             {editing && (
               <div className="flex gap-2 mt-3">
-                <select value={newWorkType} onChange={e => setNewWorkType(e.target.value)} className="flex-1 px-3 py-2 border rounded-lg text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <select value={newWorkType} onChange={e => setNewWorkType(e.target.value)} className="flex-1 px-3 py-2 border rounded-lg text-sm">
                   <option value="">Select work type</option>
                   {WORK_TYPES.filter(wt => !workTypes.includes(wt)).map(wt => <option key={wt} value={wt}>{wt}</option>)}
                 </select>
