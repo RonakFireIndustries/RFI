@@ -76,6 +76,11 @@ class Building extends Model
         return $this->hasMany(BuildingContact::class);
     }
 
+    public function amcs(): HasMany
+    {
+        return $this->hasMany(BuildingAmc::class);
+    }
+
     public function siteVisits(): HasMany
     {
         return $this->hasMany(SiteVisit::class);

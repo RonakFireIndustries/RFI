@@ -17,6 +17,11 @@ export const buildingDetailService = {
   updateContact: async (buildingId, contactId, payload) => unwrapItem((await api.put(`/buildings/${buildingId}/contacts/${contactId}`, payload)).data),
   removeContact: async (buildingId, contactId) => api.delete(`/buildings/${buildingId}/contacts/${contactId}`),
 
+  getAmcs: async (buildingId) => unwrapList((await api.get(`/buildings/${buildingId}/amcs`)).data),
+  createAmc: async (buildingId, payload) => unwrapItem((await api.post(`/buildings/${buildingId}/amcs`, payload)).data),
+  updateAmc: async (buildingId, amcId, payload) => unwrapItem((await api.put(`/buildings/${buildingId}/amcs/${amcId}`, payload)).data),
+  removeAmc: async (buildingId, amcId) => api.delete(`/buildings/${buildingId}/amcs/${amcId}`),
+
   getStatuses: async () => unwrapList((await api.get('/building-statuses')).data),
   assignStatus: async (buildingId, statusId) => unwrapItem((await api.post(`/buildings/${buildingId}/statuses`, { building_status_id: statusId })).data),
   removeStatus: async (buildingId, statusId) => api.delete(`/buildings/${buildingId}/statuses/${statusId}`),

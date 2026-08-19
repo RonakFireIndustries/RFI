@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useBuildingStore } from '../../store/buildingStore';
 import { useSiteStore } from '../../store/siteStore';
+import { buildingDetailService } from '../../services/buildingDetailService';
 import MapPicker from '../../components/MapPicker';
 import {
   Plus, Edit, Trash2, Search, MapPin, Building2, Info, X, Compass,
@@ -60,6 +61,7 @@ export default function Buildings() {
   const [formData, setFormData] = useState({ ...defaultFormData });
   const [formErrors, setFormErrors] = useState({});
   const [expandedCard, setExpandedCard] = useState(null);
+  const [wingsData, setWingsData] = useState([]);
 
   useEffect(() => {
     fetchBuildings({ search, status: statusFilter, page: currentPage, per_page: 1000 });
@@ -68,18 +70,45 @@ export default function Buildings() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => {
+      const next = { ...prev, [name]: value };
+      if (name === 'no_of_wings') {
+        const count = parseInt(value) || 0;
+        setWingsData(prevWings => {
+          if (count > prevWings.length) {
+            return [...prevWings, ...Array.from({ length: count - prevWings.length }, (_, i) => ({
+              name: `Wing ${prevWings.length + i + 1}`,
+              floors: '',
+              flats_per_floor: '',
+              flat_configuration: '',
+              total_flats: '',
+            }))];
+          }
+          return prevWings.slice(0, count);
+        });
+      }
+      return next;
+    });
     if (formErrors[name]) setFormErrors(prev => ({ ...prev, [name]: null }));
+  };
+
+  const handleWingChange = (index, field, value) => {
+    setWingsData(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
   };
 
   const openAddModal = () => {
     setEditingBuilding(null);
     setFormData({ ...defaultFormData });
     setFormErrors({});
+    setWingsData([]);
     setIsModalOpen(true);
   };
 
-  const openEditModal = (b) => {
+  const openEditModal = async (b) => {
     setEditingBuilding(b);
     setFormData({
       name: b.name || '',
@@ -91,7 +120,7 @@ export default function Buildings() {
       latitude: b.latitude || '',
       longitude: b.longitude || '',
       no_of_floors: b.no_of_floors ?? '',
-      no_of_wings: b.no_of_wings || '',
+      no_of_wings: b.no_of_wings ?? '',
       no_of_flats: b.no_of_flats ?? '',
       commercial_shops_available: !!b.commercial_shops_available,
       no_of_staircase: b.no_of_staircase ?? '',
@@ -114,6 +143,19 @@ export default function Buildings() {
       status: b.status || 'Active',
     });
     setFormErrors({});
+    try {
+      const wings = await buildingDetailService.getWings(b.id);
+      setWingsData(Array.isArray(wings) ? wings.map(w => ({
+        id: w.id,
+        name: w.name || '',
+        floors: w.floors ?? '',
+        flats_per_floor: w.flats_per_floor ?? '',
+        flat_configuration: w.flat_configuration || '',
+        total_flats: w.total_flats ?? '',
+      })) : []);
+    } catch {
+      setWingsData([]);
+    }
     setIsModalOpen(true);
   };
 
@@ -127,11 +169,20 @@ export default function Buildings() {
         latitude: formData.latitude ? parseFloat(formData.latitude) : null,
         longitude: formData.longitude ? parseFloat(formData.longitude) : null,
         no_of_floors: formData.no_of_floors !== '' ? parseInt(formData.no_of_floors) : null,
+        no_of_wings: formData.no_of_wings !== '' ? parseInt(formData.no_of_wings) : null,
         no_of_flats: formData.no_of_flats !== '' ? parseInt(formData.no_of_flats) : null,
         no_of_staircase: formData.no_of_staircase !== '' ? parseInt(formData.no_of_staircase) : null,
         no_of_lifts: formData.no_of_lifts !== '' ? parseInt(formData.no_of_lifts) : null,
         no_of_exits_entry: formData.no_of_exits_entry !== '' ? parseInt(formData.no_of_exits_entry) : null,
         site_id: formData.site_id ? parseInt(formData.site_id) : null,
+        wings: wingsData.length > 0 ? wingsData.map(w => ({
+          ...(w.id ? { id: w.id } : {}),
+          name: w.name,
+          floors: w.floors !== '' ? parseInt(w.floors) : null,
+          flats_per_floor: w.flats_per_floor !== '' ? parseInt(w.flats_per_floor) : null,
+          flat_configuration: w.flat_configuration || null,
+          total_flats: w.total_flats !== '' ? parseInt(w.total_flats) : null,
+        })) : undefined,
       };
       if (editingBuilding) {
         await updateBuilding(editingBuilding.id, payload);
@@ -423,7 +474,7 @@ export default function Buildings() {
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-700 uppercase mb-1">No. of Wings</label>
-                    <input type="text" name="no_of_wings" value={formData.no_of_wings} onChange={handleInputChange} placeholder="e.g. A, B, C" className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    <input type="number" name="no_of_wings" value={formData.no_of_wings} onChange={handleInputChange} min="0" className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-700 uppercase mb-1">No. of Flats</label>
@@ -453,6 +504,73 @@ export default function Buildings() {
                   </label>
                 </div>
               </div>
+
+              {wingsData.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Wings Details</h4>
+                  <div className="space-y-4">
+                    {wingsData.map((wing, idx) => (
+                      <div key={idx} className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-sm font-bold text-gray-700">Wing {idx + 1}</span>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-600 mb-1">Name</label>
+                            <input
+                              type="text"
+                              value={wing.name}
+                              onChange={(e) => handleWingChange(idx, 'name', e.target.value)}
+                              placeholder="e.g. A, North"
+                              className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-600 mb-1">Floors</label>
+                            <input
+                              type="number"
+                              value={wing.floors}
+                              onChange={(e) => handleWingChange(idx, 'floors', e.target.value)}
+                              min="0"
+                              className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-600 mb-1">Flats/Floor</label>
+                            <input
+                              type="number"
+                              value={wing.flats_per_floor}
+                              onChange={(e) => handleWingChange(idx, 'flats_per_floor', e.target.value)}
+                              min="0"
+                              className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-600 mb-1">Config</label>
+                            <input
+                              type="text"
+                              value={wing.flat_configuration}
+                              onChange={(e) => handleWingChange(idx, 'flat_configuration', e.target.value)}
+                              placeholder="e.g. 2BHK"
+                              className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-600 mb-1">Total Flats</label>
+                            <input
+                              type="number"
+                              value={wing.total_flats}
+                              onChange={(e) => handleWingChange(idx, 'total_flats', e.target.value)}
+                              min="0"
+                              className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div>
                 <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Fire Safety</h4>

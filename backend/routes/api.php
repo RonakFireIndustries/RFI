@@ -343,6 +343,12 @@ Route::prefix('v1')->group(function () {
     Route::put('/buildings/{building}/contacts/{contact}', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'updateContact']);
     Route::delete('/buildings/{building}/contacts/{contact}', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'destroyContact']);
 
+    // Building AMCs
+    Route::get('/buildings/{building}/amcs', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'amcs']);
+    Route::post('/buildings/{building}/amcs', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'storeAmc']);
+    Route::put('/buildings/{building}/amcs/{amc}', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'updateAmc']);
+    Route::delete('/buildings/{building}/amcs/{amc}', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'destroyAmc']);
+
     // Site Visits
     Route::get('/site-visits', [\App\Http\Controllers\Api\V1\SiteVisitController::class, 'index']);
     Route::post('/site-visits', [\App\Http\Controllers\Api\V1\SiteVisitController::class, 'store']);

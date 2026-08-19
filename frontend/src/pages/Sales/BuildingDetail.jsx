@@ -6,7 +6,7 @@ import { buildingDetailService } from '../../services/buildingDetailService';
 import { salesDocumentService } from '../../services/salesDocumentService';
 import { format } from 'date-fns';
 
-const TABS = ['Overview', 'Wings', 'Fire Systems', 'Contacts', 'Documents'];
+const TABS = ['Overview', 'Wings', 'Fire Systems', 'Contacts', 'AMCs', 'Documents'];
 const FIRE_SYSTEM_TYPES = ['Fire Fighting', 'Fire Alarm', 'Fire Sprinkler', 'Fire Hydrant', 'Fire Extinguisher', 'Emergency Lighting', 'Smoke Detector', 'Others'];
 const CONTACT_CATEGORIES = ['society', 'developer', 'architect', 'pmc', 'other'];
 const DOC_CATEGORIES = ['Fire NOC', 'Building Plan', 'NOC Certificate', 'AMC Agreement', 'Quotation', 'Invoice', 'Site Photo', 'Other'];
@@ -30,6 +30,7 @@ export default function BuildingDetail() {
   const [wings, setWings] = useState([]);
   const [fireSystems, setFireSystems] = useState([]);
   const [contacts, setContacts] = useState([]);
+  const [amcs, setAmcs] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [showForm, setShowForm] = useState(null);
 
@@ -88,15 +89,17 @@ export default function BuildingDetail() {
 
   const loadSubEntities = async () => {
     try {
-      const [w, f, c, d] = await Promise.all([
+      const [w, f, c, a, d] = await Promise.all([
         buildingDetailService.getWings(id),
         buildingDetailService.getFireSystems(id),
         buildingDetailService.getContacts(id),
+        buildingDetailService.getAmcs(id),
         salesDocumentService.list({ building_id: id }),
       ]);
       if (Array.isArray(w)) setWings(w);
       if (Array.isArray(f)) setFireSystems(f);
       if (Array.isArray(c)) setContacts(c);
+      if (Array.isArray(a)) setAmcs(a);
       if (Array.isArray(d)) setDocuments(d);
     } catch (err) {
       console.error(err);
@@ -285,6 +288,7 @@ export default function BuildingDetail() {
       {activeTab === 'Wings' && <WingsTab wings={wings} buildingId={id} reload={loadSubEntities} editing={editing} />}
       {activeTab === 'Fire Systems' && <FireSystemsTab systems={fireSystems} buildingId={id} reload={loadSubEntities} editing={editing} />}
       {activeTab === 'Contacts' && <ContactsTab contacts={contacts} buildingId={id} reload={loadSubEntities} editing={editing} />}
+      {activeTab === 'AMCs' && <AmcsTab amcs={amcs} buildingId={id} reload={loadSubEntities} editing={editing} />}
       {activeTab === 'Documents' && <DocumentsTab documents={documents} buildingId={id} reload={loadSubEntities} />}
     </div>
   );
@@ -515,6 +519,129 @@ function ContactsTab({ contacts, buildingId, reload, editing }) {
           </div>
         ))}
         {contacts.length === 0 && <p className="text-center text-gray-500 py-8 text-sm col-span-full">No contacts recorded</p>}
+      </div>
+    </div>
+  );
+}
+
+function AmcsTab({ amcs, buildingId, reload, editing }) {
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ vendor_name: '', contract_number: '', contract_type: '', start_date: '', end_date: '', amount: '', frequency: 'Annual', status: 'Active', scope: '', last_service_date: '', next_service_date: '', notes: '' });
+  const [editingId, setEditingId] = useState(null);
+
+  const handleSave = async () => {
+    try {
+      const payload = { ...form };
+      Object.keys(payload).forEach(k => { if (payload[k] === '') delete payload[k]; });
+      if (editingId) {
+        await buildingDetailService.updateAmc(buildingId, editingId, payload);
+      } else {
+        await buildingDetailService.createAmc(buildingId, payload);
+      }
+      setShowForm(false); setEditingId(null);
+      setForm({ vendor_name: '', contract_number: '', contract_type: '', start_date: '', end_date: '', amount: '', frequency: 'Annual', status: 'Active', scope: '', last_service_date: '', next_service_date: '', notes: '' });
+      reload();
+    } catch (err) { console.error(err); }
+  };
+
+  const handleEdit = (amc) => {
+    setForm({
+      vendor_name: amc.vendor_name || '', contract_number: amc.contract_number || '', contract_type: amc.contract_type || '',
+      start_date: amc.start_date ? amc.start_date.slice(0, 10) : '', end_date: amc.end_date ? amc.end_date.slice(0, 10) : '',
+      amount: amc.amount || '', frequency: amc.frequency || 'Annual', status: amc.status || 'Active',
+      scope: amc.scope || '', last_service_date: amc.last_service_date ? amc.last_service_date.slice(0, 10) : '',
+      next_service_date: amc.next_service_date ? amc.next_service_date.slice(0, 10) : '', notes: amc.notes || '',
+    });
+    setEditingId(amc.id);
+    setShowForm(true);
+  };
+
+  const isExpired = (amc) => amc.end_date && new Date(amc.end_date) < new Date();
+  const isExpiringSoon = (amc) => {
+    if (!amc.end_date) return false;
+    const diff = new Date(amc.end_date) - new Date();
+    return diff > 0 && diff < 30 * 24 * 60 * 60 * 1000;
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-semibold text-gray-900">AMCs ({amcs.length})</h2>
+        {editing && <button onClick={() => { setShowForm(true); setEditingId(null); }} className="flex items-center gap-2 px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm"><Plus className="w-3 h-3" /> Add AMC</button>}
+      </div>
+      {showForm && (
+        <div className="bg-white border rounded-lg p-4 space-y-3">
+          <div className="grid grid-cols-3 gap-3">
+            <input placeholder="Vendor Name" value={form.vendor_name} onChange={e => setForm({ ...form, vendor_name: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
+            <input placeholder="Contract Number" value={form.contract_number} onChange={e => setForm({ ...form, contract_number: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
+            <input placeholder="Contract Type (e.g. Fire System)" value={form.contract_type} onChange={e => setForm({ ...form, contract_type: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Start Date</label>
+              <input type="date" value={form.start_date} onChange={e => setForm({ ...form, start_date: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">End Date</label>
+              <input type="date" value={form.end_date} onChange={e => setForm({ ...form, end_date: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" />
+            </div>
+            <input placeholder="Amount" type="number" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
+            <select value={form.frequency} onChange={e => setForm({ ...form, frequency: e.target.value })} className="px-3 py-2 border rounded-lg text-sm">
+              <option>Annual</option><option>Semi-Annual</option><option>Quarterly</option><option>Monthly</option>
+            </select>
+            <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} className="px-3 py-2 border rounded-lg text-sm">
+              <option>Active</option><option>Expired</option><option>Pending Renewal</option>
+            </select>
+            <input placeholder="Scope (what's covered)" value={form.scope} onChange={e => setForm({ ...form, scope: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Last Service</label>
+              <input type="date" value={form.last_service_date} onChange={e => setForm({ ...form, last_service_date: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Next Service</label>
+              <input type="date" value={form.next_service_date} onChange={e => setForm({ ...form, next_service_date: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" />
+            </div>
+          </div>
+          <textarea placeholder="Notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} className="w-full px-3 py-2 border rounded-lg text-sm" />
+          <div className="flex gap-2">
+            <button onClick={handleSave} className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm">{editingId ? 'Update' : 'Save'}</button>
+            <button onClick={() => { setShowForm(false); setEditingId(null); }} className="px-3 py-1.5 border rounded-lg text-sm">Cancel</button>
+          </div>
+        </div>
+      )}
+      <div className="bg-white rounded-lg border overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-gray-50 border-b"><tr>
+            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Vendor</th>
+            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Contract #</th>
+            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Type</th>
+            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Period</th>
+            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Amount</th>
+            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Frequency</th>
+            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Status</th>
+            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Next Service</th>
+            {editing && <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Actions</th>}
+          </tr></thead>
+          <tbody className="divide-y divide-gray-100">
+            {amcs.map(amc => (
+              <tr key={amc.id} className={`hover:bg-gray-50 ${isExpired(amc) ? 'bg-red-50' : isExpiringSoon(amc) ? 'bg-amber-50' : ''}`}>
+                <td className="px-4 py-2 text-sm font-medium">{amc.vendor_name || '-'}</td>
+                <td className="px-4 py-2 text-sm">{amc.contract_number || '-'}</td>
+                <td className="px-4 py-2 text-sm">{amc.contract_type || '-'}</td>
+                <td className="px-4 py-2 text-sm">{amc.start_date ? format(new Date(amc.start_date), 'dd MMM yy') : '?'} - {amc.end_date ? format(new Date(amc.end_date), 'dd MMM yy') : '?'}</td>
+                <td className="px-4 py-2 text-sm">{amc.amount ? `₹${Number(amc.amount).toLocaleString()}` : '-'}</td>
+                <td className="px-4 py-2 text-sm">{amc.frequency || '-'}</td>
+                <td className="px-4 py-2 text-sm">
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${amc.status === 'Active' ? 'bg-green-100 text-green-700' : amc.status === 'Expired' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>{amc.status}</span>
+                </td>
+                <td className="px-4 py-2 text-sm">{amc.next_service_date ? format(new Date(amc.next_service_date), 'dd MMM yyyy') : '-'}</td>
+                {editing && <td className="px-4 py-2 text-right">
+                  <button onClick={() => handleEdit(amc)} className="text-blue-600 hover:text-blue-800 text-xs mr-2">Edit</button>
+                  <button onClick={async () => { await buildingDetailService.removeAmc(buildingId, amc.id); reload(); }} className="text-red-600 hover:text-red-800 text-xs">Delete</button>
+                </td>}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {amcs.length === 0 && <p className="text-center text-gray-500 py-8 text-sm">No AMCs recorded</p>}
       </div>
     </div>
   );

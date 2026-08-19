@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Building;
+use Illuminate\Support\Facades\DB;
 
 class BuildingService
 {
@@ -32,13 +33,52 @@ class BuildingService
 
     public function createBuilding(array $data): Building
     {
-        return Building::create($data);
+        $wingsData = $data['wings'] ?? null;
+        unset($data['wings']);
+
+        return DB::transaction(function () use ($data, $wingsData) {
+            $building = Building::create($data);
+
+            if (!empty($wingsData)) {
+                $building->wings()->createMany($wingsData);
+            }
+
+            return $building;
+        });
     }
 
     public function updateBuilding(Building $building, array $data): Building
     {
-        $building->update($data);
-        return $building;
+        $wingsData = $data['wings'] ?? null;
+        unset($data['wings']);
+
+        return DB::transaction(function () use ($building, $data, $wingsData) {
+            $building->update($data);
+
+            if ($wingsData !== null) {
+                $existingWingIds = collect($wingsData)
+                    ->pluck('id')
+                    ->filter()
+                    ->map(fn ($id) => (int) $id)
+                    ->toArray();
+
+                $building->wings()
+                    ->whereNotIn('id', $existingWingIds)
+                    ->delete();
+
+                foreach ($wingsData as $wingDatum) {
+                    if (!empty($wingDatum['id'])) {
+                        $building->wings()
+                            ->where('id', $wingDatum['id'])
+                            ->update(collect($wingDatum)->except('id')->toArray());
+                    } else {
+                        $building->wings()->create($wingDatum);
+                    }
+                }
+            }
+
+            return $building;
+        });
     }
 
     public function deleteBuilding(Building $building): void

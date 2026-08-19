@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Building;
 use App\Models\BuildingContact;
+use App\Models\BuildingAmc;
 use App\Models\BuildingStatus;
 use App\Models\BuildingWing;
 use App\Models\FireSystem;
@@ -161,6 +162,66 @@ class BuildingDetailController extends Controller
         $this->authorize('building.delete');
         $contact->delete();
         return $this->success('Contact deleted');
+    }
+
+    public function amcs(Building $building): JsonResponse
+    {
+        $this->authorize('building.view');
+        $amcs = $building->amcs()->get();
+        return $this->success('AMCs retrieved', ['amcs' => $amcs]);
+    }
+
+    public function storeAmc(Request $request, Building $building): JsonResponse
+    {
+        $this->authorize('building.edit');
+
+        $validated = $request->validate([
+            'vendor_name' => ['nullable', 'string', 'max:255'],
+            'contract_number' => ['nullable', 'string', 'max:255'],
+            'contract_type' => ['nullable', 'string', 'max:255'],
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date'],
+            'amount' => ['nullable', 'numeric', 'min:0'],
+            'frequency' => ['nullable', 'string', 'max:50'],
+            'status' => ['nullable', 'string', 'max:50'],
+            'scope' => ['nullable', 'string'],
+            'last_service_date' => ['nullable', 'date'],
+            'next_service_date' => ['nullable', 'date'],
+            'notes' => ['nullable', 'string'],
+        ]);
+
+        $amc = $building->amcs()->create($validated);
+        return $this->success('AMC created', ['amc' => $amc], [], 201);
+    }
+
+    public function updateAmc(Request $request, Building $building, BuildingAmc $amc): JsonResponse
+    {
+        $this->authorize('building.edit');
+
+        $validated = $request->validate([
+            'vendor_name' => ['sometimes', 'string', 'max:255'],
+            'contract_number' => ['sometimes', 'string', 'max:255'],
+            'contract_type' => ['sometimes', 'string', 'max:255'],
+            'start_date' => ['sometimes', 'date'],
+            'end_date' => ['sometimes', 'date'],
+            'amount' => ['sometimes', 'numeric', 'min:0'],
+            'frequency' => ['sometimes', 'string', 'max:50'],
+            'status' => ['sometimes', 'string', 'max:50'],
+            'scope' => ['sometimes', 'string'],
+            'last_service_date' => ['sometimes', 'date'],
+            'next_service_date' => ['sometimes', 'date'],
+            'notes' => ['sometimes', 'string'],
+        ]);
+
+        $amc->update($validated);
+        return $this->success('AMC updated', ['amc' => $amc]);
+    }
+
+    public function destroyAmc(Building $building, BuildingAmc $amc): JsonResponse
+    {
+        $this->authorize('building.delete');
+        $amc->delete();
+        return $this->success('AMC deleted');
     }
 
     public function statuses(): JsonResponse
