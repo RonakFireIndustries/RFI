@@ -47,6 +47,7 @@ class DashboardService
         'Workshop Supervisor'  => 'production',
         'Design Manager'       => 'employee',
         'Designer'             => 'employee',
+        'Sales'                => 'employee',
         'Fitter'               => 'employee',
         'Welder'               => 'employee',
         'Electrician'          => 'employee',

@@ -87,7 +87,7 @@ class RolesAndPermissionsSeeder extends Seeder
         }
 
         // Define new roles
-        $newRoles = ['Admin', 'Manager', 'Store Manager', 'Accountant', 'HR', 'Employee', 'Designer'];
+        $newRoles = ['Admin', 'Manager', 'Store Manager', 'Accountant', 'HR', 'Employee', 'Sales', 'Designer'];
 
         $maxRoleId = Role::max('id') ?? 0;
         foreach ($newRoles as $role) {
@@ -165,6 +165,16 @@ class RolesAndPermissionsSeeder extends Seeder
         ];
 
         Role::findByName('Accountant')->syncPermissions($accountantPermissions);
+
+        // Sales: buildings, site visits, follow-ups, opportunities
+        Role::findByName('Sales')->syncPermissions([
+            'view dashboard',
+            'building.view', 'building.create', 'building.edit',
+            'document.view', 'document.create', 'document.download',
+            'attendance.checkin', 'attendance.checkout', 'attendance.view',
+            'daily-report.create', 'daily-report.view', 'daily-report.submit',
+            'leave.view', 'leave.create', 'leave.balance.view',
+        ]);
 
         // Designer: full building access + documents + employee self-service
         Role::findByName('Designer')->syncPermissions([

@@ -1,4 +1,4 @@
-export const ENVIRONMENT = 'development'; // 'production' or 'development'
+export const ENVIRONMENT = 'production'; // 'production' or 'development'
 
 const environments = {
   production: {
