@@ -20,6 +20,8 @@ class Attendance extends Model
         'working_hours',
         'overtime_hours',
         'status',
+        'is_late',
+        'late_minutes',
         'remarks',
         'checkin_latitude',
         'checkin_longitude',
@@ -40,6 +42,8 @@ class Attendance extends Model
         'check_out' => 'datetime',
         'working_hours' => 'decimal:2',
         'overtime_hours' => 'decimal:2',
+        'is_late' => 'boolean',
+        'late_minutes' => 'decimal:2',
         'checkin_latitude' => 'decimal:8',
         'checkin_longitude' => 'decimal:8',
         'checkout_latitude' => 'decimal:8',
@@ -81,5 +85,35 @@ class Attendance extends Model
     public function shift(): BelongsTo
     {
         return $this->belongsTo(Shift::class);
+    }
+
+    public function scopeLateMarks($query, int $employeeId, string $startDate, string $endDate): int
+    {
+        return (clone $query)
+            ->where('employee_id', $employeeId)
+            ->where('is_late', true)
+            ->whereBetween('date', [$startDate, $endDate])
+            ->count();
+    }
+
+    public function scopeGetLateMarksDeduction($query, int $employeeId, string $startDate, string $endDate): array
+    {
+        $lateMarks = (clone $query)
+            ->where('employee_id', $employeeId)
+            ->where('is_late', true)
+            ->whereBetween('date', [$startDate, $endDate])
+            ->count();
+
+        $halfDayDeductions = intdiv($lateMarks, 3);
+        $fullDayDeductions = intdiv($lateMarks, 5);
+
+        $totalDeductionDays = ($halfDayDeductions * 0.5) + ($fullDayDeductions * 1);
+
+        return [
+            'late_marks' => $lateMarks,
+            'half_day_deductions' => $halfDayDeductions,
+            'full_day_deductions' => $fullDayDeductions,
+            'total_deduction_days' => $totalDeductionDays,
+        ];
     }
 }

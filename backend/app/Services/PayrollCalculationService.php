@@ -41,6 +41,9 @@ class PayrollCalculationService
         // Present days include Late days for calculation purpose unless specified otherwise
         $totalPresent = $presentDays + $lateDays;
 
+        // Count actual late marks (days where is_late = true)
+        $lateMarks = $attendances->where('is_late', true)->count();
+
         // 3. Calculate Leaves
         $leaves = Leave::where('employee_id', $employee->id)
             ->where('status', 'Approved')
@@ -111,9 +114,13 @@ class PayrollCalculationService
         $tds = $salaryStructure->tds;
         $otherDeductions = $salaryStructure->other_deductions;
 
-        // Penalty for late days (e.g., 3 late days = 1 day deduct). Simple logic:
-        $latePenaltyDays = floor($lateDays / 3);
-        $latePenalty = $latePenaltyDays * ($totalDaysInPeriod > 0 ? ($salaryStructure->basic_salary / $totalDaysInPeriod) : 0);
+        // Penalty for late marks:
+        // 3 late marks = 1 half day deduction
+        // 5 late marks = 1 full day deduction
+        $halfDayDeductions = intdiv($lateMarks, 3);
+        $fullDayDeductions = intdiv($lateMarks, 5);
+        $totalLateDeductionDays = ($halfDayDeductions * 0.5) + ($fullDayDeductions * 1);
+        $latePenalty = $totalLateDeductionDays * ($totalDaysInPeriod > 0 ? ($salaryStructure->basic_salary / $totalDaysInPeriod) : 0);
 
         $lossOfPay = ($unpaidLeaves + $absentDays) * ($totalDaysInPeriod > 0 ? ($salaryStructure->basic_salary / $totalDaysInPeriod) : 0);
         $salaryAdvance = 0; // Fetch from SalaryAdvance module if exists
@@ -159,6 +166,8 @@ class PayrollCalculationService
             'paid_leaves' => $paidLeaves,
             'unpaid_leaves' => $unpaidLeaves,
             'working_days' => $payableDays,
+            'late_marks' => $lateMarks,
+            'late_deduction_days' => $totalLateDeductionDays,
             
             'status' => 'Draft',
         ];

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class BuildingWing extends Model
 {
@@ -21,5 +22,15 @@ class BuildingWing extends Model
     public function building(): BelongsTo
     {
         return $this->belongsTo(Building::class);
+    }
+
+    public function buildingFloors(): HasMany
+    {
+        return $this->hasMany(BuildingFloor::class, 'wing_id');
+    }
+
+    public function buildingFlats(): HasMany
+    {
+        return $this->hasMany(BuildingFlat::class, 'wing_id');
     }
 }

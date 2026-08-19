@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit2, Save, X, Plus, Trash2, MapPin, Building2, Flame, Users, Calendar, FileText, Download, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Edit2, Save, X, Plus, Trash2, MapPin, Building2, Flame, Users, Calendar, FileText, Download, ExternalLink, Bell, Target, ChevronDown as ChevronDownIcon, ChevronUp } from 'lucide-react';
 import { useBuildingStore } from '../../store/buildingStore';
 import { buildingDetailService } from '../../services/buildingDetailService';
 import { salesDocumentService } from '../../services/salesDocumentService';
+import api from '../../services/api';
 import { format } from 'date-fns';
 
-const TABS = ['Overview', 'Wings', 'Fire Systems', 'Contacts', 'AMCs', 'Documents'];
+const TABS = ['Overview', 'Wings', 'Site Visits', 'Follow-ups', 'Opportunities', 'Invoices', 'Fire Systems', 'Contacts', 'AMCs', 'Documents'];
 const FIRE_SYSTEM_TYPES = ['Fire Fighting', 'Fire Alarm', 'Fire Sprinkler', 'Fire Hydrant', 'Fire Extinguisher', 'Emergency Lighting', 'Smoke Detector', 'Others'];
 const CONTACT_CATEGORIES = ['society', 'developer', 'architect', 'pmc', 'other'];
 const DOC_CATEGORIES = ['Fire NOC', 'Building Plan', 'NOC Certificate', 'AMC Agreement', 'Quotation', 'Invoice', 'Site Photo', 'Other'];
@@ -28,10 +29,16 @@ export default function BuildingDetail() {
 
   // Sub-entity states
   const [wings, setWings] = useState([]);
+  const [floors, setFloors] = useState([]);
+  const [flats, setFlats] = useState([]);
   const [fireSystems, setFireSystems] = useState([]);
   const [contacts, setContacts] = useState([]);
   const [amcs, setAmcs] = useState([]);
   const [documents, setDocuments] = useState([]);
+  const [siteVisits, setSiteVisits] = useState([]);
+  const [followUps, setFollowUps] = useState([]);
+  const [opportunities, setOpportunities] = useState([]);
+  const [invoices, setInvoices] = useState([]);
   const [showForm, setShowForm] = useState(null);
 
   useEffect(() => {
@@ -89,18 +96,30 @@ export default function BuildingDetail() {
 
   const loadSubEntities = async () => {
     try {
-      const [w, f, c, a, d] = await Promise.all([
+      const [w, fl, fa, f, c, a, d, sv, fu, op, inv] = await Promise.all([
         buildingDetailService.getWings(id),
+        buildingDetailService.getFloors(id),
+        buildingDetailService.getFlats(id),
         buildingDetailService.getFireSystems(id),
         buildingDetailService.getContacts(id),
         buildingDetailService.getAmcs(id),
         salesDocumentService.list({ building_id: id }),
+        buildingDetailService.getSiteVisits(id),
+        buildingDetailService.getFollowUps(id),
+        buildingDetailService.getOpportunities(id),
+        buildingDetailService.getInvoices(id),
       ]);
       if (Array.isArray(w)) setWings(w);
+      if (Array.isArray(fl)) setFloors(fl);
+      if (Array.isArray(fa)) setFlats(fa);
       if (Array.isArray(f)) setFireSystems(f);
       if (Array.isArray(c)) setContacts(c);
       if (Array.isArray(a)) setAmcs(a);
       if (Array.isArray(d)) setDocuments(d);
+      if (Array.isArray(sv)) setSiteVisits(sv);
+      if (Array.isArray(fu)) setFollowUps(fu);
+      if (Array.isArray(op)) setOpportunities(op);
+      if (Array.isArray(inv)) setInvoices(inv);
     } catch (err) {
       console.error(err);
     }
@@ -113,6 +132,23 @@ export default function BuildingDetail() {
       fetchItem(id);
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    try {
+      const blob = await api.getBlob(`/reports/building/${id}?format=pdf`);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `building-report-${id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    } catch (err) {
+      console.error('PDF download failed:', err);
+      alert('Failed to download PDF report.');
     }
   };
 
@@ -154,7 +190,7 @@ export default function BuildingDetail() {
           </div>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => window.open(`/reports/building/${id}?format=pdf`)} className="flex items-center gap-2 px-3 py-2 border rounded-lg text-sm hover:bg-gray-50">
+          <button onClick={handleDownloadPDF} className="flex items-center gap-2 px-3 py-2 border rounded-lg text-sm hover:bg-gray-50">
             <Download className="w-4 h-4" /> PDF Report
           </button>
           {editing ? (
@@ -285,7 +321,11 @@ export default function BuildingDetail() {
         </div>
       )}
 
-      {activeTab === 'Wings' && <WingsTab wings={wings} buildingId={id} reload={loadSubEntities} editing={editing} />}
+      {activeTab === 'Wings' && <WingsTab wings={wings} floors={floors} flats={flats} buildingId={id} reload={loadSubEntities} editing={editing} />}
+      {activeTab === 'Site Visits' && <SiteVisitsTab siteVisits={siteVisits} buildingId={id} />}
+      {activeTab === 'Follow-ups' && <FollowUpsTab followUps={followUps} buildingId={id} />}
+      {activeTab === 'Opportunities' && <OpportunitiesTab opportunities={opportunities} buildingId={id} />}
+      {activeTab === 'Invoices' && <InvoicesTab invoices={invoices} />}
       {activeTab === 'Fire Systems' && <FireSystemsTab systems={fireSystems} buildingId={id} reload={loadSubEntities} editing={editing} />}
       {activeTab === 'Contacts' && <ContactsTab contacts={contacts} buildingId={id} reload={loadSubEntities} editing={editing} />}
       {activeTab === 'AMCs' && <AmcsTab amcs={amcs} buildingId={id} reload={loadSubEntities} editing={editing} />}
@@ -294,10 +334,11 @@ export default function BuildingDetail() {
   );
 }
 
-function WingsTab({ wings, buildingId, reload, editing }) {
+function WingsTab({ wings, floors, flats, buildingId, reload, editing }) {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: '', floors: '', flats_per_floor: '', flat_configuration: '', total_flats: '' });
   const [editingId, setEditingId] = useState(null);
+  const [expandedWing, setExpandedWing] = useState(null);
 
   const handleSave = async () => {
     try {
@@ -318,6 +359,9 @@ function WingsTab({ wings, buildingId, reload, editing }) {
     setEditingId(wing.id);
     setShowForm(true);
   };
+
+  const getWingFloors = (wingId) => floors.filter(f => f.wing_id === wingId);
+  const getFloorFlats = (floorId) => flats.filter(f => f.floor_id === floorId);
 
   return (
     <div className="space-y-4">
@@ -340,33 +384,68 @@ function WingsTab({ wings, buildingId, reload, editing }) {
           </div>
         </div>
       )}
-      <div className="bg-white rounded-lg border overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b"><tr>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Name</th>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Floors</th>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Flats/Floor</th>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Config</th>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Total</th>
-            {editing && <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Actions</th>}
-          </tr></thead>
-          <tbody className="divide-y divide-gray-100">
-            {wings.map(wing => (
-              <tr key={wing.id} className="hover:bg-gray-50">
-                <td className="px-4 py-2 text-sm font-medium">{wing.name}</td>
-                <td className="px-4 py-2 text-sm">{wing.floors}</td>
-                <td className="px-4 py-2 text-sm">{wing.flats_per_floor}</td>
-                <td className="px-4 py-2 text-sm">{wing.flat_configuration || '-'}</td>
-                <td className="px-4 py-2 text-sm">{wing.total_flats}</td>
-                {editing && <td className="px-4 py-2 text-right">
-                  <button onClick={() => handleEdit(wing)} className="text-blue-600 hover:text-blue-800 text-xs mr-2">Edit</button>
-                  <button onClick={async () => { await buildingDetailService.removeWing(buildingId, wing.id); reload(); }} className="text-red-600 hover:text-red-800 text-xs">Delete</button>
-                </td>}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {wings.length === 0 && <p className="text-center text-gray-500 py-8 text-sm">No wings configured</p>}
+      <div className="space-y-3">
+        {wings.map(wing => {
+          const wingFloors = getWingFloors(wing.id);
+          const isExpanded = expandedWing === wing.id;
+          return (
+            <div key={wing.id} className="bg-white rounded-lg border overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 cursor-pointer" onClick={() => setExpandedWing(isExpanded ? null : wing.id)}>
+                <div className="flex items-center gap-4">
+                  <span className="text-sm font-semibold text-gray-900">{wing.name}</span>
+                  <div className="flex gap-3 text-xs text-gray-500">
+                    {wing.floors != null && <span>{wing.floors} floors</span>}
+                    {wing.flats_per_floor != null && <span>{wing.flats_per_floor} flats/floor</span>}
+                    {wing.total_flats != null && <span>{wing.total_flats} total</span>}
+                    {wing.flat_configuration && <span>{wing.flat_configuration}</span>}
+                  </div>
+                  <span className="text-[10px] text-gray-400">{wingFloors.length} floors added</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {editing && <button onClick={(e) => { e.stopPropagation(); handleEdit(wing); }} className="text-blue-600 hover:text-blue-800 text-xs">Edit</button>}
+                  {editing && <button onClick={(e) => { e.stopPropagation(); buildingDetailService.removeWing(buildingId, wing.id).then(reload); }} className="text-red-600 hover:text-red-800 text-xs">Delete</button>}
+                  {isExpanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDownIcon className="w-4 h-4 text-gray-400" />}
+                </div>
+              </div>
+              {isExpanded && wingFloors.length > 0 && (
+                <div className="border-t bg-gray-50 px-4 py-3 space-y-2">
+                  {wingFloors.map(floor => {
+                    const floorFlats = getFloorFlats(floor.id);
+                    return (
+                      <div key={floor.id} className="bg-white rounded border p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-gray-700">{floor.name}</span>
+                            {floor.floor_number != null && <span className="text-[10px] text-gray-400">#{floor.floor_number}</span>}
+                            {floor.type && <span className="text-[10px] font-medium text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">{floor.type}</span>}
+                          </div>
+                          <span className="text-[10px] text-gray-400">{floorFlats.length} flats</span>
+                        </div>
+                        {floorFlats.length > 0 && (
+                          <div className="grid grid-cols-4 md:grid-cols-6 gap-1.5">
+                            {floorFlats.map(flat => (
+                              <div key={flat.id} className="bg-gray-50 rounded px-2 py-1.5 text-center border border-gray-100">
+                                <div className="text-[11px] font-bold text-gray-800">{flat.name}</div>
+                                <div className="text-[9px] text-gray-500">
+                                  {flat.bhk_type && <span>{flat.bhk_type}</span>}
+                                  {flat.area && <span> &middot; {flat.area} sqft</span>}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              {isExpanded && wingFloors.length === 0 && (
+                <div className="border-t bg-gray-50 px-4 py-3 text-xs text-gray-400">No floor details added yet</div>
+              )}
+            </div>
+          );
+        })}
+        {wings.length === 0 && <p className="text-center text-gray-500 py-8 text-sm bg-white border rounded-lg">No wings configured</p>}
       </div>
     </div>
   );
@@ -643,6 +722,171 @@ function AmcsTab({ amcs, buildingId, reload, editing }) {
         </table>
         {amcs.length === 0 && <p className="text-center text-gray-500 py-8 text-sm">No AMCs recorded</p>}
       </div>
+    </div>
+  );
+}
+
+function SiteVisitsTab({ siteVisits, buildingId }) {
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-semibold text-gray-900">Site Visits ({siteVisits.length})</h2>
+        <button onClick={() => window.location.href = `/dashboard/site-visits?building_id=${buildingId}`} className="flex items-center gap-2 px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm"><Plus className="w-3 h-3" /> New Visit</button>
+      </div>
+      {siteVisits.length === 0 ? (
+        <div className="text-center py-12 text-gray-500 bg-white border rounded-lg">
+          <Calendar className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+          <p>No site visits recorded</p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-lg border overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b"><tr>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Date</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Purpose</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Notes</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Next Follow-up</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Visit By</th>
+            </tr></thead>
+            <tbody className="divide-y divide-gray-100">
+              {siteVisits.map(sv => (
+                <tr key={sv.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-2 text-sm">{sv.visit_date ? format(new Date(sv.visit_date), 'dd MMM yyyy') : '-'}</td>
+                  <td className="px-4 py-2 text-sm font-medium">{sv.purpose || '-'}</td>
+                  <td className="px-4 py-2 text-sm text-gray-500 max-w-xs truncate">{sv.discussion_notes || '-'}</td>
+                  <td className="px-4 py-2 text-sm">{sv.next_followup_date ? format(new Date(sv.next_followup_date), 'dd MMM yyyy') : '-'}</td>
+                  <td className="px-4 py-2 text-sm">{sv.user?.name || '-'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FollowUpsTab({ followUps, buildingId }) {
+  const handleMarkComplete = async (id) => {
+    try {
+      await api.post(`/follow-ups/${id}/complete`);
+      window.location.reload();
+    } catch (err) { console.error(err); }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-semibold text-gray-900">Follow-ups ({followUps.length})</h2>
+        <button onClick={() => window.location.href = `/dashboard/follow-ups?building_id=${buildingId}`} className="flex items-center gap-2 px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm"><Plus className="w-3 h-3" /> New Follow-up</button>
+      </div>
+      {followUps.length === 0 ? (
+        <div className="text-center py-12 text-gray-500 bg-white border rounded-lg">
+          <Bell className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+          <p>No follow-ups scheduled</p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-lg border overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b"><tr>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Reminder Date</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Type</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Notes</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Status</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Assigned To</th>
+              <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Actions</th>
+            </tr></thead>
+            <tbody className="divide-y divide-gray-100">
+              {followUps.map(fu => (
+                <tr key={fu.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-2 text-sm">{fu.reminder_date ? format(new Date(fu.reminder_date), 'dd MMM yyyy') : '-'}</td>
+                  <td className="px-4 py-2 text-sm">{fu.type || '-'}</td>
+                  <td className="px-4 py-2 text-sm text-gray-500 max-w-xs truncate">{fu.notes || '-'}</td>
+                  <td className="px-4 py-2 text-sm">
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${fu.status === 'Completed' ? 'bg-green-100 text-green-700' : fu.status === 'Cancelled' ? 'bg-gray-100 text-gray-600' : 'bg-yellow-100 text-yellow-700'}`}>{fu.status}</span>
+                  </td>
+                  <td className="px-4 py-2 text-sm">{fu.user?.name || '-'}</td>
+                  <td className="px-4 py-2 text-right">
+                    {fu.status === 'Pending' && <button onClick={() => handleMarkComplete(fu.id)} className="text-green-600 hover:text-green-800 text-xs">Complete</button>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function OpportunitiesTab({ opportunities, buildingId }) {
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-semibold text-gray-900">Opportunities ({opportunities.length})</h2>
+        <button onClick={() => window.location.href = `/dashboard/opportunities?building_id=${buildingId}`} className="flex items-center gap-2 px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm"><Plus className="w-3 h-3" /> New Opportunity</button>
+      </div>
+      {opportunities.length === 0 ? (
+        <div className="text-center py-12 text-gray-500 bg-white border rounded-lg">
+          <Target className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+          <p>No opportunities found</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {opportunities.map(op => (
+            <div key={op.id} className="bg-white border rounded-lg p-4">
+              <div className="flex items-start justify-between mb-2">
+                <h3 className="text-sm font-semibold text-gray-900">{op.name || `Opportunity #${op.id}`}</h3>
+                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${op.status === 'Active' ? 'bg-green-100 text-green-700' : op.status === 'Won' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>{op.status}</span>
+              </div>
+              {op.stage && <p className="text-xs text-gray-500 mb-1">Stage: {op.stage}</p>}
+              {op.estimated_value && <p className="text-sm font-medium text-gray-900">Value: ₹{Number(op.estimated_value).toLocaleString()}</p>}
+              {op.description && <p className="text-xs text-gray-500 mt-2 line-clamp-2">{op.description}</p>}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function InvoicesTab({ invoices }) {
+  return (
+    <div className="space-y-4">
+      <h2 className="text-lg font-semibold text-gray-900">Related Invoices ({invoices.length})</h2>
+      {invoices.length === 0 ? (
+        <div className="text-center py-12 text-gray-500 bg-white border rounded-lg">
+          <FileText className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+          <p>No invoices linked to this building</p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-lg border overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b"><tr>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Invoice #</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Customer</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Amount</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Status</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Issue Date</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Due Date</th>
+            </tr></thead>
+            <tbody className="divide-y divide-gray-100">
+              {invoices.map(inv => (
+                <tr key={inv.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-2 text-sm font-medium">{inv.invoice_number || `INV-${inv.id}`}</td>
+                  <td className="px-4 py-2 text-sm">{inv.customer?.name || '-'}</td>
+                  <td className="px-4 py-2 text-sm font-medium">₹{Number(inv.total_amount || inv.grand_total || 0).toLocaleString()}</td>
+                  <td className="px-4 py-2 text-sm">
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${inv.status === 'Paid' ? 'bg-green-100 text-green-700' : inv.status === 'Sent' ? 'bg-yellow-100 text-yellow-700' : inv.status === 'Overdue' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'}`}>{inv.status}</span>
+                  </td>
+                  <td className="px-4 py-2 text-sm">{inv.issue_date ? format(new Date(inv.issue_date), 'dd MMM yyyy') : '-'}</td>
+                  <td className="px-4 py-2 text-sm">{inv.due_date ? format(new Date(inv.due_date), 'dd MMM yyyy') : '-'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

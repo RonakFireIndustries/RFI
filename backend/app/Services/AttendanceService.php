@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Attendance;
 use App\Models\Employee;
 use App\Models\Site;
+use App\Models\Shift;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -146,12 +147,43 @@ class AttendanceService
 
         $locationVerified = $this->geoLocation->isWithinRadius($distance, $allowedRadius);
 
+        // Detect late check-in based on shift
+        $isLate = false;
+        $lateMinutes = null;
+        $status = 'Present';
+
+        $shiftId = $data['shift_id'] ?? null;
+        $shift = $shiftId ? Shift::find($shiftId) : Shift::where('status', 'Active')->first();
+
+        if ($shift && $shift->start_time) {
+            $shiftStart = Carbon::parse($today . ' ' . $shift->start_time);
+            $gracePeriod = $shift->grace_period ?? 0;
+            $lateThreshold = $shift->late_threshold ?? 0;
+            $halfDayThreshold = $shift->half_day_threshold ?? 0;
+
+            $graceEnd = $shiftStart->copy()->addMinutes($gracePeriod);
+            $lateEnd = $shiftStart->copy()->addMinutes($lateThreshold);
+            $halfDayEnd = $shiftStart->copy()->addMinutes($halfDayThreshold);
+
+            if ($now->greaterThan($lateEnd) && $lateThreshold > 0) {
+                $isLate = true;
+                $lateMinutes = $now->diffInMinutes($shiftStart);
+                $status = 'Late';
+
+                if ($halfDayThreshold > 0 && $now->greaterThan($halfDayEnd)) {
+                    $status = 'Half Day';
+                }
+            }
+        }
+
         $attendanceData = [
             'employee_id' => $employee->id,
             'site_id' => $site->id,
             'date' => $today,
             'check_in' => $now,
-            'status' => 'Present',
+            'status' => $status,
+            'is_late' => $isLate,
+            'late_minutes' => $lateMinutes,
             'checkin_latitude' => $data['latitude'],
             'checkin_longitude' => $data['longitude'],
             'checkin_distance' => round($distance, 2),
@@ -164,18 +196,22 @@ class AttendanceService
 
         if (!empty($data['shift_id'])) {
             $attendanceData['shift_id'] = $data['shift_id'];
+        } elseif ($shift) {
+            $attendanceData['shift_id'] = $shift->id;
         }
 
         $attendance = Attendance::create($attendanceData);
 
         return [
             'success' => true,
-            'message' => 'Checked in successfully',
+            'message' => 'Checked in successfully' . ($isLate ? ' (Late by ' . $lateMinutes . ' minutes)' : ''),
             'data' => [
                 'attendance' => $attendance,
                 'distance' => round($distance, 2),
                 'allowed_radius' => $allowedRadius,
                 'location_verified' => $locationVerified,
+                'is_late' => $isLate,
+                'late_minutes' => $lateMinutes,
             ],
             'status' => 200,
         ];

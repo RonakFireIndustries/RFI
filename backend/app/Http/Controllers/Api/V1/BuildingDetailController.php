@@ -8,6 +8,8 @@ use App\Models\BuildingContact;
 use App\Models\BuildingAmc;
 use App\Models\BuildingStatus;
 use App\Models\BuildingWing;
+use App\Models\BuildingFloor;
+use App\Models\BuildingFlat;
 use App\Models\FireSystem;
 use App\Http\Resources\BuildingResource;
 use App\Traits\ApiResponse;
@@ -62,6 +64,98 @@ class BuildingDetailController extends Controller
         $this->authorize('building.delete');
         $wing->delete();
         return $this->success('Wing deleted');
+    }
+
+    public function floors(Building $building): JsonResponse
+    {
+        $this->authorize('building.view');
+        $floors = $building->floors()->with('wing')->get();
+        return $this->success('Floors retrieved', ['floors' => $floors]);
+    }
+
+    public function storeFloor(Request $request, Building $building): JsonResponse
+    {
+        $this->authorize('building.edit');
+
+        $validated = $request->validate([
+            'wing_id' => ['required', 'exists:building_wings,id'],
+            'name' => ['required', 'string', 'max:255'],
+            'floor_number' => ['nullable', 'integer'],
+            'type' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $floor = $building->floors()->create($validated);
+        return $this->success('Floor created', ['floor' => $floor], [], 201);
+    }
+
+    public function updateFloor(Request $request, Building $building, BuildingFloor $floor): JsonResponse
+    {
+        $this->authorize('building.edit');
+
+        $validated = $request->validate([
+            'wing_id' => ['sometimes', 'exists:building_wings,id'],
+            'name' => ['sometimes', 'string', 'max:255'],
+            'floor_number' => ['nullable', 'integer'],
+            'type' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $floor->update($validated);
+        return $this->success('Floor updated', ['floor' => $floor]);
+    }
+
+    public function destroyFloor(Building $building, BuildingFloor $floor): JsonResponse
+    {
+        $this->authorize('building.delete');
+        $floor->delete();
+        return $this->success('Floor deleted');
+    }
+
+    public function flats(Building $building): JsonResponse
+    {
+        $this->authorize('building.view');
+        $flats = $building->flats()->with(['wing', 'floor'])->get();
+        return $this->success('Flats retrieved', ['flats' => $flats]);
+    }
+
+    public function storeFlat(Request $request, Building $building): JsonResponse
+    {
+        $this->authorize('building.edit');
+
+        $validated = $request->validate([
+            'wing_id' => ['required', 'exists:building_wings,id'],
+            'floor_id' => ['required', 'exists:building_floors,id'],
+            'name' => ['required', 'string', 'max:255'],
+            'flat_number' => ['nullable', 'string', 'max:255'],
+            'bhk_type' => ['nullable', 'string', 'max:50'],
+            'area' => ['nullable', 'numeric', 'min:0'],
+        ]);
+
+        $flat = $building->flats()->create($validated);
+        return $this->success('Flat created', ['flat' => $flat], [], 201);
+    }
+
+    public function updateFlat(Request $request, Building $building, BuildingFlat $flat): JsonResponse
+    {
+        $this->authorize('building.edit');
+
+        $validated = $request->validate([
+            'wing_id' => ['sometimes', 'exists:building_wings,id'],
+            'floor_id' => ['sometimes', 'exists:building_floors,id'],
+            'name' => ['sometimes', 'string', 'max:255'],
+            'flat_number' => ['nullable', 'string', 'max:255'],
+            'bhk_type' => ['nullable', 'string', 'max:50'],
+            'area' => ['nullable', 'numeric', 'min:0'],
+        ]);
+
+        $flat->update($validated);
+        return $this->success('Flat updated', ['flat' => $flat]);
+    }
+
+    public function destroyFlat(Building $building, BuildingFlat $flat): JsonResponse
+    {
+        $this->authorize('building.delete');
+        $flat->delete();
+        return $this->success('Flat deleted');
     }
 
     public function fireSystems(Building $building): JsonResponse
@@ -285,5 +379,45 @@ class BuildingDetailController extends Controller
             'recent_activity' => $recentActivity,
             'upcoming_follow_ups' => $upcomingFollowUps,
         ]);
+    }
+
+    public function siteVisits(Building $building): JsonResponse
+    {
+        $this->authorize('building.view');
+        $visits = $building->siteVisits()->with('user')->latest('visit_date')->get();
+        return $this->success('Site visits retrieved', ['site_visits' => $visits]);
+    }
+
+    public function followUps(Building $building): JsonResponse
+    {
+        $this->authorize('building.view');
+        $followUps = $building->followUps()->with('user')->latest('reminder_date')->get();
+        return $this->success('Follow-ups retrieved', ['follow_ups' => $followUps]);
+    }
+
+    public function opportunities(Building $building): JsonResponse
+    {
+        $this->authorize('building.view');
+        $opportunities = $building->opportunities()->latest()->get();
+        return $this->success('Opportunities retrieved', ['opportunities' => $opportunities]);
+    }
+
+    public function invoices(Building $building): JsonResponse
+    {
+        $this->authorize('building.view');
+
+        $invoices = collect();
+
+        if ($building->site_id) {
+            $salesOrderIds = \App\Models\SalesOrder::where('site_id', $building->site_id)->pluck('id');
+            if ($salesOrderIds->isNotEmpty()) {
+                $invoices = \App\Models\Invoice::whereIn('sales_order_id', $salesOrderIds)
+                    ->with('customer')
+                    ->latest()
+                    ->get();
+            }
+        }
+
+        return $this->success('Invoices retrieved', ['invoices' => $invoices]);
     }
 }

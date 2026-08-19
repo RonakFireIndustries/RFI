@@ -331,6 +331,18 @@ Route::prefix('v1')->group(function () {
     Route::put('/buildings/{building}/wings/{wing}', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'updateWing']);
     Route::delete('/buildings/{building}/wings/{wing}', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'destroyWing']);
 
+    // Floors
+    Route::get('/buildings/{building}/floors', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'floors']);
+    Route::post('/buildings/{building}/floors', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'storeFloor']);
+    Route::put('/buildings/{building}/floors/{floor}', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'updateFloor']);
+    Route::delete('/buildings/{building}/floors/{floor}', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'destroyFloor']);
+
+    // Flats
+    Route::get('/buildings/{building}/flats', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'flats']);
+    Route::post('/buildings/{building}/flats', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'storeFlat']);
+    Route::put('/buildings/{building}/flats/{flat}', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'updateFlat']);
+    Route::delete('/buildings/{building}/flats/{flat}', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'destroyFlat']);
+
     // Fire Systems
     Route::get('/buildings/{building}/fire-systems', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'fireSystems']);
     Route::post('/buildings/{building}/fire-systems', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'storeFireSystem']);
@@ -348,6 +360,12 @@ Route::prefix('v1')->group(function () {
     Route::post('/buildings/{building}/amcs', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'storeAmc']);
     Route::put('/buildings/{building}/amcs/{amc}', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'updateAmc']);
     Route::delete('/buildings/{building}/amcs/{amc}', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'destroyAmc']);
+
+    // Building Site Visits, Follow-ups, Opportunities, Invoices
+    Route::get('/buildings/{building}/site-visits', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'siteVisits']);
+    Route::get('/buildings/{building}/follow-ups', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'followUps']);
+    Route::get('/buildings/{building}/opportunities', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'opportunities']);
+    Route::get('/buildings/{building}/invoices', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'invoices']);
 
     // Site Visits
     Route::get('/site-visits', [\App\Http\Controllers\Api\V1\SiteVisitController::class, 'index']);

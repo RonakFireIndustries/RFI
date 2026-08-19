@@ -402,6 +402,12 @@ export default function EmployeeDashboard() {
               {formatHours(todayAttendance?.overtime_hours)}
             </p>
           </div>
+          <div className={`bg-gray-50 rounded-lg p-3 ${todayAttendance?.is_late ? 'bg-red-50 border border-red-200' : ''}`}>
+            <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Status</p>
+            <p className={`text-lg font-bold mt-1 ${todayAttendance?.is_late ? 'text-red-600' : 'text-green-600'}`}>
+              {todayAttendance?.is_late ? `Late (${todayAttendance?.late_minutes}m)` : 'On Time'}
+            </p>
+          </div>
         </div>
 
         {todayAttendance && (

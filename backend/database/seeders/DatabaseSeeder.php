@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             DashboardWidgetSeeder::class,
             InventorySeeder::class,
             BuildingStatusSeeder::class,
+            LeaveTypeSeeder::class,
         ]);
     }
 }

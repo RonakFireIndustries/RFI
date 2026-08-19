@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useBuildingStore } from '../../store/buildingStore';
 import { useSiteStore } from '../../store/siteStore';
 import { buildingDetailService } from '../../services/buildingDetailService';
 import MapPicker from '../../components/MapPicker';
 import {
   Plus, Edit, Trash2, Search, MapPin, Building2, Info, X, Compass,
-  Shield, Flame, Hammer, User, Phone, FileText, ChevronDown, ChevronUp
+  Shield, Flame, Hammer, User, Phone, FileText, ChevronDown, ChevronUp, Eye
 } from 'lucide-react';
 
 const defaultFormData = {
@@ -42,6 +43,7 @@ const defaultFormData = {
 };
 
 export default function Buildings() {
+  const navigate = useNavigate();
   const {
     items: buildings,
     loading,
@@ -62,6 +64,7 @@ export default function Buildings() {
   const [formErrors, setFormErrors] = useState({});
   const [expandedCard, setExpandedCard] = useState(null);
   const [wingsData, setWingsData] = useState([]);
+  const [floorsData, setFloorsData] = useState({});
 
   useEffect(() => {
     fetchBuildings({ search, status: statusFilter, page: currentPage, per_page: 1000 });
@@ -86,6 +89,7 @@ export default function Buildings() {
           }
           return prevWings.slice(0, count);
         });
+        setFloorsData({});
       }
       return next;
     });
@@ -98,6 +102,66 @@ export default function Buildings() {
       updated[index] = { ...updated[index], [field]: value };
       return updated;
     });
+    if (field === 'floors') {
+      const count = parseInt(value) || 0;
+      setFloorsData(prev => {
+        const existing = prev[index] || [];
+        if (count > existing.length) {
+          return { ...prev, [index]: [...existing, ...Array.from({ length: count - existing.length }, (_, i) => ({
+            name: `Floor ${existing.length + i + 1}`,
+            floor_number: existing.length + i + 1,
+            type: '',
+            flats_count: '',
+            flats_data: [],
+          }))] };
+        }
+        return { ...prev, [index]: existing.slice(0, count) };
+      });
+    }
+  };
+
+  const handleFloorChange = (wingIdx, floorIdx, field, value) => {
+    setFloorsData(prev => {
+      const updated = { ...prev };
+      const wingFloors = [...(updated[wingIdx] || [])];
+      wingFloors[floorIdx] = { ...wingFloors[floorIdx], [field]: value };
+      updated[wingIdx] = wingFloors;
+      return updated;
+    });
+    if (field === 'flats_count') {
+      const count = parseInt(value) || 0;
+      setFloorsData(prev => {
+        const updated = { ...prev };
+        const wingFloors = [...(updated[wingIdx] || [])];
+        const existing = wingFloors[floorIdx].flats_data || [];
+        if (count > existing.length) {
+          wingFloors[floorIdx] = { ...wingFloors[floorIdx], flats_data: [...existing, ...Array.from({ length: count - existing.length }, (_, i) => ({
+            name: `${wingFloors[floorIdx].name || `Floor ${floorIdx + 1}`}-${existing.length + i + 1}`,
+            flat_number: `${existing.length + i + 1}`,
+            bhk_type: '',
+            area: '',
+          }))] };
+        } else {
+          wingFloors[floorIdx] = { ...wingFloors[floorIdx], flats_data: existing.slice(0, count) };
+        }
+        updated[wingIdx] = wingFloors;
+        return updated;
+      });
+    }
+  };
+
+  const handleFlatChange = (wingIdx, floorIdx, flatIdx, field, value) => {
+    setFloorsData(prev => {
+      const updated = { ...prev };
+      const wingFloors = [...(updated[wingIdx] || [])];
+      const floor = { ...wingFloors[floorIdx] };
+      const flats = [...(floor.flats_data || [])];
+      flats[flatIdx] = { ...flats[flatIdx], [field]: value };
+      floor.flats_data = flats;
+      wingFloors[floorIdx] = floor;
+      updated[wingIdx] = wingFloors;
+      return updated;
+    });
   };
 
   const openAddModal = () => {
@@ -105,6 +169,7 @@ export default function Buildings() {
     setFormData({ ...defaultFormData });
     setFormErrors({});
     setWingsData([]);
+    setFloorsData({});
     setIsModalOpen(true);
   };
 
@@ -145,16 +210,51 @@ export default function Buildings() {
     setFormErrors({});
     try {
       const wings = await buildingDetailService.getWings(b.id);
-      setWingsData(Array.isArray(wings) ? wings.map(w => ({
-        id: w.id,
-        name: w.name || '',
-        floors: w.floors ?? '',
-        flats_per_floor: w.flats_per_floor ?? '',
-        flat_configuration: w.flat_configuration || '',
-        total_flats: w.total_flats ?? '',
-      })) : []);
+      const floors = await buildingDetailService.getFloors(b.id);
+      const flats = await buildingDetailService.getFlats(b.id);
+
+      const wingsList = Array.isArray(wings) ? wings : [];
+      const floorsList = Array.isArray(floors) ? floors : [];
+      const flatsList = Array.isArray(flats) ? flats : [];
+
+      setWingsData(wingsList.map(w => {
+        const wingFloors = floorsList.filter(f => f.wing_id === w.id);
+        return {
+          id: w.id,
+          name: w.name || '',
+          floors: w.floors ?? '',
+          flats_per_floor: w.flats_per_floor ?? '',
+          flat_configuration: w.flat_configuration || '',
+          total_flats: w.total_flats ?? '',
+          _floorCount: wingFloors.length || w.floors || '',
+        };
+      }));
+
+      const newFloorsData = {};
+      wingsList.forEach((w, wIdx) => {
+        const wingFloors = floorsList.filter(f => f.wing_id === w.id);
+        newFloorsData[wIdx] = wingFloors.map(f => {
+          const floorFlats = flatsList.filter(fl => fl.floor_id === f.id);
+          return {
+            id: f.id,
+            name: f.name || '',
+            floor_number: f.floor_number ?? '',
+            type: f.type || '',
+            flats_count: floorFlats.length || '',
+            flats_data: floorFlats.map(fl => ({
+              id: fl.id,
+              name: fl.name || '',
+              flat_number: fl.flat_number || '',
+              bhk_type: fl.bhk_type || '',
+              area: fl.area ?? '',
+            })),
+          };
+        });
+      });
+      setFloorsData(newFloorsData);
     } catch {
       setWingsData([]);
+      setFloorsData({});
     }
     setIsModalOpen(true);
   };
@@ -175,13 +275,26 @@ export default function Buildings() {
         no_of_lifts: formData.no_of_lifts !== '' ? parseInt(formData.no_of_lifts) : null,
         no_of_exits_entry: formData.no_of_exits_entry !== '' ? parseInt(formData.no_of_exits_entry) : null,
         site_id: formData.site_id ? parseInt(formData.site_id) : null,
-        wings: wingsData.length > 0 ? wingsData.map(w => ({
+        wings: wingsData.length > 0 ? wingsData.map((w, wIdx) => ({
           ...(w.id ? { id: w.id } : {}),
           name: w.name,
           floors: w.floors !== '' ? parseInt(w.floors) : null,
           flats_per_floor: w.flats_per_floor !== '' ? parseInt(w.flats_per_floor) : null,
           flat_configuration: w.flat_configuration || null,
           total_flats: w.total_flats !== '' ? parseInt(w.total_flats) : null,
+          floors_data: floorsData[wIdx]?.length > 0 ? floorsData[wIdx].map((f, fIdx) => ({
+            ...(f.id ? { id: f.id } : {}),
+            name: f.name,
+            floor_number: f.floor_number !== '' ? parseInt(f.floor_number) : null,
+            type: f.type || null,
+            flats_data: f.flats_data?.length > 0 ? f.flats_data.map(fl => ({
+              ...(fl.id ? { id: fl.id } : {}),
+              name: fl.name,
+              flat_number: fl.flat_number || null,
+              bhk_type: fl.bhk_type || null,
+              area: fl.area !== '' ? parseFloat(fl.area) : null,
+            })) : undefined,
+          })) : undefined,
         })) : undefined,
       };
       if (editingBuilding) {
@@ -361,6 +474,7 @@ export default function Buildings() {
               </div>
 
               <div className="bg-gray-50/50 px-6 py-3 border-t border-gray-100 flex justify-end gap-2">
+                <button onClick={() => navigate(`/dashboard/buildings/${b.id}`)} className="p-2 text-gray-600 hover:text-blue-600 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-gray-100" title="View"><Eye className="w-4 h-4" /></button>
                 <button onClick={() => openEditModal(b)} className="p-2 text-gray-600 hover:text-blue-600 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-gray-100" title="Edit"><Edit className="w-4 h-4" /></button>
                 <button onClick={() => handleDelete(b.id)} className="p-2 text-gray-600 hover:text-red-600 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-gray-100" title="Delete"><Trash2 className="w-4 h-4" /></button>
               </div>
@@ -566,6 +680,113 @@ export default function Buildings() {
                             />
                           </div>
                         </div>
+
+                        {floorsData[idx]?.length > 0 && (
+                          <div className="mt-4 space-y-3">
+                            <h5 className="text-xs font-bold text-gray-600 uppercase tracking-wider">Floors Details</h5>
+                            {floorsData[idx].map((floor, fIdx) => (
+                              <div key={fIdx} className="bg-white rounded-lg p-3 border border-gray-200">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-xs font-bold text-gray-600">Floor {fIdx + 1}</span>
+                                </div>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                  <div>
+                                    <label className="block text-[10px] font-semibold text-gray-500 mb-0.5">Name</label>
+                                    <input
+                                      type="text"
+                                      value={floor.name}
+                                      onChange={(e) => handleFloorChange(idx, fIdx, 'name', e.target.value)}
+                                      placeholder="e.g. Ground, 1st"
+                                      className="w-full px-2 py-1.5 border border-gray-250 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-[10px] font-semibold text-gray-500 mb-0.5">Floor No.</label>
+                                    <input
+                                      type="number"
+                                      value={floor.floor_number}
+                                      onChange={(e) => handleFloorChange(idx, fIdx, 'floor_number', e.target.value)}
+                                      className="w-full px-2 py-1.5 border border-gray-250 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-[10px] font-semibold text-gray-500 mb-0.5">Type</label>
+                                    <input
+                                      type="text"
+                                      value={floor.type}
+                                      onChange={(e) => handleFloorChange(idx, fIdx, 'type', e.target.value)}
+                                      placeholder="e.g. Residential"
+                                      className="w-full px-2 py-1.5 border border-gray-250 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-[10px] font-semibold text-gray-500 mb-0.5">No. of Flats</label>
+                                    <input
+                                      type="number"
+                                      value={floor.flats_count}
+                                      onChange={(e) => handleFloorChange(idx, fIdx, 'flats_count', e.target.value)}
+                                      min="0"
+                                      className="w-full px-2 py-1.5 border border-gray-250 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                  </div>
+                                </div>
+
+                                {floor.flats_data?.length > 0 && (
+                                  <div className="mt-2 space-y-2">
+                                    <h6 className="text-[10px] font-bold text-gray-500 uppercase">Flats</h6>
+                                    {floor.flats_data.map((flat, flIdx) => (
+                                      <div key={flIdx} className="bg-gray-50 rounded p-2 border border-gray-100">
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                          <div>
+                                            <label className="block text-[10px] font-semibold text-gray-500 mb-0.5">Name</label>
+                                            <input
+                                              type="text"
+                                              value={flat.name}
+                                              onChange={(e) => handleFlatChange(idx, fIdx, flIdx, 'name', e.target.value)}
+                                              placeholder="e.g. A-101"
+                                              className="w-full px-2 py-1 border border-gray-250 rounded text-[11px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            />
+                                          </div>
+                                          <div>
+                                            <label className="block text-[10px] font-semibold text-gray-500 mb-0.5">Flat No.</label>
+                                            <input
+                                              type="text"
+                                              value={flat.flat_number}
+                                              onChange={(e) => handleFlatChange(idx, fIdx, flIdx, 'flat_number', e.target.value)}
+                                              placeholder="e.g. 101"
+                                              className="w-full px-2 py-1 border border-gray-250 rounded text-[11px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            />
+                                          </div>
+                                          <div>
+                                            <label className="block text-[10px] font-semibold text-gray-500 mb-0.5">BHK Type</label>
+                                            <input
+                                              type="text"
+                                              value={flat.bhk_type}
+                                              onChange={(e) => handleFlatChange(idx, fIdx, flIdx, 'bhk_type', e.target.value)}
+                                              placeholder="e.g. 2BHK"
+                                              className="w-full px-2 py-1 border border-gray-250 rounded text-[11px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            />
+                                          </div>
+                                          <div>
+                                            <label className="block text-[10px] font-semibold text-gray-500 mb-0.5">Area (sqft)</label>
+                                            <input
+                                              type="number"
+                                              value={flat.area}
+                                              onChange={(e) => handleFlatChange(idx, fIdx, flIdx, 'area', e.target.value)}
+                                              min="0"
+                                              step="0.01"
+                                              className="w-full px-2 py-1 border border-gray-250 rounded text-[11px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            />
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

@@ -77,7 +77,7 @@ class RolesAndPermissionsSeeder extends Seeder
         }
 
         // Remove old replaced roles (detach permissions first)
-        $oldRolesToRemove = ['Super Admin', 'Warehouse Manager', 'Inventory Staff', 'Sales Executive'];
+        $oldRolesToRemove = ['Super Admin', 'Warehouse Manager', 'Inventory Staff', 'Sales Executive', 'Finance Manager'];
         foreach ($oldRolesToRemove as $roleName) {
             $role = Role::where('name', $roleName)->first();
             if ($role) {
@@ -87,7 +87,7 @@ class RolesAndPermissionsSeeder extends Seeder
         }
 
         // Define new roles
-        $newRoles = ['Admin', 'Manager', 'Store Manager', 'Accountant', 'HR', 'Employee'];
+        $newRoles = ['Admin', 'Manager', 'Store Manager', 'Accountant', 'HR', 'Employee', 'Designer'];
 
         $maxRoleId = Role::max('id') ?? 0;
         foreach ($newRoles as $role) {
@@ -98,12 +98,10 @@ class RolesAndPermissionsSeeder extends Seeder
             }
         }
 
-        // Attendance write permissions - Admin should NOT have these
+        // Attendance write permissions - Admin should NOT have attendance.create/edit/delete (those are for HR)
         $attendanceWritePermissions = [
             'create_attendance', 'update_attendance', 'delete_attendance',
             'attendance.create', 'attendance.edit', 'attendance.delete',
-            'attendance.checkin', 'attendance.checkout',
-            'attendance.geo.checkin', 'attendance.geo.checkout',
         ];
 
         $allPermissions = Permission::pluck('name')->toArray();
@@ -122,6 +120,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'inventory.units.view', 'inventory.requests.view',
             'daily-report.view', 'daily-report.report.view',
             'attendance.view', 'view_attendance',
+            'attendance.checkin', 'attendance.checkout',
             'leave.view',
             'building.view',
             'view reports', 'create reports', 'update reports', 'export reports',
@@ -145,9 +144,10 @@ class RolesAndPermissionsSeeder extends Seeder
             'view_products', 'view_categories',
             'view_purchase_orders', 'create_purchase_orders',
             'view_sales_orders', 'create_sales_orders',
+            'attendance.checkin', 'attendance.checkout', 'attendance.view',
         ]);
 
-        // Accountant: payroll + purchase/sales orders (no inventory update)
+        // Accountant: payroll + purchase/sales orders + invoices + payments (merged with Finance Manager)
         $accountantPermissions = [
             'view dashboard', 'view reports',
             'view_payroll', 'manage_payroll',
@@ -155,20 +155,27 @@ class RolesAndPermissionsSeeder extends Seeder
             'view_sales_orders', 'create_sales_orders',
             'view_invoices', 'create_invoices', 'update_invoices',
             'view_payments', 'create_payments',
-            'view_customers', 'view_suppliers',
+            'view_customers', 'create_customers', 'update_customers',
+            'view_suppliers', 'create_suppliers', 'update_suppliers',
             'employee.view', 'view_employees',
-                    'view_products', 'view_categories',
-                    'salary-structure.view',
-                    'create reports', 'export reports',
+            'view_products', 'view_categories',
+            'salary-structure.view',
+            'create reports', 'export reports',
+            'attendance.checkin', 'attendance.checkout', 'attendance.view',
         ];
 
         Role::findByName('Accountant')->syncPermissions($accountantPermissions);
 
-        // Finance Manager: same accounting/finance access as Accountant
-        $financeManager = Role::findByName('Finance Manager');
-        if ($financeManager) {
-            $financeManager->givePermissionTo($accountantPermissions);
-        }
+        // Designer: full building access + documents + employee self-service
+        Role::findByName('Designer')->syncPermissions([
+            'view dashboard',
+            'building.view', 'building.create', 'building.edit', 'building.delete',
+            'document.view', 'document.create', 'document.edit', 'document.delete', 'document.download',
+            'attendance.checkin', 'attendance.checkout', 'attendance.view',
+            'daily-report.create', 'daily-report.view', 'daily-report.submit',
+            'leave.view', 'leave.create', 'leave.cancel', 'leave.balance.view',
+            'view_payroll',
+        ]);
 
         // HR: unchanged
         Role::findByName('HR')->syncPermissions([
@@ -201,6 +208,61 @@ class RolesAndPermissionsSeeder extends Seeder
             'leave.view', 'leave.create', 'leave.cancel', 'leave.balance.view',
             'view_payroll',
         ]);
+
+        // Worker roles: field workers with attendance + DPR
+        $workerPermissions = [
+            'view dashboard',
+            'attendance.checkin', 'attendance.checkout',
+            'attendance.view', 'attendance.create',
+            'daily-report.create', 'daily-report.view', 'daily-report.submit',
+        ];
+        foreach (['Fitter', 'Welder', 'Electrician', 'Helper'] as $workerRole) {
+            $role = Role::findByName($workerRole);
+            if ($role) {
+                $role->syncPermissions($workerPermissions);
+            }
+        }
+
+        // Design Manager: building access + attendance
+        $designManager = Role::findByName('Design Manager');
+        if ($designManager) {
+            $designManager->syncPermissions([
+                'view dashboard',
+                'attendance.checkin', 'attendance.checkout',
+                'attendance.view',
+                'building.view', 'building.edit',
+                'document.view', 'document.create', 'document.download',
+                'daily-report.create', 'daily-report.view', 'daily-report.submit',
+            ]);
+        }
+
+        // General Manager: admin-level read access
+        $gm = Role::findByName('General Manager');
+        if ($gm) {
+            $gm->syncPermissions([
+                'view dashboard',
+                'attendance.checkin', 'attendance.checkout',
+                'attendance.view',
+                'building.view',
+                'view_employees', 'employee.view',
+                'view_sites', 'site.view',
+                'daily-report.view', 'daily-report.report.view',
+                'leave.view',
+                'view reports',
+            ]);
+        }
+
+        // Workshop Supervisor: production read + attendance
+        $ws = Role::findByName('Workshop Supervisor');
+        if ($ws) {
+            $ws->syncPermissions([
+                'view dashboard',
+                'attendance.checkin', 'attendance.checkout',
+                'attendance.view', 'attendance.create',
+                'daily-report.create', 'daily-report.view', 'daily-report.approve', 'daily-report.submit',
+                'view_employees', 'employee.view',
+            ]);
+        }
 
         $maxUserId = User::max('id') ?? 0;
 

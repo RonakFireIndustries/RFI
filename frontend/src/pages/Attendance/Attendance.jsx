@@ -139,12 +139,23 @@ export default function Attendance() {
     const late = records.filter(r => r.status?.toLowerCase() === 'late').length;
     const absent = Math.max(0, totalEmployees - present - late);
 
+    // Count all late marks for the month
+    const monthRecords = report?.attendance_records || [];
+    const totalLateMarks = monthRecords.filter(r => r.is_late).length;
+    const halfDayDeductions = Math.floor(totalLateMarks / 3);
+    const fullDayDeductions = Math.floor(totalLateMarks / 5);
+    const totalDeductionDays = (halfDayDeductions * 0.5) + (fullDayDeductions * 1);
+
     return {
       total: totalEmployees,
       present,
       late,
       absent,
-      avg: totalEmployees > 0 ? Math.round(((present + late) / totalEmployees) * 100) : 0
+      avg: totalEmployees > 0 ? Math.round(((present + late) / totalEmployees) * 100) : 0,
+      totalLateMarks,
+      halfDayDeductions,
+      fullDayDeductions,
+      totalDeductionDays,
     };
   }, [todaysRecords, report, employees, departmentId, siteId, shiftId]);
 
@@ -264,8 +275,10 @@ export default function Attendance() {
             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Late Arrivals</span>
             <Clock className="w-4 h-4 text-warning" />
           </div>
-          <div className="text-3xl font-extrabold text-foreground mb-1">{kpis.late}</div>
-          <div className="text-xs font-semibold text-muted-foreground">Recorded</div>
+          <div className="text-3xl font-extrabold text-foreground mb-1">{kpis.totalLateMarks}</div>
+          <div className="text-xs font-semibold text-muted-foreground">
+            {kpis.totalDeductionDays > 0 ? `${kpis.totalDeductionDays} day(s) deduction (3=½day, 5=1day)` : 'No deductions'}
+          </div>
         </div>
       </div>
 
@@ -460,7 +473,7 @@ export default function Attendance() {
                       <td className="p-4 text-sm font-bold text-foreground">{hours}</td>
                       <td className="p-4 text-right pr-6">
                         <span className={`inline-block px-3 py-1 rounded text-xs font-bold capitalize ${statusBg} ${statusText}`}>
-                          {log.status || 'unknown'}
+                          {log.status || 'unknown'}{log.is_late ? ` (${log.late_minutes}m)` : ''}
                         </span>
                       </td>
                     </tr>
@@ -514,7 +527,7 @@ export default function Attendance() {
                                           <td className="p-2 text-sm font-bold text-foreground">{calculateHours(rec.check_in, rec.check_out)}</td>
                                           <td className="p-2">
                                             <span className={`inline-block px-2 py-0.5 rounded text-xs font-bold capitalize ${rStatusBg} ${rStatusText}`}>
-                                              {rec.status || 'unknown'}
+                                              {rec.status || 'unknown'}{rec.is_late ? ` (${rec.late_minutes}m)` : ''}
                                             </span>
                                           </td>
                                           <td className="p-2 text-right pr-0 text-xs text-muted-foreground">

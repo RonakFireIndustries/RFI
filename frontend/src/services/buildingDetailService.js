@@ -7,6 +7,16 @@ export const buildingDetailService = {
   updateWing: async (buildingId, wingId, payload) => unwrapItem((await api.put(`/buildings/${buildingId}/wings/${wingId}`, payload)).data),
   removeWing: async (buildingId, wingId) => api.delete(`/buildings/${buildingId}/wings/${wingId}`),
 
+  getFloors: async (buildingId) => unwrapList((await api.get(`/buildings/${buildingId}/floors`)).data),
+  createFloor: async (buildingId, payload) => unwrapItem((await api.post(`/buildings/${buildingId}/floors`, payload)).data),
+  updateFloor: async (buildingId, floorId, payload) => unwrapItem((await api.put(`/buildings/${buildingId}/floors/${floorId}`, payload)).data),
+  removeFloor: async (buildingId, floorId) => api.delete(`/buildings/${buildingId}/floors/${floorId}`),
+
+  getFlats: async (buildingId) => unwrapList((await api.get(`/buildings/${buildingId}/flats`)).data),
+  createFlat: async (buildingId, payload) => unwrapItem((await api.post(`/buildings/${buildingId}/flats`, payload)).data),
+  updateFlat: async (buildingId, flatId, payload) => unwrapItem((await api.put(`/buildings/${buildingId}/flats/${flatId}`, payload)).data),
+  removeFlat: async (buildingId, flatId) => api.delete(`/buildings/${buildingId}/flats/${flatId}`),
+
   getFireSystems: async (buildingId) => unwrapList((await api.get(`/buildings/${buildingId}/fire-systems`)).data),
   createFireSystem: async (buildingId, payload) => unwrapItem((await api.post(`/buildings/${buildingId}/fire-systems`, payload)).data),
   updateFireSystem: async (buildingId, systemId, payload) => unwrapItem((await api.put(`/buildings/${buildingId}/fire-systems/${systemId}`, payload)).data),
@@ -25,4 +35,9 @@ export const buildingDetailService = {
   getStatuses: async () => unwrapList((await api.get('/building-statuses')).data),
   assignStatus: async (buildingId, statusId) => unwrapItem((await api.post(`/buildings/${buildingId}/statuses`, { building_status_id: statusId })).data),
   removeStatus: async (buildingId, statusId) => api.delete(`/buildings/${buildingId}/statuses/${statusId}`),
+
+  getSiteVisits: async (buildingId) => unwrapList((await api.get(`/buildings/${buildingId}/site-visits`)).data),
+  getFollowUps: async (buildingId) => unwrapList((await api.get(`/buildings/${buildingId}/follow-ups`)).data),
+  getOpportunities: async (buildingId) => unwrapList((await api.get(`/buildings/${buildingId}/opportunities`)).data),
+  getInvoices: async (buildingId) => unwrapList((await api.get(`/buildings/${buildingId}/invoices`)).data),
 };

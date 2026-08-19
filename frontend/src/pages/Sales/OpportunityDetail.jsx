@@ -215,7 +215,7 @@ export default function OpportunityDetail() {
               <button onClick={() => navigate(`/dashboard/follow-ups/new?opportunity_id=${opp.id}`)} className="w-full flex items-center gap-2 px-3 py-2 text-sm border rounded-lg hover:bg-gray-50">
                 <Plus className="w-4 h-4" /> Add Follow-up
               </button>
-              <button onClick={() => navigate(`/dashboard/reports/building/${opp.building_id}`)} className="w-full flex items-center gap-2 px-3 py-2 text-sm border rounded-lg hover:bg-gray-50">
+              <button onClick={() => window.open(`${window.location.origin}/dashboard/buildings/${opp.building_id}`)} className="w-full flex items-center gap-2 px-3 py-2 text-sm border rounded-lg hover:bg-gray-50">
                 <FileText className="w-4 h-4" /> Building Report
               </button>
             </div>

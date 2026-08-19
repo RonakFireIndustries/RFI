@@ -61,6 +61,16 @@ class Building extends Model
         return $this->hasMany(BuildingWing::class);
     }
 
+    public function floors(): HasMany
+    {
+        return $this->hasMany(BuildingFloor::class);
+    }
+
+    public function flats(): HasMany
+    {
+        return $this->hasMany(BuildingFlat::class);
+    }
+
     public function statuses(): BelongsToMany
     {
         return $this->belongsToMany(BuildingStatus::class, 'building_status_mapping');
@@ -94,6 +104,11 @@ class Building extends Model
     public function documents(): HasMany
     {
         return $this->hasMany(SalesDocument::class);
+    }
+
+    public function followUps(): HasMany
+    {
+        return $this->hasMany(FollowUp::class);
     }
 
     public function activityLogs(): HasMany

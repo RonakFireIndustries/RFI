@@ -40,7 +40,6 @@ class DashboardService
         'HR'                   => 'hr',
         'HR Manager'           => 'hr',
         'Accountant'           => 'finance',
-        'Finance Manager'      => 'finance',
         'Store Manager'        => 'inventory',
         'IT Manager'           => 'it',
         'Developer'            => 'it',
