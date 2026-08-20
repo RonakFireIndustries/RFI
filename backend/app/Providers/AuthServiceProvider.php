@@ -14,6 +14,12 @@ class AuthServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        //
+        Gate::before(function ($user, $ability) {
+            if (method_exists($user, 'hasPermissionTo') && $user->hasPermissionTo($ability)) {
+                return true;
+            }
+
+            return null;
+        });
     }
 }
