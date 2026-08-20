@@ -92,9 +92,6 @@ class AttendanceController extends Controller
     public function checkIn(CheckInRequest $request): JsonResponse
     {
         $user = $request->user();
-        if (!$user->hasPermissionTo('attendance.checkin')) {
-            return $this->error('This action is unauthorized.', [], 403);
-        }
 
         $user = $request->user();
         $employee = $user->employee;
@@ -127,9 +124,6 @@ class AttendanceController extends Controller
     public function checkOut(CheckOutRequest $request): JsonResponse
     {
         $user = $request->user();
-        if (!$user->hasPermissionTo('attendance.checkout')) {
-            return $this->error('This action is unauthorized.', [], 403);
-        }
 
         $user = $request->user();
         $employee = $user->employee;
