@@ -21,7 +21,7 @@ class FixEmptyRolePermissions extends Command
 
     public function handle(): int
     {
-        $roles = Role::withCount('permissions')->where('permissions_count', 0)->get();
+        $roles = Role::withCount('permissions')->having('permissions_count', '=', 0)->get();
 
         if ($roles->isEmpty()) {
             $this->info('All roles already have permissions assigned.');
