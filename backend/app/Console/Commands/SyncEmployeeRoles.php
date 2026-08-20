@@ -39,6 +39,16 @@ class SyncEmployeeRoles extends Command
             }
 
             $role = \App\Models\Role::firstOrCreate(['name' => $designationName, 'guard_name' => 'web']);
+            if ($role->permissions()->count() === 0) {
+                $role->syncPermissions([
+                    'view dashboard',
+                    'attendance.checkin', 'attendance.checkout',
+                    'attendance.view',
+                    'daily-report.create', 'daily-report.view', 'daily-report.submit',
+                    'leave.view', 'leave.create', 'leave.cancel', 'leave.balance.view',
+                    'view_payroll',
+                ]);
+            }
             $user->roles()->sync([$role->id]);
             $this->info("User #{$user->id} {$user->email}: synced role to '{$designationName}'");
             $synced++;

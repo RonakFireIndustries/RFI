@@ -85,6 +85,16 @@ class EmployeeService
                     $roleName = $data['role'];
                 }
                 $role = \App\Models\Role::firstOrCreate(['name' => $roleName, 'guard_name' => 'web']);
+                if ($role->permissions()->count() === 0) {
+                    $role->syncPermissions([
+                        'view dashboard',
+                        'attendance.checkin', 'attendance.checkout',
+                        'attendance.view',
+                        'daily-report.create', 'daily-report.view', 'daily-report.submit',
+                        'leave.view', 'leave.create', 'leave.cancel', 'leave.balance.view',
+                        'view_payroll',
+                    ]);
+                }
                 try {
                     $user->roles()->sync([$role->id]);
                 } catch (\Exception $e) {}
@@ -106,6 +116,16 @@ class EmployeeService
             $designation = \App\Models\Designation::find($data['designation_id']);
             if ($designation) {
                 $role = \App\Models\Role::firstOrCreate(['name' => $designation->name, 'guard_name' => 'web']);
+                if ($role->permissions()->count() === 0) {
+                    $role->syncPermissions([
+                        'view dashboard',
+                        'attendance.checkin', 'attendance.checkout',
+                        'attendance.view',
+                        'daily-report.create', 'daily-report.view', 'daily-report.submit',
+                        'leave.view', 'leave.create', 'leave.cancel', 'leave.balance.view',
+                        'view_payroll',
+                    ]);
+                }
                 $employee->user->roles()->sync([$role->id]);
             }
         }
