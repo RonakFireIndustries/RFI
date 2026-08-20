@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Plus, Search, Download, TrendingUp, Clock, AlertCircle, Filter, ChevronDown, Trash2, FileText, CheckCircle, Truck, Package, List, Eye
@@ -16,10 +16,18 @@ export default function SalesOrdersPage() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [sites, setSites] = useState([]);
-  const [newOrder, setNewOrder] = useState({ customer_id: '', site_id: '', gst_type: 'cgst', shipping_cost: 0, other_cost: 0, other_cost_note: '', terms_conditions: '', items: [{ category_id: '', product_id: '', custom_product_name: '', quantity: 1, unit_price: 0, gst_rate: 18, hsn_code: '' }] });
+  const [newOrder, setNewOrder] = useState({ customer_id: '', site_id: '', gst_type: 'cgst', shipping_cost: 0, other_cost: 0, other_cost_note: '', terms_conditions: '', items: [{ parent_category_id: '', category_id: '', product_id: '', custom_product_name: '', quantity: 1, unit_price: 0, gst_rate: 18, hsn_code: '' }] });
   const [activeTab, setActiveTab] = useState('All Orders');
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 25;
+
+  const parentCategories = useMemo(
+    () => categories.filter((c) => !c.parent_id).sort((a, b) => a.name.localeCompare(b.name)),
+    [categories]
+  );
+
+  const getSubCategories = (parentId) =>
+    parentId ? categories.filter((c) => c.parent_id && String(c.parent_id) === String(parentId)).sort((a, b) => a.name.localeCompare(b.name)) : [];
 
   useEffect(() => {
     fetchOrders();
@@ -76,7 +84,7 @@ export default function SalesOrdersPage() {
       await api.post('/sales/orders', { ...newOrder, status });
       setIsModalOpen(false);
       fetchOrders();
-      setNewOrder({ customer_id: '', site_id: '', gst_type: 'cgst', shipping_cost: '0', other_cost: 0, other_cost_note: '', terms_conditions: '', items: [{ category_id: '', product_id: '', custom_product_name: '', quantity: 1, unit_price: 0, gst_rate: 18, hsn_code: '' }] });
+      setNewOrder({ customer_id: '', site_id: '', gst_type: 'cgst', shipping_cost: '0', other_cost: 0, other_cost_note: '', terms_conditions: '', items: [{ parent_category_id: '', category_id: '', product_id: '', custom_product_name: '', quantity: 1, unit_price: 0, gst_rate: 18, hsn_code: '' }] });
     } catch (error) {
       console.error("Error creating SO:", error);
       const msg = error.response?.data?.message || "Failed to create Sales Order.";
@@ -588,7 +596,7 @@ export default function SalesOrdersPage() {
                       </h2>
                       <button 
                         type="button"
-                        onClick={() => setNewOrder({...newOrder, items: [...newOrder.items, { category_id: '', product_id: '', custom_product_name: '', quantity: 1, unit_price: 0, gst_rate: 18, hsn_code: '' }]})}
+                        onClick={() => setNewOrder({...newOrder, items: [...newOrder.items, { parent_category_id: '', category_id: '', product_id: '', custom_product_name: '', quantity: 1, unit_price: 0, gst_rate: 18, hsn_code: '' }]})}
                         className="flex items-center text-primary font-semibold text-sm hover:text-primary"
                       >
                         <Plus className="w-4 h-4 mr-1" /> Add New Product
@@ -599,7 +607,8 @@ export default function SalesOrdersPage() {
                       <table className="w-full text-left border-collapse">
                         <thead>
                           <tr className="bg-gray-50 border-b border-gray-200 text-xs uppercase tracking-wider text-gray-500 font-bold">
-                            <th className="p-4 w-40">Category</th>
+                            <th className="p-4 w-32">Category</th>
+                            <th className="p-4 w-32">Sub Category</th>
                             <th className="p-4">Product Code / Name</th>
                             <th className="p-4 w-24 text-center">Quantity</th>
                             <th className="p-4 w-28 text-right">Unit Price</th>
@@ -617,17 +626,34 @@ export default function SalesOrdersPage() {
                               <td className="p-4">
                                 <select
                                   className="w-full bg-transparent border-0 border-b border-gray-200 focus:ring-0 focus:border-primary/30 p-0 pb-1 text-sm"
-                                  value={item.category_id}
+                                  value={item.parent_category_id || ''}
                                   onChange={(e) => {
                                     const items = [...newOrder.items];
-                                    items[index].category_id = e.target.value;
+                                    items[index].parent_category_id = e.target.value;
+                                    items[index].category_id = e.target.value || '';
                                     items[index].product_id = '';
                                     items[index].custom_product_name = '';
                                     setNewOrder({...newOrder, items});
                                   }}
                                 >
                                   <option value="">All Categories</option>
-                                  {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                  {parentCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                </select>
+                              </td>
+                              <td className="p-4">
+                                <select
+                                  className="w-full bg-transparent border-0 border-b border-gray-200 focus:ring-0 focus:border-primary/30 p-0 pb-1 text-sm"
+                                  value={item.category_id && item.parent_category_id && String(item.category_id) !== String(item.parent_category_id) ? item.category_id : ''}
+                                  onChange={(e) => {
+                                    const items = [...newOrder.items];
+                                    items[index].category_id = e.target.value || item.parent_category_id || '';
+                                    items[index].product_id = '';
+                                    items[index].custom_product_name = '';
+                                    setNewOrder({...newOrder, items});
+                                  }}
+                                >
+                                  <option value="">None</option>
+                                  {getSubCategories(item.parent_category_id).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                 </select>
                               </td>
                               <td className="p-4">
@@ -643,7 +669,11 @@ export default function SalesOrdersPage() {
                                       if (prod) {
                                         items[index].unit_price = parseFloat(prod.selling_price || 0);
                                         items[index].hsn_code = prod.hsn_code || '';
-                                        if (prod.category_id) items[index].category_id = prod.category_id;
+                                        if (prod.category_id) {
+                                          items[index].category_id = prod.category_id;
+                                          const cat = categories.find(c => c.id === prod.category_id);
+                                          items[index].parent_category_id = cat?.parent_id ? String(cat.parent_id) : String(prod.category_id);
+                                        }
                                       }
                                       items[index].custom_product_name = '';
                                     }

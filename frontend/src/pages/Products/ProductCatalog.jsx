@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ChevronDown, ChevronRight, ChevronsDownUp, ChevronsUpDown, Edit2, Filter, FolderTree, Layers, Package, Trash2, X } from 'lucide-react';
 import ModuleListPage from '../ERP/ModuleListPage';
@@ -60,6 +60,7 @@ export default function ProductCatalog() {
   const [showFilters, setShowFilters] = useState(false);
   const [collapsedParents, setCollapsedParents] = useState(() => new Set());
   const [collapsedSubs, setCollapsedSubs] = useState(() => new Set());
+  const [selectedParentId, setSelectedParentId] = useState('');
 
   const fetchParams = useMemo(() => {
     if (categoryId) return { category_id: categoryId };
@@ -94,6 +95,23 @@ export default function ProductCatalog() {
     return [...new Set(subs.map((c) => c.name))].sort((a, b) => a.localeCompare(b));
   }, [lookups.categories, filters.parent]);
 
+  const parentCategories = useMemo(
+    () => lookups.categories.filter((c) => !c.parent_id).sort((a, b) => a.name.localeCompare(b.name)),
+    [lookups.categories]
+  );
+
+  const subCategories = useMemo(
+    () => lookups.categories.filter((c) => c.parent_id && String(c.parent_id) === String(selectedParentId)).sort((a, b) => a.name.localeCompare(b.name)),
+    [lookups.categories, selectedParentId]
+  );
+
+  const formLookups = useMemo(() => ({
+    parentCategories,
+    subCategories,
+    suppliers: lookups.suppliers,
+    sites: lookups.sites,
+  }), [parentCategories, subCategories, lookups.suppliers, lookups.sites]);
+
   const activeFilterCount = Object.values(filters).filter((v) => v !== '').length;
 
   const categoryTitle = useMemo(() => {
@@ -105,6 +123,52 @@ export default function ProductCatalog() {
   const setFilter = (key, value) => setFilters((current) => ({ ...current, [key]: value }));
 
   const clearFilters = () => setFilters({ parent: '', sub: '', supplier: '', status: '' });
+
+  const handleFieldChange = useCallback((fieldName, value) => {
+    if (fieldName === 'parent_category_id') {
+      setSelectedParentId(value);
+    }
+  }, []);
+
+  const transformProductPayload = useCallback((payload) => {
+    const out = { ...payload };
+    const subId = out.subcategory_id ? Number(out.subcategory_id) : null;
+    const parentId = out.parent_category_id ? Number(out.parent_category_id) : null;
+    out.category_id = subId || parentId || null;
+    delete out.parent_category_id;
+    delete out.subcategory_id;
+    return out;
+  }, []);
+
+  const getProductInitialValues = useCallback((item) => {
+    const catId = item.category_id;
+    const cat = lookups.categories.find((c) => c.id === catId);
+    let parentId = '';
+    let subId = '';
+    if (cat) {
+      if (cat.parent_id) {
+        parentId = String(cat.parent_id);
+        subId = String(cat.id);
+      } else {
+        parentId = String(cat.id);
+      }
+    }
+    setSelectedParentId(parentId);
+    return {
+      sku: item.sku ?? '',
+      name: item.name ?? '',
+      hsn_code: item.hsn_code ?? '',
+      dimension: item.dimension ?? '',
+      parent_category_id: parentId,
+      subcategory_id: subId,
+      supplier_id: item.supplier_id ? String(item.supplier_id) : '',
+      purchase_price: item.purchase_price ?? '',
+      selling_price: item.selling_price ?? '',
+      opening_stock: item.opening_stock ?? 0,
+      site_id: item.site_id ? String(item.site_id) : '',
+      status: item.status ?? 'active',
+    };
+  }, [lookups.categories]);
 
   const toggleParent = (name) => {
     setCollapsedParents((prev) => {
@@ -159,7 +223,8 @@ export default function ProductCatalog() {
       { name: 'name', label: 'Product Name', required: true },
       { name: 'hsn_code', label: 'HSN Code' },
       { name: 'dimension', label: 'Dimension' },
-      { name: 'category_id', label: 'Category', type: 'select', optionsKey: 'categories', emptyAsNull: true },
+      { name: 'parent_category_id', label: 'Category', type: 'select', optionsKey: 'parentCategories', emptyAsNull: true },
+      { name: 'subcategory_id', label: 'Sub Category', type: 'select', optionsKey: 'subCategories', emptyAsNull: true },
       { name: 'supplier_id', label: 'Supplier', type: 'select', optionsKey: 'suppliers', emptyAsNull: true },
     ];
     if (canFinance) {
@@ -354,11 +419,14 @@ export default function ProductCatalog() {
       store={useProductsStore}
       detailBasePath="/dashboard/products"
       searchPlaceholder="Search products or SKUs..."
-      lookups={lookups}
+      lookups={formLookups}
       columns={columns}
       fields={fields}
       fetchParams={fetchParams}
       renderItems={renderItems}
+      onFieldChange={handleFieldChange}
+      transformPayload={transformProductPayload}
+      getInitialValues={getProductInitialValues}
     />
   );
 }

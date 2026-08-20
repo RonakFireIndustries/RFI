@@ -31,6 +31,9 @@ export default function ModuleListPage({
   readOnly,
   fetchParams,
   renderItems,
+  onFieldChange,
+  transformPayload,
+  getInitialValues,
 }) {
   const { items, loading, fetchItems, createItem, updateItem, deleteItem } = store();
   const [search, setSearch] = useState('');
@@ -44,11 +47,15 @@ export default function ModuleListPage({
 
   const openModal = (item = null) => {
     setEditing(item);
-    setFormData(fields.reduce((data, field) => {
-      if (field.type === 'heading' || !field.name) return data;
-      data[field.name] = item ? (getPathValue(item, field.valuePath || field.name) ?? '') : (field.defaultValue ?? '');
-      return data;
-    }, {}));
+    setFormData(
+      getInitialValues && item
+        ? getInitialValues(item)
+        : fields.reduce((data, field) => {
+            if (field.type === 'heading' || !field.name) return data;
+            data[field.name] = item ? (getPathValue(item, field.valuePath || field.name) ?? '') : (field.defaultValue ?? '');
+            return data;
+          }, {})
+    );
     setIsModalOpen(true);
   };
 
@@ -59,7 +66,8 @@ export default function ModuleListPage({
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    const payload = coercePayload(fields, formData);
+    let payload = coercePayload(fields, formData);
+    if (transformPayload) payload = transformPayload(payload);
     
     const hasFiles = Object.values(payload).some((val) => val instanceof File);
     let finalPayload = payload;
@@ -197,7 +205,11 @@ export default function ModuleListPage({
                     <select
                       required={field.required}
                       value={formData[field.name] ?? ''}
-                      onChange={(event) => setFormData((current) => ({ ...current, [field.name]: event.target.value }))}
+                      onChange={(event) => {
+                        const val = event.target.value;
+                        setFormData((current) => ({ ...current, [field.name]: val }));
+                        onFieldChange?.(field.name, val);
+                      }}
                       className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
                     >
                       <option value="">{field.placeholder || `Select ${field.label}`}</option>
