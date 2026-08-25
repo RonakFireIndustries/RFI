@@ -159,20 +159,14 @@ class AttendanceService
             $shiftStart = Carbon::parse($today . ' ' . $shift->start_time);
             $gracePeriod = $shift->grace_period ?? 0;
             $lateThreshold = $shift->late_threshold ?? 0;
-            $halfDayThreshold = $shift->half_day_threshold ?? 0;
 
             $graceEnd = $shiftStart->copy()->addMinutes($gracePeriod);
             $lateEnd = $shiftStart->copy()->addMinutes($lateThreshold);
-            $halfDayEnd = $shiftStart->copy()->addMinutes($halfDayThreshold);
 
             if ($now->greaterThan($lateEnd) && $lateThreshold > 0) {
                 $isLate = true;
                 $lateMinutes = $now->diffInMinutes($shiftStart);
                 $status = 'Late';
-
-                if ($halfDayThreshold > 0 && $now->greaterThan($halfDayEnd)) {
-                    $status = 'Half Day';
-                }
             }
         }
 

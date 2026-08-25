@@ -5,7 +5,7 @@ import { Calendar, Search, MapPin, Clock, Filter, Download } from 'lucide-react'
 
 export default function EmployeeAttendanceHistory() {
   const { user } = useAuthStore();
-  const { items, loading, fetchItems } = useAttendanceStore();
+  const { items, loading, myAttendance } = useAttendanceStore();
 
   const [dateRange, setDateRange] = useState({
     start_date: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
@@ -18,8 +18,7 @@ export default function EmployeeAttendanceHistory() {
   }, []);
 
   const loadHistory = (params = {}) => {
-    fetchItems({
-      employee_id: user?.employee?.id,
+    myAttendance({
       start_date: dateRange.start_date,
       end_date: dateRange.end_date,
       ...(statusFilter ? { status: statusFilter } : {}),

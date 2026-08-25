@@ -80,8 +80,8 @@ class ReportsController extends Controller
             'total_records' => $attendance->count(),
             'present' => $attendance->where('status', 'Present')->count(),
             'absent' => $attendance->where('status', 'Absent')->count(),
-            'late' => $attendance->where('status', 'Late')->count(),
-            'half_day' => $attendance->where('status', 'Half Day')->count(),
+            'late' => $attendance->whereIn('status', ['Late', 'Half Day'])->count(),
+            'half_day' => 0,
             'late_marks' => $attendance->where('is_late', true)->count(),
             'attendance_records' => $attendance,
         ];

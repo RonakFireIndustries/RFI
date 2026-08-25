@@ -261,7 +261,7 @@ class DashboardService
     protected function widgetPresentToday(): array
     {
         $count = Attendance::whereDate('date', Carbon::today())
-            ->where('status', 'Present')->count();
+            ->whereIn('status', ['Present', 'Late', 'Half Day'])->count();
         return ['value' => $count, 'subtitle' => 'Checked in today'];
     }
 
@@ -269,7 +269,7 @@ class DashboardService
     {
         $total = Employee::count();
         $present = Attendance::whereDate('date', Carbon::today())
-            ->where('status', 'Present')->count();
+            ->whereIn('status', ['Present', 'Late', 'Half Day'])->count();
         return ['value' => $total - $present, 'subtitle' => 'Not checked in'];
     }
 
@@ -478,7 +478,7 @@ class DashboardService
         for ($i = 5; $i >= 0; $i--) {
             $date = Carbon::now()->subMonths($i);
             $present = Attendance::whereMonth('date', $date->month)->whereYear('date', $date->year)
-                ->where('status', 'Present')
+                ->whereIn('status', ['Present', 'Late', 'Half Day'])
                 ->count();
             $data[] = ['name' => $date->format('M'), 'value' => $present];
         }
@@ -593,7 +593,7 @@ class DashboardService
             $employeeIds = EmployeeSite::where('site_id', $site->id)->pluck('employee_id');
             $present = Attendance::whereIn('employee_id', $employeeIds)
                 ->whereDate('date', Carbon::today())
-                ->where('status', 'Present')
+                ->whereIn('status', ['Present', 'Late', 'Half Day'])
                 ->count();
             return ['name' => $site->name, 'value' => $present];
         });
@@ -614,7 +614,7 @@ class DashboardService
     protected function widgetWorkforceUtilization(): array
     {
         $total = Employee::count();
-        $present = Attendance::whereDate('date', Carbon::today())->where('status', 'Present')->count();
+        $present = Attendance::whereDate('date', Carbon::today())->whereIn('status', ['Present', 'Late', 'Half Day'])->count();
         return ['data' => [
             ['name' => 'Present', 'value' => $present],
             ['name' => 'Absent', 'value' => $total - $present],
@@ -794,7 +794,7 @@ class DashboardService
     {
         $total = Employee::count();
         $present = Attendance::whereDate('date', Carbon::today())
-            ->where('status', 'Present')->count();
+            ->whereIn('status', ['Present', 'Late', 'Half Day'])->count();
         $absentPercent = $total > 0 ? round((($total - $present) / $total) * 100) : 0;
         if ($absentPercent < 30) return null;
         return ['value' => "{$absentPercent}% absenteeism today", 'subtitle' => "$present present out of $total", 'severity' => $absentPercent > 50 ? 'critical' : 'warning'];
@@ -829,7 +829,7 @@ class DashboardService
     protected function widgetMyAttendance(): ?array
     {
         if (!$this->employee) return null;
-        $present = Attendance::where('employee_id', $this->employee->id)->where('status', 'Present')
+        $present = Attendance::where('employee_id', $this->employee->id)->whereIn('status', ['Present', 'Late', 'Half Day'])
             ->whereMonth('date', Carbon::now()->month)->count();
         return ['type' => 'mini_card', 'value' => $present, 'subtitle' => 'Days this month'];
     }

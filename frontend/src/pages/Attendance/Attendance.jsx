@@ -67,9 +67,11 @@ export default function Attendance() {
     const handleFocus = () => applyFilters();
     document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('focus', handleFocus);
+    const pollInterval = setInterval(() => applyFilters(), 30000);
     return () => {
       document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('focus', handleFocus);
+      clearInterval(pollInterval);
     };
   }, [currentDate, departmentId, siteId, shiftId]);
 
@@ -85,10 +87,6 @@ export default function Attendance() {
     const filtered = (report?.attendance_records || []).filter(r => r.date === selectedDateString);
     return filtered;
   }, [report, selectedDateString]);
-
-  console.log('report:', report);
-  console.log('todaysRecords:', todaysRecords);
-  console.log('selectedDateString:', selectedDateString);
 
   // Group all month records by employee for expanded history view
   const employeeMonthRecords = useMemo(() => {
@@ -135,9 +133,10 @@ export default function Attendance() {
       totalEmployees = records.length || employees.length || 0;
     }
 
-    const present = records.filter(r => r.status?.toLowerCase() === 'present').length;
+    const present = records.filter(r => ['present', 'late', 'half day'].includes(r.status?.toLowerCase())).length;
     const late = records.filter(r => r.status?.toLowerCase() === 'late').length;
-    const absent = Math.max(0, totalEmployees - present - late);
+    const halfDay = records.filter(r => r.status?.toLowerCase() === 'half day').length;
+    const absent = Math.max(0, totalEmployees - present);
 
     // Count all late marks for the month
     const monthRecords = report?.attendance_records || [];
@@ -150,8 +149,9 @@ export default function Attendance() {
       total: totalEmployees,
       present,
       late,
+      halfDay,
       absent,
-      avg: totalEmployees > 0 ? Math.round(((present + late) / totalEmployees) * 100) : 0,
+      avg: totalEmployees > 0 ? Math.round(((present) / totalEmployees) * 100) : 0,
       totalLateMarks,
       halfDayDeductions,
       fullDayDeductions,
@@ -439,6 +439,9 @@ export default function Attendance() {
                 } else if (log.status.toLowerCase() === 'late') {
                   statusBg = 'bg-warning/10';
                   statusText = 'text-warning';
+                } else if (log.status.toLowerCase() === 'half day') {
+                  statusBg = 'bg-warning/10';
+                  statusText = 'text-warning';
                 } else if (['absent', 'leave'].includes(log.status.toLowerCase())) {
                   statusBg = 'bg-destructive/10';
                   statusText = 'text-destructive';
@@ -473,7 +476,7 @@ export default function Attendance() {
                       <td className="p-4 text-sm font-bold text-foreground">{hours}</td>
                       <td className="p-4 text-right pr-6">
                         <span className={`inline-block px-3 py-1 rounded text-xs font-bold capitalize ${statusBg} ${statusText}`}>
-                          {log.status || 'unknown'}{log.is_late ? ` (${log.late_minutes}m)` : ''}
+                          {log.status === 'Half Day' ? 'Late' : (log.status || 'unknown')}{log.is_late ? ` (${log.late_minutes}m)` : ''}
                         </span>
                       </td>
                     </tr>
@@ -515,6 +518,9 @@ export default function Attendance() {
                                       } else if (rec.status.toLowerCase() === 'late') {
                                         rStatusBg = 'bg-warning/10';
                                         rStatusText = 'text-warning';
+                                      } else if (rec.status.toLowerCase() === 'half day') {
+                                        rStatusBg = 'bg-warning/10';
+                                        rStatusText = 'text-warning';
                                       } else if (['absent', 'leave'].includes(rec.status.toLowerCase())) {
                                         rStatusBg = 'bg-destructive/10';
                                         rStatusText = 'text-destructive';
@@ -527,7 +533,7 @@ export default function Attendance() {
                                           <td className="p-2 text-sm font-bold text-foreground">{calculateHours(rec.check_in, rec.check_out)}</td>
                                           <td className="p-2">
                                             <span className={`inline-block px-2 py-0.5 rounded text-xs font-bold capitalize ${rStatusBg} ${rStatusText}`}>
-                                              {rec.status || 'unknown'}{rec.is_late ? ` (${rec.late_minutes}m)` : ''}
+                                              {rec.status === 'Half Day' ? 'Late' : (rec.status || 'unknown')}{rec.is_late ? ` (${rec.late_minutes}m)` : ''}
                                             </span>
                                           </td>
                                           <td className="p-2 text-right pr-0 text-xs text-muted-foreground">
