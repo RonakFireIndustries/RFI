@@ -40,7 +40,7 @@ const LEGACY_MODULE_MAP = {
   dashboard: 'dashboard', roles: 'role', permissions: 'permission', users: 'user',
 };
 
-const DOT_ACTION_MAP = { view: 'view', create: 'add', edit: 'edit', delete: 'remove' };
+const DOT_ACTION_MAP = { view: 'view', create: 'add', edit: 'edit', update: 'edit', delete: 'remove' };
 
 const parsePermName = (name) => {
   if (name.includes('.')) {
@@ -51,7 +51,7 @@ const parsePermName = (name) => {
   const m = name.match(/^(view|create|edit|update|delete|manage|export|schedule)[ _](.+)$/i);
   if (m) {
     const raw = m[1].toLowerCase();
-    const action = raw === 'update' ? 'edit' : raw;
+    const action = DOT_ACTION_MAP[raw] || raw;
     const module = LEGACY_MODULE_MAP[m[2].toLowerCase().replace(/[\s_]/g, '')];
     if (module && ACTION_META[action]) return { module, action };
   }
@@ -122,7 +122,7 @@ function GrantModal({ module, employeeName, actions, initialChecked, onSave, onC
           </button>
           <button
             type="button"
-            onClick={onSave}
+            onClick={() => onSave(checked)}
             className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
           >
             Grant
@@ -195,12 +195,17 @@ export default function AccessControl() {
 
   const allPerms = useMemo(() => Object.values(permissions || {}).flat(), [permissions]);
 
-  const modules = useMemo(
-    () => sortModules(
-      Object.keys(permissions || {}).filter(mod => (permissions[mod] || []).some(p => p.name.includes('.'))),
-    ),
-    [permissions],
-  );
+  const modules = useMemo(() => {
+    const grouped = {};
+    for (const p of allPerms) {
+      const parsed = parsePermName(p.name);
+      if (parsed) {
+        if (!grouped[parsed.module]) grouped[parsed.module] = [];
+        grouped[parsed.module].push(p);
+      }
+    }
+    return sortModules(Object.keys(grouped));
+  }, [allPerms]);
 
   const moduleActions = useMemo(() => {
     const map = {};
@@ -281,14 +286,15 @@ export default function AccessControl() {
     setDialogChecks(directActionsForModule(module));
   };
 
-  const saveDialog = async () => {
+  const saveDialog = async (updatedChecks) => {
     if (!selectedUser || !dialogModule) return;
+    const checks = updatedChecks || dialogChecks;
     const entries = moduleActions[dialogModule] || {};
     const current = directActionsForModule(dialogModule);
-    const toAdd = dialogChecks.filter(a => !current.includes(a))
+    const toAdd = checks.filter(a => !current.includes(a))
       .map(a => (entries[a] || []).find(p => p.name.includes('.')) || (entries[a] || [])[0])
       .filter(Boolean);
-    const toRemove = current.filter(a => !dialogChecks.includes(a))
+    const toRemove = current.filter(a => !checks.includes(a))
       .flatMap(a => (entries[a] || []).filter(mp => userPermissions.some(p => p.id === mp.id)));
 
     setBusy(true);
