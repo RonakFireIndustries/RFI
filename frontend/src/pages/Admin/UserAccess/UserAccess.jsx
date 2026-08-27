@@ -18,6 +18,10 @@ export default function UserAccess() {
   const [selectedRoles, setSelectedRoles] = useState([]);
   const [selectedPerms, setSelectedPerms] = useState([]);
   const [feedback, setFeedback] = useState(null);
+  const [rolesListLoading, setRolesListLoading] = useState(true);
+  const [permsListLoading, setPermsListLoading] = useState(true);
+  const [rolesListError, setRolesListError] = useState(null);
+  const [permsListError, setPermsListError] = useState(null);
 
   const {
     userRoles,
@@ -35,8 +39,33 @@ export default function UserAccess() {
 
   useEffect(() => {
     fetchUsers();
-    fetchRoles();
-    fetchPermissionsList();
+
+    const loadRoles = async () => {
+      setRolesListLoading(true);
+      setRolesListError(null);
+      try {
+        await fetchRoles();
+      } catch (error) {
+        setRolesListError(getErrorMessage(error, 'Could not load roles. You may lack the "manage_roles" permission.'));
+      } finally {
+        setRolesListLoading(false);
+      }
+    };
+
+    const loadPermissions = async () => {
+      setPermsListLoading(true);
+      setPermsListError(null);
+      try {
+        await fetchPermissionsList();
+      } catch (error) {
+        setPermsListError(getErrorMessage(error, 'Could not load permissions. You may lack the "manage_permissions" permission.'));
+      } finally {
+        setPermsListLoading(false);
+      }
+    };
+
+    loadRoles();
+    loadPermissions();
   }, []);
 
   const fetchUsers = async () => {
@@ -323,7 +352,18 @@ export default function UserAccess() {
                   one with the &times; button.
                 </p>
 
-                {userRoles.length === 0 ? (
+                {rolesListError ? (
+                  <div className="mt-4 p-3 rounded-md bg-red-50 border border-red-200">
+                    <p className="text-sm text-red-700">{rolesListError}</p>
+                    <button
+                      type="button"
+                      onClick={async () => { setRolesListError(null); setRolesListLoading(true); try { await fetchRoles(); } catch (e) { setRolesListError(getErrorMessage(e, 'Failed to load roles.')); } finally { setRolesListLoading(false); } }}
+                      className="mt-2 text-xs font-medium text-red-600 hover:underline"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                ) : userRoles.length === 0 ? (
                   <p className="mt-4 text-sm text-gray-400 italic">
                     No roles assigned yet.
                   </p>
@@ -358,7 +398,11 @@ export default function UserAccess() {
                     className="block w-full rounded-md border-gray-300 shadow-sm focus:ring-ring focus:border-ring sm:text-sm"
                     title="Hold Ctrl (or Cmd) to pick more than one role"
                   >
-                    {roleOptions.length === 0 ? (
+                    {rolesListLoading ? (
+                      <option value="" disabled>Loading roles...</option>
+                    ) : rolesListError ? (
+                      <option value="" disabled>Failed to load roles — check permissions</option>
+                    ) : roleOptions.length === 0 ? (
                       <option value="" disabled>
                         All available roles are already assigned
                       </option>
@@ -398,7 +442,18 @@ export default function UserAccess() {
                   permission when one role is nearly right but not exactly.
                 </p>
 
-                {userPermissions.length === 0 ? (
+                {permsListError ? (
+                  <div className="mt-4 p-3 rounded-md bg-red-50 border border-red-200">
+                    <p className="text-sm text-red-700">{permsListError}</p>
+                    <button
+                      type="button"
+                      onClick={async () => { setPermsListError(null); setPermsListLoading(true); try { await fetchPermissionsList(); } catch (e) { setPermsListError(getErrorMessage(e, 'Failed to load permissions.')); } finally { setPermsListLoading(false); } }}
+                      className="mt-2 text-xs font-medium text-red-600 hover:underline"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                ) : userPermissions.length === 0 ? (
                   <p className="mt-4 text-sm text-gray-400 italic">
                     No permissions yet. Add a role above and they will appear here automatically.
                   </p>
@@ -433,7 +488,11 @@ export default function UserAccess() {
                     className="block w-full rounded-md border-gray-300 shadow-sm focus:ring-ring focus:border-ring sm:text-sm"
                     title="Hold Ctrl (or Cmd) to pick more than one permission"
                   >
-                    {permOptions.length === 0 ? (
+                    {permsListLoading ? (
+                      <option value="" disabled>Loading permissions...</option>
+                    ) : permsListError ? (
+                      <option value="" disabled>Failed to load permissions — check permissions</option>
+                    ) : permOptions.length === 0 ? (
                       <option value="" disabled>
                         All available permissions are already granted
                       </option>

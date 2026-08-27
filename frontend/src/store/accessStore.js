@@ -8,7 +8,7 @@ export const useAccessStore = create((set) => ({
   error: null,
 
   fetchUserRoles: async (userId) => {
-    set({ loading: true, error: null });
+    set({ error: null });
     try {
       const response = await api.get(`/users/${userId}/roles`);
       set({ userRoles: response.data, loading: false });
@@ -20,7 +20,7 @@ export const useAccessStore = create((set) => ({
   },
 
   assignRole: async (userId, roles) => {
-    set({ loading: true, error: null });
+    set({ error: null });
     try {
       const response = await api.post(`/users/${userId}/roles`, { roles });
       set({ userRoles: response.data, loading: false });
@@ -32,7 +32,7 @@ export const useAccessStore = create((set) => ({
   },
 
   removeRole: async (userId, roleId) => {
-    set({ loading: true, error: null });
+    set({ error: null });
     try {
       await api.delete(`/users/${userId}/roles/${roleId}`);
       let remaining = [];
@@ -48,7 +48,7 @@ export const useAccessStore = create((set) => ({
   },
 
   fetchUserPermissions: async (userId) => {
-    set({ loading: true, error: null });
+    set({ error: null });
     try {
       const response = await api.get(`/users/${userId}/permissions`);
       set({ userPermissions: response.data, loading: false });
@@ -60,7 +60,7 @@ export const useAccessStore = create((set) => ({
   },
 
   assignPermissions: async (userId, permissions) => {
-    set({ loading: true, error: null });
+    set({ error: null });
     try {
       const response = await api.post(`/users/${userId}/permissions`, { permissions });
       set({ userPermissions: response.data, loading: false });
@@ -72,7 +72,7 @@ export const useAccessStore = create((set) => ({
   },
 
   removePermission: async (userId, permissionId) => {
-    set({ loading: true, error: null });
+    set({ error: null });
     try {
       await api.delete(`/users/${userId}/permissions/${permissionId}`);
       let remaining = [];

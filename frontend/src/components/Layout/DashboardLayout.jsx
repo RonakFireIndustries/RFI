@@ -191,10 +191,15 @@ export default function DashboardLayout() {
     return () => clearTimeout(debounceTimer);
   }, [searchQuery]);
 
-  const canAccess = (itemRoles) => {
-    if (!itemRoles) return true;
-    if (roles.includes('Admin') || itemRoles.includes('*')) return true;
-    return roles.some(r => itemRoles.includes(r));
+  const canAccess = (itemRoles, itemPermissions) => {
+    if (roles.includes('Admin')) return true;
+    if (itemRoles?.includes('*')) return true;
+    const roleMatch = roles.some(r => itemRoles?.includes(r));
+    if (roleMatch) return true;
+    if (itemPermissions?.length > 0) {
+      return permissions.some(p => itemPermissions.includes(p));
+    }
+    return false;
   };
 
     return (
@@ -241,7 +246,7 @@ export default function DashboardLayout() {
         <div className="flex-1 py-4 overflow-y-auto">
           <div className="px-3 space-y-6">
             {menuCategories.map((category, index) => {
-              const visibleItems = category.items.filter((item) => canAccess(item.roles));
+              const visibleItems = category.items.filter((item) => canAccess(item.roles, item.permissions));
 
               if (visibleItems.length === 0) return null;
 
