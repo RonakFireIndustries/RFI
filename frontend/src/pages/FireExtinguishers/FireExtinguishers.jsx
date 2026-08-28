@@ -26,6 +26,8 @@ export default function FireExtinguishers() {
   const [addOpen, setAddOpen] = useState(false);
   const [formError, setFormError] = useState('');
   const [buildingId, setBuildingId] = useState('');
+  const [buildingText, setBuildingText] = useState('');
+  const [showBuildingSugg, setShowBuildingSugg] = useState(false);
   const [count, setCount] = useState('');
   const [rows, setRows] = useState([]);
 
@@ -69,9 +71,26 @@ export default function FireExtinguishers() {
   const openAdd = () => {
     setFormError('');
     setBuildingId('');
+    setBuildingText('');
+    setShowBuildingSugg(false);
     setCount('');
     setRows([]);
     setAddOpen(true);
+  };
+
+  const buildingSuggestions = useMemo(() => {
+    const q = buildingText.trim().toLowerCase();
+    if (!q) return [];
+    return (buildings || [])
+      .filter((b) => (b.name || '').toLowerCase().includes(q))
+      .slice(0, 8);
+  }, [buildingText, buildings]);
+
+  const selectBuilding = (b) => {
+    setBuildingText(b.name);
+    setBuildingId(b.id);
+    setShowBuildingSugg(false);
+    setFormError('');
   };
 
   const handleSubmit = async (e) => {
@@ -79,7 +98,7 @@ export default function FireExtinguishers() {
     setFormError('');
 
     if (!buildingId) {
-      setFormError('Please select a building.');
+      setFormError('Please type a building name and pick it from the suggestions.');
       return;
     }
     const numCount = parseInt(count || '0', 10) || 0;
@@ -318,18 +337,45 @@ export default function FireExtinguishers() {
                 </div>
               )}
 
-              <div>
+              <div className="relative">
                 <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Building</label>
-                <select
-                  value={buildingId}
-                  onChange={(e) => setBuildingId(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select Building</option>
-                  {(buildings || []).map((b) => (
-                    <option key={b.id} value={b.id}>{b.name}</option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <Building2 className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    value={buildingText}
+                    onChange={(e) => {
+                      setBuildingText(e.target.value);
+                      setBuildingId('');
+                      setShowBuildingSugg(true);
+                      setFormError('');
+                    }}
+                    onFocus={() => setShowBuildingSugg(true)}
+                    onBlur={() => setTimeout(() => setShowBuildingSugg(false), 150)}
+                    placeholder="Type a building name..."
+                    className="w-full pl-10 pr-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  {buildingId && (
+                    <span className="absolute right-3 top-2.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-600">
+                      ✓ selected
+                    </span>
+                  )}
+                </div>
+                {showBuildingSugg && buildingSuggestions.length > 0 && (
+                  <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-56 overflow-y-auto">
+                    {buildingSuggestions.map((b) => (
+                      <button
+                        key={b.id}
+                        type="button"
+                        onMouseDown={() => selectBuilding(b)}
+                        className="w-full text-left px-3 py-2 text-sm text-gray-800 hover:bg-blue-50 flex items-center gap-2"
+                      >
+                        <Building2 className="w-4 h-4 text-gray-400" />
+                        {b.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 {buildingsLoading && <p className="text-xs text-gray-400 mt-1">Loading buildings...</p>}
               </div>
 
