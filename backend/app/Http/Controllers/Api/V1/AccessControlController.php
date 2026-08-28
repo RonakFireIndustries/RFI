@@ -120,8 +120,13 @@ class AccessControlController extends Controller
 
         $names = $request->input('permissions', []);
 
-        DB::transaction(function () use ($user, $names) {
-            $user->syncPermissions($names);
+        // Only sync permissions that actually exist, so a stale/missing name
+        // (e.g. config drift between the UI build and the server) doesn't throw
+        // a PermissionDoesNotExist 500. Unknown names are silently ignored.
+        $validNames = Permission::whereIn('name', $names)->pluck('name')->all();
+
+        DB::transaction(function () use ($user, $validNames) {
+            $user->syncPermissions($validNames);
         });
 
         return response()->json([
