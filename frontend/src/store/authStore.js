@@ -20,7 +20,7 @@ export const useAuthStore = create(
           const response = await authService.getUser();
           const u = response.data.user;
           const roles = (u.roles || []).map(r => typeof r === 'string' ? r : r.name);
-          const permissions = (u.permissions || []).map(p => typeof p === 'string' ? p : p.name);
+          const permissions = (u.access_permissions || u.permissions || []).map(p => typeof p === 'string' ? p : p.name);
           set({ user: u, roles, permissions, isAuthenticated: true });
           return true;
         } catch (e) {

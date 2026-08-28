@@ -43,6 +43,15 @@ class User extends Authenticatable
     ];
 
     /**
+     * Attributes appended to the model's array/JSON form.
+     *
+     * @var list<string>
+     */
+    protected $appends = [
+        'access_permissions',
+    ];
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -58,6 +67,16 @@ class User extends Authenticatable
     public function employee(): HasOne
     {
         return $this->hasOne(Employee::class);
+    }
+
+    /**
+     * The user's canonical permission names as a plain array of strings.
+     * Serialized as `access_permissions` (avoids clashing with Spatie's
+     * `permissions` relation).
+     */
+    public function getAccessPermissionsAttribute(): array
+    {
+        return \App\Support\Access::permissionNamesFor($this);
     }
 
     public function buildings(): HasMany

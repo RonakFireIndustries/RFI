@@ -31,7 +31,7 @@ export default function Login() {
       if (response.data.token && response.data.user) {
         const user = response.data.user;
         const roles = (user.roles || []).map(r => typeof r === 'string' ? r : r.name);
-        const permissions = (user.permissions || []).map(p => typeof p === 'string' ? p : p.name);
+        const permissions = (user.access_permissions || user.permissions || []).map(p => typeof p === 'string' ? p : p.name);
         setAuth(user, response.data.token, roles, permissions);
 
         if (rememberMe) {
