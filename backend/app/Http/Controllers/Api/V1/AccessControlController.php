@@ -28,7 +28,7 @@ class AccessControlController extends Controller
                 $list[] = [
                     'module' => $module,
                     'label' => $def['label'],
-                    'actions' => array_map(function ($action) use ($labels) {
+                    'actions' => array_map(function ($action) use ($labels, $module) {
                         return [
                             'key' => $action,
                             'label' => $labels[$action] ?? ucfirst($action),
