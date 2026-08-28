@@ -13,6 +13,24 @@ export const useAuthStore = create(
       setAuth: (user, token, roles = [], permissions = []) => {
         set({ user, token, roles, permissions, isAuthenticated: true });
       },
+
+      refreshUser: async () => {
+        const { authService } = await import('../services/authService');
+        try {
+          const response = await authService.getUser();
+          const u = response.data.user;
+          const roles = (u.roles || []).map(r => typeof r === 'string' ? r : r.name);
+          const permissions = (u.permissions || []).map(p => typeof p === 'string' ? p : p.name);
+          set({ user: u, roles, permissions, isAuthenticated: true });
+          return true;
+        } catch (e) {
+          if (e?.response?.status === 401) {
+            set({ user: null, token: null, roles: [], permissions: [], isAuthenticated: false });
+            try { localStorage.removeItem('auth-storage'); } catch (_) {}
+          }
+          return false;
+        }
+      },
       
       logout: async () => {
         try {

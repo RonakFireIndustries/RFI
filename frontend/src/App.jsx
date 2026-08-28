@@ -12,13 +12,21 @@ import DashboardLayout from './components/Layout/DashboardLayout';
 const ProtectedRoute = ({ children }) => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const token = useAuthStore((state) => state.token);
+  const refreshUser = useAuthStore((state) => state.refreshUser);
 
   const storedAuth = typeof window !== 'undefined'
     ? JSON.parse(localStorage.getItem('auth-storage') || 'null')
     : null;
   const hasPersistedToken = Boolean(token || storedAuth?.state?.token);
+  const [refreshing, setRefreshing] = useState(hasPersistedToken);
 
-  if (!isAuthenticated && hasPersistedToken) {
+  useEffect(() => {
+    if (hasPersistedToken && refreshing) {
+      refreshUser().finally(() => setRefreshing(false));
+    }
+  }, [hasPersistedToken, refreshing, refreshUser]);
+
+  if (hasPersistedToken && refreshing) {
     return null;
   }
 
