@@ -22,11 +22,7 @@ class FireExtinguisherController extends Controller
 
         $query = FireSystem::extinguishers()->with('building:id,name');
 
-        $routeBuilding = $request->route('building');
-        if ($routeBuilding) {
-            $routeBuildingId = is_object($routeBuilding) ? $routeBuilding->id : (int) $routeBuilding;
-            $query->where('building_id', $routeBuildingId);
-        } elseif ($request->filled('building_id')) {
+        if ($request->filled('building_id')) {
             $query->where('building_id', $request->integer('building_id'));
         }
 
@@ -50,21 +46,28 @@ class FireExtinguisherController extends Controller
     }
 
     /**
-     * Bulk-create extinguishers for a building.
+     * Bulk-create extinguishers for a building (identified by name).
      *
-     * Body: { count, items: [{ label, installation_date, next_refill_date }] }
+     * Body: { building_name, count, items: [{ label, installation_date, next_refill_date }] }
      */
-    public function store(Request $request, Building $building): JsonResponse
+    public function store(Request $request): JsonResponse
     {
         $this->authorize('extinguishers.create');
 
         $validated = $request->validate([
+            'building_name' => ['required', 'string', 'max:255'],
             'count' => ['required', 'integer', 'min:1', 'max:500'],
             'items' => ['nullable', 'array'],
             'items.*.label' => ['nullable', 'string', 'max:255'],
+            'items.*.capacity' => ['nullable', 'integer', 'min:0'],
             'items.*.installation_date' => ['nullable', 'date'],
             'items.*.next_refill_date' => ['nullable', 'date'],
         ]);
+
+        $building = Building::firstOrCreate(
+            ['name' => trim($validated['building_name'])],
+            ['name' => trim($validated['building_name'])]
+        );
 
         $count = (int) $validated['count'];
         $items = $validated['items'] ?? [];
@@ -72,35 +75,33 @@ class FireExtinguisherController extends Controller
         $created = [];
         for ($i = 0; $i < $count; $i++) {
             $row = $items[$i] ?? [];
-            $seq = $i + 1;
             $created[] = $building->fireSystems()->create([
                 'system_type' => FireSystem::TYPE_EXTINGUISHER,
                 'sub_type' => 'Fire Extinguisher',
                 'quantity' => 1,
+                'capacity' => $row['capacity'] ?? null,
                 'label' => $row['label'] ?? null,
                 'installation_date' => $row['installation_date'] ?? null,
                 'next_refill_date' => $row['next_refill_date'] ?? null,
             ]);
         }
 
-        return $this->success("{$count} extinguisher(s) added", [
+        return $this->success("{$count} extinguisher(s) added to {$building->name}", [
+            'building' => ['id' => $building->id, 'name' => $building->name],
             'extinguishers' => array_map(fn ($e) => $this->present($e), $created),
         ], [], 201);
     }
 
     /**
-     * Update a single extinguisher (label / dates / quantity).
+     * Update a single extinguisher (label / dates).
      */
-    public function update(Request $request, Building $building, FireSystem $fireSystem): JsonResponse
+    public function update(Request $request, FireSystem $fireSystem): JsonResponse
     {
         $this->authorize('extinguishers.update');
 
-        if ($fireSystem->building_id !== $building->id) {
-            return $this->error('Extinguisher does not belong to this building.', [], 422);
-        }
-
         $validated = $request->validate([
             'label' => ['nullable', 'string', 'max:255'],
+            'capacity' => ['nullable', 'integer', 'min:0'],
             'installation_date' => ['nullable', 'date'],
             'next_refill_date' => ['nullable', 'date'],
         ]);
@@ -110,6 +111,7 @@ class FireExtinguisherController extends Controller
             'sub_type' => 'Fire Extinguisher',
             'quantity' => 1,
             'label' => $validated['label'] ?? $fireSystem->label,
+            'capacity' => $validated['capacity'] ?? $fireSystem->capacity,
             'installation_date' => !empty($validated['installation_date']) ? $validated['installation_date'] : null,
             'next_refill_date' => !empty($validated['next_refill_date']) ? $validated['next_refill_date'] : null,
         ]);
@@ -122,13 +124,9 @@ class FireExtinguisherController extends Controller
     /**
      * Delete a single extinguisher.
      */
-    public function destroy(Building $building, FireSystem $fireSystem): JsonResponse
+    public function destroy(FireSystem $fireSystem): JsonResponse
     {
         $this->authorize('extinguishers.delete');
-
-        if ($fireSystem->building_id !== $building->id) {
-            return $this->error('Extinguisher does not belong to this building.', [], 422);
-        }
 
         $fireSystem->delete();
 
@@ -145,6 +143,7 @@ class FireExtinguisherController extends Controller
                 'name' => $e->building?->name ?? null,
             ],
             'label' => $e->label,
+            'capacity' => $e->capacity !== null ? (int) $e->capacity : null,
             'installation_date' => $e->installation_date?->toDateString(),
             'next_refill_date' => $e->next_refill_date?->toDateString(),
             'quantity' => $e->quantity,

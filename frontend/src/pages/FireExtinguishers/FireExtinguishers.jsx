@@ -4,7 +4,6 @@ import {
   Info, X, AlertTriangle, CheckCircle2, ShieldAlert,
 } from 'lucide-react';
 import api from '../../services/api';
-import { useBuildingStore } from '../../store/buildingStore';
 
 const iso = (d) => {
   if (!d) return '';
@@ -15,8 +14,6 @@ const iso = (d) => {
 const isValidDate = (d) => d && !isNaN(new Date(d).getTime());
 
 export default function FireExtinguishers() {
-  const { items: buildings, fetchItems: fetchBuildings, loading: buildingsLoading } = useBuildingStore();
-
   const [extinguishers, setExtinguishers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
@@ -25,15 +22,9 @@ export default function FireExtinguishers() {
   // Add flow
   const [addOpen, setAddOpen] = useState(false);
   const [formError, setFormError] = useState('');
-  const [buildingId, setBuildingId] = useState('');
-  const [buildingText, setBuildingText] = useState('');
-  const [showBuildingSugg, setShowBuildingSugg] = useState(false);
+  const [buildingName, setBuildingName] = useState('');
   const [count, setCount] = useState('');
   const [rows, setRows] = useState([]);
-
-  useEffect(() => {
-    fetchBuildings({ per_page: 1000 });
-  }, [fetchBuildings]);
 
   useEffect(() => {
     loadExtinguishers();
@@ -59,6 +50,7 @@ export default function FireExtinguishers() {
     setCount(value);
     setRows(Array.from({ length: num }, (_, i) => ({
       label: `Extinguisher ${i + 1}`,
+      capacity: '',
       installation_date: '',
       next_refill_date: '',
     })));
@@ -70,35 +62,18 @@ export default function FireExtinguishers() {
 
   const openAdd = () => {
     setFormError('');
-    setBuildingId('');
-    setBuildingText('');
-    setShowBuildingSugg(false);
+    setBuildingName('');
     setCount('');
     setRows([]);
     setAddOpen(true);
-  };
-
-  const buildingSuggestions = useMemo(() => {
-    const q = buildingText.trim().toLowerCase();
-    if (!q) return [];
-    return (buildings || [])
-      .filter((b) => (b.name || '').toLowerCase().includes(q))
-      .slice(0, 8);
-  }, [buildingText, buildings]);
-
-  const selectBuilding = (b) => {
-    setBuildingText(b.name);
-    setBuildingId(b.id);
-    setShowBuildingSugg(false);
-    setFormError('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormError('');
 
-    if (!buildingId) {
-      setFormError('Please type a building name and pick it from the suggestions.');
+    if (!buildingName.trim()) {
+      setFormError('Please enter a building name.');
       return;
     }
     const numCount = parseInt(count || '0', 10) || 0;
@@ -109,13 +84,15 @@ export default function FireExtinguishers() {
 
     const items = rows.map((r) => {
       const item = { label: r.label };
+      if (r.capacity !== '' && r.capacity !== null && r.capacity !== undefined) item.capacity = parseInt(r.capacity, 10);
       if (isValidDate(r.installation_date)) item.installation_date = iso(r.installation_date);
       if (isValidDate(r.next_refill_date)) item.next_refill_date = iso(r.next_refill_date);
       return item;
     });
 
     try {
-      await api.post(`/buildings/${buildingId}/extinguishers`, {
+      await api.post('/extinguishers', {
+        building_name: buildingName.trim(),
         count: numCount,
         items,
       });
@@ -130,7 +107,7 @@ export default function FireExtinguishers() {
   const handleDelete = async (ext) => {
     if (!window.confirm('Delete this extinguisher?')) return;
     try {
-      await api.delete(`/buildings/${ext.building_id}/extinguishers/${ext.id}`);
+      await api.delete(`/extinguishers/${ext.id}`);
       loadExtinguishers();
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to delete extinguisher.');
@@ -139,8 +116,10 @@ export default function FireExtinguishers() {
 
   const handleUpdate = async (ext, key, value) => {
     try {
-      const payload = { [key]: iso(value) };
-      const res = await api.put(`/buildings/${ext.building_id}/extinguishers/${ext.id}`, payload);
+      const payload = key === 'capacity'
+        ? { [key]: value === '' ? null : parseInt(value, 10) }
+        : { [key]: iso(value) };
+      const res = await api.put(`/extinguishers/${ext.id}`, payload);
       const updated = res.data?.extinguisher ?? res.data;
       if (updated && typeof updated === 'object' && !Array.isArray(updated)) {
         setExtinguishers(prev =>
@@ -255,6 +234,7 @@ export default function FireExtinguishers() {
               <tr className="border-b border-gray-200 text-left text-xs font-bold text-gray-500 uppercase">
                 <th className="py-3 px-4">Building</th>
                 <th className="py-3 px-4">Label</th>
+                <th className="py-3 px-4">Capacity (kg)</th>
                 <th className="py-3 px-4">Installation Date</th>
                 <th className="py-3 px-4">Next Refill Date</th>
                 <th className="py-3 px-4 text-right">Status</th>
@@ -273,6 +253,15 @@ export default function FireExtinguishers() {
                       </div>
                     </td>
                     <td className="py-3 px-4 text-gray-600">{x.label || '-'}</td>
+                    <td className="py-3 px-4">
+                      <input
+                        type="number"
+                        min="0"
+                        value={x.capacity ?? ''}
+                        onChange={(e) => handleUpdate(x, 'capacity', e.target.value)}
+                        className="w-20 border border-gray-200 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
                         <CalendarDays className="w-4 h-4 text-gray-400" />
@@ -337,46 +326,21 @@ export default function FireExtinguishers() {
                 </div>
               )}
 
-              <div className="relative">
-                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Building</label>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Building Name</label>
                 <div className="relative">
                   <Building2 className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                   <input
                     type="text"
-                    value={buildingText}
+                    value={buildingName}
                     onChange={(e) => {
-                      setBuildingText(e.target.value);
-                      setBuildingId('');
-                      setShowBuildingSugg(true);
+                      setBuildingName(e.target.value);
                       setFormError('');
                     }}
-                    onFocus={() => setShowBuildingSugg(true)}
-                    onBlur={() => setTimeout(() => setShowBuildingSugg(false), 150)}
-                    placeholder="Type a building name..."
+                    placeholder="Enter building name..."
                     className="w-full pl-10 pr-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                  {buildingId && (
-                    <span className="absolute right-3 top-2.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-600">
-                      ✓ selected
-                    </span>
-                  )}
                 </div>
-                {showBuildingSugg && buildingSuggestions.length > 0 && (
-                  <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-56 overflow-y-auto">
-                    {buildingSuggestions.map((b) => (
-                      <button
-                        key={b.id}
-                        type="button"
-                        onMouseDown={() => selectBuilding(b)}
-                        className="w-full text-left px-3 py-2 text-sm text-gray-800 hover:bg-blue-50 flex items-center gap-2"
-                      >
-                        <Building2 className="w-4 h-4 text-gray-400" />
-                        {b.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {buildingsLoading && <p className="text-xs text-gray-400 mt-1">Loading buildings...</p>}
               </div>
 
               <div>
@@ -397,13 +361,24 @@ export default function FireExtinguishers() {
                 <div className="bg-gray-50/50 p-4 rounded-xl border border-gray-100 space-y-3">
                   <h3 className="text-sm font-bold text-gray-800">Extinguisher Details</h3>
                   {rows.map((row, i) => (
-                    <div key={i} className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end bg-white p-3 rounded-lg border border-gray-100">
+                    <div key={i} className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end bg-white p-3 rounded-lg border border-gray-100">
                       <div>
                         <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">#{i + 1} Label</label>
                         <input
                           type="text"
                           value={row.label}
                           onChange={(e) => updateRow(i, 'label', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Capacity (kg)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={row.capacity}
+                          onChange={(e) => updateRow(i, 'capacity', e.target.value)}
+                          placeholder="e.g. 2"
                           className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
