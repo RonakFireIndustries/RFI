@@ -15,7 +15,7 @@ class SalesDocumentController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $this->authorize('building.view');
+        $this->authorize('buildings.view');
 
         $query = SalesDocument::with(['building', 'uploader']);
 
@@ -48,7 +48,7 @@ class SalesDocumentController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $this->authorize('building.edit');
+        $this->authorize('buildings.update');
 
         $validated = $request->validate([
             'file' => ['required', 'file', 'max:20480'],
@@ -85,14 +85,14 @@ class SalesDocumentController extends Controller
 
     public function show(SalesDocument $salesDocument): JsonResponse
     {
-        $this->authorize('building.view');
+        $this->authorize('buildings.view');
         $salesDocument->load(['building', 'siteVisit', 'opportunity', 'uploader', 'versions', 'parentDocument']);
         return $this->success('Document retrieved', ['document' => $salesDocument]);
     }
 
     public function download(SalesDocument $salesDocument): \Symfony\Component\HttpFoundation\StreamedResponse
     {
-        $this->authorize('building.view');
+        $this->authorize('buildings.view');
 
         return Storage::disk('public')->download(
             $salesDocument->file_path,
@@ -102,7 +102,7 @@ class SalesDocumentController extends Controller
 
     public function destroy(SalesDocument $salesDocument): JsonResponse
     {
-        $this->authorize('building.delete');
+        $this->authorize('buildings.delete');
 
         Storage::disk('public')->delete($salesDocument->file_path);
         $salesDocument->delete();

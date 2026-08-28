@@ -11,7 +11,7 @@ class InventoryTransferController extends Controller
 {
     public function index(Request $request)
     {
-        $this->authorize('inventory.transfers.view');
+        $this->authorize('stock-transfers.view');
         $user = $request->user();
         $query = InventoryTransfer::with(['product', 'requester', 'approver']);
 
@@ -20,7 +20,7 @@ class InventoryTransferController extends Controller
 
     public function store(Request $request)
     {
-        $this->authorize('inventory.transfers.create');
+        $this->authorize('stock-transfers.create');
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1',
@@ -40,7 +40,7 @@ class InventoryTransferController extends Controller
 
     public function updateStatus(Request $request, InventoryTransfer $transfer)
     {
-        $this->authorize('inventory.transfers.approve');
+        $this->authorize('stock-transfers.approve');
         $request->validate([
             'status' => 'required|in:approved,rejected,completed'
         ]);

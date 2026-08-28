@@ -14,7 +14,7 @@ class ReportsController extends Controller
 {
     public function salesReport(Request $request)
     {
-        $this->authorize('view reports');
+        $this->authorize('reports.view');
 
         $startDate = $request->query('start_date') ? Carbon::parse($request->query('start_date')) : now()->startOfMonth();
         $endDate = $request->query('end_date') ? Carbon::parse($request->query('end_date')) : now()->endOfMonth();
@@ -39,7 +39,7 @@ class ReportsController extends Controller
 
     public function paymentReport(Request $request)
     {
-        $this->authorize('view reports');
+        $this->authorize('reports.view');
 
         $startDate = $request->query('start_date') ? Carbon::parse($request->query('start_date')) : now()->startOfMonth();
         $endDate = $request->query('end_date') ? Carbon::parse($request->query('end_date')) : now()->endOfMonth();
@@ -64,7 +64,7 @@ class ReportsController extends Controller
 
     public function attendanceReport(Request $request)
     {
-        $this->authorize('view reports');
+        $this->authorize('reports.view');
 
         $month = $request->query('month', now()->month);
         $year = $request->query('year', now()->year);
@@ -95,7 +95,7 @@ class ReportsController extends Controller
 
     public function leaveReport(Request $request)
     {
-        $this->authorize('view reports');
+        $this->authorize('reports.view');
 
         $month = $request->query('month');
         $year = $request->query('year');
@@ -127,7 +127,7 @@ class ReportsController extends Controller
 
     public function employeeReport(Request $request)
     {
-        $this->authorize('view reports');
+        $this->authorize('reports.view');
 
         $employees = Employee::with('user', 'department', 'designation')
             ->where('status', $request->query('status', 'Active'))

@@ -15,7 +15,7 @@ class ReportController extends Controller
 
     public function buildingReport(Request $request, Building $building): \Symfony\Component\HttpFoundation\StreamedResponse|JsonResponse
     {
-        $this->authorize('building.view');
+        $this->authorize('buildings.view');
 
         $building->load([
             'wings', 'statuses', 'fireSystems', 'contacts',
@@ -37,7 +37,7 @@ class ReportController extends Controller
 
     public function opportunityReport(Request $request): JsonResponse
     {
-        $this->authorize('building.view');
+        $this->authorize('buildings.view');
 
         $query = \App\Models\Opportunity::with(['building', 'user', 'workTypes']);
 

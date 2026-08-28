@@ -16,7 +16,7 @@ class TransactionLedgerController extends Controller
 
     public function index(Request $request)
     {
-        $this->authorize('inventory.transactions.view');
+        $this->authorize('stock-transactions.view');
 
         $query = TransactionLedger::with(['product', 'locationable', 'toLocationable', 'creator']);
 
@@ -47,7 +47,7 @@ class TransactionLedgerController extends Controller
 
     public function store(StoreTransactionRequest $request)
     {
-        $this->authorize('inventory.transactions.create');
+        $this->authorize('stock-transactions.create');
 
         $data = $request->validated();
 
@@ -76,7 +76,7 @@ class TransactionLedgerController extends Controller
 
     public function show(TransactionLedger $transactionLedger)
     {
-        $this->authorize('inventory.transactions.view');
+        $this->authorize('stock-transactions.view');
 
         return new TransactionLedgerResource(
             $transactionLedger->load(['product', 'locationable', 'toLocationable', 'creator'])
@@ -85,7 +85,7 @@ class TransactionLedgerController extends Controller
 
     public function summary(Request $request)
     {
-        $this->authorize('inventory.transactions.view');
+        $this->authorize('stock-transactions.view');
 
         $query = TransactionLedger::query();
 

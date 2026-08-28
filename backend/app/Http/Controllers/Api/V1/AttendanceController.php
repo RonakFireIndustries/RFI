@@ -71,7 +71,7 @@ class AttendanceController extends Controller
 
     public function update(UpdateAttendanceRequest $request, Attendance $attendance): JsonResponse
     {
-        $this->authorize('attendance.edit');
+        $this->authorize('attendance.update');
 
         $attendance = $this->attendanceService->updateAttendance($attendance, $request->validated());
 

@@ -21,7 +21,7 @@ class PayrollController extends Controller
 
     public function index(Request $request)
     {
-        $this->authorize('view_payroll');
+        $this->authorize('payroll.view');
 
         $query = Payroll::with(['employee', 'payrollPeriod', 'payslip']);
 
@@ -55,14 +55,14 @@ class PayrollController extends Controller
 
     public function show(Payroll $payroll)
     {
-        $this->authorize('view_payroll');
+        $this->authorize('payroll.view');
 
         return response()->json($payroll->load(['employee.department', 'employee.designation', 'payrollPeriod', 'payslip']));
     }
 
     public function generate(Request $request)
     {
-        $this->authorize('manage_payroll');
+        $this->authorize('payroll.manage');
 
         $request->validate([
             'payroll_period_id' => 'required|exists:payroll_periods,id',
@@ -131,7 +131,7 @@ class PayrollController extends Controller
 
     public function regenerate(Request $request)
     {
-        $this->authorize('manage_payroll');
+        $this->authorize('payroll.manage');
 
         $request->validate([
             'payroll_period_id' => 'required|exists:payroll_periods,id',
@@ -186,7 +186,7 @@ class PayrollController extends Controller
 
     public function approve($payroll)
     {
-        $this->authorize('manage_payroll');
+        $this->authorize('payroll.manage');
 
         $payroll = Payroll::findOrFail($payroll);
         $payroll->status = 'Approved';
@@ -198,7 +198,7 @@ class PayrollController extends Controller
 
     public function lock($payroll)
     {
-        $this->authorize('manage_payroll');
+        $this->authorize('payroll.manage');
 
         $payroll = Payroll::findOrFail($payroll);
         $payroll->status = 'Locked';
@@ -209,7 +209,7 @@ class PayrollController extends Controller
 
     public function unlock($payroll)
     {
-        $this->authorize('manage_payroll');
+        $this->authorize('payroll.manage');
 
         $payroll = Payroll::findOrFail($payroll);
 
@@ -225,7 +225,7 @@ class PayrollController extends Controller
 
     public function destroy($payroll)
     {
-        $this->authorize('manage_payroll');
+        $this->authorize('payroll.manage');
 
         $payroll = Payroll::findOrFail($payroll);
         $payroll->delete();

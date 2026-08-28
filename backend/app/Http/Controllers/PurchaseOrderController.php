@@ -13,14 +13,14 @@ class PurchaseOrderController extends Controller
 {
     public function index()
     {
-        $this->authorize('view_purchase_orders');
+        $this->authorize('purchase-orders.view');
 
         return PurchaseOrder::with('items')->get();
     }
 
     public function store(Request $request)
     {
-        $this->authorize('create_purchase_orders');
+        $this->authorize('purchase-orders.create');
 
         $request->validate([
             'supplier_id' => 'required|exists:suppliers,id',
@@ -86,7 +86,7 @@ class PurchaseOrderController extends Controller
 
     public function approve(Request $request, $id)
     {
-        $this->authorize('view_purchase_orders');
+        $this->authorize('purchase-orders.view');
 
         $po = PurchaseOrder::findOrFail($id);
 
@@ -103,7 +103,7 @@ class PurchaseOrderController extends Controller
 
     public function reject(Request $request, $id)
     {
-        $this->authorize('view_purchase_orders');
+        $this->authorize('purchase-orders.view');
 
         $po = PurchaseOrder::findOrFail($id);
 
@@ -123,7 +123,7 @@ class PurchaseOrderController extends Controller
      */
     public function confirmReceipt(Request $request, $id)
     {
-        $this->authorize('manage_inventory');
+        $this->authorize('inventory.manage');
 
         $po = PurchaseOrder::with('items')->findOrFail($id);
 
@@ -185,7 +185,7 @@ class PurchaseOrderController extends Controller
 
     public function show($id)
     {
-        $this->authorize('view_purchase_orders');
+        $this->authorize('purchase-orders.view');
 
         return PurchaseOrder::with(['items.product', 'supplier', 'site', 'payments'])
             ->withSum('payments as paid_amount', 'amount')
@@ -194,7 +194,7 @@ class PurchaseOrderController extends Controller
 
     public function update(Request $request, $id)
     {
-        $this->authorize('create_purchase_orders');
+        $this->authorize('purchase-orders.create');
 
         $po = PurchaseOrder::findOrFail($id);
 
@@ -262,7 +262,7 @@ class PurchaseOrderController extends Controller
 
     public function destroy($id)
     {
-        $this->authorize('manage_inventory');
+        $this->authorize('inventory.manage');
 
         $po = PurchaseOrder::findOrFail($id);
         $po->items()->delete();

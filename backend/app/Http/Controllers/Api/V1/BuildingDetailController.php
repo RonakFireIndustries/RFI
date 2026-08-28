@@ -22,14 +22,14 @@ class BuildingDetailController extends Controller
 
     public function wings(Building $building): JsonResponse
     {
-        $this->authorize('building.view');
+        $this->authorize('buildings.view');
         $wings = $building->wings()->get();
         return $this->success('Wings retrieved', ['wings' => $wings]);
     }
 
     public function storeWing(Request $request, Building $building): JsonResponse
     {
-        $this->authorize('building.edit');
+        $this->authorize('buildings.update');
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -45,7 +45,7 @@ class BuildingDetailController extends Controller
 
     public function updateWing(Request $request, Building $building, BuildingWing $wing): JsonResponse
     {
-        $this->authorize('building.edit');
+        $this->authorize('buildings.update');
 
         $validated = $request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
@@ -61,21 +61,21 @@ class BuildingDetailController extends Controller
 
     public function destroyWing(Building $building, BuildingWing $wing): JsonResponse
     {
-        $this->authorize('building.delete');
+        $this->authorize('buildings.delete');
         $wing->delete();
         return $this->success('Wing deleted');
     }
 
     public function floors(Building $building): JsonResponse
     {
-        $this->authorize('building.view');
+        $this->authorize('buildings.view');
         $floors = $building->floors()->with('wing')->get();
         return $this->success('Floors retrieved', ['floors' => $floors]);
     }
 
     public function storeFloor(Request $request, Building $building): JsonResponse
     {
-        $this->authorize('building.edit');
+        $this->authorize('buildings.update');
 
         $validated = $request->validate([
             'wing_id' => ['required', 'exists:building_wings,id'],
@@ -90,7 +90,7 @@ class BuildingDetailController extends Controller
 
     public function updateFloor(Request $request, Building $building, BuildingFloor $floor): JsonResponse
     {
-        $this->authorize('building.edit');
+        $this->authorize('buildings.update');
 
         $validated = $request->validate([
             'wing_id' => ['sometimes', 'exists:building_wings,id'],
@@ -105,21 +105,21 @@ class BuildingDetailController extends Controller
 
     public function destroyFloor(Building $building, BuildingFloor $floor): JsonResponse
     {
-        $this->authorize('building.delete');
+        $this->authorize('buildings.delete');
         $floor->delete();
         return $this->success('Floor deleted');
     }
 
     public function flats(Building $building): JsonResponse
     {
-        $this->authorize('building.view');
+        $this->authorize('buildings.view');
         $flats = $building->flats()->with(['wing', 'floor'])->get();
         return $this->success('Flats retrieved', ['flats' => $flats]);
     }
 
     public function storeFlat(Request $request, Building $building): JsonResponse
     {
-        $this->authorize('building.edit');
+        $this->authorize('buildings.update');
 
         $validated = $request->validate([
             'wing_id' => ['required', 'exists:building_wings,id'],
@@ -136,7 +136,7 @@ class BuildingDetailController extends Controller
 
     public function updateFlat(Request $request, Building $building, BuildingFlat $flat): JsonResponse
     {
-        $this->authorize('building.edit');
+        $this->authorize('buildings.update');
 
         $validated = $request->validate([
             'wing_id' => ['sometimes', 'exists:building_wings,id'],
@@ -153,21 +153,21 @@ class BuildingDetailController extends Controller
 
     public function destroyFlat(Building $building, BuildingFlat $flat): JsonResponse
     {
-        $this->authorize('building.delete');
+        $this->authorize('buildings.delete');
         $flat->delete();
         return $this->success('Flat deleted');
     }
 
     public function fireSystems(Building $building): JsonResponse
     {
-        $this->authorize('building.view');
+        $this->authorize('buildings.view');
         $systems = $building->fireSystems()->get();
         return $this->success('Fire systems retrieved', ['fire_systems' => $systems]);
     }
 
     public function storeFireSystem(Request $request, Building $building): JsonResponse
     {
-        $this->authorize('building.edit');
+        $this->authorize('buildings.update');
 
         $validated = $request->validate([
             'system_type' => ['required', 'string', 'max:255'],
@@ -185,7 +185,7 @@ class BuildingDetailController extends Controller
 
     public function updateFireSystem(Request $request, Building $building, FireSystem $fireSystem): JsonResponse
     {
-        $this->authorize('building.edit');
+        $this->authorize('buildings.update');
 
         $validated = $request->validate([
             'system_type' => ['sometimes', 'string', 'max:255'],
@@ -203,21 +203,21 @@ class BuildingDetailController extends Controller
 
     public function destroyFireSystem(Building $building, FireSystem $fireSystem): JsonResponse
     {
-        $this->authorize('building.delete');
+        $this->authorize('buildings.delete');
         $fireSystem->delete();
         return $this->success('Fire system deleted');
     }
 
     public function contacts(Building $building): JsonResponse
     {
-        $this->authorize('building.view');
+        $this->authorize('buildings.view');
         $contacts = $building->contacts()->get();
         return $this->success('Contacts retrieved', ['contacts' => $contacts]);
     }
 
     public function storeContact(Request $request, Building $building): JsonResponse
     {
-        $this->authorize('building.edit');
+        $this->authorize('buildings.update');
 
         $validated = $request->validate([
             'full_name' => ['required', 'string', 'max:255'],
@@ -235,7 +235,7 @@ class BuildingDetailController extends Controller
 
     public function updateContact(Request $request, Building $building, BuildingContact $contact): JsonResponse
     {
-        $this->authorize('building.edit');
+        $this->authorize('buildings.update');
 
         $validated = $request->validate([
             'full_name' => ['sometimes', 'string', 'max:255'],
@@ -253,21 +253,21 @@ class BuildingDetailController extends Controller
 
     public function destroyContact(Building $building, BuildingContact $contact): JsonResponse
     {
-        $this->authorize('building.delete');
+        $this->authorize('buildings.delete');
         $contact->delete();
         return $this->success('Contact deleted');
     }
 
     public function amcs(Building $building): JsonResponse
     {
-        $this->authorize('building.view');
+        $this->authorize('buildings.view');
         $amcs = $building->amcs()->get();
         return $this->success('AMCs retrieved', ['amcs' => $amcs]);
     }
 
     public function storeAmc(Request $request, Building $building): JsonResponse
     {
-        $this->authorize('building.edit');
+        $this->authorize('buildings.update');
 
         $validated = $request->validate([
             'vendor_name' => ['nullable', 'string', 'max:255'],
@@ -290,7 +290,7 @@ class BuildingDetailController extends Controller
 
     public function updateAmc(Request $request, Building $building, BuildingAmc $amc): JsonResponse
     {
-        $this->authorize('building.edit');
+        $this->authorize('buildings.update');
 
         $validated = $request->validate([
             'vendor_name' => ['sometimes', 'string', 'max:255'],
@@ -313,21 +313,21 @@ class BuildingDetailController extends Controller
 
     public function destroyAmc(Building $building, BuildingAmc $amc): JsonResponse
     {
-        $this->authorize('building.delete');
+        $this->authorize('buildings.delete');
         $amc->delete();
         return $this->success('AMC deleted');
     }
 
     public function statuses(): JsonResponse
     {
-        $this->authorize('building.view');
+        $this->authorize('buildings.view');
         $statuses = BuildingStatus::all();
         return $this->success('Statuses retrieved', ['statuses' => $statuses]);
     }
 
     public function assignStatus(Request $request, Building $building): JsonResponse
     {
-        $this->authorize('building.edit');
+        $this->authorize('buildings.update');
 
         $validated = $request->validate([
             'building_status_id' => ['required', 'exists:building_statuses,id'],
@@ -339,14 +339,14 @@ class BuildingDetailController extends Controller
 
     public function removeStatus(Building $building, BuildingStatus $buildingStatus): JsonResponse
     {
-        $this->authorize('building.edit');
+        $this->authorize('buildings.update');
         $building->statuses()->detach($buildingStatus->id);
         return $this->success('Status removed');
     }
 
     public function dashboardStats(): JsonResponse
     {
-        $this->authorize('building.view');
+        $this->authorize('buildings.view');
 
         $totalBuildings = Building::count();
         $totalOpportunities = \App\Models\Opportunity::where('status', 'Active')->count();
@@ -383,28 +383,28 @@ class BuildingDetailController extends Controller
 
     public function siteVisits(Building $building): JsonResponse
     {
-        $this->authorize('building.view');
+        $this->authorize('buildings.view');
         $visits = $building->siteVisits()->with('user')->latest('visit_date')->get();
         return $this->success('Site visits retrieved', ['site_visits' => $visits]);
     }
 
     public function followUps(Building $building): JsonResponse
     {
-        $this->authorize('building.view');
+        $this->authorize('buildings.view');
         $followUps = $building->followUps()->with('user')->latest('reminder_date')->get();
         return $this->success('Follow-ups retrieved', ['follow_ups' => $followUps]);
     }
 
     public function opportunities(Building $building): JsonResponse
     {
-        $this->authorize('building.view');
+        $this->authorize('buildings.view');
         $opportunities = $building->opportunities()->latest()->get();
         return $this->success('Opportunities retrieved', ['opportunities' => $opportunities]);
     }
 
     public function invoices(Building $building): JsonResponse
     {
-        $this->authorize('building.view');
+        $this->authorize('buildings.view');
 
         $invoices = collect();
 

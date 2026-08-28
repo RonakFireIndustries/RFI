@@ -58,7 +58,7 @@ class DailyReportController extends Controller
     public function store(StoreDailyReportRequest $request): JsonResponse
     {
         try {
-            $this->authorize('daily-report.create');
+            $this->authorize('daily-reports.create');
 
             $data = $request->validated();
             $data['employee_id'] = $request->user()->employee?->id
@@ -77,7 +77,7 @@ class DailyReportController extends Controller
 
     public function show(DailyReport $dailyReport): JsonResponse
     {
-        $this->authorize('daily-report.view');
+        $this->authorize('daily-reports.view');
 
         $dailyReport->load(['employee.designation', 'site', 'approver', 'histories.user']);
 
@@ -88,7 +88,7 @@ class DailyReportController extends Controller
 
     public function update(UpdateDailyReportRequest $request, DailyReport $dailyReport): JsonResponse
     {
-        $this->authorize('daily-report.edit');
+        $this->authorize('daily-reports.update');
 
         try {
             $data = $request->validated();
@@ -105,7 +105,7 @@ class DailyReportController extends Controller
 
     public function destroy(DailyReport $dailyReport): JsonResponse
     {
-        $this->authorize('daily-report.delete');
+        $this->authorize('daily-reports.delete');
 
         try {
             $this->dprService->deleteReport($dailyReport);
@@ -118,7 +118,7 @@ class DailyReportController extends Controller
 
     public function approve(DailyReport $dailyReport): JsonResponse
     {
-        $this->authorize('daily-report.approve');
+        $this->authorize('daily-reports.approve');
 
         try {
             $report = $this->dprService->approveReport($dailyReport, auth()->user());
@@ -133,7 +133,7 @@ class DailyReportController extends Controller
 
     public function reject(DailyReport $dailyReport): JsonResponse
     {
-        $this->authorize('daily-report.reject');
+        $this->authorize('daily-reports.reject');
 
         try {
             $report = $this->dprService->rejectReport($dailyReport, auth()->user());

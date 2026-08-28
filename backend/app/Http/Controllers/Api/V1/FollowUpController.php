@@ -15,7 +15,7 @@ class FollowUpController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $this->authorize('building.view');
+        $this->authorize('buildings.view');
 
         $query = FollowUp::with(['building', 'opportunity', 'siteVisit', 'buildingContact', 'user']);
 
@@ -59,7 +59,7 @@ class FollowUpController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $this->authorize('building.edit');
+        $this->authorize('buildings.update');
 
         $validated = $request->validate([
             'building_id' => ['nullable', 'exists:buildings,id'],
@@ -90,14 +90,14 @@ class FollowUpController extends Controller
 
     public function show(FollowUp $followUp): JsonResponse
     {
-        $this->authorize('building.view');
+        $this->authorize('buildings.view');
         $followUp->load(['building', 'opportunity', 'siteVisit', 'buildingContact', 'user']);
         return $this->success('Follow-up retrieved', ['follow_up' => $followUp]);
     }
 
     public function update(Request $request, FollowUp $followUp): JsonResponse
     {
-        $this->authorize('building.edit');
+        $this->authorize('buildings.update');
 
         $validated = $request->validate([
             'reminder_date' => ['sometimes', 'date'],
@@ -114,14 +114,14 @@ class FollowUpController extends Controller
 
     public function destroy(FollowUp $followUp): JsonResponse
     {
-        $this->authorize('building.delete');
+        $this->authorize('buildings.delete');
         $followUp->delete();
         return $this->success('Follow-up deleted');
     }
 
     public function markComplete(FollowUp $followUp): JsonResponse
     {
-        $this->authorize('building.edit');
+        $this->authorize('buildings.update');
         $followUp->update(['status' => 'Completed']);
         return $this->success('Follow-up marked complete', ['follow_up' => $followUp->fresh()->load(['building', 'opportunity', 'user'])]);
     }

@@ -19,7 +19,7 @@ class SiteVisitController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $this->authorize('building.view');
+        $this->authorize('buildings.view');
 
         $query = SiteVisit::with(['building', 'user', 'photos', 'voiceNotes']);
 
@@ -52,7 +52,7 @@ class SiteVisitController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $this->authorize('building.edit');
+        $this->authorize('buildings.update');
 
         $validated = $request->validate([
             'building_id' => ['required', 'exists:buildings,id'],
@@ -81,14 +81,14 @@ class SiteVisitController extends Controller
 
     public function show(SiteVisit $siteVisit): JsonResponse
     {
-        $this->authorize('building.view');
+        $this->authorize('buildings.view');
         $siteVisit->load(['building', 'user', 'photos', 'voiceNotes', 'documents']);
         return $this->success('Site visit retrieved', ['site_visit' => $siteVisit]);
     }
 
     public function update(Request $request, SiteVisit $siteVisit): JsonResponse
     {
-        $this->authorize('building.edit');
+        $this->authorize('buildings.update');
 
         $validated = $request->validate([
             'visit_date' => ['sometimes', 'date'],
@@ -104,7 +104,7 @@ class SiteVisitController extends Controller
 
     public function destroy(SiteVisit $siteVisit): JsonResponse
     {
-        $this->authorize('building.delete');
+        $this->authorize('buildings.delete');
 
         foreach ($siteVisit->photos as $photo) {
             Storage::disk('public')->delete($photo->file_path);
@@ -119,7 +119,7 @@ class SiteVisitController extends Controller
 
     public function uploadPhotos(Request $request, SiteVisit $siteVisit): JsonResponse
     {
-        $this->authorize('building.edit');
+        $this->authorize('buildings.update');
 
         $request->validate([
             'photos' => ['required', 'array', 'max:20'],
@@ -144,7 +144,7 @@ class SiteVisitController extends Controller
 
     public function deletePhoto(SiteVisit $siteVisit, SiteVisitPhoto $photo): JsonResponse
     {
-        $this->authorize('building.edit');
+        $this->authorize('buildings.update');
 
         Storage::disk('public')->delete($photo->file_path);
         $photo->delete();
@@ -154,7 +154,7 @@ class SiteVisitController extends Controller
 
     public function uploadVoiceNotes(Request $request, SiteVisit $siteVisit): JsonResponse
     {
-        $this->authorize('building.edit');
+        $this->authorize('buildings.update');
 
         $request->validate([
             'voice_notes' => ['required', 'array', 'max:10'],
@@ -182,7 +182,7 @@ class SiteVisitController extends Controller
 
     public function deleteVoiceNote(SiteVisit $siteVisit, SiteVisitVoiceNote $voiceNote): JsonResponse
     {
-        $this->authorize('building.edit');
+        $this->authorize('buildings.update');
 
         Storage::disk('public')->delete($voiceNote->file_path);
         $voiceNote->delete();

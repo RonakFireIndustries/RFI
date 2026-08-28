@@ -25,7 +25,7 @@ class EmployeeController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $this->authorize('employee.view');
+        $this->authorize('employees.view');
 
         $filters = $request->only([
             'search', 'department_id', 'designation_id', 'status', 'manager_id'
@@ -47,7 +47,7 @@ class EmployeeController extends Controller
 
     public function store(StoreEmployeeRequest $request): JsonResponse
     {
-        $this->authorize('employee.create');
+        $this->authorize('employees.create');
 
         $employee = $this->employeeService->createEmployee($request->validated());
 
@@ -58,7 +58,7 @@ class EmployeeController extends Controller
 
     public function show(Employee $employee): JsonResponse
     {
-        $this->authorize('employee.view');
+        $this->authorize('employees.view');
 
         $employee->load(['department', 'designation', 'manager', 'user']);
 
@@ -69,7 +69,7 @@ class EmployeeController extends Controller
 
     public function update(UpdateEmployeeRequest $request, Employee $employee): JsonResponse
     {
-        $this->authorize('employee.edit');
+        $this->authorize('employees.update');
 
         $employee = $this->employeeService->updateEmployee($employee, $request->validated());
 
@@ -80,7 +80,7 @@ class EmployeeController extends Controller
 
     public function destroy(Employee $employee): JsonResponse
     {
-        $this->authorize('employee.delete');
+        $this->authorize('employees.delete');
 
         $this->employeeService->deleteEmployee($employee);
 
@@ -89,7 +89,7 @@ class EmployeeController extends Controller
 
     public function subordinates(Employee $employee): JsonResponse
     {
-        $this->authorize('employee.view');
+        $this->authorize('employees.view');
 
         $subordinates = $this->employeeService->getSubordinates($employee);
 
@@ -100,7 +100,7 @@ class EmployeeController extends Controller
 
     public function manager(Employee $employee): JsonResponse
     {
-        $this->authorize('employee.view');
+        $this->authorize('employees.view');
 
         $manager = $this->employeeService->getManager($employee);
 

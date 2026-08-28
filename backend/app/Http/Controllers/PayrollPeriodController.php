@@ -9,13 +9,13 @@ class PayrollPeriodController extends Controller
 {
     public function index()
     {
-        $this->authorize('manage_payroll');
+        $this->authorize('payroll.manage');
         return response()->json(PayrollPeriod::orderBy('year', 'desc')->orderBy('month', 'desc')->get());
     }
 
     public function store(Request $request)
     {
-        $this->authorize('manage_payroll');
+        $this->authorize('payroll.manage');
         $validated = $request->validate([
             'month' => 'required|integer|min:1|max:12',
             'year' => 'required|integer|min:2000|max:2100',
@@ -40,7 +40,7 @@ class PayrollPeriodController extends Controller
 
     public function update(Request $request, PayrollPeriod $payrollPeriod)
     {
-        $this->authorize('manage_payroll');
+        $this->authorize('payroll.manage');
         $validated = $request->validate([
             'start_date' => 'sometimes|date',
             'end_date' => 'sometimes|date|after_or_equal:start_date',
@@ -53,7 +53,7 @@ class PayrollPeriodController extends Controller
 
     public function destroy(PayrollPeriod $payrollPeriod)
     {
-        $this->authorize('manage_payroll');
+        $this->authorize('payroll.manage');
         if (in_array($payrollPeriod->status, ['Locked', 'Paid'])) {
             return response()->json(['message' => 'Cannot delete a payroll period with Locked or Paid status.'], 403);
         }

@@ -25,7 +25,7 @@ class ReportsModuleController extends Controller
 
     public function categories()
     {
-        $this->authorize('view reports');
+        $this->authorize('reports.view');
         $categories = ReportCategory::where('is_active', true)
             ->withCount('activeReports')
             ->orderBy('sort_order')
@@ -39,7 +39,7 @@ class ReportsModuleController extends Controller
 
     public function index(Request $request)
     {
-        $this->authorize('view reports');
+        $this->authorize('reports.view');
         $query = Report::with('category', 'creator')
             ->withCount(['schedules', 'activeSchedules', 'generations']);
 
@@ -80,7 +80,7 @@ class ReportsModuleController extends Controller
 
     public function store(StoreReportRequest $request)
     {
-        $this->authorize('create reports');
+        $this->authorize('reports.create');
         $data = $request->validated();
         $data['created_by'] = Auth::id();
 
@@ -99,7 +99,7 @@ class ReportsModuleController extends Controller
 
     public function show(Report $report)
     {
-        $this->authorize('view reports');
+        $this->authorize('reports.view');
         $report->load(['category', 'creator', 'schedules', 'generations' => function ($q) {
             $q->latest('generated_at')->limit(5);
         }]);
@@ -112,7 +112,7 @@ class ReportsModuleController extends Controller
 
     public function update(UpdateReportRequest $request, Report $report)
     {
-        $this->authorize('update reports');
+        $this->authorize('reports.update');
         $data = $request->validated();
 
         if (isset($data['parameters']) && is_string($data['parameters'])) {
@@ -144,7 +144,7 @@ class ReportsModuleController extends Controller
 
     public function generations(Request $request)
     {
-        $this->authorize('view reports');
+        $this->authorize('reports.view');
         $query = ReportGeneration::with('report.category', 'generator');
 
         if ($request->filled('report_id')) {
@@ -515,7 +515,7 @@ class ReportsModuleController extends Controller
 
     public function schedules(Request $request)
     {
-        $this->authorize('view reports');
+        $this->authorize('reports.view');
         $query = ReportSchedule::with('report.category', 'creator');
 
         if ($request->filled('report_id')) {
@@ -536,7 +536,7 @@ class ReportsModuleController extends Controller
 
     public function storeSchedule(StoreReportScheduleRequest $request)
     {
-        $this->authorize('schedule reports');
+        $this->authorize('reports.schedule');
         $data = $request->validated();
         $data['created_by'] = Auth::id();
 
@@ -615,7 +615,7 @@ class ReportsModuleController extends Controller
 
     public function stats()
     {
-        $this->authorize('view reports');
+        $this->authorize('reports.view');
         $totalReports = Report::where('status', 'active')->count();
         $totalCategories = ReportCategory::where('is_active', true)->count();
         $totalSchedules = ReportSchedule::where('status', 'active')->count();

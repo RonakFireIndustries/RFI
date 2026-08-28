@@ -73,7 +73,7 @@ class NotificationController extends Controller
 
     public function send(Request $request): JsonResponse
     {
-        $this->authorize('manage_users');
+        $this->authorize('access-control.manage');
         $validated = $request->validate([
             'user_id' => ['required', 'exists:users,id'],
             'title' => ['required', 'string', 'max:255'],

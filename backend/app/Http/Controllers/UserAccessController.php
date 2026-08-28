@@ -12,7 +12,7 @@ class UserAccessController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $this->authorize('manage_users');
+        $this->authorize('access-control.manage');
 
         $users = User::with(['roles:id,name', 'employee:id,user_id,emp_id,full_name,department_id,designation_id', 'employee.department:id,name', 'employee.designation:id,name'])
             ->when($request->search, fn ($q) => $q->where('name', 'like', "%{$request->search}%"))
@@ -44,7 +44,7 @@ class UserAccessController extends Controller
 
     public function getRoles(User $user): JsonResponse
     {
-        $this->authorize('manage_users');
+        $this->authorize('access-control.manage');
         return response()->json([
             'success' => true,
             'data' => $user->roles
@@ -53,7 +53,7 @@ class UserAccessController extends Controller
 
     public function assignRole(Request $request, User $user): JsonResponse
     {
-        $this->authorize('manage_users');
+        $this->authorize('access-control.manage');
         $request->validate([
             'roles' => 'required|array',
             'roles.*' => 'exists:roles,name',
@@ -71,7 +71,7 @@ class UserAccessController extends Controller
 
     public function removeRole(User $user, $roleId): JsonResponse
     {
-        $this->authorize('manage_users');
+        $this->authorize('access-control.manage');
         $role = Role::findOrFail($roleId);
         
         if ($role->name === 'Super Admin' && $user->id === 1) { // Basic safeguard
@@ -91,7 +91,7 @@ class UserAccessController extends Controller
 
     public function getPermissions(User $user): JsonResponse
     {
-        $this->authorize('manage_users');
+        $this->authorize('access-control.manage');
         $permissions = $user->getDirectPermissions();
 
         return response()->json([
@@ -102,7 +102,7 @@ class UserAccessController extends Controller
 
     public function assignPermission(Request $request, User $user): JsonResponse
     {
-        $this->authorize('manage_users');
+        $this->authorize('access-control.manage');
         $request->validate([
             'permissions' => 'required|array',
             'permissions.*' => 'exists:permissions,name',
@@ -119,7 +119,7 @@ class UserAccessController extends Controller
 
     public function removePermission(User $user, $permissionId): JsonResponse
     {
-        $this->authorize('manage_users');
+        $this->authorize('access-control.manage');
         $permission = Permission::findOrFail($permissionId);
         $user->revokePermissionTo($permission);
 

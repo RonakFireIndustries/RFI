@@ -22,13 +22,13 @@ class GoodsReceiptNoteController extends Controller
 
     public function index()
     {
-        $this->authorize('view_purchase_orders');
+        $this->authorize('purchase-orders.view');
         return GoodsReceiptNote::with(['items.product'])->get();
     }
 
     public function store(Request $request)
     {
-        $this->authorize('create_purchase_orders');
+        $this->authorize('purchase-orders.create');
         $request->validate([
             'purchase_order_id' => 'required|exists:purchase_orders,id',
             'receipt_date' => 'required|date',

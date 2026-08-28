@@ -18,7 +18,7 @@ class StockRequestController extends Controller
 
     public function index(Request $request)
     {
-        $this->authorize('inventory.requests.view');
+        $this->authorize('stock-requests.view');
         $query = StockRequest::with([
             'product', 'fromLocationable', 'toLocationable',
             'requester', 'approver', 'issuer', 'receiver'
@@ -42,7 +42,7 @@ class StockRequestController extends Controller
 
     public function store(StoreStockRequestRequest $request)
     {
-        $this->authorize('inventory.requests.create');
+        $this->authorize('stock-requests.create');
         $data = $request->validated();
 
         $stockRequest = StockRequest::create([
@@ -76,7 +76,7 @@ class StockRequestController extends Controller
 
     public function approve(StockRequest $stockRequest)
     {
-        $this->authorize('inventory.requests.approve');
+        $this->authorize('stock-requests.approve');
         try {
             $result = $this->stockRequestService->approve($stockRequest);
             return new StockRequestResource($result->load(['product', 'fromLocationable', 'toLocationable', 'approver']));

@@ -11,7 +11,7 @@ class DocumentController extends Controller
 {
     public function store(Request $request)
     {
-        $this->authorize('document.create');
+        $this->authorize('sales-documents.create');
 
         $request->validate([
             'file' => 'required|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:10240', // max 10MB
@@ -37,7 +37,7 @@ class DocumentController extends Controller
 
     public function download($id)
     {
-        $this->authorize('document.download');
+        $this->authorize('sales-documents.download');
 
         $document = Document::findOrFail($id);
         
@@ -50,7 +50,7 @@ class DocumentController extends Controller
 
     public function destroy($id)
     {
-        $this->authorize('document.delete');
+        $this->authorize('sales-documents.delete');
 
         $document = Document::findOrFail($id);
 

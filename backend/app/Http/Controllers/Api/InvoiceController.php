@@ -14,14 +14,14 @@ class InvoiceController extends Controller
 {
     public function index(Request $request)
     {
-        $this->authorize('view_invoices');
+        $this->authorize('invoices.view');
         $invoices = Invoice::with(['customer', 'creator'])->orderBy('created_at', 'desc')->get();
         return response()->json($invoices);
     }
 
     public function store(Request $request)
     {
-        $this->authorize('create_invoices');
+        $this->authorize('invoices.create');
         $validated = $request->validate([
             'customer_id' => 'required|exists:customers,id',
             'sales_order_id' => 'nullable|exists:sales_orders,id',
@@ -124,14 +124,14 @@ class InvoiceController extends Controller
 
     public function show(Invoice $invoice)
     {
-        $this->authorize('view_invoices');
+        $this->authorize('invoices.view');
         $invoice->load(['customer', 'items.product', 'creator']);
         return response()->json($invoice);
     }
 
     public function update(Request $request, Invoice $invoice)
     {
-        $this->authorize('update_invoices');
+        $this->authorize('invoices.update');
         $validated = $request->validate([
             'status' => 'sometimes|string|in:draft,sent,paid,overdue,cancelled',
             'payment_date' => 'nullable|date',
@@ -145,7 +145,7 @@ class InvoiceController extends Controller
 
     public function destroy(Invoice $invoice)
     {
-        $this->authorize('delete_invoices');
+        $this->authorize('invoices.delete');
         $invoice->delete();
         return response()->json(null, 204);
     }

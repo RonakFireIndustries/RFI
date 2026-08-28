@@ -14,7 +14,7 @@ class ActivityLogController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $this->authorize('building.view');
+        $this->authorize('buildings.view');
 
         $query = ActivityLog::with('user');
 

@@ -10,7 +10,7 @@ class ProductStockController extends Controller
 {
     public function index(Request $request)
     {
-        $this->authorize('inventory.stock.view');
+        $this->authorize('stock.view');
 
         $query = ProductStock::with(['product.category', 'product.unit', 'locationable']);
 
@@ -33,14 +33,14 @@ class ProductStockController extends Controller
 
     public function show(ProductStock $stock)
     {
-        $this->authorize('inventory.stock.view');
+        $this->authorize('stock.view');
 
         return new ProductStockResource($stock->load(['product.category', 'product.unit', 'locationable']));
     }
 
     public function byProduct($productId)
     {
-        $this->authorize('inventory.stock.view');
+        $this->authorize('stock.view');
 
         return ProductStockResource::collection(
             ProductStock::with('locationable')
@@ -51,7 +51,7 @@ class ProductStockController extends Controller
 
     public function byLocation($locationType, $locationId)
     {
-        $this->authorize('inventory.stock.view');
+        $this->authorize('stock.view');
 
         $typeMap = ['site' => 'App\\Models\\Site'];
         $type = $typeMap[$locationType] ?? null;

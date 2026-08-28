@@ -17,7 +17,7 @@ class OpportunityController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $this->authorize('building.view');
+        $this->authorize('buildings.view');
 
         $query = Opportunity::with(['building', 'user', 'workTypes']);
 
@@ -56,7 +56,7 @@ class OpportunityController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $this->authorize('building.edit');
+        $this->authorize('buildings.update');
 
         $validated = $request->validate([
             'building_id' => ['required', 'exists:buildings,id'],
@@ -97,14 +97,14 @@ class OpportunityController extends Controller
 
     public function show(Opportunity $opportunity): JsonResponse
     {
-        $this->authorize('building.view');
+        $this->authorize('buildings.view');
         $opportunity->load(['building', 'user', 'workTypes', 'documents', 'followUps']);
         return $this->success('Opportunity retrieved', ['opportunity' => $opportunity]);
     }
 
     public function update(Request $request, Opportunity $opportunity): JsonResponse
     {
-        $this->authorize('building.edit');
+        $this->authorize('buildings.update');
 
         $validated = $request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
@@ -153,7 +153,7 @@ class OpportunityController extends Controller
 
     public function destroy(Opportunity $opportunity): JsonResponse
     {
-        $this->authorize('building.delete');
+        $this->authorize('buildings.delete');
 
         $opportunity->workTypes()->delete();
         $opportunity->delete();

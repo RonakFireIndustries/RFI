@@ -25,7 +25,7 @@ class BuildingController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $this->authorize('building.view');
+        $this->authorize('buildings.view');
 
         $filters = $request->only(['search', 'status', 'site_id']);
         $perPage = (int) $request->input('per_page', 15);
@@ -45,7 +45,7 @@ class BuildingController extends Controller
 
     public function store(StoreBuildingRequest $request): JsonResponse
     {
-        $this->authorize('building.create');
+        $this->authorize('buildings.create');
 
         $building = $this->buildingService->createBuilding($request->validated());
 
@@ -56,7 +56,7 @@ class BuildingController extends Controller
 
     public function show(Building $building): JsonResponse
     {
-        $this->authorize('building.view');
+        $this->authorize('buildings.view');
 
         $building->load('site');
 
@@ -67,7 +67,7 @@ class BuildingController extends Controller
 
     public function update(UpdateBuildingRequest $request, Building $building): JsonResponse
     {
-        $this->authorize('building.edit');
+        $this->authorize('buildings.update');
 
         $building = $this->buildingService->updateBuilding($building, $request->validated());
 
@@ -78,7 +78,7 @@ class BuildingController extends Controller
 
     public function destroy(Building $building): JsonResponse
     {
-        $this->authorize('building.delete');
+        $this->authorize('buildings.delete');
 
         $this->buildingService->deleteBuilding($building);
 

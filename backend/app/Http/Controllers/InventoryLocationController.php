@@ -10,7 +10,7 @@ class InventoryLocationController extends Controller
 {
     public function index(Request $request)
     {
-        $this->authorize('inventory.locations.view');
+        $this->authorize('inventory-locations.view');
 
         $sites = Site::select(
             'id', 'name', 'code', 'address', 'city', 'state', 'pincode',
@@ -24,7 +24,7 @@ class InventoryLocationController extends Controller
 
     public function show(Request $request, string $location): JsonResponse
     {
-        $this->authorize('inventory.locations.view');
+        $this->authorize('inventory-locations.view');
 
         $site = $this->resolveSite($location);
 
@@ -65,7 +65,7 @@ class InventoryLocationController extends Controller
 
     public function store(Request $request)
     {
-        $this->authorize('inventory.locations.create');
+        $this->authorize('inventory-locations.create');
 
         $data = $request->validate([
             'name' => 'required|string|max:255',
@@ -80,7 +80,7 @@ class InventoryLocationController extends Controller
 
     public function update(Request $request, string $location): JsonResponse
     {
-        $this->authorize('inventory.locations.edit');
+        $this->authorize('inventory-locations.update');
 
         $site = $this->resolveSite($location);
 
@@ -101,7 +101,7 @@ class InventoryLocationController extends Controller
 
     public function destroy(Request $request, string $location): JsonResponse
     {
-        $this->authorize('inventory.locations.delete');
+        $this->authorize('inventory-locations.delete');
 
         $this->resolveSite($location)->delete();
 

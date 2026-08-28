@@ -25,7 +25,7 @@ class SiteController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $this->authorize('site.view');
+        $this->authorize('sites.view');
 
         $filters = $request->only(['search', 'status']);
         $perPage = (int) $request->input('per_page', 15);
@@ -45,7 +45,7 @@ class SiteController extends Controller
 
     public function store(StoreSiteRequest $request): JsonResponse
     {
-        $this->authorize('site.create');
+        $this->authorize('sites.create');
 
         $site = $this->siteService->createSite($request->validated());
 
@@ -56,7 +56,7 @@ class SiteController extends Controller
 
     public function show(Site $site): JsonResponse
     {
-        $this->authorize('site.view');
+        $this->authorize('sites.view');
 
         $site->load('manager');
 
@@ -67,7 +67,7 @@ class SiteController extends Controller
 
     public function update(UpdateSiteRequest $request, Site $site): JsonResponse
     {
-        $this->authorize('site.edit');
+        $this->authorize('sites.update');
 
         $site = $this->siteService->updateSite($site, $request->validated());
 
@@ -78,7 +78,7 @@ class SiteController extends Controller
 
     public function destroy(Site $site): JsonResponse
     {
-        $this->authorize('site.delete');
+        $this->authorize('sites.delete');
 
         $this->siteService->deleteSite($site);
 

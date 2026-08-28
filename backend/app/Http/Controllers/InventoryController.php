@@ -12,7 +12,7 @@ class InventoryController extends Controller
 {
     public function index(Request $request)
     {
-        $this->authorize('view_inventory');
+        $this->authorize('inventory.view');
 
         $query = Inventory::with(['product.category', 'product.supplier', 'warehouse']);
         return InventoryResource::collection($query->get());
@@ -20,7 +20,7 @@ class InventoryController extends Controller
 
     public function store(Request $request)
     {
-        $this->authorize('manage_inventory');
+        $this->authorize('inventory.manage');
 
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
@@ -37,14 +37,14 @@ class InventoryController extends Controller
 
     public function show(Inventory $inventory)
     {
-        $this->authorize('view_inventory');
+        $this->authorize('inventory.view');
 
         return new InventoryResource($inventory->load(['product.category', 'product.supplier', 'warehouse', 'transactions']));
     }
 
     public function update(Request $request, Inventory $inventory)
     {
-        $this->authorize('manage_inventory');
+        $this->authorize('inventory.manage');
 
         $validated = $request->validate([
             'product_id' => 'sometimes|exists:products,id',
@@ -58,7 +58,7 @@ class InventoryController extends Controller
 
     public function destroy(Inventory $inventory)
     {
-        $this->authorize('manage_inventory');
+        $this->authorize('inventory.manage');
 
         $inventory->delete();
 
@@ -67,7 +67,7 @@ class InventoryController extends Controller
 
     public function transaction(Request $request)
     {
-        $this->authorize('manage_inventory');
+        $this->authorize('inventory.manage');
 
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
@@ -124,7 +124,7 @@ class InventoryController extends Controller
 
     public function transactions(Request $request)
     {
-        $this->authorize('view_inventory');
+        $this->authorize('inventory.view');
 
         $query = InventoryTransaction::with(['inventory.product', 'user']);
         

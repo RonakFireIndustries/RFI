@@ -10,14 +10,14 @@ class PaymentController extends Controller
 {
     public function index()
     {
-        $this->authorize('view_payments');
+        $this->authorize('payments.view');
 
         return Payment::all();
     }
 
     public function store(Request $request)
     {
-        $this->authorize('create_payments');
+        $this->authorize('payments.create');
 
         $validated = $request->validate([
             'type' => 'required|in:Payable,Receivable',
@@ -40,14 +40,14 @@ class PaymentController extends Controller
 
     public function show(Payment $payment)
     {
-        $this->authorize('view_payments');
+        $this->authorize('payments.view');
 
         return $payment;
     }
 
     public function update(Request $request, Payment $payment)
     {
-        $this->authorize('create_payments');
+        $this->authorize('payments.create');
 
         $validated = $request->validate([
             'type' => 'sometimes|in:Payable,Receivable',
@@ -68,7 +68,7 @@ class PaymentController extends Controller
 
     public function destroy(Payment $payment)
     {
-        $this->authorize('create_payments');
+        $this->authorize('payments.create');
 
         $payment->delete();
         return response()->noContent();

@@ -13,7 +13,7 @@ class RoleController extends Controller
 {
     public function index(): JsonResponse
     {
-        $this->authorize('manage_roles');
+        $this->authorize('role-config.manage');
         $roles = Role::with('permissions')->get();
         return response()->json([
             'success' => true,
@@ -23,7 +23,7 @@ class RoleController extends Controller
 
     public function store(RoleStoreRequest $request): JsonResponse
     {
-        $this->authorize('manage_roles');
+        $this->authorize('role-config.manage');
         $role = Role::create(['name' => $request->name, 'guard_name' => 'web']);
 
         if ($request->has('permissions')) {
@@ -40,7 +40,7 @@ class RoleController extends Controller
 
     public function show(Role $role): JsonResponse
     {
-        $this->authorize('manage_roles');
+        $this->authorize('role-config.manage');
         return response()->json([
             'success' => true,
             'data' => $role->load('permissions')
@@ -49,7 +49,7 @@ class RoleController extends Controller
 
     public function update(RoleUpdateRequest $request, Role $role): JsonResponse
     {
-        $this->authorize('manage_roles');
+        $this->authorize('role-config.manage');
         $role->update(['name' => $request->name]);
 
         if ($request->has('permissions')) {
@@ -66,7 +66,7 @@ class RoleController extends Controller
 
     public function destroy(Role $role): JsonResponse
     {
-        $this->authorize('manage_roles');
+        $this->authorize('role-config.manage');
         if ($role->name === 'Super Admin') {
             return response()->json([
                 'success' => false,

@@ -13,14 +13,14 @@ class SalesOrderController extends Controller
 {
     public function index()
     {
-        $this->authorize('view_sales_orders');
+        $this->authorize('sales-orders.view');
 
         return SalesOrder::with('items')->get();
     }
 
     public function store(Request $request)
     {
-        $this->authorize('create_sales_orders');
+        $this->authorize('sales-orders.create');
 
         $request->validate([
             'customer_id' => 'required|exists:customers,id',
@@ -86,7 +86,7 @@ class SalesOrderController extends Controller
 
     public function show($id)
     {
-        $this->authorize('view_sales_orders');
+        $this->authorize('sales-orders.view');
 
         return SalesOrder::with(['items.product', 'customer', 'site', 'payments'])
             ->withSum('payments as paid_amount', 'amount')
@@ -95,7 +95,7 @@ class SalesOrderController extends Controller
 
     public function update(Request $request, $id)
     {
-        $this->authorize('create_sales_orders');
+        $this->authorize('sales-orders.create');
 
         $so = SalesOrder::findOrFail($id);
 
@@ -163,7 +163,7 @@ class SalesOrderController extends Controller
 
     public function approve(Request $request, $id)
     {
-        $this->authorize('view_sales_orders');
+        $this->authorize('sales-orders.view');
 
         $so = SalesOrder::findOrFail($id);
 
@@ -180,7 +180,7 @@ class SalesOrderController extends Controller
 
     public function reject(Request $request, $id)
     {
-        $this->authorize('view_sales_orders');
+        $this->authorize('sales-orders.view');
 
         $so = SalesOrder::findOrFail($id);
 
@@ -200,7 +200,7 @@ class SalesOrderController extends Controller
      */
     public function confirmDelivery(Request $request, $id)
     {
-        $this->authorize('manage_inventory');
+        $this->authorize('inventory.manage');
 
         $so = SalesOrder::with('items')->findOrFail($id);
 
@@ -274,7 +274,7 @@ class SalesOrderController extends Controller
 
     public function destroy($id)
     {
-        $this->authorize('manage_inventory');
+        $this->authorize('inventory.manage');
 
         $so = SalesOrder::findOrFail($id);
         $so->items()->delete();

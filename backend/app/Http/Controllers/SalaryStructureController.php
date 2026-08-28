@@ -9,13 +9,13 @@ class SalaryStructureController extends Controller
 {
     public function index()
     {
-        $this->authorize('manage_payroll');
+        $this->authorize('payroll.manage');
         return response()->json(SalaryStructure::with('employee')->get());
     }
 
     public function store(Request $request)
     {
-        $this->authorize('manage_payroll');
+        $this->authorize('payroll.manage');
         $validated = $request->validate([
             'employee_id' => 'required|exists:employees,id',
             'basic_salary' => 'required|numeric|min:0',
@@ -48,7 +48,7 @@ class SalaryStructureController extends Controller
 
     public function update(Request $request, SalaryStructure $salaryStructure)
     {
-        $this->authorize('manage_payroll');
+        $this->authorize('payroll.manage');
         $validated = $request->validate([
             'employee_id' => 'sometimes|exists:employees,id',
             'basic_salary' => 'sometimes|numeric|min:0',
@@ -76,7 +76,7 @@ class SalaryStructureController extends Controller
 
     public function destroy(SalaryStructure $salaryStructure)
     {
-        $this->authorize('manage_payroll');
+        $this->authorize('payroll.manage');
         $salaryStructure->delete();
         return response()->noContent();
     }

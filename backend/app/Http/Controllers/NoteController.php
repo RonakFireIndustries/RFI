@@ -10,7 +10,7 @@ class NoteController extends Controller
 {
     public function store(Request $request)
     {
-        $this->authorize('manage_inventory');
+        $this->authorize('inventory.manage');
 
         $validated = $request->validate([
             'note' => 'required|string',
@@ -27,7 +27,7 @@ class NoteController extends Controller
 
     public function destroy($id)
     {
-        $this->authorize('manage_inventory');
+        $this->authorize('inventory.manage');
 
         $note = Note::findOrFail($id);
 
