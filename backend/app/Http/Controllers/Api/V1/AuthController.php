@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\User;
+use App\Support\Access;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -27,9 +28,7 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth_token')->plainTextToken;
         $user->load(['roles', 'employee']);
-        $rolePerms = $user->roles->flatMap->permissions->pluck('name')->unique();
-        $directPerms = $user->getAllPermissions()->pluck('name')->unique();
-        $user->setRelation('permissions', $rolePerms->merge($directPerms)->unique()->values());
+        $user->setRelation('permissions', Access::permissionNamesFor($user));
 
         return $this->success('Login successful', [
             'user' => $user,
@@ -53,9 +52,7 @@ class AuthController extends Controller
     public function user(Request $request): JsonResponse
     {
         $user = $request->user()->load(['roles', 'employee']);
-        $rolePerms = $user->roles->flatMap->permissions->pluck('name')->unique();
-        $directPerms = $user->getAllPermissions()->pluck('name')->unique();
-        $user->setRelation('permissions', $rolePerms->merge($directPerms)->unique()->values());
+        $user->setRelation('permissions', Access::permissionNamesFor($user));
 
         return $this->success('User fetched successfully', [
             'user' => $user

@@ -26,6 +26,10 @@ class AuthServiceProvider extends ServiceProvider
         }
 
         Gate::before(function ($user, $ability) {
+            if (\App\Support\Access::isSuperAdmin($user)) {
+                return true;
+            }
+
             if (method_exists($user, 'hasPermissionTo') && $user->hasPermissionTo($ability)) {
                 return true;
             }

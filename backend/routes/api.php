@@ -35,6 +35,7 @@ use App\Http\Controllers\ProductStockController;
 use App\Http\Controllers\TransactionLedgerController;
 use App\Http\Controllers\StockRequestController;
 use App\Http\Controllers\InventoryDashboardController;
+use App\Http\Controllers\Api\V1\AccessControlController;
 
 
 Route::prefix('v1')->group(function () {
@@ -88,6 +89,14 @@ Route::prefix('v1')->group(function () {
     Route::get('/users/{user}/permissions', [UserAccessController::class, 'getPermissions']);
     Route::post('/users/{user}/permissions', [UserAccessController::class, 'assignPermission']);
     Route::delete('/users/{user}/permissions/{permission}', [UserAccessController::class, 'removePermission']);
+
+    // ==================== Access Control (config-driven, super admin) ====================
+    Route::get('/access-control/definitions', [AccessControlController::class, 'definitions']);
+    Route::get('/access-control/users', [AccessControlController::class, 'users']);
+    Route::get('/access-control/users/{user}/permissions', [AccessControlController::class, 'userPermissions']);
+    Route::put('/access-control/users/{user}/permissions', [AccessControlController::class, 'updatePermissions']);
+    Route::post('/access-control/users/{user}/permissions/grant', [AccessControlController::class, 'grantPermission']);
+    Route::post('/access-control/users/{user}/permissions/revoke', [AccessControlController::class, 'revokePermission']);
 
     Route::apiResource('employees', \App\Http\Controllers\Api\V1\EmployeeController::class);
     Route::get('employees/{employee}/subordinates', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'subordinates']);

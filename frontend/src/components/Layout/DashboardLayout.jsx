@@ -191,15 +191,17 @@ export default function DashboardLayout() {
     return () => clearTimeout(debounceTimer);
   }, [searchQuery]);
 
-  const canAccess = (itemRoles, itemPermissions) => {
-    if (roles.includes('Admin')) return true;
-    if (itemRoles?.includes('*')) return true;
-    const roleMatch = roles.some(r => itemRoles?.includes(r));
-    if (roleMatch) return true;
-    if (itemPermissions?.length > 0) {
-      return permissions.some(p => itemPermissions.includes(p));
+  const isSuperAdmin = !!user?.is_super_admin || permissions.includes('__super_admin__');
+
+  const canAccess = (required) => {
+    required = required || [];
+    if (isSuperAdmin) return true;
+    if (required.includes('*')) return true;
+    if (required.includes('__super_admin__')) return false;
+    if (required.length > 0) {
+      return required.some(p => permissions.includes(p));
     }
-    return false;
+    return true;
   };
 
     return (
@@ -246,7 +248,7 @@ export default function DashboardLayout() {
         <div className="flex-1 py-4 overflow-y-auto">
           <div className="px-3 space-y-6">
             {menuCategories.map((category, index) => {
-              const visibleItems = category.items.filter((item) => canAccess(item.roles, item.permissions));
+              const visibleItems = category.items.filter((item) => canAccess(item.permissions));
 
               if (visibleItems.length === 0) return null;
 
@@ -284,7 +286,7 @@ export default function DashboardLayout() {
         </div>
 
         <div className="p-4 border-t border-border">
-          {canAccess(['Admin']) && (
+          {isSuperAdmin && (
             <Link
               to="/dashboard/settings"
               title={!isSidebarOpen ? 'Settings' : ''}
