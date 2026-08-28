@@ -210,6 +210,10 @@ return [
                 'label' => 'Buildings',
                 'actions' => ['view', 'create', 'update', 'delete'],
             ],
+            'extinguishers' => [
+                'label' => 'Fire Extinguishers',
+                'actions' => ['view', 'create', 'update', 'delete'],
+            ],
             'site-visits' => [
                 'label' => 'Site Visits',
                 'actions' => ['view', 'create', 'update', 'delete'],

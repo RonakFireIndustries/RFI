@@ -358,6 +358,13 @@ Route::prefix('v1')->group(function () {
     Route::put('/buildings/{building}/fire-systems/{fireSystem}', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'updateFireSystem']);
     Route::delete('/buildings/{building}/fire-systems/{fireSystem}', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'destroyFireSystem']);
 
+    // Fire Extinguishers
+    Route::get('/extinguishers', [\App\Http\Controllers\Api\V1\FireExtinguisherController::class, 'index']);
+    Route::get('/buildings/{building}/extinguishers', [\App\Http\Controllers\Api\V1\FireExtinguisherController::class, 'index']);
+    Route::post('/buildings/{building}/extinguishers', [\App\Http\Controllers\Api\V1\FireExtinguisherController::class, 'store']);
+    Route::put('/buildings/{building}/extinguishers/{fireSystem}', [\App\Http\Controllers\Api\V1\FireExtinguisherController::class, 'update']);
+    Route::delete('/buildings/{building}/extinguishers/{fireSystem}', [\App\Http\Controllers\Api\V1\FireExtinguisherController::class, 'destroy']);
+
     // Building Contacts
     Route::get('/buildings/{building}/contacts', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'contacts']);
     Route::post('/buildings/{building}/contacts', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'storeContact']);

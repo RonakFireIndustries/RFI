@@ -2,7 +2,7 @@ import {
   LayoutDashboard, Users, Calendar, ClipboardList, MapPin, Clock, FileText, Briefcase,
   DollarSign, Layers, Package, Boxes, Warehouse, ShoppingCart, Shield, Settings,
   Ruler, GitCompare, Move3D, FileSpreadsheet, FileClock, FileInput, Building2,
-  TrendingUp, Target, Bell, BarChart3, PenTool,
+  TrendingUp, Target, Bell, BarChart3, PenTool, Flame,
 } from 'lucide-react';
 
 /*
@@ -60,6 +60,7 @@ export const menuCategories = [
     title: 'Sales & Survey',
     items: [
       { name: 'Buildings', path: '/dashboard/buildings', icon: Building2, permissions: ['buildings.view'] },
+      { name: 'Fire Extinguishers', path: '/dashboard/extinguishers', icon: Flame, permissions: ['extinguishers.view'] },
       { name: 'Sales Dashboard', path: '/dashboard/sales-dashboard', icon: BarChart3, permissions: ['reports.view'] },
       { name: 'Buildings Map', path: '/dashboard/buildings-map', icon: MapPin, permissions: ['buildings.view'] },
       { name: 'Site Visits', path: '/dashboard/site-visits', icon: Calendar, permissions: ['buildings.view'] },

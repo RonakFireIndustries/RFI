@@ -13,13 +13,26 @@ class FireSystem extends Model
     protected $fillable = [
         'building_id', 'system_type', 'sub_type', 'quantity',
         'capacity', 'brand', 'installation_year', 'last_testing_date',
+        'label', 'installation_date', 'next_refill_date',
     ];
 
     protected $casts = [
         'quantity' => 'integer',
         'installation_year' => 'integer',
         'last_testing_date' => 'date',
+        'installation_date' => 'date',
+        'next_refill_date' => 'date',
     ];
+
+    public const TYPE_EXTINGUISHER = 'Fire Extinguisher';
+
+    /**
+     * Scope to fire-extinguisher records only.
+     */
+    public function scopeExtinguishers($query)
+    {
+        return $query->where('system_type', self::TYPE_EXTINGUISHER);
+    }
 
     public function building(): BelongsTo
     {
