@@ -70,7 +70,10 @@ class AccessControlController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'is_super_admin' => Access::isSuperAdmin($user),
-                'permissions' => Access::permissionNamesFor($user),
+                // Direct grants only. The Access page edits direct permissions, so
+                // showing role-derived (effective) grants here made removed ones
+                // reappear in the list after a refresh (a role would re-supply them).
+                'permissions' => $user->getDirectPermissions()->pluck('name')->values()->all(),
                 'employee' => $user->employee ? [
                     'id' => $user->employee->id,
                     'emp_id' => $user->employee->emp_id,
