@@ -321,7 +321,7 @@ export default function DashboardLayout() {
                 {user?.name || 'John Doe'}
               </p>
               <p className="text-xs text-muted-foreground truncate">
-                {roles?.[0] || 'User'}
+                {typeof roles?.[0] === 'object' ? roles[0].name || 'User' : roles?.[0] || 'User'}
               </p>
             </div>
           )}

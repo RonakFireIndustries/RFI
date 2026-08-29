@@ -44,6 +44,15 @@ export const useAuthStore = create(
     }),
     {
       name: 'auth-storage',
+      // Normalize any stale persisted state (e.g. from older builds that stored
+      // raw Role/Permission objects instead of name strings) so that rendering
+      // ({roles?.[0]}, sidebar gating, etc.) never receives non-string values.
+      merge: (persisted, current) => {
+        if (!persisted) return current;
+        const r = (persisted.roles || []).map((x) => (typeof x === 'string' ? x : x?.name)).filter(Boolean);
+        const p = (persisted.permissions || []).map((x) => (typeof x === 'string' ? x : x?.name)).filter(Boolean);
+        return { ...current, ...persisted, roles: r, permissions: p, user: persisted.user ?? current.user };
+      },
     }
   )
 );
