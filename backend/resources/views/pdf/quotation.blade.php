@@ -84,7 +84,14 @@
                 @foreach ($section->items as $i => $item)
                     <tr>
                         <td>{{ $i + 1 }}</td>
-                        <td>{{ $item->description ?? '—' }}</td>
+                        <td>
+                            {{ $item->description ?? '—' }}
+                            @if ($item->product && ($item->product->sku || $item->product->dimension))
+                                <div style="color:#6b7280; font-size:10px;">SKU:
+                                    {{ $item->product->sku ?? '—' }}@if($item->product->dimension) · Dim: {{ $item->product->dimension }} @endif
+                                </div>
+                            @endif
+                        </td>
                         <td>{{ $item->unit ?? '—' }}</td>
                         <td class="num">{{ rtrim(rtrim(number_format((float)$item->qty, 2), '0'), '.') }}</td>
                         <td class="num">{{ number_format((float)$item->rate, 2) }}</td>

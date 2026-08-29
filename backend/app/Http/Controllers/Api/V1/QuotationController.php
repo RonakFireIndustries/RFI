@@ -54,7 +54,7 @@ class QuotationController extends Controller
     public function show(Quotation $quotation): JsonResponse
     {
         $this->authorize('quotations.view');
-        $quotation->load(['building:id,name', 'items.product:id,name,unit', 'sections.items.product:id,name,unit', 'creator:id,name']);
+        $quotation->load(['building:id,name', 'items.product:id,name,unit', 'sections.items.product:id,name,unit,sku,product_code,dimension', 'creator:id,name']);
         return $this->success('Quotation retrieved', ['quotation' => $this->present($quotation)]);
     }
 
@@ -161,7 +161,7 @@ class QuotationController extends Controller
     public function pdf(Quotation $quotation)
     {
         $this->authorize('quotations.view');
-        $quotation->load(['building:id,name', 'sections.items.product:id,name,unit', 'creator:id,name']);
+        $quotation->load(['building:id,name', 'sections.items.product:id,name,unit,sku,product_code,dimension', 'creator:id,name']);
 
         $pdf = Pdf::loadView('pdf.quotation', ['quotation' => $quotation, 'sections' => $quotation->sections])
             ->setPaper('a4');
@@ -307,6 +307,7 @@ class QuotationController extends Controller
 
     protected function itemBrief(QuotationItem $i): array
     {
+        $product = $i->relationLoaded('product') ? $i->product : null;
         return [
             'id' => $i->id,
             'product_id' => $i->product_id,
@@ -315,6 +316,8 @@ class QuotationController extends Controller
             'qty' => (float) $i->qty,
             'rate' => (float) $i->rate,
             'amount' => (float) $i->amount,
+            'product_sku' => $product?->sku,
+            'product_dimension' => $product?->dimension,
         ];
     }
 }

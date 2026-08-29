@@ -17,7 +17,7 @@ const STATUS_META = {
 const fm = (n) =>
   new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n || 0));
 
-const emptyItem = () => ({ id: null, product_id: null, description: '', unit: '', qty: '', rate: '' });
+const emptyItem = () => ({ id: null, product_id: null, description: '', unit: '', qty: '', rate: '', sku: '', dimension: '' });
 const emptySection = () => ({ key: Date.now() + Math.random(), id: null, name: 'Ground Floor', items: [emptyItem()] });
 
 let uid = 0;
@@ -117,6 +117,7 @@ export default function QuotationsPage() {
         items: (s.items || []).map((i) => ({
           id: i.id, product_id: i.product_id || '', description: i.description || '',
           unit: i.unit || '', qty: i.qty, rate: i.rate,
+          sku: i.product_sku || '', dimension: i.product_dimension || '',
         })),
       })),
     );
@@ -163,6 +164,9 @@ export default function QuotationsPage() {
   const selectProduct = (si, ii, p) => {
     updateSectionItem(si, ii, 'product_id', String(p.id));
     updateSectionItem(si, ii, 'description', p.name || '');
+    updateSectionItem(si, ii, 'unit', p.unit?.name || '');
+    updateSectionItem(si, ii, 'sku', p.sku || '');
+    updateSectionItem(si, ii, 'dimension', p.dimension || '');
     setActiveSearch(null);
   };
 
@@ -200,19 +204,16 @@ export default function QuotationsPage() {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    setSaving(true);
     setError('');
     setNotice('');
-    try {
-      const payload = {
-        ...form,
-        building_id: form.building_id ? Number(form.building_id) : null,
-        discount: form.discount === '' ? null : Number(form.discount),
-        gst_percent: form.gst_percent === '' ? null : Number(form.gst_percent),
-        sections: sections.map((s) => ({
-          id: s.id || undefined,
-          name: s.name,
-          items: s.items.map((r) => ({
+
+    const sectionsPayload = sections
+      .map((s) => ({
+        id: s.id || undefined,
+        name: (s.name || '').trim(),
+        items: s.items
+          .filter((r) => Number(r.qty) > 0 && Number(r.rate) > 0 && (r.description || r.product_id))
+          .map((r) => ({
             id: r.id || undefined,
             product_id: r.product_id ? Number(r.product_id) : null,
             description: r.description,
@@ -220,7 +221,22 @@ export default function QuotationsPage() {
             qty: Number(r.qty),
             rate: Number(r.rate),
           })),
-        })),
+      }))
+      .filter((s) => s.name && s.items.length > 0);
+
+    if (sectionsPayload.length === 0) {
+      setError('Add at least one section with a filled item (description, qty and rate).');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const payload = {
+        ...form,
+        building_id: form.building_id ? Number(form.building_id) : null,
+        discount: form.discount === '' ? null : Number(form.discount),
+        gst_percent: form.gst_percent === '' ? null : Number(form.gst_percent),
+        sections: sectionsPayload,
       };
       if (editingId) {
         await api.put(`/quotations/${editingId}`, payload);
@@ -232,7 +248,14 @@ export default function QuotationsPage() {
       await fetchList();
       setMode('list');
     } catch (err) {
-      setError(err?.response?.data?.message || 'Could not save quotation.');
+      const msg = err?.response?.data?.message;
+      const validation = err?.response?.data?.errors;
+      if (validation && typeof validation === 'object') {
+        const first = Object.values(validation)[0];
+        setError(Array.isArray(first) ? first[0] : String(validation));
+      } else {
+        setError(msg || 'Could not save quotation.');
+      }
     } finally {
       setSaving(false);
     }
@@ -596,6 +619,12 @@ export default function QuotationsPage() {
                                   })()}
                                 </div>
                               </>
+                            )}
+                            {(row.sku || row.dimension) && (
+                              <div className="mt-1 text-xs text-gray-500 truncate">
+                                {row.sku && <span className="font-medium text-gray-600">SKU: {row.sku}</span>}
+                                {row.dimension && <span>{row.sku ? ' · ' : ''}Dim: {row.dimension}</span>}
+                              </div>
                             )}
                           </div>
                           <div className="md:col-span-2">
