@@ -364,6 +364,14 @@ Route::prefix('v1')->group(function () {
     Route::put('/extinguishers/{fireSystem}', [\App\Http\Controllers\Api\V1\FireExtinguisherController::class, 'update']);
     Route::delete('/extinguishers/{fireSystem}', [\App\Http\Controllers\Api\V1\FireExtinguisherController::class, 'destroy']);
 
+    // Quotations / BOQ
+    Route::get('/quotations', [\App\Http\Controllers\Api\V1\QuotationController::class, 'index']);
+    Route::post('/quotations', [\App\Http\Controllers\Api\V1\QuotationController::class, 'store']);
+    Route::get('/quotations/{quotation}', [\App\Http\Controllers\Api\V1\QuotationController::class, 'show']);
+    Route::put('/quotations/{quotation}', [\App\Http\Controllers\Api\V1\QuotationController::class, 'update']);
+    Route::delete('/quotations/{quotation}', [\App\Http\Controllers\Api\V1\QuotationController::class, 'destroy']);
+    Route::get('/quotations/{quotation}/pdf', [\App\Http\Controllers\Api\V1\QuotationController::class, 'pdf']);
+
     // Building Contacts
     Route::get('/buildings/{building}/contacts', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'contacts']);
     Route::post('/buildings/{building}/contacts', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'storeContact']);

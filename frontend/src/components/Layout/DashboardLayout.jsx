@@ -58,6 +58,7 @@ import PayslipPage from '../../pages/Payroll/PayslipPage';
 import Sites from '@/pages/Sites/Sites';
 import Buildings from '@/pages/Buildings/Buildings';
 import FireExtinguishers from '@/pages/FireExtinguishers/FireExtinguishers';
+import QuotationsPage from '@/pages/Quotations/QuotationsPage';
 import ChatPage from '@/pages/Chat/ChatPage';
 import NotificationBell from '../Notifications/NotificationBell';
 import NotificationsPage from '../../pages/Notifications/NotificationsPage';
@@ -494,6 +495,7 @@ export default function DashboardLayout() {
               <Route path="sites" element={<Sites />} />
               <Route path="buildings" element={<Buildings />} />
               <Route path="extinguishers" element={<FireExtinguishers />} />
+              <Route path="quotations" element={<QuotationsPage />} />
               <Route path="buildings/new" element={<Navigate to="/dashboard/buildings" replace />} />
               <Route path="buildings/:id" element={<BuildingSurveyDetail />} />
               <Route path="sales-dashboard" element={<SalesDashboard />} />

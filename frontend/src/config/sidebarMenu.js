@@ -61,6 +61,7 @@ export const menuCategories = [
     items: [
       { name: 'Buildings', path: '/dashboard/buildings', icon: Building2, permissions: ['buildings.view'] },
       { name: 'Fire Extinguishers', path: '/dashboard/extinguishers', icon: Flame, permissions: ['extinguishers.view'] },
+      { name: 'Quotations / BOQ', path: '/dashboard/quotations', icon: FileText, permissions: ['quotations.view'] },
       { name: 'Sales Dashboard', path: '/dashboard/sales-dashboard', icon: BarChart3, permissions: ['reports.view'] },
       { name: 'Buildings Map', path: '/dashboard/buildings-map', icon: MapPin, permissions: ['buildings.view'] },
       { name: 'Site Visits', path: '/dashboard/site-visits', icon: Calendar, permissions: ['buildings.view'] },
