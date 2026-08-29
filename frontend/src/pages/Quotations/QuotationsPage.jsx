@@ -522,7 +522,7 @@ export default function QuotationsPage() {
 
             <div className="space-y-4">
               {sections.map((section, si) => (
-                <div key={section.key} className="rounded-xl border border-indigo-100 overflow-hidden">
+                <div key={section.key} className="rounded-xl border border-indigo-100">
                   <div className="flex items-center gap-2 px-3 py-2.5 bg-indigo-50/60">
                     <Layers className="w-4 h-4 text-indigo-500 shrink-0" />
                     <input
@@ -553,19 +553,30 @@ export default function QuotationsPage() {
                             <input
                               type="text"
                               value={row.description}
-                              onFocus={() => { setActiveSearch({ section: si, item: ii }); setProductSearch(''); }}
-                              onChange={(e) => { updateSectionItem(si, ii, 'description', e.target.value); setActiveSearch({ section: si, item: ii }); }}
-                              placeholder="Search product or type custom..."
+                              onFocus={() => { setActiveSearch({ section: si, item: ii }); setProductSearch(row.description || ''); }}
+                              onChange={(e) => { updateSectionItem(si, ii, 'description', e.target.value); setProductSearch(e.target.value); setActiveSearch({ section: si, item: ii }); }}
+                              placeholder="Search by name, SKU or dimension..."
                               className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                             {isActive && (
                               <>
                                 <div className="absolute inset-0 z-30" onClick={() => setActiveSearch(null)} />
-                                <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-xl max-h-48 overflow-y-auto">
-                                  {products
-                                    .filter((p) => !productSearch || (p.name || '').toLowerCase().includes(productSearch.toLowerCase()))
-                                    .slice(0, 20)
-                                    .map((p) => (
+                                <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-xl max-h-72 overflow-y-auto">
+                                  {(() => {
+                                    const q = (productSearch || '').trim().toLowerCase();
+                                    const matches = products.filter((p) => {
+                                      if (!q) return true;
+                                      return [p.name, p.sku, p.product_code, p.dimension]
+                                        .filter(Boolean).some((v) => String(v).toLowerCase().includes(q));
+                                    });
+                                    if (matches.length === 0) {
+                                      return (
+                                        <div className="px-3 py-2 text-sm text-gray-500">
+                                          No matching product. The typed text will be used as a custom description.
+                                        </div>
+                                      );
+                                    }
+                                    return matches.map((p) => (
                                       <button
                                         key={p.id}
                                         type="button"
@@ -581,7 +592,8 @@ export default function QuotationsPage() {
                                           {p.unit?.name ? ` · Unit: ${p.unit.name}` : ''}
                                         </span>
                                       </button>
-                                    ))}
+                                    ));
+                                  })()}
                                 </div>
                               </>
                             )}
