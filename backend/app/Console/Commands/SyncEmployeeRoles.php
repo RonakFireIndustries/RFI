@@ -12,14 +12,16 @@ use Illuminate\Support\Facades\DB;
 class SyncEmployeeRoles extends Command
 {
     protected $signature = 'employees:sync-roles';
-    protected $description = '[Deprecated] Role-based access was removed. This now ensures every employee has the baseline core permissions as direct grants and removes any lingering role assignments (Access Control panel is the single source of truth).';
+    protected $description = '[Deprecated] Role-based access was removed. Ensures baseline + Designer quotation grants as direct permissions and detaches any lingering roles (Access Control panel is the single source of truth).';
 
     public function handle(): int
     {
         $baseline = config('access.baseline', []);
         $baselineValid = Permission::whereIn('name', $baseline)->pluck('name')->all();
+        $designerPerms = config('access.designer_permissions', []);
+        $designerValid = Permission::whereIn('name', $designerPerms)->pluck('name')->all();
 
-        $users = User::whereNotNull('id')->whereHas('employee')->with('roles')->get();
+        $users = User::with(['employee.designation', 'roles'])->whereHas('employee')->get();
         $updated = 0;
 
         foreach ($users as $user) {
@@ -27,16 +29,26 @@ class SyncEmployeeRoles extends Command
                 continue;
             }
 
-            $hadRoles = $user->roles->isNotEmpty();
-            $hadBaseline = $user->hasAllPermissions($baselineValid);
+            // Designation-based Designer grant (role-free).
+            $isDesigner = str_contains(strtolower($user->employee?->designation?->name ?? ''), 'designer');
+            $extra = $isDesigner ? $designerValid : [];
+            $grants = array_values(array_unique(array_merge($baselineValid, $extra)));
 
-            DB::transaction(function () use ($user, $baselineValid) {
-                $user->givePermissionTo($baselineValid);
+            $hadRoles = $user->roles->isNotEmpty();
+            $hadGrants = $user->hasAllPermissions($grants);
+
+            DB::transaction(function () use ($user, $grants) {
+                $user->givePermissionTo($grants);
                 $user->roles()->detach();
             });
 
-            if ($hadRoles || !$hadBaseline) {
-                $this->info("User #{$user->id} {$user->email}: baseline ensured, roles detached.");
+            if ($hadRoles || !$hadGrants) {
+                $this->info(sprintf(
+                    "User #%d %s: %s ensured, roles detached.",
+                    $user->id,
+                    $user->email,
+                    $isDesigner ? 'designer+baseline' : 'baseline'
+                ));
                 $updated++;
             }
         }

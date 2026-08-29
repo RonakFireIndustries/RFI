@@ -428,4 +428,21 @@ return [
         'leaves.update',
         'payroll.view',
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Designer permissions
+    |--------------------------------------------------------------------------
+    |
+    | Auto-granted to employees whose designation is "Designer" (so they can
+    | prepare BOQ quotes). Applied by the same command that enforces baseline
+    | direct grants (employees:sync-roles).
+    |
+    */
+    'designer_permissions' => [
+        'quotations.view',
+        'quotations.create',
+        'quotations.update',
+        'quotations.delete',
+    ],
 ];
