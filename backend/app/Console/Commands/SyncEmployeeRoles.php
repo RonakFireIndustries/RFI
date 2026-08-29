@@ -3,58 +3,46 @@
 namespace App\Console\Commands;
 
 use App\Models\Employee;
+use App\Models\Permission;
 use App\Models\User;
+use App\Support\Access;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 
 class SyncEmployeeRoles extends Command
 {
     protected $signature = 'employees:sync-roles';
-    protected $description = 'Sync each employee user account role to match their current designation';
+    protected $description = '[Deprecated] Role-based access was removed. This now ensures every employee has the baseline core permissions as direct grants and removes any lingering role assignments (Access Control panel is the single source of truth).';
 
     public function handle(): int
     {
-        $employees = Employee::with(['designation', 'user.roles'])->whereNotNull('user_id')->get();
-        $synced = 0;
-        $skipped = 0;
+        $baseline = config('access.baseline', []);
+        $baselineValid = Permission::whereIn('name', $baseline)->pluck('name')->all();
 
-        foreach ($employees as $employee) {
-            $designationName = $employee->designation?->name;
-            if (!$designationName) {
-                $this->warn("Employee #{$employee->id} has no designation, skipping");
-                $skipped++;
+        $users = User::whereNotNull('id')->whereHas('employee')->with('roles')->get();
+        $updated = 0;
+
+        foreach ($users as $user) {
+            if (Access::isSuperAdmin($user)) {
                 continue;
             }
 
-            $user = $employee->user;
-            if (!$user) {
-                $this->warn("Employee #{$employee->id} has no linked user, skipping");
-                $skipped++;
-                continue;
-            }
+            $hadRoles = $user->roles->isNotEmpty();
+            $hadBaseline = $user->hasAllPermissions($baselineValid);
 
-            $currentRoles = $user->roles->pluck('name')->toArray();
-            if (in_array($designationName, $currentRoles)) {
-                $skipped++;
-                continue;
-            }
+            DB::transaction(function () use ($user, $baselineValid) {
+                $user->givePermissionTo($baselineValid);
+                $user->roles()->detach();
+            });
 
-            $role = \App\Models\Role::firstOrCreate(['name' => $designationName, 'guard_name' => 'web']);
-            if ($role->permissions()->count() === 0) {
-                $role->syncPermissions([
-                    'view dashboard',
-                    'attendance.checkin', 'attendance.checkout',
-                    'attendance.view',
-                    'daily-report.create', 'daily-report.view', 'daily-report.submit',
-                    'leave.view', 'leave.create', 'leave.cancel', 'leave.balance.view',
-                    'view_payroll',
-                ]);
+            if ($hadRoles || !$hadBaseline) {
+                $this->info("User #{$user->id} {$user->email}: baseline ensured, roles detached.");
+                $updated++;
             }
-            $user->roles()->sync([$role->id]);
-            $this->info("User #{$user->id} {$user->email}: synced role to '{$designationName}'");
-            $synced++;
         }
 
-        $this->info("Done. {$synced} synced, {$skipped} already correct / skipped.");
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        $this->info("Done. {$updated} user(s) updated. Roles are deprecated; use the Access Control panel instead.");
         return Command::SUCCESS;
     }
 }

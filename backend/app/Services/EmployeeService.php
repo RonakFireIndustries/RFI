@@ -76,28 +76,10 @@ class EmployeeService
                     'password' => Hash::make($tempPassword),
                 ]);
                 
-                // Assign role based on designation name, explicit role field, or default
-                $roleName = 'Employee';
-                if (!empty($data['designation_id'])) {
-                    $designation = \App\Models\Designation::find($data['designation_id']);
-                    if ($designation) $roleName = $designation->name;
-                } elseif (!empty($data['role'])) {
-                    $roleName = $data['role'];
-                }
-                $role = \App\Models\Role::firstOrCreate(['name' => $roleName, 'guard_name' => 'web']);
-                if ($role->permissions()->count() === 0) {
-                    $role->syncPermissions([
-                        'view dashboard',
-                        'attendance.checkin', 'attendance.checkout',
-                        'attendance.view',
-                        'daily-report.create', 'daily-report.view', 'daily-report.submit',
-                        'leave.view', 'leave.create', 'leave.cancel', 'leave.balance.view',
-                        'view_payroll',
-                    ]);
-                }
-                try {
-                    $user->roles()->sync([$role->id]);
-                } catch (\Exception $e) {}
+                // Access Control panel is now the single source of truth.
+                // New accounts get the baseline core permissions directly;
+                // role-based assignment has been removed.
+                $this->applyBaseline($user);
 
                 $employee->update(['user_id' => $user->id]);
             }
@@ -113,24 +95,24 @@ class EmployeeService
         $employee->update($data);
 
         if (isset($data['designation_id']) && $employee->user) {
-            $designation = \App\Models\Designation::find($data['designation_id']);
-            if ($designation) {
-                $role = \App\Models\Role::firstOrCreate(['name' => $designation->name, 'guard_name' => 'web']);
-                if ($role->permissions()->count() === 0) {
-                    $role->syncPermissions([
-                        'view dashboard',
-                        'attendance.checkin', 'attendance.checkout',
-                        'attendance.view',
-                        'daily-report.create', 'daily-report.view', 'daily-report.submit',
-                        'leave.view', 'leave.create', 'leave.cancel', 'leave.balance.view',
-                        'view_payroll',
-                    ]);
-                }
-                $employee->user->roles()->sync([$role->id]);
-            }
+            // Access Control panel is now the single source of truth; ensure the
+            // linked account always carries the baseline core permissions directly
+            // (no role assignment).
+            $this->applyBaseline($employee->user);
         }
 
         return $employee->fresh(['department', 'designation', 'manager']);
+    }
+
+    /**
+     * Grant the baseline core permissions to a user as direct grants
+     * (via the Access Control model). Only existing permissions are applied.
+     */
+    protected function applyBaseline(User $user): void
+    {
+        $baseline = config('access.baseline', []);
+        $valid = \App\Models\Permission::whereIn('name', $baseline)->pluck('name')->all();
+        $user->givePermissionTo($valid);
     }
 
     public function deleteEmployee(Employee $employee): void

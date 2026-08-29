@@ -399,4 +399,29 @@ return [
         'create sales'     => 'sales-orders.create',
         'view warehouses'  => 'inventory.view',
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Baseline permissions for every (non-super-admin) employee
+    |--------------------------------------------------------------------------
+    |
+    | These core permissions are always granted to an employee directly,
+    | regardless of what they get via the Access Control panel. They replace
+    | what the old per-designation ROLE used to grant automatically, now that
+    | role-based access has been removed in favour of the Access Control panel.
+    |
+    */
+    'baseline' => [
+        'dashboard.view',
+        'attendance.view',
+        'attendance.checkin',
+        'attendance.checkout',
+        'daily-reports.view',
+        'daily-reports.create',
+        'daily-reports.submit',
+        'leaves.view',
+        'leaves.create',
+        'leaves.update',
+        'payroll.view',
+    ],
 ];
