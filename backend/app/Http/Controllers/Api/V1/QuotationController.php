@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Building;
+use App\Models\Product;
 use App\Models\Quotation;
 use App\Models\QuotationItem;
+use App\Models\QuotationSection;
 use App\Traits\ApiResponse;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
@@ -20,7 +22,7 @@ class QuotationController extends Controller
     {
         $this->authorize('quotations.view');
 
-        $query = Quotation::with(['building:id,name', 'items']);
+        $query = Quotation::with(['building:id,name', 'items', 'sections.items']);
 
         if ($request->filled('search')) {
             $s = $request->string('search')->toString();
@@ -39,7 +41,7 @@ class QuotationController extends Controller
             ->paginate($request->integer('per_page', 20));
 
         return $this->success('Quotations retrieved', [
-            'quotations' => $quotations->items(),
+            'quotations' => array_map(fn ($q) => $this->present($q), $quotations->items()),
             'pagination' => [
                 'total' => $quotations->total(),
                 'per_page' => $quotations->perPage(),
@@ -52,7 +54,7 @@ class QuotationController extends Controller
     public function show(Quotation $quotation): JsonResponse
     {
         $this->authorize('quotations.view');
-        $quotation->load(['building:id,name', 'items.product:id,name,unit', 'creator:id,name']);
+        $quotation->load(['building:id,name', 'items.product:id,name,unit', 'sections.items.product:id,name,unit', 'creator:id,name']);
         return $this->success('Quotation retrieved', ['quotation' => $this->present($quotation)]);
     }
 
@@ -69,12 +71,14 @@ class QuotationController extends Controller
             'gst_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'terms' => ['nullable', 'string'],
             'notes' => ['nullable', 'string'],
-            'items' => ['required', 'array', 'min:1'],
-            'items.*.product_id' => ['nullable', 'exists:products,id'],
-            'items.*.description' => ['nullable', 'string', 'max:500'],
-            'items.*.unit' => ['nullable', 'string', 'max:100'],
-            'items.*.qty' => ['required', 'numeric', 'min:0.01'],
-            'items.*.rate' => ['required', 'numeric', 'min:0'],
+            'sections' => ['required', 'array', 'min:1'],
+            'sections.*.name' => ['required', 'string', 'max:255'],
+            'sections.*.items' => ['required', 'array', 'min:1'],
+            'sections.*.items.*.product_id' => ['nullable', 'exists:products,id'],
+            'sections.*.items.*.description' => ['nullable', 'string', 'max:500'],
+            'sections.*.items.*.unit' => ['nullable', 'string', 'max:100'],
+            'sections.*.items.*.qty' => ['required', 'numeric', 'min:0.01'],
+            'sections.*.items.*.rate' => ['required', 'numeric', 'min:0'],
         ]);
 
         $quotation = DB::transaction(function () use ($request, $validated) {
@@ -91,24 +95,9 @@ class QuotationController extends Controller
                 'created_by' => $request->user()?->id,
             ]);
 
-            foreach ($validated['items'] as $row) {
-                $description = $row['description'] ?? null;
-                if (empty($description) && !empty($row['product_id'])) {
-                    $description = optional(\App\Models\Product::find($row['product_id']))->name;
-                }
-                $qty = (float) $row['qty'];
-                $rate = (float) $row['rate'];
-                $quotation->items()->create([
-                    'product_id' => $row['product_id'] ?? null,
-                    'description' => $description,
-                    'unit' => $row['unit'] ?? null,
-                    'qty' => $qty,
-                    'rate' => $rate,
-                    'amount' => round($qty * $rate, 2),
-                ]);
-            }
+            $this->storeSections($quotation, $validated['sections']);
 
-            return $quotation->fresh(['building:id,name', 'items']);
+            return $quotation->fresh(['building:id,name', 'sections.items']);
         });
 
         return $this->success('Quotation created', ['quotation' => $this->present($quotation)], [], 201);
@@ -127,16 +116,19 @@ class QuotationController extends Controller
             'gst_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'terms' => ['nullable', 'string'],
             'notes' => ['nullable', 'string'],
-            'items' => ['required', 'array', 'min:1'],
-            'items.*.id' => ['nullable', 'exists:quotation_items,id'],
-            'items.*.product_id' => ['nullable', 'exists:products,id'],
-            'items.*.description' => ['nullable', 'string', 'max:500'],
-            'items.*.unit' => ['nullable', 'string', 'max:100'],
-            'items.*.qty' => ['required', 'numeric', 'min:0.01'],
-            'items.*.rate' => ['required', 'numeric', 'min:0'],
+            'sections' => ['required', 'array', 'min:1'],
+            'sections.*.id' => ['nullable', 'exists:quotation_sections,id'],
+            'sections.*.name' => ['required', 'string', 'max:255'],
+            'sections.*.items' => ['required', 'array', 'min:1'],
+            'sections.*.items.*.id' => ['nullable', 'exists:quotation_items,id'],
+            'sections.*.items.*.product_id' => ['nullable', 'exists:products,id'],
+            'sections.*.items.*.description' => ['nullable', 'string', 'max:500'],
+            'sections.*.items.*.unit' => ['nullable', 'string', 'max:100'],
+            'sections.*.items.*.qty' => ['required', 'numeric', 'min:0.01'],
+            'sections.*.items.*.rate' => ['required', 'numeric', 'min:0'],
         ]);
 
-        $quotation = DB::transaction(function () use ($request, $quotation, $validated) {
+        $quotation = DB::transaction(function () use ($quotation, $validated) {
             $quotation->update([
                 'building_id' => $validated['building_id'] ?? null,
                 'building_name' => $validated['building_name'] ?? null,
@@ -148,37 +140,9 @@ class QuotationController extends Controller
                 'notes' => $validated['notes'] ?? null,
             ]);
 
-            $incomingIds = [];
-            foreach ($validated['items'] as $row) {
-                $description = $row['description'] ?? null;
-                if (empty($description) && !empty($row['product_id'])) {
-                    $description = optional(\App\Models\Product::find($row['product_id']))->name;
-                }
-                $data = [
-                    'product_id' => $row['product_id'] ?? null,
-                    'description' => $description,
-                    'unit' => $row['unit'] ?? null,
-                    'qty' => (float) $row['qty'],
-                    'rate' => (float) $row['rate'],
-                    'amount' => round((float) $row['qty'] * (float) $row['rate'], 2),
-                ];
+            $this->syncSections($quotation, $validated['sections']);
 
-                if (!empty($row['id'])) {
-                    $item = QuotationItem::where('quotation_id', $quotation->id)
-                        ->whereKey($row['id'])->first();
-                    if ($item) {
-                        $item->update($data);
-                        $incomingIds[] = $item->id;
-                        continue;
-                    }
-                }
-                $new = $quotation->items()->create($data);
-                $incomingIds[] = $new->id;
-            }
-
-            $quotation->items()->whereNotIn('id', $incomingIds)->delete();
-
-            return $quotation->fresh(['building:id,name', 'items']);
+            return $quotation->fresh(['building:id,name', 'sections.items']);
         });
 
         return $this->success('Quotation updated', ['quotation' => $this->present($quotation)]);
@@ -187,7 +151,6 @@ class QuotationController extends Controller
     public function destroy(Quotation $quotation): JsonResponse
     {
         $this->authorize('quotations.delete');
-        $quotation->items()->delete();
         $quotation->delete();
         return $this->success('Quotation deleted');
     }
@@ -198,12 +161,99 @@ class QuotationController extends Controller
     public function pdf(Quotation $quotation)
     {
         $this->authorize('quotations.view');
-        $quotation->load(['building:id,name', 'items', 'creator:id,name']);
+        $quotation->load(['building:id,name', 'sections.items.product:id,name,unit', 'creator:id,name']);
 
-        $pdf = Pdf::loadView('pdf.quotation', ['quotation' => $quotation])
+        $pdf = Pdf::loadView('pdf.quotation', ['quotation' => $quotation, 'sections' => $quotation->sections])
             ->setPaper('a4');
 
         return $pdf->download("BOQ_{$quotation->quotation_no}.pdf");
+    }
+
+    protected function storeSections(Quotation $quotation, array $sections): void
+    {
+        foreach ($sections as $sort => $section) {
+            $sectionModel = $quotation->sections()->create([
+                'name' => $section['name'],
+                'sort_order' => $sort,
+            ]);
+            $this->syncItems($sectionModel, $section['items'] ?? []);
+        }
+    }
+
+    protected function syncSections(Quotation $quotation, array $sections): void
+    {
+        $keepSectionIds = [];
+        $sort = 0;
+
+        foreach ($sections as $section) {
+            $sectionData = ['name' => $section['name'], 'sort_order' => $sort++];
+
+            if (!empty($section['id'])) {
+                $existing = QuotationSection::where('quotation_id', $quotation->id)
+                    ->whereKey($section['id'])->first();
+                if ($existing) {
+                    $existing->update($sectionData);
+                    $this->syncItems($existing, $section['items'] ?? []);
+                    $keepSectionIds[] = $existing->id;
+                    continue;
+                }
+            }
+
+            $created = $quotation->sections()->create($sectionData);
+            $this->syncItems($created, $section['items'] ?? []);
+            $keepSectionIds[] = $created->id;
+        }
+
+        $quotation->sections()
+            ->whereKey($keepSectionIds === [] ? [0] : $keepSectionIds)
+            ->whereNotIn('id', $keepSectionIds)
+            ->delete();
+    }
+
+    protected function syncItems(QuotationSection $section, array $items): void
+    {
+        $keepIds = [];
+
+        foreach ($items as $row) {
+            $data = $this->itemData($row);
+
+            if (!empty($row['id'])) {
+                $item = QuotationItem::where('quotation_section_id', $section->id)
+                    ->whereKey($row['id'])->first();
+                if ($item) {
+                    $item->update($data);
+                    $keepIds[] = $item->id;
+                    continue;
+                }
+            }
+
+            $new = $section->items()->create($data);
+            $keepIds[] = $new->id;
+        }
+
+        if ($keepIds !== []) {
+            $section->items()->whereNotIn('id', $keepIds)->delete();
+        } else {
+            $section->items()->delete();
+        }
+    }
+
+    protected function itemData(array $row): array
+    {
+        $description = $row['description'] ?? null;
+        if (empty($description) && !empty($row['product_id'])) {
+            $description = optional(Product::find($row['product_id']))->name;
+        }
+        $qty = (float) $row['qty'];
+        $rate = (float) $row['rate'];
+        return [
+            'product_id' => $row['product_id'] ?? null,
+            'description' => $description,
+            'unit' => $row['unit'] ?? null,
+            'qty' => $qty,
+            'rate' => $rate,
+            'amount' => round($qty * $rate, 2),
+        ];
     }
 
     /**
@@ -227,6 +277,14 @@ class QuotationController extends Controller
 
     protected function present(Quotation $q): array
     {
+        $sections = $q->sections->map(fn ($section) => [
+            'id' => $section->id,
+            'name' => $section->name,
+            'sort_order' => $section->sort_order,
+            'subtotal' => round($section->items->sum('amount'), 2),
+            'items' => $section->items->map(fn ($i) => $this->itemBrief($i))->values(),
+        ])->values();
+
         return [
             'id' => $q->id,
             'quotation_no' => $q->quotation_no,
@@ -242,15 +300,21 @@ class QuotationController extends Controller
             'created_by' => $q->creator?->name,
             'subtotal' => round($q->subtotal, 2),
             'grand_total' => round($q->grand_total, 2),
-            'items' => $q->items->map(fn ($i) => [
-                'id' => $i->id,
-                'product_id' => $i->product_id,
-                'description' => $i->description,
-                'unit' => $i->unit,
-                'qty' => (float) $i->qty,
-                'rate' => (float) $i->rate,
-                'amount' => (float) $i->amount,
-            ])->values(),
+            'item_count' => $q->items->count(),
+            'sections' => $sections,
+        ];
+    }
+
+    protected function itemBrief(QuotationItem $i): array
+    {
+        return [
+            'id' => $i->id,
+            'product_id' => $i->product_id,
+            'description' => $i->description,
+            'unit' => $i->unit,
+            'qty' => (float) $i->qty,
+            'rate' => (float) $i->rate,
+            'amount' => (float) $i->amount,
         ];
     }
 }

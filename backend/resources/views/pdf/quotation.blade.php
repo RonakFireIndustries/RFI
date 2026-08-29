@@ -19,6 +19,8 @@
         table.items th { background: #1e40af; color: #fff; padding: 8px; text-align: left; font-size: 11px; }
         table.items td { border: 1px solid #e5e7eb; padding: 8px; }
         table.items tr:nth-child(even) td { background: #f9fafb; }
+        table.items tr.section-name td, table.items tr.section-total td { background: #eef2ff; }
+        table.items td.section-name { font-weight: bold; color: #1e40af; text-transform: uppercase; letter-spacing: .03em; }
         .num { text-align: right; }
         .totals { width: 260px; margin-left: auto; border-collapse: collapse; }
         .totals td { padding: 5px 8px; }
@@ -66,24 +68,41 @@
                 <th class="num" style="width:100px">Amount</th>
             </tr>
         </thead>
-        <tbody>
-            @foreach ($quotation->items as $i => $item)
-                <tr>
-                    <td>{{ $i + 1 }}</td>
-                    <td>{{ $item->description ?? '—' }}</td>
-                    <td>{{ $item->unit ?? '—' }}</td>
-                    <td class="num">{{ rtrim(rtrim(number_format((float)$item->qty, 2), '0'), '.') }}</td>
-                    <td class="num">{{ number_format((float)$item->rate, 2) }}</td>
-                    <td class="num">{{ number_format((float)$item->amount, 2) }}</td>
-                </tr>
-            @endforeach
-        </tbody>
     </table>
+
+    @php $running = 0; @endphp
+    @foreach ($sections as $section)
+        @php
+            $sub = round($section->items->sum('amount'), 2);
+            $running += $sub;
+        @endphp
+        <table class="items section">
+            <tbody>
+                <tr>
+                    <td colspan="6" class="section-name">{{ $section->name }}</td>
+                </tr>
+                @foreach ($section->items as $i => $item)
+                    <tr>
+                        <td>{{ $i + 1 }}</td>
+                        <td>{{ $item->description ?? '—' }}</td>
+                        <td>{{ $item->unit ?? '—' }}</td>
+                        <td class="num">{{ rtrim(rtrim(number_format((float)$item->qty, 2), '0'), '.') }}</td>
+                        <td class="num">{{ number_format((float)$item->rate, 2) }}</td>
+                        <td class="num">{{ number_format((float)$item->amount, 2) }}</td>
+                    </tr>
+                @endforeach
+                <tr class="section-total">
+                    <td colspan="5" style="text-align:right; font-weight:bold;">{{ $section->name }} Subtotal</td>
+                    <td class="num" style="font-weight:bold;">{{ number_format($sub, 2) }}</td>
+                </tr>
+            </tbody>
+        </table>
+    @endforeach
 
     <table class="totals">
         <tr>
             <td>Subtotal</td>
-            <td class="num">{{ number_format($quotation->subtotal, 2) }}</td>
+            <td class="num">{{ number_format($running, 2) }}</td>
         </tr>
         @if ((float)$quotation->discount > 0)
             <tr>
