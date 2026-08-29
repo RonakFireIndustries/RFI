@@ -21,11 +21,19 @@ export default function PermissionManagement() {
         ]);
 
         setRoles(rolesRes.data);
-        setPermissions(permissionsRes.data);
+        setPermissions(
+          (permissionsRes.data || []).map((p) =>
+            typeof p === 'string' ? p : p?.name
+          ),
+        );
 
         if (rolesRes.data.length > 0) {
           setSelectedRole(rolesRes.data[0]);
-          setAssignedPermissions(rolesRes.data[0].permissions || []);
+          setAssignedPermissions(
+            (rolesRes.data[0].permissions || []).map((p) =>
+              typeof p === 'string' ? p : p?.name
+            ),
+          );
         }
       } catch (error) {
         console.error('Failed to load permissions data', error);
@@ -41,7 +49,9 @@ export default function PermissionManagement() {
     const role = roles.find((item) => item.name === roleName);
     if (!role) return;
     setSelectedRole(role);
-    setAssignedPermissions(role.permissions || []);
+    setAssignedPermissions(
+      (role.permissions || []).map((p) => (typeof p === 'string' ? p : p?.name)),
+    );
     setMessage('');
   };
 
