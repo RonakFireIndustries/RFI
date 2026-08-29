@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Spatie\Permission\Exceptions\PermissionDoesNotExist;
 use Spatie\Permission\PermissionRegistrar;
 
 class AuthServiceProvider extends ServiceProvider
@@ -30,8 +31,14 @@ class AuthServiceProvider extends ServiceProvider
                 return true;
             }
 
-            if (method_exists($user, 'hasPermissionTo') && $user->hasPermissionTo($ability)) {
-                return true;
+            try {
+                if (method_exists($user, 'hasPermissionTo') && $user->hasPermissionTo($ability)) {
+                    return true;
+                }
+            } catch (PermissionDoesNotExist $e) {
+                // Permission row is missing in the database (seed not run on this
+                // environment). Treat it as "not granted" instead of throwing a 500.
+                return null;
             }
 
             return null;

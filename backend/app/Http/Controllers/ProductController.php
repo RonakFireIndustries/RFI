@@ -43,6 +43,12 @@ class ProductController extends Controller
         if (!ProductResource::canManageSalesPrice($request)) {
             unset($data['selling_price']);
         }
+        // purchase_price / selling_price are NOT NULL in the products table without
+        // a default, but non-finance roles are never required to send them. Fall
+        // back to zero so product creation cannot 500 for those roles.
+        $data['purchase_price'] = $data['purchase_price'] ?? 0;
+        $data['selling_price'] = $data['selling_price'] ?? 0;
+        $data['cost_price'] = $data['cost_price'] ?? 0;
         $openingStock = (float) ($data['opening_stock'] ?? 0);
         $siteId = (int) ($data['site_id'] ?? 0);
         unset($data['opening_stock'], $data['site_id']);

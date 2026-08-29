@@ -59,9 +59,13 @@ class FireExtinguisherController extends Controller
             'count' => ['required', 'integer', 'min:1', 'max:500'],
             'items' => ['nullable', 'array'],
             'items.*.label' => ['nullable', 'string', 'max:255'],
+            'items.*.location' => ['nullable', 'string', 'max:255'],
+            'items.*.type' => ['nullable', 'string', 'max:255'],
             'items.*.capacity' => ['nullable', 'integer', 'min:0'],
             'items.*.installation_date' => ['nullable', 'date'],
             'items.*.next_refill_date' => ['nullable', 'date'],
+            'items.*.year_of_manufacturing' => ['nullable', 'integer'],
+            'items.*.remark' => ['nullable', 'string', 'max:1000'],
         ]);
 
         $building = Building::firstOrCreate(
@@ -79,10 +83,14 @@ class FireExtinguisherController extends Controller
                 'system_type' => FireSystem::TYPE_EXTINGUISHER,
                 'sub_type' => 'Fire Extinguisher',
                 'quantity' => 1,
+                'type' => $row['type'] ?? null,
                 'capacity' => $row['capacity'] ?? null,
                 'label' => $row['label'] ?? null,
+                'location' => $row['location'] ?? null,
                 'installation_date' => $row['installation_date'] ?? null,
                 'next_refill_date' => $row['next_refill_date'] ?? null,
+                'year_of_manufacturing' => $row['year_of_manufacturing'] ?? null,
+                'remark' => $row['remark'] ?? null,
             ]);
         }
 
@@ -101,12 +109,16 @@ class FireExtinguisherController extends Controller
 
         $validated = $request->validate([
             'label' => ['nullable', 'string', 'max:255'],
+            'location' => ['nullable', 'string', 'max:255'],
+            'type' => ['nullable', 'string', 'max:255'],
             'capacity' => ['nullable', 'integer', 'min:0'],
             'installation_date' => ['nullable', 'date'],
             'next_refill_date' => ['nullable', 'date'],
+            'year_of_manufacturing' => ['nullable', 'integer'],
+            'remark' => ['nullable', 'string', 'max:1000'],
         ]);
 
-        $fireSystem->update([
+        $data = [
             'system_type' => FireSystem::TYPE_EXTINGUISHER,
             'sub_type' => 'Fire Extinguisher',
             'quantity' => 1,
@@ -114,7 +126,28 @@ class FireExtinguisherController extends Controller
             'capacity' => $validated['capacity'] ?? $fireSystem->capacity,
             'installation_date' => !empty($validated['installation_date']) ? $validated['installation_date'] : null,
             'next_refill_date' => !empty($validated['next_refill_date']) ? $validated['next_refill_date'] : null,
-        ]);
+            'location' => $validated['location'] ?? $fireSystem->location,
+            'type' => $validated['type'] ?? $fireSystem->type,
+            'year_of_manufacturing' => $validated['year_of_manufacturing'] ?? $fireSystem->year_of_manufacturing,
+            'remark' => $validated['remark'] ?? $fireSystem->remark,
+        ];
+
+        if (array_key_exists('location', $validated) && $validated['location'] === '') {
+            $data['location'] = null;
+        }
+        if (array_key_exists('type', $validated) && $validated['type'] === '') {
+            $data['type'] = null;
+        }
+        if (array_key_exists('remark', $validated) && $validated['remark'] === '') {
+            $data['remark'] = null;
+        }
+        if (array_key_exists('year_of_manufacturing', $validated)
+            && ($validated['year_of_manufacturing'] === '' || $validated['year_of_manufacturing'] === null
+                || $validated['year_of_manufacturing'] === '0')) {
+            $data['year_of_manufacturing'] = null;
+        }
+
+        $fireSystem->update($data);
 
         return $this->success('Extinguisher updated', [
             'extinguisher' => $this->present($fireSystem->fresh()),
@@ -143,9 +176,13 @@ class FireExtinguisherController extends Controller
                 'name' => $e->building?->name ?? null,
             ],
             'label' => $e->label,
+            'location' => $e->location,
+            'type' => $e->type,
             'capacity' => $e->capacity !== null ? (int) $e->capacity : null,
             'installation_date' => $e->installation_date?->toDateString(),
             'next_refill_date' => $e->next_refill_date?->toDateString(),
+            'year_of_manufacturing' => $e->year_of_manufacturing !== null ? (int) $e->year_of_manufacturing : null,
+            'remark' => $e->remark,
             'quantity' => $e->quantity,
         ];
     }

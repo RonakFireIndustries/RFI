@@ -14,11 +14,13 @@ class FireSystem extends Model
         'building_id', 'system_type', 'sub_type', 'quantity',
         'capacity', 'brand', 'installation_year', 'last_testing_date',
         'label', 'installation_date', 'next_refill_date',
+        'location', 'type', 'year_of_manufacturing', 'remark',
     ];
 
     protected $casts = [
         'quantity' => 'integer',
         'installation_year' => 'integer',
+        'year_of_manufacturing' => 'integer',
         'last_testing_date' => 'date',
         'installation_date' => 'date',
         'next_refill_date' => 'date',

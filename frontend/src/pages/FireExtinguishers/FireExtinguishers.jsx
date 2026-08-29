@@ -13,6 +13,24 @@ const iso = (d) => {
 
 const isValidDate = (d) => d && !isNaN(new Date(d).getTime());
 
+const EXTINGUISHER_TYPES = [
+  'ABC',
+  'CO2',
+  'AFFF',
+  'Water type',
+  'DCP - Inside Cartridge',
+  'Modular',
+  'Clean agent',
+  'Trolley type with inside cartridge - ABC',
+  'Trolley type with inside cartridge - CO2',
+  'Trolley type with inside cartridge - AFFF',
+  'Trolley type with inside cartridge - Water type',
+  'Trolley type with outside cartridge - ABC',
+  'Trolley type with outside cartridge - CO2',
+  'Trolley type with outside cartridge - AFFF',
+  'Trolley type with outside cartridge - Water type',
+];
+
 export default function FireExtinguishers() {
   const [extinguishers, setExtinguishers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -50,9 +68,13 @@ export default function FireExtinguishers() {
     setCount(value);
     setRows(Array.from({ length: num }, (_, i) => ({
       label: `Extinguisher ${i + 1}`,
+      location: '',
+      type: '',
       capacity: '',
       installation_date: '',
       next_refill_date: '',
+      year_of_manufacturing: '',
+      remark: '',
     })));
   };
 
@@ -83,10 +105,13 @@ export default function FireExtinguishers() {
     }
 
     const items = rows.map((r) => {
-      const item = { label: r.label };
+      const item = { label: r.label, location: r.location, type: r.type, remark: r.remark };
       if (r.capacity !== '' && r.capacity !== null && r.capacity !== undefined) item.capacity = parseInt(r.capacity, 10);
       if (isValidDate(r.installation_date)) item.installation_date = iso(r.installation_date);
       if (isValidDate(r.next_refill_date)) item.next_refill_date = iso(r.next_refill_date);
+      if (r.year_of_manufacturing !== '' && r.year_of_manufacturing !== null && r.year_of_manufacturing !== undefined) {
+        item.year_of_manufacturing = parseInt(r.year_of_manufacturing, 10);
+      }
       return item;
     });
 
@@ -115,10 +140,15 @@ export default function FireExtinguishers() {
   };
 
   const handleUpdate = async (ext, key, value) => {
+    let payload;
+    if (key === 'capacity' || key === 'year_of_manufacturing') {
+      payload = { [key]: value === '' || value === null ? null : parseInt(value, 10) };
+    } else if (key === 'installation_date' || key === 'next_refill_date') {
+      payload = { [key]: iso(value) };
+    } else {
+      payload = { [key]: value };
+    }
     try {
-      const payload = key === 'capacity'
-        ? { [key]: value === '' ? null : parseInt(value, 10) }
-        : { [key]: iso(value) };
       const res = await api.put(`/extinguishers/${ext.id}`, payload);
       const updated = res.data?.extinguisher ?? res.data;
       if (updated && typeof updated === 'object' && !Array.isArray(updated)) {
@@ -232,11 +262,15 @@ export default function FireExtinguishers() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200 text-left text-xs font-bold text-gray-500 uppercase">
+                <th className="py-3 px-4">Location</th>
                 <th className="py-3 px-4">Building</th>
-                <th className="py-3 px-4">Label</th>
+                <th className="py-3 px-4">SR No</th>
+                <th className="py-3 px-4">Type</th>
                 <th className="py-3 px-4">Capacity (kg)</th>
                 <th className="py-3 px-4">Installation Date</th>
-                <th className="py-3 px-4">Next Refill Date</th>
+                <th className="py-3 px-4">Refilling Date</th>
+                <th className="py-3 px-4">Year of Manufacturing</th>
+                <th className="py-3 px-4">Remark</th>
                 <th className="py-3 px-4 text-right">Status</th>
                 <th className="py-3 px-4 text-right">Action</th>
               </tr>
@@ -247,12 +281,33 @@ export default function FireExtinguishers() {
                 return (
                   <tr key={x.id} className="border-b border-gray-50 hover:bg-gray-50/50">
                     <td className="py-3 px-4">
+                      <input
+                        type="text"
+                        value={x.location || ''}
+                        onChange={(e) => handleUpdate(x, 'location', e.target.value)}
+                        placeholder="e.g. Ground Floor"
+                        className="border border-gray-200 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full min-w-[110px]"
+                      />
+                    </td>
+                    <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
                         <Building2 className="w-4 h-4 text-gray-400" />
                         <span className="font-medium text-gray-800">{x.building?.name || '—'}</span>
                       </div>
                     </td>
                     <td className="py-3 px-4 text-gray-600">{x.label || '-'}</td>
+                    <td className="py-3 px-4">
+                      <select
+                        value={x.type || ''}
+                        onChange={(e) => handleUpdate(x, 'type', e.target.value)}
+                        className="border border-gray-200 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-[200px]"
+                      >
+                        <option value="">—</option>
+                        {EXTINGUISHER_TYPES.map((t) => (
+                          <option key={t} value={t}>{t}</option>
+                        ))}
+                      </select>
+                    </td>
                     <td className="py-3 px-4">
                       <input
                         type="number"
@@ -283,6 +338,26 @@ export default function FireExtinguishers() {
                           className="border border-gray-200 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <input
+                        type="number"
+                        min="0"
+                        max="2100"
+                        value={x.year_of_manufacturing ?? ''}
+                        onChange={(e) => handleUpdate(x, 'year_of_manufacturing', e.target.value)}
+                        placeholder="e.g. 2020"
+                        className="w-24 border border-gray-200 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </td>
+                    <td className="py-3 px-4">
+                      <input
+                        type="text"
+                        value={x.remark || ''}
+                        onChange={(e) => handleUpdate(x, 'remark', e.target.value)}
+                        placeholder="—"
+                        className="border border-gray-200 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full min-w-[120px]"
+                      />
                     </td>
                     <td className="py-3 px-4 text-right">
                       {due ? (
@@ -361,44 +436,94 @@ export default function FireExtinguishers() {
                 <div className="bg-gray-50/50 p-4 rounded-xl border border-gray-100 space-y-3">
                   <h3 className="text-sm font-bold text-gray-800">Extinguisher Details</h3>
                   {rows.map((row, i) => (
-                    <div key={i} className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end bg-white p-3 rounded-lg border border-gray-100">
-                      <div>
-                        <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">#{i + 1} Label</label>
-                        <input
-                          type="text"
-                          value={row.label}
-                          onChange={(e) => updateRow(i, 'label', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
+                    <div key={i} className="space-y-3 bg-white p-3 rounded-lg border border-gray-100">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+                        <div>
+                          <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">#{i + 1} SR No</label>
+                          <input
+                            type="text"
+                            value={row.label}
+                            onChange={(e) => updateRow(i, 'label', e.target.value)}
+                            placeholder="e.g. EXT-001"
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Location</label>
+                          <input
+                            type="text"
+                            value={row.location}
+                            onChange={(e) => updateRow(i, 'location', e.target.value)}
+                            placeholder="e.g. Ground Floor"
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Type</label>
+                          <select
+                            value={row.type}
+                            onChange={(e) => updateRow(i, 'type', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                          >
+                            <option value="">Select type...</option>
+                            {EXTINGUISHER_TYPES.map((t) => (
+                              <option key={t} value={t}>{t}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Capacity (kg)</label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={row.capacity}
+                            onChange={(e) => updateRow(i, 'capacity', e.target.value)}
+                            placeholder="e.g. 2"
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Capacity (kg)</label>
-                        <input
-                          type="number"
-                          min="0"
-                          value={row.capacity}
-                          onChange={(e) => updateRow(i, 'capacity', e.target.value)}
-                          placeholder="e.g. 2"
-                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Installation Date</label>
-                        <input
-                          type="date"
-                          value={row.installation_date}
-                          onChange={(e) => updateRow(i, 'installation_date', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Next Refill Date</label>
-                        <input
-                          type="date"
-                          value={row.next_refill_date}
-                          onChange={(e) => updateRow(i, 'next_refill_date', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+                        <div>
+                          <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Year of Manufacturing</label>
+                          <input
+                            type="number"
+                            min="1900"
+                            max="2100"
+                            value={row.year_of_manufacturing}
+                            onChange={(e) => updateRow(i, 'year_of_manufacturing', e.target.value)}
+                            placeholder="e.g. 2020"
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Installation Date</label>
+                          <input
+                            type="date"
+                            value={row.installation_date}
+                            onChange={(e) => updateRow(i, 'installation_date', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Refiling Date</label>
+                          <input
+                            type="date"
+                            value={row.next_refill_date}
+                            onChange={(e) => updateRow(i, 'next_refill_date', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Remark</label>
+                          <input
+                            type="text"
+                            value={row.remark}
+                            onChange={(e) => updateRow(i, 'remark', e.target.value)}
+                            placeholder="Any notes..."
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
                       </div>
                     </div>
                   ))}
