@@ -22,7 +22,7 @@ class UpdateProductRequest extends FormRequest
             'hsn_code' => 'nullable|string|max:255',
             'dimension' => 'nullable|string|max:255',
             'category_id' => 'nullable|exists:categories,id',
-            'unit_id' => 'nullable|exists:units,id',
+            'unit_id' => ['sometimes', 'required', 'exists:units,id'],
             'supplier_id' => 'nullable|exists:suppliers,id',
             'purchase_price' => 'sometimes|numeric|min:0',
             'cost_price' => 'nullable|numeric|min:0',

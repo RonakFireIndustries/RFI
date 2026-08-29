@@ -73,9 +73,10 @@ export default function ProductCatalog() {
         api.get('/categories'),
         api.get('/suppliers'),
         api.get('/sites?per_page=1000'),
+        api.get('/units'),
       ]);
       const get = (idx) => results[idx].status === 'fulfilled' ? unwrapList(results[idx].value.data) : [];
-      setLookups({ categories: get(0), suppliers: get(1), sites: get(2) });
+      setLookups({ categories: get(0), suppliers: get(1), sites: get(2), units: get(3) });
     };
     fetchLookups();
   }, []);
@@ -110,7 +111,8 @@ export default function ProductCatalog() {
     subCategories,
     suppliers: lookups.suppliers,
     sites: lookups.sites,
-  }), [parentCategories, subCategories, lookups.suppliers, lookups.sites]);
+    units: lookups.units.map((u) => ({ ...u, name: u.code ? `${u.name} (${u.code})` : u.name })),
+  }), [parentCategories, subCategories, lookups.suppliers, lookups.sites, lookups.units]);
 
   const activeFilterCount = Object.values(filters).filter((v) => v !== '').length;
 
@@ -159,6 +161,7 @@ export default function ProductCatalog() {
       name: item.name ?? '',
       hsn_code: item.hsn_code ?? '',
       dimension: item.dimension ?? '',
+      unit_id: item.unit_id ? String(item.unit_id) : '',
       parent_category_id: parentId,
       subcategory_id: subId,
       supplier_id: item.supplier_id ? String(item.supplier_id) : '',
@@ -223,6 +226,7 @@ export default function ProductCatalog() {
       { name: 'name', label: 'Product Name', required: true },
       { name: 'hsn_code', label: 'HSN Code' },
       { name: 'dimension', label: 'Dimension' },
+      { name: 'unit_id', label: 'Unit', type: 'select', optionsKey: 'units', required: true },
       { name: 'parent_category_id', label: 'Category', type: 'select', optionsKey: 'parentCategories', emptyAsNull: true },
       { name: 'subcategory_id', label: 'Sub Category', type: 'select', optionsKey: 'subCategories', emptyAsNull: true },
       { name: 'supplier_id', label: 'Supplier', type: 'select', optionsKey: 'suppliers', emptyAsNull: true },
