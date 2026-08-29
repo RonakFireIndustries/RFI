@@ -455,8 +455,8 @@ export default function QuotationsPage() {
                 </div>
                 {showBuildingList && (
                   <>
-                    <div className="absolute inset-0 z-0" onClick={() => setShowBuildingList(false)} />
-                    <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-56 overflow-y-auto">
+                    <div className="absolute inset-0 z-30" onClick={() => setShowBuildingList(false)} />
+                    <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-xl max-h-56 overflow-y-auto">
                       {filteredBuildings.length === 0 ? (
                         <button
                           type="button"
@@ -560,19 +560,26 @@ export default function QuotationsPage() {
                             />
                             {isActive && (
                               <>
-                                <div className="absolute inset-0 z-0" onClick={() => setActiveSearch(null)} />
-                                <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                <div className="absolute inset-0 z-30" onClick={() => setActiveSearch(null)} />
+                                <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-xl max-h-48 overflow-y-auto">
                                   {products
                                     .filter((p) => !productSearch || (p.name || '').toLowerCase().includes(productSearch.toLowerCase()))
-                                    .slice(0, 15)
+                                    .slice(0, 20)
                                     .map((p) => (
                                       <button
                                         key={p.id}
                                         type="button"
                                         onClick={() => selectProduct(si, ii, p)}
-                                        className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 text-gray-800"
+                                        className="w-full text-left px-3 py-2 hover:bg-blue-50 border-b border-gray-50 last:border-0"
                                       >
-                                        {p.name}
+                                        <span className="block text-sm font-medium text-gray-800 truncate">
+                                          {p.name}
+                                        </span>
+                                        <span className="block text-xs text-gray-500 truncate">
+                                          {[p.sku, p.product_code].filter(Boolean).join(' · ') || '—'}
+                                          {p.dimension ? ` · Dim: ${p.dimension}` : ''}
+                                          {p.unit?.name ? ` · Unit: ${p.unit.name}` : ''}
+                                        </span>
                                       </button>
                                     ))}
                                 </div>
