@@ -50,7 +50,7 @@ const buildCategoryTree = (products, getPlacementFor) => {
 
 export default function ProductCatalog() {
   const { items } = useProductsStore();
-  const [lookups, setLookups] = useState({ categories: [], suppliers: [], sites: [] });
+  const [lookups, setLookups] = useState({ categories: [], suppliers: [], sites: [], units: [] });
   const userRoles = useAuthStore((s) => s.roles);
   const canFinance = userRoles.some((r) => FINANCE_ROLES.includes(r));
   const [searchParams] = useSearchParams();
@@ -111,7 +111,7 @@ export default function ProductCatalog() {
     subCategories,
     suppliers: lookups.suppliers,
     sites: lookups.sites,
-    units: lookups.units.map((u) => ({ ...u, name: u.code ? `${u.name} (${u.code})` : u.name })),
+    units: (lookups.units || []).map((u) => ({ ...u, name: u.code ? `${u.name} (${u.code})` : u.name })),
   }), [parentCategories, subCategories, lookups.suppliers, lookups.sites, lookups.units]);
 
   const activeFilterCount = Object.values(filters).filter((v) => v !== '').length;
