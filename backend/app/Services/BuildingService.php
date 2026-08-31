@@ -9,7 +9,7 @@ class BuildingService
 {
     public function listBuildings(array $filters = [], $perPage = 15)
     {
-        $query = Building::with('site');
+        $query = Building::with('site', 'fireSystemsConfig');
 
         if (isset($filters['search'])) {
             $query->where(function ($q) use ($filters) {
@@ -34,10 +34,21 @@ class BuildingService
     public function createBuilding(array $data): Building
     {
         $wingsData = $data['wings'] ?? null;
-        unset($data['wings']);
+        $fireSystemsData = $data['fire_systems'] ?? null;
+        unset($data['wings'], $data['fire_systems']);
 
-        return DB::transaction(function () use ($data, $wingsData) {
+        return DB::transaction(function () use ($data, $wingsData, $fireSystemsData) {
             $building = Building::create($data);
+
+            if (!empty($fireSystemsData)) {
+                foreach ($fireSystemsData as $fs) {
+                    $building->fireSystemsConfig()->create([
+                        'system_type' => $fs['system_type'],
+                        'sub_type' => $fs['sub_type'] ?? null,
+                        'other_details' => $fs['other_details'] ?? null,
+                    ]);
+                }
+            }
 
             if (!empty($wingsData)) {
                 foreach ($wingsData as $wingDatum) {
@@ -82,10 +93,39 @@ class BuildingService
     public function updateBuilding(Building $building, array $data): Building
     {
         $wingsData = $data['wings'] ?? null;
-        unset($data['wings']);
+        $fireSystemsData = $data['fire_systems'] ?? null;
+        unset($data['wings'], $data['fire_systems']);
 
-        return DB::transaction(function () use ($building, $data, $wingsData) {
+        return DB::transaction(function () use ($building, $data, $wingsData, $fireSystemsData) {
             $building->update($data);
+
+            if ($fireSystemsData !== null) {
+                $existingIds = collect($fireSystemsData)
+                    ->pluck('id')
+                    ->filter()
+                    ->map(fn ($id) => (int) $id)
+                    ->toArray();
+
+                $building->fireSystemsConfig()
+                    ->whereNotIn('id', $existingIds)
+                    ->delete();
+
+                foreach ($fireSystemsData as $fs) {
+                    $payload = [
+                        'system_type' => $fs['system_type'],
+                        'sub_type' => $fs['sub_type'] ?? null,
+                        'other_details' => $fs['other_details'] ?? null,
+                    ];
+
+                    if (!empty($fs['id'])) {
+                        $building->fireSystemsConfig()
+                            ->where('id', (int) $fs['id'])
+                            ->update($payload);
+                    } else {
+                        $building->fireSystemsConfig()->create($payload);
+                    }
+                }
+            }
 
             if ($wingsData !== null) {
                 $existingWingIds = collect($wingsData)

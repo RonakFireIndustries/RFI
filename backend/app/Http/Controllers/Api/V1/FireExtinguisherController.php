@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Building;
+use App\Models\Document;
 use App\Models\FireSystem;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class FireExtinguisherController extends Controller
 {
@@ -164,6 +167,122 @@ class FireExtinguisherController extends Controller
         $fireSystem->delete();
 
         return $this->success('Extinguisher deleted');
+    }
+
+    /**
+     * List certificates attached to buildings (optionally filtered by building).
+     */
+    public function listCertificates(Request $request): JsonResponse
+    {
+        $this->authorize('extinguishers.view');
+
+        $query = Document::where('documentable_type', Building::class)
+            ->with('uploader:id,name');
+
+        if ($request->filled('building_id')) {
+            $query->where('documentable_id', $request->integer('building_id'));
+        }
+
+        $documents = $query->orderBy('id', 'desc')->get();
+
+        return $this->success('Certificates retrieved', [
+            'certificates' => $documents->map(fn ($d) => $this->presentDocument($d))->values(),
+        ]);
+    }
+
+    /**
+     * Attach a certificate to a building (shared across its extinguishers).
+     *
+     * Body: { building_id, file, expiry_date?, remarks? }
+     */
+    public function uploadCertificate(Request $request): JsonResponse
+    {
+        $this->authorize('extinguishers.update');
+
+        $validated = $request->validate([
+            'building_id' => ['required', 'integer', 'exists:buildings,id'],
+            'file' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png,doc,docx', 'max:10240'],
+            'expiry_date' => ['nullable', 'date'],
+            'remarks' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $file = $request->file('file');
+        $path = $file->store('extinguisher-certificates', 'public');
+
+        $document = Document::create([
+            'file_name' => $file->getClientOriginalName(),
+            'original_file_name' => $file->getClientOriginalName(),
+            'file_path' => $path,
+            'file_type' => $file->getClientOriginalExtension(),
+            'mime_type' => $file->getMimeType(),
+            'file_size' => $file->getSize(),
+            'document_type' => 'Fire Extinguisher Certificate',
+            'expiry_date' => $validated['expiry_date'] ?? null,
+            'remarks' => $validated['remarks'] ?? null,
+            'documentable_id' => $validated['building_id'],
+            'documentable_type' => Building::class,
+            'uploaded_by' => Auth::id(),
+        ]);
+
+        return $this->success('Certificate uploaded', [
+            'certificate' => $this->presentDocument($document->load('uploader:id,name')),
+        ], [], 201);
+    }
+
+    /**
+     * Download a building certificate.
+     */
+    public function downloadCertificate(Document $document)
+    {
+        $this->authorize('extinguishers.view');
+
+        $this->ensureBuildingDocument($document);
+
+        if (!Storage::disk('public')->exists($document->file_path)) {
+            return $this->error('Certificate file not found', [], 404);
+        }
+
+        return Storage::disk('public')->download($document->file_path, $document->file_name);
+    }
+
+    /**
+     * Delete a building certificate.
+     */
+    public function deleteCertificate(Document $document): JsonResponse
+    {
+        $this->authorize('extinguishers.delete');
+
+        $this->ensureBuildingDocument($document);
+
+        if (Storage::disk('public')->exists($document->file_path)) {
+            Storage::disk('public')->delete($document->file_path);
+        }
+
+        $document->delete();
+
+        return $this->success('Certificate deleted');
+    }
+
+    protected function ensureBuildingDocument(Document $document): void
+    {
+        if ($document->documentable_type !== Building::class) {
+            abort(404, 'Certificate not found');
+        }
+    }
+
+    protected function presentDocument(Document $d): array
+    {
+        return [
+            'id' => $d->id,
+            'building_id' => $d->documentable_type === Building::class ? $d->documentable_id : null,
+            'file_name' => $d->file_name,
+            'file_type' => $d->file_type,
+            'file_size' => $d->file_size,
+            'expiry_date' => $d->expiry_date?->toDateString(),
+            'remarks' => $d->remarks,
+            'created_at' => $d->created_at?->toDateTimeString(),
+            'uploaded_by' => optional($d->uploader)->name,
+        ];
     }
 
     protected function present(FireSystem $e): array

@@ -9,6 +9,21 @@ import { format } from 'date-fns';
 
 const TABS = ['Overview', 'Wings', 'Site Visits', 'Follow-ups', 'Opportunities', 'Invoices', 'Fire Systems', 'Contacts', 'AMCs', 'Documents'];
 const FIRE_SYSTEM_TYPES = ['Fire Fighting', 'Fire Alarm', 'Fire Sprinkler', 'Fire Hydrant', 'Fire Extinguisher', 'Emergency Lighting', 'Smoke Detector', 'Others'];
+const FIRE_SYSTEM_MAIN_TYPES = [
+  'Downcomer System',
+  'Sprinkler System',
+  'Drencher System',
+  'Hydrant System',
+  'Fire Extinguisher',
+  'Fire Alarm',
+  'CCTV',
+  'Biometric',
+  'Others',
+];
+const FIRE_SYSTEM_SUB_TYPES = {
+  'Fire Alarm': ['Conventional', 'Public Addressable', 'Semi Addressable'],
+  'CCTV': ['IP Camera', 'Analog Camera'],
+};
 const CONTACT_CATEGORIES = ['society', 'developer', 'architect', 'pmc', 'other'];
 const DOC_CATEGORIES = ['Fire NOC', 'Building Plan', 'NOC Certificate', 'AMC Agreement', 'Quotation', 'Invoice', 'Site Photo', 'Other'];
 
@@ -71,7 +86,12 @@ export default function BuildingDetail() {
         no_of_lifts: building.no_of_lifts || '',
         no_of_exits_entry: building.no_of_exits_entry || '',
         fire_safety_available: building.fire_safety_available || false,
-        fire_safety_type: building.fire_safety_type || '',
+        fire_systems: Array.isArray(building.fire_systems_config) ? building.fire_systems_config.map(fs => ({
+          id: fs.id,
+          system_type: fs.system_type || '',
+          sub_type: fs.sub_type || '',
+          other_details: fs.other_details || '',
+        })) : [],
         under_construction: building.under_construction || false,
         property_owner: building.property_owner || '',
         plot_no: building.plot_no || '',
@@ -266,9 +286,8 @@ export default function BuildingDetail() {
               </div>
 
               <h3 className="text-sm font-semibold text-gray-900 mt-6">Fire Safety</h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
                 <ToggleField label="Fire Safety Available" checked={form.fire_safety_available} onChange={v => setForm({ ...form, fire_safety_available: v })} />
-                <Field label="Fire Safety Type" value={form.fire_safety_type} onChange={v => setForm({ ...form, fire_safety_type: v })} />
                 <div>
                   <label className="block text-sm font-medium text-color-white">Fire NOC Status</label>
                   <select value={form.fire_noc_status} onChange={e => setForm({ ...form, fire_noc_status: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm">
@@ -276,6 +295,61 @@ export default function BuildingDetail() {
                   </select>
                 </div>
               </div>
+              {form.fire_safety_available && (
+                <div className="space-y-3">
+                  <div className="text-sm font-medium text-gray-700">Fire Safety Systems</div>
+                  {(form.fire_systems || []).map((fs, idx) => {
+                    const subtypes = FIRE_SYSTEM_SUB_TYPES[fs.system_type] || [];
+                    return (
+                      <div key={idx} className="border border-gray-200 rounded-lg p-3 space-y-2 bg-gray-50/60">
+                        <div className="flex items-center gap-2">
+                          <select
+                            value={fs.system_type}
+                            onChange={e => {
+                              const next = [...form.fire_systems];
+                              next[idx] = { ...next[idx], system_type: e.target.value, sub_type: '', other_details: '' };
+                              setForm({ ...form, fire_systems: next });
+                            }}
+                            className="w-full px-3 py-2 border rounded-lg text-sm"
+                          >
+                            <option value="">Select System</option>
+                            {FIRE_SYSTEM_MAIN_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                          </select>
+                          <button type="button" onClick={() => setForm({ ...form, fire_systems: form.fire_systems.filter((_, i) => i !== idx) })} className="p-2 text-red-500 hover:bg-red-50 rounded-lg" title="Remove"><X className="w-4 h-4" /></button>
+                        </div>
+                        {subtypes.length > 0 && (
+                          <select
+                            value={fs.sub_type}
+                            onChange={e => {
+                              const next = [...form.fire_systems];
+                              next[idx] = { ...next[idx], sub_type: e.target.value };
+                              setForm({ ...form, fire_systems: next });
+                            }}
+                            className="w-full px-3 py-2 border rounded-lg text-sm"
+                          >
+                            <option value="">Select Sub-type</option>
+                            {subtypes.map(st => <option key={st} value={st}>{st}</option>)}
+                          </select>
+                        )}
+                        {fs.system_type === 'Others' && (
+                          <input
+                            type="text"
+                            value={fs.other_details}
+                            onChange={e => {
+                              const next = [...form.fire_systems];
+                              next[idx] = { ...next[idx], other_details: e.target.value };
+                              setForm({ ...form, fire_systems: next });
+                            }}
+                            placeholder="Specify other system details..."
+                            className="w-full px-3 py-2 border rounded-lg text-sm"
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
+                  <button type="button" onClick={() => setForm({ ...form, fire_systems: [...form.fire_systems, { system_type: '', sub_type: '', other_details: '' }] })} className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 font-medium"><Plus className="w-4 h-4" /> Add System</button>
+                </div>
+              )}
 
               <h3 className="text-sm font-semibold text-gray-900 mt-6">Stakeholders</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -304,7 +378,9 @@ export default function BuildingDetail() {
               <Section title="Fire Safety">
                 <InfoGrid items={[
                   { label: 'Fire Safety', value: building.fire_safety_available ? 'Yes' : 'No' },
-                  { label: 'Type', value: building.fire_safety_type },
+                  { label: 'Systems', value: Array.isArray(building.fire_systems_config) && building.fire_systems_config.length > 0
+                    ? building.fire_systems_config.map(fs => fs.system_type + (fs.sub_type ? ` - ${fs.sub_type}` : '') + (fs.system_type === 'Others' && fs.other_details ? ` (${fs.other_details})` : '')).join(', ')
+                    : null },
                   { label: 'NOC Status', value: building.fire_noc_status },
                 ]} />
               </Section>

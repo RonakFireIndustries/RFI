@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Building extends Model
 {
@@ -81,6 +82,11 @@ class Building extends Model
         return $this->hasMany(FireSystem::class);
     }
 
+    public function fireSystemsConfig(): HasMany
+    {
+        return $this->hasMany(BuildingFireSystem::class);
+    }
+
     public function contacts(): HasMany
     {
         return $this->hasMany(BuildingContact::class);
@@ -104,6 +110,11 @@ class Building extends Model
     public function documents(): HasMany
     {
         return $this->hasMany(SalesDocument::class);
+    }
+
+    public function genericDocuments(): MorphMany
+    {
+        return $this->morphMany(Document::class, 'documentable');
     }
 
     public function followUps(): HasMany

@@ -60,6 +60,7 @@ class BuildingResource extends JsonResource
             'floors' => $this->whenLoaded('floors'),
             'flats' => $this->whenLoaded('flats'),
             'fire_systems' => $this->whenLoaded('fireSystems'),
+            'fire_systems_config' => $this->whenLoaded('fireSystemsConfig'),
             'contacts' => $this->whenLoaded('contacts'),
             'active_opportunity' => $this->whenLoaded('activeOpportunity'),
             'created_at' => $this->created_at,

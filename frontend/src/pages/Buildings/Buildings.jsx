@@ -9,6 +9,23 @@ import {
   Shield, Flame, Hammer, User, Phone, FileText, ChevronDown, ChevronUp, Eye
 } from 'lucide-react';
 
+const FIRE_SYSTEM_MAIN_TYPES = [
+  'Downcomer System',
+  'Sprinkler System',
+  'Drencher System',
+  'Hydrant System',
+  'Fire Extinguisher',
+  'Fire Alarm',
+  'CCTV',
+  'Biometric',
+  'Others',
+];
+
+const FIRE_SYSTEM_SUB_TYPES = {
+  'Fire Alarm': ['Conventional', 'Public Addressable', 'Semi Addressable'],
+  'CCTV': ['IP Camera', 'Analog Camera'],
+};
+
 const defaultFormData = {
   name: '',
   address: '',
@@ -26,7 +43,7 @@ const defaultFormData = {
   no_of_lifts: '',
   no_of_exits_entry: '',
   fire_safety_available: false,
-  fire_safety_type: '',
+  fire_systems: [],
   under_construction: false,
   property_owner: '',
   plot_no: '',
@@ -164,6 +181,23 @@ export default function Buildings() {
     });
   };
 
+  const addFireSystem = () => {
+    setFormData(prev => ({ ...prev, fire_systems: [...prev.fire_systems, { system_type: '', sub_type: '', other_details: '' }] }));
+  };
+
+  const updateFireSystem = (index, field, value) => {
+    setFormData(prev => {
+      const next = [...prev.fire_systems];
+      next[index] = { ...next[index], [field]: value };
+      if (field === 'system_type') { next[index].sub_type = ''; next[index].other_details = ''; }
+      return { ...prev, fire_systems: next };
+    });
+  };
+
+  const removeFireSystem = (index) => {
+    setFormData(prev => ({ ...prev, fire_systems: prev.fire_systems.filter((_, i) => i !== index) }));
+  };
+
   const openAddModal = () => {
     setEditingBuilding(null);
     setFormData({ ...defaultFormData });
@@ -192,7 +226,12 @@ export default function Buildings() {
       no_of_lifts: b.no_of_lifts ?? '',
       no_of_exits_entry: b.no_of_exits_entry ?? '',
       fire_safety_available: !!b.fire_safety_available,
-      fire_safety_type: b.fire_safety_type || '',
+      fire_systems: Array.isArray(b.fire_systems_config) ? b.fire_systems_config.map(fs => ({
+        id: fs.id,
+        system_type: fs.system_type || '',
+        sub_type: fs.sub_type || '',
+        other_details: fs.other_details || '',
+      })) : [],
       under_construction: !!b.under_construction,
       property_owner: b.property_owner || '',
       plot_no: b.plot_no || '',
@@ -275,6 +314,12 @@ export default function Buildings() {
         no_of_lifts: formData.no_of_lifts !== '' ? parseInt(formData.no_of_lifts) : null,
         no_of_exits_entry: formData.no_of_exits_entry !== '' ? parseInt(formData.no_of_exits_entry) : null,
         site_id: formData.site_id ? parseInt(formData.site_id) : null,
+        fire_systems: formData.fire_systems.filter(fs => fs.system_type).map(fs => ({
+          ...(fs.id ? { id: fs.id } : {}),
+          system_type: fs.system_type,
+          sub_type: fs.sub_type || null,
+          other_details: fs.system_type === 'Others' ? (fs.other_details || null) : null,
+        })),
         wings: wingsData.length > 0 ? wingsData.map((w, wIdx) => ({
           ...(w.id ? { id: w.id } : {}),
           name: w.name,
@@ -432,11 +477,20 @@ export default function Buildings() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 mt-3 text-xs">
+                <div className="flex items-center gap-3 mt-3 text-xs flex-wrap">
                   <div className={`flex items-center gap-1 ${b.fire_safety_available ? 'text-green-600 font-medium' : 'text-gray-400'}`}>
                     <Flame className="w-3.5 h-3.5" />
-                    {b.fire_safety_available ? (b.fire_safety_type || 'Fire Safety') : 'No Fire Safety'}
+                    {b.fire_safety_available ? 'Fire Safety' : 'No Fire Safety'}
                   </div>
+                  {b.fire_safety_available && Array.isArray(b.fire_systems_config) && b.fire_systems_config.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {b.fire_systems_config.map((fs, i) => (
+                        <span key={i} className="bg-green-50 text-green-700 px-2 py-0.5 rounded-full">
+                          {fs.system_type}{fs.sub_type ? ` - ${fs.sub_type}` : ''}{fs.system_type === 'Others' && fs.other_details ? ` (${fs.other_details})` : ''}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   {b.commercial_shops_available && <span className="text-purple-600 font-medium bg-purple-50 px-2 py-0.5 rounded">Commercial Shops</span>}
                   {b.provisional_noc && <span className="text-blue-600 font-medium bg-blue-50 px-2 py-0.5 rounded">NOC</span>}
                 </div>
@@ -801,9 +855,49 @@ export default function Buildings() {
                     <span className="text-sm font-medium text-gray-700">Fire Safety Available</span>
                   </label>
                   {formData.fire_safety_available && (
-                    <div>
-                      <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Fire Safety Type</label>
-                      <input type="text" name="fire_safety_type" value={formData.fire_safety_type} onChange={handleInputChange} placeholder="e.g. Sprinkler, Hose Reel, Extinguisher" className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    <div className="space-y-3">
+                      {formData.fire_systems.map((fs, idx) => {
+                        const subtypes = FIRE_SYSTEM_SUB_TYPES[fs.system_type] || [];
+                        return (
+                          <div key={idx} className="border border-gray-200 rounded-lg p-3 space-y-2 bg-gray-50/50">
+                            <div className="flex items-center gap-2">
+                              <select
+                                value={fs.system_type}
+                                onChange={(e) => updateFireSystem(idx, 'system_type', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              >
+                                <option value="">Select System</option>
+                                {FIRE_SYSTEM_MAIN_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                              </select>
+                              <button type="button" onClick={() => removeFireSystem(idx)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg" title="Remove">
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                            {subtypes.length > 0 && (
+                              <select
+                                value={fs.sub_type}
+                                onChange={(e) => updateFireSystem(idx, 'sub_type', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              >
+                                <option value="">Select Sub-type</option>
+                                {subtypes.map(st => <option key={st} value={st}>{st}</option>)}
+                              </select>
+                            )}
+                            {fs.system_type === 'Others' && (
+                              <input
+                                type="text"
+                                value={fs.other_details}
+                                onChange={(e) => updateFireSystem(idx, 'other_details', e.target.value)}
+                                placeholder="Specify other system details..."
+                                className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              />
+                            )}
+                          </div>
+                        );
+                      })}
+                      <button type="button" onClick={addFireSystem} className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 font-medium">
+                        <Plus className="w-4 h-4" /> Add System
+                      </button>
                     </div>
                   )}
                 </div>

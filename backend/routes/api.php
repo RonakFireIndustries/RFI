@@ -364,6 +364,12 @@ Route::prefix('v1')->group(function () {
     Route::put('/extinguishers/{fireSystem}', [\App\Http\Controllers\Api\V1\FireExtinguisherController::class, 'update']);
     Route::delete('/extinguishers/{fireSystem}', [\App\Http\Controllers\Api\V1\FireExtinguisherController::class, 'destroy']);
 
+    // Fire Extinguisher Certificates (per building)
+    Route::get('/extinguishers/certificates', [\App\Http\Controllers\Api\V1\FireExtinguisherController::class, 'listCertificates']);
+    Route::post('/extinguishers/certificates', [\App\Http\Controllers\Api\V1\FireExtinguisherController::class, 'uploadCertificate']);
+    Route::get('/extinguishers/certificates/{document}/download', [\App\Http\Controllers\Api\V1\FireExtinguisherController::class, 'downloadCertificate']);
+    Route::delete('/extinguishers/certificates/{document}', [\App\Http\Controllers\Api\V1\FireExtinguisherController::class, 'deleteCertificate']);
+
     // Quotations / BOQ
     Route::get('/quotations', [\App\Http\Controllers\Api\V1\QuotationController::class, 'index']);
     Route::post('/quotations', [\App\Http\Controllers\Api\V1\QuotationController::class, 'store']);

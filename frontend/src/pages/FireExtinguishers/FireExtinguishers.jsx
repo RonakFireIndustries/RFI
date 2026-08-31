@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import {
   Plus, Trash2, Search, Flame, Building2, CalendarDays, CalendarClock,
-  Info, X, AlertTriangle, CheckCircle2, ShieldAlert,
+  Info, X, AlertTriangle, CheckCircle2, ShieldAlert, Paperclip, Download, FileText, Upload,
 } from 'lucide-react';
 import api from '../../services/api';
 
@@ -37,17 +37,48 @@ export default function FireExtinguishers() {
   const [search, setSearch] = useState('');
   const [dueOnly, setDueOnly] = useState(false);
 
+  // Certificates keyed by building_id
+  const [certificates, setCertificates] = useState({});
+  const [certsLoading, setCertsLoading] = useState(false);
+
   // Add flow
   const [addOpen, setAddOpen] = useState(false);
   const [formError, setFormError] = useState('');
   const [buildingName, setBuildingName] = useState('');
   const [count, setCount] = useState('');
   const [rows, setRows] = useState([]);
+  const [addCertFile, setAddCertFile] = useState(null);
+  const [addCertExpiry, setAddCertExpiry] = useState('');
+  const [addCertRemarks, setAddCertRemarks] = useState('');
+
+  // Row certificate upload UI
+  const [certRow, setCertRow] = useState(null);
+  const [certFile, setCertFile] = useState(null);
+  const [certExpiry, setCertExpiry] = useState('');
+  const [certRemarks, setCertRemarks] = useState('');
 
   useEffect(() => {
     loadExtinguishers();
+    loadCertificates();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dueOnly]);
+
+  const loadCertificates = async () => {
+    setCertsLoading(true);
+    try {
+      const res = await api.get('/extinguishers/certificates', { params: { per_page: 500 } });
+      const raw = Array.isArray(res.data) ? res.data : (res.data?.certificates ?? []);
+      const map = {};
+      (raw || []).forEach((c) => {
+        if (!map[c.building_id]) map[c.building_id] = [];
+        map[c.building_id].push(c);
+      });
+      setCertificates(map);
+    } catch {
+      setCertificates({});
+    }
+    setCertsLoading(false);
+  };
 
   const loadExtinguishers = async () => {
     setLoading(true);
@@ -60,6 +91,74 @@ export default function FireExtinguishers() {
       setExtinguishers([]);
     }
     setLoading(false);
+  };
+
+  const addCertificateToBuilding = async (buildingId, file, expiry, remarks) => {
+    if (!file) return null;
+    const fd = new FormData();
+    fd.append('building_id', buildingId);
+    fd.append('file', file);
+    if (expiry) fd.append('expiry_date', iso(expiry));
+    if (remarks) fd.append('remarks', remarks);
+    const res = await api.post('/extinguishers/certificates', fd);
+    const cert = res.data?.certificate ?? res.data;
+    setCertificates((prev) => {
+      const list = [...(prev[buildingId] || [])];
+      if (cert && typeof cert === 'object' && !Array.isArray(cert)) list.push(cert);
+      return { ...prev, [buildingId]: list };
+    });
+    return cert;
+  };
+
+  const downloadCertificate = async (certObj) => {
+    try {
+      const blob = await api.getBlob(`/extinguishers/certificates/${certObj.id}/download`);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', certObj.file_name || 'certificate');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to download certificate.');
+    }
+  };
+
+  const deleteCertificate = async (certObj) => {
+    if (!window.confirm('Delete this certificate?')) return;
+    try {
+      await api.delete(`/extinguishers/certificates/${certObj.id}`);
+      const buildingId = certObj.building_id;
+      setCertificates((prev) => ({
+        ...prev,
+        [buildingId]: (prev[buildingId] || []).filter((c) => c.id !== certObj.id),
+      }));
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete certificate.');
+    }
+  };
+
+  const openCertUpload = (ext) => {
+    setCertRow(ext);
+    setCertFile(null);
+    setCertExpiry('');
+    setCertRemarks('');
+  };
+
+  const submitRowCert = async (e) => {
+    e.preventDefault();
+    if (!certRow) return;
+    try {
+      await addCertificateToBuilding(certRow.building_id, certFile, certExpiry, certRemarks);
+      setCertRow(null);
+      setCertFile(null);
+      setCertExpiry('');
+      setCertRemarks('');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to upload certificate.');
+    }
   };
 
   // Dynamic rows based on count
@@ -87,6 +186,9 @@ export default function FireExtinguishers() {
     setBuildingName('');
     setCount('');
     setRows([]);
+    setAddCertFile(null);
+    setAddCertExpiry('');
+    setAddCertRemarks('');
     setAddOpen(true);
   };
 
@@ -116,11 +218,22 @@ export default function FireExtinguishers() {
     });
 
     try {
-      await api.post('/extinguishers', {
+      const res = await api.post('/extinguishers', {
         building_name: buildingName.trim(),
         count: numCount,
         items,
       });
+      const buildingId = res.data?.building?.id;
+      if (addCertFile && buildingId) {
+        try {
+          await addCertificateToBuilding(buildingId, addCertFile, addCertExpiry, addCertRemarks);
+        } catch (certErr) {
+          setFormError('Extinguishers saved, but certificate upload failed: ' + (certErr.response?.data?.message || certErr.message));
+          setAddOpen(false);
+          loadExtinguishers();
+          return;
+        }
+      }
       setAddOpen(false);
       loadExtinguishers();
     } catch (err) {
@@ -271,6 +384,7 @@ export default function FireExtinguishers() {
                 <th className="py-3 px-4">Refilling Date</th>
                 <th className="py-3 px-4">Year of Manufacturing</th>
                 <th className="py-3 px-4">Remark</th>
+                <th className="py-3 px-4">Certificate</th>
                 <th className="py-3 px-4 text-right">Status</th>
                 <th className="py-3 px-4 text-right">Action</th>
               </tr>
@@ -278,6 +392,7 @@ export default function FireExtinguishers() {
             <tbody>
               {filtered.map((x) => {
                 const due = x.next_refill_date && new Date(x.next_refill_date) <= new Date();
+                const buildingCerts = certificates[x.building_id] || [];
                 return (
                   <tr key={x.id} className="border-b border-gray-50 hover:bg-gray-50/50">
                     <td className="py-3 px-4">
@@ -359,6 +474,30 @@ export default function FireExtinguishers() {
                         className="border border-gray-200 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full min-w-[120px]"
                       />
                     </td>
+                    <td className="py-3 px-4">
+                      <div className="flex flex-wrap items-center gap-1.5 min-w-[160px]">
+                        {buildingCerts.map((c) => (
+                          <span key={c.id} className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-xs rounded-md px-2 py-1">
+                            <FileText className="w-3.5 h-3.5" />
+                            <span className="max-w-[100px] truncate" title={c.file_name}>{c.file_name}</span>
+                            <button onClick={() => downloadCertificate(c)} className="hover:text-blue-900" title="Download">
+                              <Download className="w-3.5 h-3.5" />
+                            </button>
+                            <button onClick={() => deleteCertificate(c)} className="hover:text-red-600" title="Delete">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </span>
+                        ))}
+                        <button
+                          onClick={() => openCertUpload(x)}
+                          className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 border border-blue-200 rounded-md px-2 py-1"
+                          title="Attach certificate"
+                        >
+                          <Paperclip className="w-3.5 h-3.5" />
+                          Attach
+                        </button>
+                      </div>
+                    </td>
                     <td className="py-3 px-4 text-right">
                       {due ? (
                         <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-red-50 text-red-700">Due</span>
@@ -415,6 +554,43 @@ export default function FireExtinguishers() {
                     placeholder="Enter building name..."
                     className="w-full pl-10 pr-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
+                </div>
+              </div>
+
+              <div className="bg-gray-50/50 p-4 rounded-xl border border-gray-100 space-y-3">
+                <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                  <Paperclip className="w-4 h-4 text-gray-500" />
+                  Certificate (Optional)
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-end">
+                  <div className="md:col-span-2">
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Certificate File</label>
+                    <input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                      onChange={(e) => setAddCertFile(e.target.files?.[0] || null)}
+                      className="w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 file:font-semibold hover:file:bg-blue-100"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Expiry Date</label>
+                    <input
+                      type="date"
+                      value={addCertExpiry}
+                      onChange={(e) => setAddCertExpiry(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Remarks</label>
+                    <input
+                      type="text"
+                      value={addCertRemarks}
+                      onChange={(e) => setAddCertRemarks(e.target.value)}
+                      placeholder="Any notes..."
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -543,6 +719,78 @@ export default function FireExtinguishers() {
                   className="px-5 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary/90 transition-colors font-semibold"
                 >
                   Save Extinguishers
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {certRow && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl">
+            <div className="flex justify-between items-center px-6 py-4 border-b border-gray-150">
+              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <Paperclip className="w-5 h-5 text-gray-500" />
+                Attach Certificate
+              </h2>
+              <button onClick={() => setCertRow(null)} className="text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={submitRowCert} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Building</label>
+                <div className="flex items-center gap-2 text-sm text-gray-700">
+                  <Building2 className="w-4 h-4 text-gray-400" />
+                  <span className="font-medium">{certRow.building?.name || '—'}</span>
+                </div>
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Certificate File</label>
+                <input
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                  required
+                  onChange={(e) => setCertFile(e.target.files?.[0] || null)}
+                  className="w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 file:font-semibold hover:file:bg-blue-100"
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Expiry Date</label>
+                  <input
+                    type="date"
+                    value={certExpiry}
+                    onChange={(e) => setCertExpiry(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Remarks</label>
+                  <input
+                    type="text"
+                    value={certRemarks}
+                    onChange={(e) => setCertRemarks(e.target.value)}
+                    placeholder="Any notes..."
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-150">
+                <button
+                  type="button"
+                  onClick={() => setCertRow(null)}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="inline-flex items-center px-5 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary/90 transition-colors font-semibold"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload Certificate
                 </button>
               </div>
             </form>

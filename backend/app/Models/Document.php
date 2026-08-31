@@ -12,6 +12,11 @@ class Document extends Model
         'documentable_type', 'uploaded_by', 'file_size',
     ];
 
+    protected $casts = [
+        'expiry_date' => 'date',
+        'file_size' => 'integer',
+    ];
+
     public function documentable()
     {
         return $this->morphTo();

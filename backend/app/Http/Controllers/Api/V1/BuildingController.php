@@ -58,7 +58,7 @@ class BuildingController extends Controller
     {
         $this->authorize('buildings.view');
 
-        $building->load('site');
+        $building->load('site', 'fireSystemsConfig');
 
         return $this->success('Building retrieved successfully', [
             'building' => new BuildingResource($building)
