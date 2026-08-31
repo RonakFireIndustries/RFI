@@ -227,7 +227,9 @@ class QuotationController extends Controller
                 }
             }
 
-            $new = $section->items()->create($data);
+            $new = $section->items()->create(array_merge($data, [
+                'quotation_id' => $section->quotation_id,
+            ]));
             $keepIds[] = $new->id;
         }
 
