@@ -244,16 +244,6 @@ class DashboardWidgetSeeder extends Seeder
         ], $this->fieldWorkers());
 
         $this->widget([
-            'widget_key' => 'my_attendance', 'name' => 'My Attendance', 'type' => 'card', 'icon' => 'Calendar',
-            'permission' => null, 'order' => ++$order,
-        ], $this->allWorkers());
-
-        $this->widget([
-            'widget_key' => 'my_dpr', 'name' => 'My DPRs', 'type' => 'card', 'icon' => 'FileText',
-            'permission' => null, 'order' => ++$order,
-        ], $this->allWorkers());
-
-        $this->widget([
             'widget_key' => 'leave_balance', 'name' => 'Leave Balance', 'type' => 'card', 'icon' => 'CalendarDays',
             'permission' => null, 'order' => ++$order,
         ], $this->allWorkers());
@@ -680,6 +670,16 @@ class DashboardWidgetSeeder extends Seeder
     protected function seedWidgets(): void
     {
         $order = 0;
+
+        $this->widget([
+            'widget_key' => 'my_attendance', 'name' => 'My Attendance', 'type' => 'widget', 'icon' => 'Calendar',
+            'permission' => null, 'order' => ++$order,
+        ], $this->allWorkers());
+
+        $this->widget([
+            'widget_key' => 'my_dpr', 'name' => 'My DPRs', 'type' => 'widget', 'icon' => 'FileText',
+            'permission' => null, 'order' => ++$order,
+        ], $this->allWorkers());
 
         $this->widget([
             'widget_key' => 'my_documents', 'name' => 'My Documents', 'type' => 'widget', 'icon' => 'FileText',

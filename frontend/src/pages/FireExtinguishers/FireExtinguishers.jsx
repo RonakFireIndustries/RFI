@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import {
   Plus, Trash2, Search, Flame, Building2, CalendarDays, CalendarClock,
-  Info, X, AlertTriangle, CheckCircle2, ShieldAlert, Paperclip, Download, FileText, Upload,
+  Info, X, AlertTriangle, CheckCircle2, ShieldAlert, Paperclip, Download, FileText, Upload, ArrowLeft,
 } from 'lucide-react';
 import api from '../../services/api';
 
@@ -57,6 +57,13 @@ export default function FireExtinguishers() {
   const [certExpiry, setCertExpiry] = useState('');
   const [certRemarks, setCertRemarks] = useState('');
 
+  // Submission guards to prevent duplicate entries
+  const [saving, setSaving] = useState(false);
+  const [uploadingCert, setUploadingCert] = useState(false);
+
+  // Detail panel: building id currently being viewed (null = list)
+  const [selectedBuildingId, setSelectedBuildingId] = useState(null);
+
   useEffect(() => {
     loadExtinguishers();
     loadCertificates();
@@ -70,8 +77,10 @@ export default function FireExtinguishers() {
       const raw = Array.isArray(res.data) ? res.data : (res.data?.certificates ?? []);
       const map = {};
       (raw || []).forEach((c) => {
-        if (!map[c.building_id]) map[c.building_id] = [];
-        map[c.building_id].push(c);
+        const bId = c.building_id;
+        if (!bId) return;
+        if (!map[bId]) map[bId] = [];
+        if (!map[bId].some((existing) => existing.id === c.id)) map[bId].push(c);
       });
       setCertificates(map);
     } catch {
@@ -102,11 +111,16 @@ export default function FireExtinguishers() {
     if (remarks) fd.append('remarks', remarks);
     const res = await api.post('/extinguishers/certificates', fd);
     const cert = res.data?.certificate ?? res.data;
-    setCertificates((prev) => {
-      const list = [...(prev[buildingId] || [])];
-      if (cert && typeof cert === 'object' && !Array.isArray(cert)) list.push(cert);
-      return { ...prev, [buildingId]: list };
-    });
+    if (cert && typeof cert === 'object' && !Array.isArray(cert)) {
+      setCertificates((prev) => {
+        const list = [...(prev[buildingId] || [])];
+        if (!list.some((existing) => existing.id === cert.id)) {
+          list.push(cert);
+          return { ...prev, [buildingId]: list };
+        }
+        return prev;
+      });
+    }
     return cert;
   };
 
@@ -149,7 +163,8 @@ export default function FireExtinguishers() {
 
   const submitRowCert = async (e) => {
     e.preventDefault();
-    if (!certRow) return;
+    if (!certRow || uploadingCert) return;
+    setUploadingCert(true);
     try {
       await addCertificateToBuilding(certRow.building_id, certFile, certExpiry, certRemarks);
       setCertRow(null);
@@ -159,6 +174,7 @@ export default function FireExtinguishers() {
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to upload certificate.');
     }
+    setUploadingCert(false);
   };
 
   // Dynamic rows based on count
@@ -194,6 +210,7 @@ export default function FireExtinguishers() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (saving) return;
     setFormError('');
 
     if (!buildingName.trim()) {
@@ -217,6 +234,7 @@ export default function FireExtinguishers() {
       return item;
     });
 
+    setSaving(true);
     try {
       const res = await api.post('/extinguishers', {
         building_name: buildingName.trim(),
@@ -230,13 +248,16 @@ export default function FireExtinguishers() {
         } catch (certErr) {
           setFormError('Extinguishers saved, but certificate upload failed: ' + (certErr.response?.data?.message || certErr.message));
           setAddOpen(false);
+          setSaving(false);
           loadExtinguishers();
           return;
         }
       }
       setAddOpen(false);
+      setSaving(false);
       loadExtinguishers();
     } catch (err) {
+      setSaving(false);
       const msg = err.response?.data?.message || err.message || 'Failed to save extinguishers.';
       setFormError(msg);
     }
@@ -249,6 +270,20 @@ export default function FireExtinguishers() {
       loadExtinguishers();
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to delete extinguisher.');
+    }
+  };
+
+  const handleDeleteBuilding = async (buildingId, name) => {
+    if (!window.confirm(`Delete all extinguishers in "${name}"? This cannot be undone.`)) return;
+    const items = extinguishers.filter((x) => (x.building_id ?? x.building?.id) === buildingId);
+    try {
+      for (const item of items) {
+        await api.delete(`/extinguishers/${item.id}`);
+      }
+      if (selectedBuildingId === buildingId) setSelectedBuildingId(null);
+      loadExtinguishers();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete extinguishers.');
     }
   };
 
@@ -284,6 +319,29 @@ export default function FireExtinguishers() {
       return true;
     });
   }, [extinguishers, search]);
+
+  const groupedBuildings = useMemo(() => {
+    const map = {};
+    filtered.forEach((x) => {
+      const bId = x.building_id ?? x.building?.id;
+      if (bId === undefined || bId === null) return;
+      if (!map[bId]) {
+        map[bId] = { id: bId, name: x.building?.name || 'Unnamed Building', items: [] };
+      }
+      map[bId].items.push(x);
+    });
+    return Object.values(map).sort((a, b) => a.name.localeCompare(b.name));
+  }, [filtered]);
+
+  const selectedBuilding = useMemo(() => {
+    if (selectedBuildingId === null) return null;
+    return groupedBuildings.find((b) => b.id === selectedBuildingId)
+      || {
+        id: selectedBuildingId,
+        name: extinguishers.find((x) => (x.building_id ?? x.building?.id) === selectedBuildingId)?.building?.name || 'Building',
+        items: extinguishers.filter((x) => (x.building_id ?? x.building?.id) === selectedBuildingId),
+      };
+  }, [selectedBuildingId, groupedBuildings, extinguishers]);
 
   const totalCount = extinguishers.length;
   const dueCount = extinguishers.filter((x) => {
@@ -364,97 +422,202 @@ export default function FireExtinguishers() {
         <div className="flex justify-center items-center py-20">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
         </div>
-      ) : filtered.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center shadow-sm">
-          <Info className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-bold text-gray-900">No Extinguishers Found</h3>
-          <p className="text-gray-500 mt-1">Add extinguishers for a building to get started.</p>
-        </div>
-      ) : (
-        <div className="overflow-x-auto bg-white rounded-2xl border border-gray-100 shadow-sm">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-200 text-left text-xs font-bold text-gray-500 uppercase">
-                <th className="py-3 px-4">Location</th>
-                <th className="py-3 px-4">Building</th>
-                <th className="py-3 px-4">SR No</th>
-                <th className="py-3 px-4">Type</th>
-                <th className="py-3 px-4">Capacity (kg)</th>
-                <th className="py-3 px-4">Installation Date</th>
-                <th className="py-3 px-4">Refilling Date</th>
-                <th className="py-3 px-4">Year of Manufacturing</th>
-                <th className="py-3 px-4">Remark</th>
-                <th className="py-3 px-4">Certificate</th>
-                <th className="py-3 px-4 text-right">Status</th>
-                <th className="py-3 px-4 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((x) => {
-                const due = x.next_refill_date && new Date(x.next_refill_date) <= new Date();
-                const buildingCerts = certificates[x.building_id] || [];
-                return (
-                  <tr key={x.id} className="border-b border-gray-50 hover:bg-gray-50/50">
-                    <td className="py-3 px-4">
+      ) : selectedBuildingId === null ? (
+        groupedBuildings.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center shadow-sm">
+            <Info className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-gray-900">No Extinguishers Found</h3>
+            <p className="text-gray-500 mt-1">Add extinguishers for a building to get started.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {groupedBuildings.map((b) => {
+              const bDue = b.items.filter((x) => x.next_refill_date && new Date(x.next_refill_date) <= new Date()).length;
+              const bCerts = (certificates[b.id] || []).length;
+              return (
+                <div key={b.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow p-5 flex flex-col hover:border-blue-200 group">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+                        <Building2 className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-gray-900 leading-tight">{b.name}</h3>
+                        <p className="text-xs text-gray-500">{b.items.length} extinguisher(s)</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 mb-4">
+                    {bDue > 0 ? (
+                      <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-red-50 text-red-700">{bDue} refill due</span>
+                    ) : (
+                      <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700">Up to date</span>
+                    )}
+                    {bCerts > 0 && (
+                      <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700">
+                        <FileText className="inline w-3 h-3 mr-1" />{bCerts} cert(s)
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-auto flex items-center justify-between gap-2 pt-3 border-t border-gray-100">
+                    <button
+                      onClick={() => setSelectedBuildingId(b.id)}
+                      className="flex-1 inline-flex items-center justify-center px-4 py-2 bg-primary text-white text-sm rounded-lg hover:bg-primary/90 transition-colors font-semibold"
+                    >
+                      View Details
+                    </button>
+                    <button
+                      onClick={() => handleDeleteBuilding(b.id, b.name)}
+                      className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Delete all extinguishers in this building"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )
+      ) : selectedBuilding ? (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 px-6 py-5 border-b border-gray-100 bg-gray-50/50">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setSelectedBuildingId(null)}
+                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Back to list"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+                <Building2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">{selectedBuilding.name}</h2>
+                <p className="text-sm text-gray-500">{selectedBuilding.items.length} extinguisher(s)</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => openCertUpload(selectedBuilding.items[0])}
+                className="inline-flex items-center px-4 py-2 border border-blue-200 text-blue-700 text-sm rounded-lg hover:bg-blue-50 transition-colors font-semibold"
+              >
+                <Paperclip className="w-4 h-4 mr-2" />
+                Add Certificate
+              </button>
+              <button
+                onClick={() => handleDeleteBuilding(selectedBuilding.id, selectedBuilding.name)}
+                className="inline-flex items-center px-4 py-2 border border-red-200 text-red-600 text-sm rounded-lg hover:bg-red-50 transition-colors font-semibold"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete All
+              </button>
+            </div>
+          </div>
+
+          {(certificates[selectedBuilding.id] || []).length > 0 && (
+            <div className="px-6 py-4 border-b border-gray-100">
+              <h3 className="text-sm font-bold text-gray-800 mb-2 flex items-center gap-2">
+                <FileText className="w-4 h-4 text-gray-500" />
+                Certificates
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {(certificates[selectedBuilding.id] || []).map((c) => (
+                  <div key={c.id} className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 text-sm rounded-md pl-3 pr-1.5 py-1.5">
+                    <FileText className="w-4 h-4" />
+                    <span className="max-w-[180px] truncate" title={c.file_name}>{c.file_name}</span>
+                    {c.expiry_date && (
+                      <span className="text-xs text-blue-500">exp {c.expiry_date}</span>
+                    )}
+                    <button onClick={() => downloadCertificate(c)} className="p-1 hover:text-blue-900" title="Download">
+                      <Download className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => deleteCertificate(c)} className="p-1 hover:text-red-600" title="Delete">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="divide-y divide-gray-100">
+            {selectedBuilding.items.map((x) => {
+              const due = x.next_refill_date && new Date(x.next_refill_date) <= new Date();
+              return (
+                <div key={x.id} className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600">
+                        <Flame className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-gray-900">{x.label || 'Extinguisher'}</h3>
+                        <p className="text-xs text-gray-500">{x.location || 'No location set'}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {due ? (
+                        <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-red-50 text-red-700">Due</span>
+                      ) : (
+                        <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700">OK</span>
+                      )}
+                      <button
+                        onClick={() => handleDelete(x)}
+                        className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Delete this extinguisher"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">SR No</label>
+                      <input
+                        type="text"
+                        value={x.label || ''}
+                        onChange={(e) => handleUpdate(x, 'label', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Location</label>
                       <input
                         type="text"
                         value={x.location || ''}
                         onChange={(e) => handleUpdate(x, 'location', e.target.value)}
                         placeholder="e.g. Ground Floor"
-                        className="border border-gray-200 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full min-w-[110px]"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        <Building2 className="w-4 h-4 text-gray-400" />
-                        <span className="font-medium text-gray-800">{x.building?.name || '—'}</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 text-gray-600">{x.label || '-'}</td>
-                    <td className="py-3 px-4">
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Type</label>
                       <select
                         value={x.type || ''}
                         onChange={(e) => handleUpdate(x, 'type', e.target.value)}
-                        className="border border-gray-200 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-[200px]"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                       >
                         <option value="">—</option>
                         {EXTINGUISHER_TYPES.map((t) => (
                           <option key={t} value={t}>{t}</option>
                         ))}
                       </select>
-                    </td>
-                    <td className="py-3 px-4">
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Capacity (kg)</label>
                       <input
                         type="number"
                         min="0"
                         value={x.capacity ?? ''}
                         onChange={(e) => handleUpdate(x, 'capacity', e.target.value)}
-                        className="w-20 border border-gray-200 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        <CalendarDays className="w-4 h-4 text-gray-400" />
-                        <input
-                          type="date"
-                          value={iso(x.installation_date)}
-                          onChange={(e) => handleUpdate(x, 'installation_date', e.target.value)}
-                          className="border border-gray-200 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        <CalendarClock className={`w-4 h-4 ${due ? 'text-red-500' : 'text-gray-400'}`} />
-                        <input
-                          type="date"
-                          value={iso(x.next_refill_date)}
-                          onChange={(e) => handleUpdate(x, 'next_refill_date', e.target.value)}
-                          className="border border-gray-200 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Year of Manufacturing</label>
                       <input
                         type="number"
                         min="0"
@@ -462,63 +625,46 @@ export default function FireExtinguishers() {
                         value={x.year_of_manufacturing ?? ''}
                         onChange={(e) => handleUpdate(x, 'year_of_manufacturing', e.target.value)}
                         placeholder="e.g. 2020"
-                        className="w-24 border border-gray-200 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
-                    </td>
-                    <td className="py-3 px-4">
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Installation Date</label>
+                      <input
+                        type="date"
+                        value={iso(x.installation_date)}
+                        onChange={(e) => handleUpdate(x, 'installation_date', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Refilling Date</label>
+                      <input
+                        type="date"
+                        value={iso(x.next_refill_date)}
+                        onChange={(e) => handleUpdate(x, 'next_refill_date', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Remark</label>
                       <input
                         type="text"
                         value={x.remark || ''}
                         onChange={(e) => handleUpdate(x, 'remark', e.target.value)}
-                        placeholder="—"
-                        className="border border-gray-200 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full min-w-[120px]"
+                        placeholder="Any notes..."
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex flex-wrap items-center gap-1.5 min-w-[160px]">
-                        {buildingCerts.map((c) => (
-                          <span key={c.id} className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-xs rounded-md px-2 py-1">
-                            <FileText className="w-3.5 h-3.5" />
-                            <span className="max-w-[100px] truncate" title={c.file_name}>{c.file_name}</span>
-                            <button onClick={() => downloadCertificate(c)} className="hover:text-blue-900" title="Download">
-                              <Download className="w-3.5 h-3.5" />
-                            </button>
-                            <button onClick={() => deleteCertificate(c)} className="hover:text-red-600" title="Delete">
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </span>
-                        ))}
-                        <button
-                          onClick={() => openCertUpload(x)}
-                          className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 border border-blue-200 rounded-md px-2 py-1"
-                          title="Attach certificate"
-                        >
-                          <Paperclip className="w-3.5 h-3.5" />
-                          Attach
-                        </button>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      {due ? (
-                        <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-red-50 text-red-700">Due</span>
-                      ) : (
-                        <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700">OK</span>
-                      )}
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      <button
-                        onClick={() => handleDelete(x)}
-                        className="p-2 text-gray-600 hover:text-red-600 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-gray-100"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        <div className="flex justify-center items-center py-20">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
         </div>
       )}
 
@@ -716,9 +862,11 @@ export default function FireExtinguishers() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary/90 transition-colors font-semibold"
+                  disabled={saving}
+                  className="inline-flex items-center px-5 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary/90 transition-colors font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  Save Extinguishers
+                  {saving && <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></span>}
+                  {saving ? 'Saving...' : 'Save Extinguishers'}
                 </button>
               </div>
             </form>
@@ -787,10 +935,15 @@ export default function FireExtinguishers() {
                 </button>
                 <button
                   type="submit"
-                  className="inline-flex items-center px-5 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary/90 transition-colors font-semibold"
+                  disabled={uploadingCert}
+                  className="inline-flex items-center px-5 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary/90 transition-colors font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  <Upload className="w-4 h-4 mr-2" />
-                  Upload Certificate
+                  {uploadingCert ? (
+                    <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></span>
+                  ) : (
+                    <Upload className="w-4 h-4 mr-2" />
+                  )}
+                  {uploadingCert ? 'Uploading...' : 'Upload Certificate'}
                 </button>
               </div>
             </form>
