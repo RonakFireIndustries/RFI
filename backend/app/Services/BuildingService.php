@@ -67,6 +67,8 @@ class BuildingService
                                 'name' => $floorDatum['name'],
                                 'floor_number' => $floorDatum['floor_number'] ?? null,
                                 'type' => $floorDatum['type'] ?? null,
+                                'area' => $floorDatum['area'] ?? null,
+                                'count' => $floorDatum['count'] ?? null,
                             ]);
 
                             if (!empty($flatsData)) {
@@ -177,6 +179,8 @@ class BuildingService
                                 'name' => $floorDatum['name'],
                                 'floor_number' => $floorDatum['floor_number'] ?? null,
                                 'type' => $floorDatum['type'] ?? null,
+                                'area' => $floorDatum['area'] ?? null,
+                                'count' => $floorDatum['count'] ?? null,
                             ];
 
                             if (!empty($floorDatum['id'])) {

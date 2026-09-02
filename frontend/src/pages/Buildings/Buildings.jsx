@@ -5,7 +5,7 @@ import { useSiteStore } from '../../store/siteStore';
 import { buildingDetailService } from '../../services/buildingDetailService';
 import MapPicker from '../../components/MapPicker';
 import {
-  Plus, Edit, Trash2, Search, MapPin, Building2, Info, X, Compass,
+  Plus, Edit, Trash2, Search, MapPin, Building2, Info, X, Compass, Copy,
   Shield, Flame, Hammer, User, Phone, FileText, ChevronDown, ChevronUp, Eye
 } from 'lucide-react';
 
@@ -26,6 +26,14 @@ const FIRE_SYSTEM_SUB_TYPES = {
   'CCTV': ['IP Camera', 'Analog Camera'],
 };
 
+const FLOOR_TYPES = ['Residential', 'Commercial', 'Parking', 'Terrace', 'Basement'];
+
+const cloneEntry = (entry) => {
+  const copy = { ...entry };
+  delete copy.id;
+  return copy;
+};
+
 const defaultFormData = {
   name: '',
   address: '',
@@ -35,9 +43,7 @@ const defaultFormData = {
   pincode: '',
   latitude: '',
   longitude: '',
-  no_of_floors: '',
   no_of_wings: '',
-  no_of_flats: '',
   commercial_shops_available: false,
   no_of_staircase: '',
   no_of_lifts: '',
@@ -99,9 +105,6 @@ export default function Buildings() {
             return [...prevWings, ...Array.from({ length: count - prevWings.length }, (_, i) => ({
               name: `Wing ${prevWings.length + i + 1}`,
               floors: '',
-              flats_per_floor: '',
-              flat_configuration: '',
-              total_flats: '',
             }))];
           }
           return prevWings.slice(0, count);
@@ -128,6 +131,8 @@ export default function Buildings() {
             name: `Floor ${existing.length + i + 1}`,
             floor_number: existing.length + i + 1,
             type: '',
+            area: '',
+            count: '',
             flats_count: '',
             flats_data: [],
           }))] };
@@ -135,6 +140,25 @@ export default function Buildings() {
         return { ...prev, [index]: existing.slice(0, count) };
       });
     }
+  };
+
+  const addFloorToWing = (index, type) => {
+    setFloorsData(prev => {
+      const existing = prev[index] || [];
+      const label = type === 'Parking' ? 'Parking' : 'Commercial';
+      return {
+        ...prev,
+        [index]: [...existing, {
+          name: `${label} Floor ${existing.filter(f => (f.type || '') === type).length + 1}`,
+          floor_number: existing.length + 1,
+          type,
+          area: '',
+          count: '',
+          flats_count: '',
+          flats_data: [],
+        }],
+      };
+    });
   };
 
   const handleFloorChange = (wingIdx, floorIdx, field, value) => {
@@ -153,14 +177,22 @@ export default function Buildings() {
         const existing = wingFloors[floorIdx].flats_data || [];
         if (count > existing.length) {
           wingFloors[floorIdx] = { ...wingFloors[floorIdx], flats_data: [...existing, ...Array.from({ length: count - existing.length }, (_, i) => ({
-            name: `${wingFloors[floorIdx].name || `Floor ${floorIdx + 1}`}-${existing.length + i + 1}`,
-            flat_number: `${existing.length + i + 1}`,
+            name: `Flat ${existing.length + i + 1}`,
             bhk_type: '',
             area: '',
           }))] };
         } else {
           wingFloors[floorIdx] = { ...wingFloors[floorIdx], flats_data: existing.slice(0, count) };
         }
+        updated[wingIdx] = wingFloors;
+        return updated;
+      });
+    }
+    if (field === 'type' && (value === 'Parking' || value === 'Commercial')) {
+      setFloorsData(prev => {
+        const updated = { ...prev };
+        const wingFloors = [...(updated[wingIdx] || [])];
+        wingFloors[floorIdx] = { ...wingFloors[floorIdx], flats_count: '', flats_data: [] };
         updated[wingIdx] = wingFloors;
         return updated;
       });
@@ -174,6 +206,62 @@ export default function Buildings() {
       const floor = { ...wingFloors[floorIdx] };
       const flats = [...(floor.flats_data || [])];
       flats[flatIdx] = { ...flats[flatIdx], [field]: value };
+      floor.flats_data = flats;
+      wingFloors[floorIdx] = floor;
+      updated[wingIdx] = wingFloors;
+      return updated;
+    });
+  };
+
+  const handleWingSameAsAbove = (index) => {
+    if (index <= 0) return;
+    const prev = wingsData[index - 1];
+    if (!prev) return;
+    setWingsData(prevWings => {
+      const updated = [...prevWings];
+      updated[index] = { ...updated[index], name: prev.name, floors: prev.floors };
+      return updated;
+    });
+    const prevFloors = floorsData[index - 1] || [];
+    setFloorsData(prevData => ({
+      ...prevData,
+      [index]: prevFloors.map(f => ({
+        ...cloneEntry(f),
+        floor_number: f.floor_number ?? (prevFloors.indexOf(f) + 1),
+        flats_data: (f.flats_data || []).map(cloneEntry),
+      })),
+    }));
+  };
+
+  const handleFloorSameAsAbove = (wingIdx, floorIdx) => {
+    if (floorIdx <= 0) return;
+    const prev = floorsData[wingIdx]?.[floorIdx - 1];
+    if (!prev) return;
+    setFloorsData(prevData => {
+      const updated = { ...prevData };
+      const wingFloors = [...(updated[wingIdx] || [])];
+      const copy = cloneEntry(prev);
+      wingFloors[floorIdx] = {
+        ...wingFloors[floorIdx],
+        ...copy,
+        floor_number: floorIdx + 1,
+        flats_data: (prev.flats_data || []).map(cloneEntry),
+      };
+      updated[wingIdx] = wingFloors;
+      return updated;
+    });
+  };
+
+  const handleFlatSameAsAbove = (wingIdx, floorIdx, flatIdx) => {
+    if (flatIdx <= 0) return;
+    const prev = floorsData[wingIdx]?.[floorIdx]?.flats_data?.[flatIdx - 1];
+    if (!prev) return;
+    setFloorsData(prevData => {
+      const updated = { ...prevData };
+      const wingFloors = [...(updated[wingIdx] || [])];
+      const floor = { ...wingFloors[floorIdx] };
+      const flats = [...(floor.flats_data || [])];
+      flats[flatIdx] = { ...flats[flatIdx], name: prev.name, bhk_type: prev.bhk_type, area: prev.area };
       floor.flats_data = flats;
       wingFloors[floorIdx] = floor;
       updated[wingIdx] = wingFloors;
@@ -218,9 +306,7 @@ export default function Buildings() {
       pincode: b.pincode || '',
       latitude: b.latitude || '',
       longitude: b.longitude || '',
-      no_of_floors: b.no_of_floors ?? '',
       no_of_wings: b.no_of_wings ?? '',
-      no_of_flats: b.no_of_flats ?? '',
       commercial_shops_available: !!b.commercial_shops_available,
       no_of_staircase: b.no_of_staircase ?? '',
       no_of_lifts: b.no_of_lifts ?? '',
@@ -262,9 +348,6 @@ export default function Buildings() {
           id: w.id,
           name: w.name || '',
           floors: w.floors ?? '',
-          flats_per_floor: w.flats_per_floor ?? '',
-          flat_configuration: w.flat_configuration || '',
-          total_flats: w.total_flats ?? '',
           _floorCount: wingFloors.length || w.floors || '',
         };
       }));
@@ -279,11 +362,12 @@ export default function Buildings() {
             name: f.name || '',
             floor_number: f.floor_number ?? '',
             type: f.type || '',
+            area: f.area ?? '',
+            count: f.count ?? '',
             flats_count: floorFlats.length || '',
             flats_data: floorFlats.map(fl => ({
               id: fl.id,
               name: fl.name || '',
-              flat_number: fl.flat_number || '',
               bhk_type: fl.bhk_type || '',
               area: fl.area ?? '',
             })),
@@ -307,9 +391,7 @@ export default function Buildings() {
         ...formData,
         latitude: formData.latitude ? parseFloat(formData.latitude) : null,
         longitude: formData.longitude ? parseFloat(formData.longitude) : null,
-        no_of_floors: formData.no_of_floors !== '' ? parseInt(formData.no_of_floors) : null,
         no_of_wings: formData.no_of_wings !== '' ? parseInt(formData.no_of_wings) : null,
-        no_of_flats: formData.no_of_flats !== '' ? parseInt(formData.no_of_flats) : null,
         no_of_staircase: formData.no_of_staircase !== '' ? parseInt(formData.no_of_staircase) : null,
         no_of_lifts: formData.no_of_lifts !== '' ? parseInt(formData.no_of_lifts) : null,
         no_of_exits_entry: formData.no_of_exits_entry !== '' ? parseInt(formData.no_of_exits_entry) : null,
@@ -324,18 +406,16 @@ export default function Buildings() {
           ...(w.id ? { id: w.id } : {}),
           name: w.name,
           floors: w.floors !== '' ? parseInt(w.floors) : null,
-          flats_per_floor: w.flats_per_floor !== '' ? parseInt(w.flats_per_floor) : null,
-          flat_configuration: w.flat_configuration || null,
-          total_flats: w.total_flats !== '' ? parseInt(w.total_flats) : null,
           floors_data: floorsData[wIdx]?.length > 0 ? floorsData[wIdx].map((f, fIdx) => ({
             ...(f.id ? { id: f.id } : {}),
             name: f.name,
             floor_number: f.floor_number !== '' ? parseInt(f.floor_number) : null,
             type: f.type || null,
+            area: f.area !== '' ? parseFloat(f.area) : null,
+            count: f.count !== '' ? parseInt(f.count) : null,
             flats_data: f.flats_data?.length > 0 ? f.flats_data.map(fl => ({
               ...(fl.id ? { id: fl.id } : {}),
               name: fl.name,
-              flat_number: fl.flat_number || null,
               bhk_type: fl.bhk_type || null,
               area: fl.area !== '' ? parseFloat(fl.area) : null,
             })) : undefined,
@@ -637,16 +717,8 @@ export default function Buildings() {
                 <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Building Structure</h4>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">No. of Floors</label>
-                    <input type="number" name="no_of_floors" value={formData.no_of_floors} onChange={handleInputChange} min="0" className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                  </div>
-                  <div>
                     <label className="block text-xs font-bold text-gray-700 uppercase mb-1">No. of Wings</label>
                     <input type="number" name="no_of_wings" value={formData.no_of_wings} onChange={handleInputChange} min="0" className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">No. of Flats</label>
-                    <input type="number" name="no_of_flats" value={formData.no_of_flats} onChange={handleInputChange} min="0" className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-700 uppercase mb-1">No. of Staircases</label>
@@ -681,6 +753,11 @@ export default function Buildings() {
                       <div key={idx} className="bg-gray-50 rounded-lg p-4 border border-gray-100">
                         <div className="flex items-center justify-between mb-3">
                           <span className="text-sm font-bold text-gray-700">Wing {idx + 1}</span>
+                          {idx > 0 && (
+                            <button type="button" onClick={() => handleWingSameAsAbove(idx)} className="flex items-center gap-1 text-[11px] text-blue-600 hover:text-blue-800 font-medium border border-blue-200 bg-blue-50 px-2.5 py-1 rounded-lg">
+                              <Copy className="w-3 h-3" /> Same as above
+                            </button>
+                          )}
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                           <div>
@@ -703,36 +780,6 @@ export default function Buildings() {
                               className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                           </div>
-                          <div>
-                            <label className="block text-xs font-semibold text-gray-600 mb-1">Flats/Floor</label>
-                            <input
-                              type="number"
-                              value={wing.flats_per_floor}
-                              onChange={(e) => handleWingChange(idx, 'flats_per_floor', e.target.value)}
-                              min="0"
-                              className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-semibold text-gray-600 mb-1">Config</label>
-                            <input
-                              type="text"
-                              value={wing.flat_configuration}
-                              onChange={(e) => handleWingChange(idx, 'flat_configuration', e.target.value)}
-                              placeholder="e.g. 2BHK"
-                              className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-semibold text-gray-600 mb-1">Total Flats</label>
-                            <input
-                              type="number"
-                              value={wing.total_flats}
-                              onChange={(e) => handleWingChange(idx, 'total_flats', e.target.value)}
-                              min="0"
-                              className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                          </div>
                         </div>
 
                         {floorsData[idx]?.length > 0 && (
@@ -742,6 +789,11 @@ export default function Buildings() {
                               <div key={fIdx} className="bg-white rounded-lg p-3 border border-gray-200">
                                 <div className="flex items-center justify-between mb-2">
                                   <span className="text-xs font-bold text-gray-600">Floor {fIdx + 1}</span>
+                                  {fIdx > 0 && (
+                                    <button type="button" onClick={() => handleFloorSameAsAbove(idx, fIdx)} className="flex items-center gap-1 text-[10px] text-blue-600 hover:text-blue-800 font-medium border border-blue-200 bg-blue-50 px-2 py-0.5 rounded">
+                                      <Copy className="w-3 h-3" /> Same as above
+                                    </button>
+                                  )}
                                 </div>
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                                   <div>
@@ -765,32 +817,69 @@ export default function Buildings() {
                                   </div>
                                   <div>
                                     <label className="block text-[10px] font-semibold text-gray-500 mb-0.5">Type</label>
-                                    <input
-                                      type="text"
+                                    <select
                                       value={floor.type}
                                       onChange={(e) => handleFloorChange(idx, fIdx, 'type', e.target.value)}
-                                      placeholder="e.g. Residential"
                                       className="w-full px-2 py-1.5 border border-gray-250 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
+                                    >
+                                      <option value="">Select</option>
+                                      {FLOOR_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                                    </select>
                                   </div>
-                                  <div>
-                                    <label className="block text-[10px] font-semibold text-gray-500 mb-0.5">No. of Flats</label>
-                                    <input
-                                      type="number"
-                                      value={floor.flats_count}
-                                      onChange={(e) => handleFloorChange(idx, fIdx, 'flats_count', e.target.value)}
-                                      min="0"
-                                      className="w-full px-2 py-1.5 border border-gray-250 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
-                                  </div>
+                                  {floor.type !== 'Parking' && floor.type !== 'Commercial' && (
+                                    <div>
+                                      <label className="block text-[10px] font-semibold text-gray-500 mb-0.5">No. of Flats</label>
+                                      <input
+                                        type="number"
+                                        value={floor.flats_count}
+                                        onChange={(e) => handleFloorChange(idx, fIdx, 'flats_count', e.target.value)}
+                                        min="0"
+                                        className="w-full px-2 py-1.5 border border-gray-250 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                      />
+                                    </div>
+                                  )}
                                 </div>
+
+                                {(floor.type === 'Parking' || floor.type === 'Commercial') && (
+                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2 pt-2 border-t border-gray-100">
+                                    <div>
+                                      <label className="block text-[10px] font-semibold text-gray-500 mb-0.5">{floor.type === 'Parking' ? 'Parking Spots' : 'No. of Shops'}</label>
+                                      <input
+                                        type="number"
+                                        value={floor.count}
+                                        onChange={(e) => handleFloorChange(idx, fIdx, 'count', e.target.value)}
+                                        min="0"
+                                        className="w-full px-2 py-1.5 border border-gray-250 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="block text-[10px] font-semibold text-gray-500 mb-0.5">Area (sqft)</label>
+                                      <input
+                                        type="number"
+                                        value={floor.area}
+                                        onChange={(e) => handleFloorChange(idx, fIdx, 'area', e.target.value)}
+                                        min="0"
+                                        step="0.01"
+                                        className="w-full px-2 py-1.5 border border-gray-250 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                      />
+                                    </div>
+                                  </div>
+                                )}
 
                                 {floor.flats_data?.length > 0 && (
                                   <div className="mt-2 space-y-2">
                                     <h6 className="text-[10px] font-bold text-gray-500 uppercase">Flats</h6>
                                     {floor.flats_data.map((flat, flIdx) => (
                                       <div key={flIdx} className="bg-gray-50 rounded p-2 border border-gray-100">
-                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                        <div className="flex items-center justify-between mb-1.5">
+                                          <span className="text-[10px] font-bold text-gray-500 uppercase">Flat {flIdx + 1}</span>
+                                          {flIdx > 0 && (
+                                            <button type="button" onClick={() => handleFlatSameAsAbove(idx, fIdx, flIdx)} className="flex items-center gap-1 text-[10px] text-blue-600 hover:text-blue-800 font-medium border border-blue-200 bg-blue-50 px-2 py-0.5 rounded">
+                                              <Copy className="w-3 h-3" /> Same as above
+                                            </button>
+                                          )}
+                                        </div>
+                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                                           <div>
                                             <label className="block text-[10px] font-semibold text-gray-500 mb-0.5">Name</label>
                                             <input
@@ -798,16 +887,6 @@ export default function Buildings() {
                                               value={flat.name}
                                               onChange={(e) => handleFlatChange(idx, fIdx, flIdx, 'name', e.target.value)}
                                               placeholder="e.g. A-101"
-                                              className="w-full px-2 py-1 border border-gray-250 rounded text-[11px] focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                            />
-                                          </div>
-                                          <div>
-                                            <label className="block text-[10px] font-semibold text-gray-500 mb-0.5">Flat No.</label>
-                                            <input
-                                              type="text"
-                                              value={flat.flat_number}
-                                              onChange={(e) => handleFlatChange(idx, fIdx, flIdx, 'flat_number', e.target.value)}
-                                              placeholder="e.g. 101"
                                               className="w-full px-2 py-1 border border-gray-250 rounded text-[11px] focus:outline-none focus:ring-2 focus:ring-blue-500"
                                             />
                                           </div>
@@ -841,6 +920,15 @@ export default function Buildings() {
                             ))}
                           </div>
                         )}
+
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <button type="button" onClick={() => addFloorToWing(idx, 'Parking')} className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium border border-blue-200 bg-blue-50 px-3 py-1.5 rounded-lg">
+                            <Plus className="w-3.5 h-3.5" /> Add Parking Floor
+                          </button>
+                          <button type="button" onClick={() => addFloorToWing(idx, 'Commercial')} className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-800 font-medium border border-purple-200 bg-purple-50 px-3 py-1.5 rounded-lg">
+                            <Plus className="w-3.5 h-3.5" /> Add Commercial Floor
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>

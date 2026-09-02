@@ -11,10 +11,12 @@ class BuildingFloor extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['building_id', 'wing_id', 'name', 'floor_number', 'type'];
+    protected $fillable = ['building_id', 'wing_id', 'name', 'floor_number', 'type', 'area', 'count'];
 
     protected $casts = [
         'floor_number' => 'integer',
+        'area' => 'decimal:2',
+        'count' => 'integer',
     ];
 
     public function building(): BelongsTo

@@ -82,6 +82,8 @@ class BuildingDetailController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'floor_number' => ['nullable', 'integer'],
             'type' => ['nullable', 'string', 'max:255'],
+            'area' => ['nullable', 'numeric', 'min:0'],
+            'count' => ['nullable', 'integer', 'min:0'],
         ]);
 
         $floor = $building->floors()->create($validated);
@@ -97,6 +99,8 @@ class BuildingDetailController extends Controller
             'name' => ['sometimes', 'string', 'max:255'],
             'floor_number' => ['nullable', 'integer'],
             'type' => ['nullable', 'string', 'max:255'],
+            'area' => ['nullable', 'numeric', 'min:0'],
+            'count' => ['nullable', 'integer', 'min:0'],
         ]);
 
         $floor->update($validated);

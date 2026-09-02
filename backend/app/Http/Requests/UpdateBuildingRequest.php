@@ -34,6 +34,8 @@ class UpdateBuildingRequest extends FormRequest
             'wings.*.floors_data.*.name' => ['required_with:wings.*.floors_data', 'string', 'max:255'],
             'wings.*.floors_data.*.floor_number' => ['nullable', 'integer'],
             'wings.*.floors_data.*.type' => ['nullable', 'string', 'max:255'],
+            'wings.*.floors_data.*.area' => ['nullable', 'numeric', 'min:0'],
+            'wings.*.floors_data.*.count' => ['nullable', 'integer', 'min:0'],
             'wings.*.floors_data.*.flats_data' => ['nullable', 'array'],
             'wings.*.floors_data.*.flats_data.*.name' => ['required_with:wings.*.floors_data.*.flats_data', 'string', 'max:255'],
             'wings.*.floors_data.*.flats_data.*.flat_number' => ['nullable', 'string', 'max:255'],
