@@ -11,7 +11,8 @@ class FireSystem extends Model
     use HasFactory;
 
     protected $fillable = [
-        'building_id', 'system_type', 'sub_type', 'quantity',
+        'building_id', 'contact_name', 'contact_number',
+        'system_type', 'sub_type', 'quantity',
         'capacity', 'brand', 'installation_year', 'last_testing_date',
         'label', 'installation_date', 'next_refill_date',
         'location', 'type', 'year_of_manufacturing', 'remark',

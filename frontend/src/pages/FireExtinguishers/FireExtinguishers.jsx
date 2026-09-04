@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import {
   Plus, Trash2, Search, Flame, Building2, CalendarDays, CalendarClock,
-  Info, X, AlertTriangle, CheckCircle2, ShieldAlert, Paperclip, Download, FileText, Upload, ArrowLeft,
+  Info, X, AlertTriangle, CheckCircle2, ShieldAlert, Paperclip, Download, FileText, Upload, ArrowLeft, User, Phone,
 } from 'lucide-react';
 import api from '../../services/api';
 
@@ -45,6 +45,8 @@ export default function FireExtinguishers() {
   const [addOpen, setAddOpen] = useState(false);
   const [formError, setFormError] = useState('');
   const [buildingName, setBuildingName] = useState('');
+  const [addContactName, setAddContactName] = useState('');
+  const [addContactNumber, setAddContactNumber] = useState('');
   const [count, setCount] = useState('');
   const [rows, setRows] = useState([]);
   const [addCertFile, setAddCertFile] = useState(null);
@@ -200,6 +202,8 @@ export default function FireExtinguishers() {
   const openAdd = () => {
     setFormError('');
     setBuildingName('');
+    setAddContactName('');
+    setAddContactNumber('');
     setCount('');
     setRows([]);
     setAddCertFile(null);
@@ -238,6 +242,8 @@ export default function FireExtinguishers() {
     try {
       const res = await api.post('/extinguishers', {
         building_name: buildingName.trim(),
+        contact_name: addContactName.trim() || null,
+        contact_number: addContactNumber.trim() || null,
         count: numCount,
         items,
       });
@@ -303,6 +309,16 @@ export default function FireExtinguishers() {
         setExtinguishers(prev =>
           prev.map(x => (x.id === updated.id ? { ...x, ...updated } : x))
         );
+        if (key === 'contact_name' || key === 'contact_number') {
+          const buildingId = ext.building_id;
+          const siblings = extinguishers.filter(x => x.building_id === buildingId && x.id !== ext.id);
+          for (const sib of siblings) {
+            try { await api.put(`/extinguishers/${sib.id}`, payload); } catch { /* ignore */ }
+          }
+          setExtinguishers(prev =>
+            prev.map(x => (x.building_id === buildingId && x.id !== updated.id ? { ...x, ...payload } : x))
+          );
+        }
       }
     } catch (err) {
       alert(err.response?.data?.message || 'Update failed.');
@@ -516,6 +532,35 @@ export default function FireExtinguishers() {
             </div>
           </div>
 
+          <div className="px-6 py-4 border-b border-gray-100 bg-white">
+            <h3 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+              <User className="w-4 h-4 text-gray-500" />
+              Contact Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Contact Name</label>
+                <input
+                  type="text"
+                  value={selectedBuilding.items[0]?.contact_name || ''}
+                  onChange={(e) => handleUpdate(selectedBuilding.items[0], 'contact_name', e.target.value)}
+                  placeholder="Contact name"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Contact Number</label>
+                <input
+                  type="text"
+                  value={selectedBuilding.items[0]?.contact_number || ''}
+                  onChange={(e) => handleUpdate(selectedBuilding.items[0], 'contact_number', e.target.value)}
+                  placeholder="Contact number"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+          </div>
+
           {(certificates[selectedBuilding.id] || []).length > 0 && (
             <div className="px-6 py-4 border-b border-gray-100">
               <h3 className="text-sm font-bold text-gray-800 mb-2 flex items-center gap-2">
@@ -700,6 +745,35 @@ export default function FireExtinguishers() {
                     placeholder="Enter building name..."
                     className="w-full pl-10 pr-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Contact Name</label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                    <input
+                      type="text"
+                      value={addContactName}
+                      onChange={(e) => setAddContactName(e.target.value)}
+                      placeholder="Enter contact name..."
+                      className="w-full pl-10 pr-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Contact Number</label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                    <input
+                      type="text"
+                      value={addContactNumber}
+                      onChange={(e) => setAddContactNumber(e.target.value)}
+                      placeholder="Enter contact number..."
+                      className="w-full pl-10 pr-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
                 </div>
               </div>
 

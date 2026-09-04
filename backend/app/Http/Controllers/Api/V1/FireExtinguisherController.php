@@ -59,6 +59,8 @@ class FireExtinguisherController extends Controller
 
         $validated = $request->validate([
             'building_name' => ['required', 'string', 'max:255'],
+            'contact_name' => ['nullable', 'string', 'max:255'],
+            'contact_number' => ['nullable', 'string', 'max:50'],
             'count' => ['required', 'integer', 'min:1', 'max:500'],
             'items' => ['nullable', 'array'],
             'items.*.label' => ['nullable', 'string', 'max:255'],
@@ -86,6 +88,8 @@ class FireExtinguisherController extends Controller
                 'system_type' => FireSystem::TYPE_EXTINGUISHER,
                 'sub_type' => 'Fire Extinguisher',
                 'quantity' => 1,
+                'contact_name' => $validated['contact_name'] ?? null,
+                'contact_number' => $validated['contact_number'] ?? null,
                 'type' => $row['type'] ?? null,
                 'capacity' => $row['capacity'] ?? null,
                 'label' => $row['label'] ?? null,
@@ -111,6 +115,8 @@ class FireExtinguisherController extends Controller
         $this->authorize('extinguishers.update');
 
         $validated = $request->validate([
+            'contact_name' => ['nullable', 'string', 'max:255'],
+            'contact_number' => ['nullable', 'string', 'max:50'],
             'label' => ['nullable', 'string', 'max:255'],
             'location' => ['nullable', 'string', 'max:255'],
             'type' => ['nullable', 'string', 'max:255'],
@@ -125,6 +131,8 @@ class FireExtinguisherController extends Controller
             'system_type' => FireSystem::TYPE_EXTINGUISHER,
             'sub_type' => 'Fire Extinguisher',
             'quantity' => 1,
+            'contact_name' => $validated['contact_name'] ?? $fireSystem->contact_name,
+            'contact_number' => $validated['contact_number'] ?? $fireSystem->contact_number,
             'label' => $validated['label'] ?? $fireSystem->label,
             'capacity' => $validated['capacity'] ?? $fireSystem->capacity,
             'installation_date' => !empty($validated['installation_date']) ? $validated['installation_date'] : null,
@@ -143,6 +151,12 @@ class FireExtinguisherController extends Controller
         }
         if (array_key_exists('remark', $validated) && $validated['remark'] === '') {
             $data['remark'] = null;
+        }
+        if (array_key_exists('contact_name', $validated) && $validated['contact_name'] === '') {
+            $data['contact_name'] = null;
+        }
+        if (array_key_exists('contact_number', $validated) && $validated['contact_number'] === '') {
+            $data['contact_number'] = null;
         }
         if (array_key_exists('year_of_manufacturing', $validated)
             && ($validated['year_of_manufacturing'] === '' || $validated['year_of_manufacturing'] === null
@@ -301,6 +315,8 @@ class FireExtinguisherController extends Controller
             'installation_date' => $e->installation_date?->toDateString(),
             'next_refill_date' => $e->next_refill_date?->toDateString(),
             'year_of_manufacturing' => $e->year_of_manufacturing !== null ? (int) $e->year_of_manufacturing : null,
+            'contact_name' => $e->contact_name,
+            'contact_number' => $e->contact_number,
             'remark' => $e->remark,
             'quantity' => $e->quantity,
         ];
