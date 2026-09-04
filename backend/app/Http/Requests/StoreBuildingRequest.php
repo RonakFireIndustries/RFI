@@ -63,6 +63,8 @@ class StoreBuildingRequest extends FormRequest
             'under_construction' => ['boolean'],
             'property_owner' => ['nullable', 'string', 'max:255'],
             'plot_no' => ['nullable', 'string', 'max:100'],
+            'contact_name' => ['nullable', 'string', 'max:255'],
+            'contact_number' => ['nullable', 'string', 'max:50'],
             'developer_name' => ['nullable', 'string', 'max:255'],
             'developer_contact' => ['nullable', 'string', 'max:255'],
             'architect_name' => ['nullable', 'string', 'max:255'],

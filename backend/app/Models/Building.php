@@ -21,7 +21,7 @@ class Building extends Model
         'commercial_shops_available',
         'no_of_staircase', 'no_of_lifts', 'no_of_exits_entry',
         'fire_safety_available', 'fire_safety_type',
-        'under_construction', 'property_owner', 'plot_no',
+        'under_construction', 'property_owner', 'plot_no', 'contact_name', 'contact_number',
         'developer_name', 'developer_contact',
         'architect_name', 'architect_contact',
         'pmc_consultant_name', 'pmc_consultant_contact',

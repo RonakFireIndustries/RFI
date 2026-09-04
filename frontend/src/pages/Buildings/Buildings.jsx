@@ -53,6 +53,8 @@ const defaultFormData = {
   under_construction: false,
   property_owner: '',
   plot_no: '',
+  contact_name: '',
+  contact_number: '',
   developer_name: '',
   developer_contact: '',
   architect_name: '',
@@ -321,6 +323,8 @@ export default function Buildings() {
       under_construction: !!b.under_construction,
       property_owner: b.property_owner || '',
       plot_no: b.plot_no || '',
+      contact_name: b.contact_name || '',
+      contact_number: b.contact_number || '',
       developer_name: b.developer_name || '',
       developer_contact: b.developer_contact || '',
       architect_name: b.architect_name || '',
@@ -430,8 +434,9 @@ export default function Buildings() {
       setIsModalOpen(false);
       fetchBuildings({ search, status: statusFilter, page: currentPage, per_page: 1000 });
     } catch (err) {
+      const serverMessage = err.response?.data?.message || '';
       if (err.response?.data?.errors) setFormErrors(err.response.data.errors);
-      else setFormErrors({ general: err.message || 'An error occurred.' });
+      else setFormErrors({ general: serverMessage || err.message || 'An error occurred.' });
     }
   };
 
@@ -1001,6 +1006,14 @@ export default function Buildings() {
                   <div>
                     <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Plot No</label>
                     <input type="text" name="plot_no" value={formData.plot_no} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Contact Name</label>
+                    <input type="text" name="contact_name" value={formData.contact_name} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Contact Number</label>
+                    <input type="text" name="contact_number" value={formData.contact_number} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                   </div>
                 </div>
               </div>

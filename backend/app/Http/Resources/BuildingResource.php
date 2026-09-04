@@ -38,6 +38,8 @@ class BuildingResource extends JsonResource
             'under_construction' => $this->under_construction,
             'property_owner' => $this->property_owner,
             'plot_no' => $this->plot_no,
+            'contact_name' => $this->contact_name,
+            'contact_number' => $this->contact_number,
             'developer_name' => $this->developer_name,
             'developer_contact' => $this->developer_contact,
             'architect_name' => $this->architect_name,
