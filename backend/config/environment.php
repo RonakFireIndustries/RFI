@@ -2,8 +2,10 @@
 
 return [
 
-    // Flip this value between 'development' and 'production' to switch the whole backend.
-    'active' => 'development',
+    // Runtime environment switch. Defaults to 'development' for local; set
+    // ACTIVE_ENVIRONMENT=production in the deployed .env to use the
+    // production block below (DB, APP_URL, Sanctum domains, etc.).
+    'active' => env('ACTIVE_ENVIRONMENT', 'development'),
 
     'environments' => [
 
