@@ -60,19 +60,21 @@ class EmployeeService
         }
     }
 
-    public function createEmployee(array $data): Employee
+    public function createEmployee(array $data): array
     {
         $this->processUploads($data);
 
-        return DB::transaction(function () use ($data) {
+        [$employee, $credentials] = DB::transaction(function () use ($data) {
             $employee = Employee::create($data);
 
             // Phase 5: Employee User Linking (if requested auto creation)
+            $credentials = null;
             if (isset($data['create_user_account']) && $data['create_user_account']) {
-                $tempPassword = \Illuminate\Support\Str::random(16);
+                $tempPassword = Str::random(16);
+                $email = $this->uniqueEmployeeEmail($data['full_name']);
                 $user = User::create([
                     'name' => $data['full_name'],
-                    'email' => strtolower(str_replace(' ', '.', $data['full_name'])) . '@ronakfire.com',
+                    'email' => $email,
                     'password' => Hash::make($tempPassword),
                 ]);
                 
@@ -82,10 +84,37 @@ class EmployeeService
                 $this->applyBaseline($user);
 
                 $employee->update(['user_id' => $user->id]);
+
+                $credentials = ['email' => $email, 'temp_password' => $tempPassword];
             }
 
-            return $employee->load(['department', 'designation', 'manager']);
+            return [$employee->load(['department', 'designation', 'manager']), $credentials];
         });
+
+        return [
+            'employee' => $employee,
+            'credentials' => $credentials,
+        ];
+    }
+
+    /**
+     * Build a collision-safe login email from the employee's name so that
+     * employees sharing a name (or with whitespace/special characters) do not
+     * violate the users_email_unique constraint.
+     */
+    protected function uniqueEmployeeEmail(string $fullName): string
+    {
+        $slug = strtolower(trim(preg_replace('/[^a-z0-9]+/', '.', $fullName), '.'));
+        $slug = $slug === '' ? 'employee' : $slug;
+
+        $email = $slug . '@ronakfire.com';
+        $suffix = 1;
+        while (User::where('email', $email)->exists()) {
+            $suffix++;
+            $email = $slug . $suffix . '@ronakfire.com';
+        }
+
+        return $email;
     }
 
     public function updateEmployee(Employee $employee, array $data): Employee

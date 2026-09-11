@@ -85,7 +85,10 @@ export default function ModuleListPage({
       if (editing) {
         await updateItem(editing.id, finalPayload);
       } else {
-        await createItem(finalPayload);
+        const result = await createItem(finalPayload);
+        if (result?.temp_password) {
+          alert(`User account created:\nEmail: ${result.email}\nTemporary password: ${result.temp_password}\n\nShare these credentials with the employee.`);
+        }
       }
       closeModal();
       fetchItems();

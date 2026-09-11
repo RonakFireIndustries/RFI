@@ -49,11 +49,18 @@ class EmployeeController extends Controller
     {
         $this->authorize('employees.create');
 
-        $employee = $this->employeeService->createEmployee($request->validated());
+        $result = $this->employeeService->createEmployee($request->validated());
 
-        return $this->success('Employee created successfully', [
-            'employee' => new EmployeeResource($employee)
-        ], 201);
+        $data = [
+            'employee' => new EmployeeResource($result['employee']),
+        ];
+
+        if ($result['credentials']) {
+            $data['email'] = $result['credentials']['email'];
+            $data['temp_password'] = $result['credentials']['temp_password'];
+        }
+
+        return $this->success('Employee created successfully', $data, 201);
     }
 
     public function show(Employee $employee): JsonResponse

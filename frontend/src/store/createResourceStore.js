@@ -31,9 +31,10 @@ export const createResourceStore = (service) => create((set, get) => ({
   },
 
   createItem: async (payload) => {
-    const item = await service.create(payload);
+    const result = await service.create(payload);
+    const item = result?.employee ?? result;
     set({ items: [item, ...get().items] });
-    return item;
+    return result;
   },
 
   updateItem: async (id, payload) => {
