@@ -4,19 +4,37 @@ import { Plus, Search, Filter, CheckCircle, Clock, XCircle, AlertTriangle } from
 import { useDailyReportsStore } from '../../store/dailyReportStore';
 import { useDepartmentStore } from '../../store/departmentStore';
 import { useSiteStore } from '../../store/siteStore';
+import { useAuthStore } from '../../store/authStore';
+import { employeeSiteService } from '../../services/employeeSiteService';
 import DataTable from '../../components/Shared/DataTable';
 
 export default function DailyReportsPage() {
   const { items, loading, fetchItems } = useDailyReportsStore();
   const { items: sites, fetchItems: fetchSites } = useSiteStore();
-  
+  const { user, permissions } = useAuthStore();
+
   const [search, setSearch] = useState('');
   const [siteId, setSiteId] = useState('');
   const [status, setStatus] = useState('');
 
+  const employeeId = user?.employee?.id;
+  const canViewAllSites = !!(user?.is_super_admin || permissions.includes('sites.view'));
+
   useEffect(() => {
+    if (!canViewAllSites) {
+      if (!employeeId) return;
+      let cancelled = false;
+      employeeSiteService.getCurrentSite(employeeId)
+        .then((data) => {
+          if (cancelled) return;
+          const site = data?.site || (data?.id ? data : null);
+          if (site?.id) setSiteId(String(site.id));
+        })
+        .catch(() => {});
+      return () => { cancelled = true; };
+    }
     fetchSites({ per_page: 100 });
-  }, [fetchSites]);
+  }, [canViewAllSites, employeeId, fetchSites]);
 
   useEffect(() => {
     fetchItems({ site_id: siteId || undefined, status: status || undefined });
@@ -124,18 +142,20 @@ export default function DailyReportsPage() {
             className="w-full rounded-lg border border-input bg-card py-2 pl-9 pr-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary"
           />
         </div>
-        <div className="w-full md:w-64">
-          <select 
-            value={siteId}
-            onChange={(e) => setSiteId(e.target.value)}
-            className="w-full rounded-lg border border-input px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary"
-          >
-            <option value="">All Sites</option>
-            {sites.map(site => (
-              <option key={site.id} value={site.id}>{site.name}</option>
-            ))}
-          </select>
-        </div>
+        {canViewAllSites && (
+          <div className="w-full md:w-64">
+            <select 
+              value={siteId}
+              onChange={(e) => setSiteId(e.target.value)}
+              className="w-full rounded-lg border border-input px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary"
+            >
+              <option value="">All Sites</option>
+              {sites.map(site => (
+                <option key={site.id} value={site.id}>{site.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
         <div className="w-full md:w-48">
           <select 
             value={status}

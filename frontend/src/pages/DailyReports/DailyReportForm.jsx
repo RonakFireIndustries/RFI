@@ -2,12 +2,20 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDailyReportsStore } from '../../store/dailyReportStore';
 import { useSiteStore } from '../../store/siteStore';
+import { useAuthStore } from '../../store/authStore';
+import { employeeSiteService } from '../../services/employeeSiteService';
 
 export default function DailyReportForm() {
   const navigate = useNavigate();
   const { createItem } = useDailyReportsStore();
   const { items: sites, fetchItems: fetchSites } = useSiteStore();
+  const { user, permissions } = useAuthStore();
   const [loading, setLoading] = useState(false);
+  const [assignedSite, setAssignedSite] = useState(null);
+  const [siteLoading, setSiteLoading] = useState(false);
+
+  const employeeId = user?.employee?.id;
+  const canViewAllSites = !!(user?.is_super_admin || permissions.includes('sites.view'));
 
   const [formData, setFormData] = useState({
     site_id: '',
@@ -21,11 +29,43 @@ export default function DailyReportForm() {
   });
 
   useEffect(() => {
-    fetchSites({ per_page: 100 });
-  }, [fetchSites]);
+    if (canViewAllSites) {
+      fetchSites({ per_page: 100 });
+      return;
+    }
+    if (!employeeId) return;
+    let cancelled = false;
+    setSiteLoading(true);
+    employeeSiteService.getCurrentSite(employeeId)
+      .then((data) => {
+        if (cancelled) return;
+        const site = data?.site || (data?.id ? data : null);
+        setAssignedSite(site || null);
+        if (site?.id) setFormData((prev) => ({ ...prev, site_id: String(site.id) }));
+      })
+      .catch(() => {
+        if (!cancelled) setAssignedSite(null);
+      })
+      .finally(() => {
+        if (!cancelled) setSiteLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [canViewAllSites, employeeId, fetchSites]);
+
+  const handleSiteChange = (e) => {
+    setFormData({ ...formData, site_id: e.target.value });
+    if (!canViewAllSites) {
+      const site = sites.find((s) => String(s.id) === e.target.value);
+      setAssignedSite(site || null);
+    }
+  };
 
   const handleSubmit = async (e, isSubmit) => {
     e.preventDefault();
+    if (!formData.site_id) {
+      alert(canViewAllSites ? 'Please select a site.' : 'No site is currently assigned to you. Contact your administrator.');
+      return;
+    }
     setLoading(true);
     try {
       const payload = {
@@ -66,15 +106,30 @@ export default function DailyReportForm() {
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">Project Site</label>
-              <select 
-                required
-                value={formData.site_id}
-                onChange={e => setFormData({...formData, site_id: e.target.value})}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-              >
-                <option value="">Select a Site</option>
-                {sites.map(s => <option key={s.id} value={s.id}>{s.name} ({s.code})</option>)}
-              </select>
+              {canViewAllSites ? (
+                <select 
+                  required
+                  value={formData.site_id}
+                  onChange={handleSiteChange}
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="">Select a Site</option>
+                  {sites.map(s => <option key={s.id} value={s.id}>{s.name} ({s.code})</option>)}
+                </select>
+              ) : siteLoading ? (
+                <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500">Loading assigned site...</div>
+              ) : assignedSite ? (
+                <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800">
+                  {assignedSite.name} ({assignedSite.code})
+                </div>
+              ) : (
+                <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                  No site assigned yet — contact your administrator.
+                </div>
+              )}
+              {!canViewAllSites && assignedSite && (
+                <p className="mt-1 text-xs text-gray-500">Reports can only be filed for your currently assigned site.</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">Hours Worked</label>
@@ -156,17 +211,17 @@ export default function DailyReportForm() {
           <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
             <button 
               type="button"
-              disabled={loading}
+              disabled={loading || (!canViewAllSites && !assignedSite)}
               onClick={(e) => handleSubmit(e, false)}
-              className="px-6 py-2 rounded-lg font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition"
+              className="px-6 py-2 rounded-lg font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Save as Draft
             </button>
             <button 
               type="button"
-              disabled={loading}
+              disabled={loading || (!canViewAllSites && !assignedSite)}
               onClick={(e) => handleSubmit(e, true)}
-              className="px-6 py-2 rounded-lg font-bold text-white bg-blue-600 hover:bg-blue-700 transition shadow-sm"
+              className="px-6 py-2 rounded-lg font-bold text-white bg-blue-600 hover:bg-blue-700 transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Submitting...' : 'Submit Report'}
             </button>

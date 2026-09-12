@@ -111,7 +111,7 @@ export default function DailyReportDetail() {
             </div>
           </div>
 
-          {report.status === 'Submitted' && (
+          {report.status === 'Submitted' && report.can_review && (
             <div className="bg-white rounded-xl shadow-sm border border-blue-200 overflow-hidden">
               <div className="px-6 py-4 border-b border-blue-100 bg-blue-50">
                 <h3 className="font-semibold text-blue-900">Manager Review</h3>

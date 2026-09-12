@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Access;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -53,5 +54,33 @@ class DailyReport extends Model
     public function histories(): HasMany
     {
         return $this->hasMany(DailyReportHistory::class);
+    }
+
+    /**
+     * Whether the given user may approve / reject / rework this report.
+     * Allowed for: super admins, users with an explicit review permission,
+     * or the reporting manager of the employee who filed the report.
+     * The submitter can never review their own report.
+     */
+    public function canBeReviewedBy(?User $user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        if (Access::isSuperAdmin($user)) {
+            return true;
+        }
+
+        if ($user->hasAnyPermission(['daily-reports.approve', 'daily-reports.reject'])) {
+            return true;
+        }
+
+        $reviewer = $user->employee;
+
+        return $this->employee_id !== null
+            && $reviewer !== null
+            && $this->employee_id !== $reviewer->id
+            && $this->employee?->reporting_manager_id === $reviewer->id;
     }
 }

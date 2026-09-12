@@ -16,7 +16,11 @@ class DailyReportService
         $query = DailyReport::with(['employee.designation', 'site', 'approver']);
 
         if (!empty($filters['employee_id'])) {
-            $query->where('employee_id', $filters['employee_id']);
+            if (is_array($filters['employee_id'])) {
+                $query->whereIn('employee_id', $filters['employee_id']);
+            } else {
+                $query->where('employee_id', $filters['employee_id']);
+            }
         }
 
         if (!empty($filters['site_id'])) {
