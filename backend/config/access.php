@@ -417,7 +417,6 @@ return [
     */
     'baseline' => [
         'dashboard.view',
-        'attendance.view',
         'attendance.checkin',
         'attendance.checkout',
         'daily-reports.view',
@@ -427,6 +426,26 @@ return [
         'leaves.create',
         'leaves.update',
         'payroll.view',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Retired baseline permissions
+    |--------------------------------------------------------------------------
+    |
+    | Permissions that USED to be auto-granted via baseline but should now only
+    | be granted explicitly through the Access Control panel. Running
+    | `php artisan employees:sync-roles` revokes these from non-super-admin
+    | users (unless the admin re-grants them via Access Control once "assigned").
+    |
+    | Rationale: the management Attendance dashboard ("Attendance" tab) must not
+    | appear for basic employees. Employees check in/out on the public
+    | "My Attendance" page instead. Show the tab only once attendance.view is
+    | explicitly assigned.
+    |
+    */
+    'retired_baseline' => [
+        'attendance.view',
     ],
 
     /*

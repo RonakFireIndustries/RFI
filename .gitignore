@@ -10,7 +10,6 @@ Thumbs.db
 
 # Sensitive / local config
 .ssh/
-.env
 .env.backup
 .env.production
 

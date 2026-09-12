@@ -18,6 +18,8 @@ class SyncEmployeeRoles extends Command
     {
         $baseline = config('access.baseline', []);
         $baselineValid = Permission::whereIn('name', $baseline)->pluck('name')->all();
+        $retired = config('access.retired_baseline', []);
+        $retiredValid = Permission::whereIn('name', $retired)->pluck('name')->all();
         $designerPerms = config('access.designer_permissions', []);
         $designerValid = Permission::whereIn('name', $designerPerms)->pluck('name')->all();
 
@@ -37,14 +39,19 @@ class SyncEmployeeRoles extends Command
             $hadRoles = $user->roles->isNotEmpty();
             $hadGrants = $user->hasAllPermissions($grants);
 
-            DB::transaction(function () use ($user, $grants) {
+            DB::transaction(function () use ($user, $grants, $retiredValid) {
                 $user->givePermissionTo($grants);
+                // Revoke permissions that have been retired from the baseline;
+                // they are only kept when re-granted explicitly via Access Control.
+                if ($retiredValid) {
+                    $user->revokePermissionTo($retiredValid);
+                }
                 $user->roles()->detach();
             });
 
             if ($hadRoles || !$hadGrants) {
                 $this->info(sprintf(
-                    "User #%d %s: %s ensured, roles detached.",
+                    "User #%d %s: %s ensured, retired baseline revoked, roles detached.",
                     $user->id,
                     $user->email,
                     $isDesigner ? 'designer+baseline' : 'baseline'
