@@ -34,7 +34,7 @@ export const menuCategories = [
       { name: 'My Attendance', path: '/dashboard/my-attendance', icon: MapPin, permissions: ['*'] },
       { name: 'Shifts', path: '/dashboard/shifts', icon: Clock, permissions: ['shifts.view'] },
       { name: 'Daily Reports', path: '/dashboard/daily-reports', icon: FileText, permissions: ['*'] },
-      { name: 'Leave', path: '/dashboard/leave-management', icon: Briefcase, permissions: ['leaves.view'] },
+      { name: 'Leave', path: '/dashboard/leave-management', icon: Briefcase, permissions: ['leaves.approve', 'leaves.reject'] },
       { name: 'My Leaves', path: '/dashboard/my-leaves', icon: FileText, permissions: ['*'] },
     ],
   },

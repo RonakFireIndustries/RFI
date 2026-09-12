@@ -8,6 +8,7 @@ use App\Services\LeaveRequestService;
 use App\Http\Requests\StoreLeaveRequest;
 use App\Http\Requests\UpdateLeaveRequest;
 use App\Http\Resources\LeaveResource;
+use App\Support\Access;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -27,9 +28,26 @@ class LeaveController extends Controller
     public function index(Request $request): JsonResponse
     {
         $this->authorize('leaves.view');
-        $filters = $request->only(['employee_id', 'status', 'leave_type_id']);
-        
-        // All authenticated users can view leaves
+
+        $user = $request->user();
+        $filters = $request->only(['status', 'leave_type_id']);
+        if ($request->has('employee_id')) {
+            $filters['employee_id'] = $request->input('employee_id');
+        }
+
+        $isReviewer = Access::isSuperAdmin($user)
+            || $user->hasAnyPermission(['leaves.approve', 'leaves.reject']);
+
+        if (! $isReviewer) {
+            // Employees: own leaves only (reporting managers also see direct subordinates').
+            $employee = $user->employee;
+            $visibleIds = collect([$employee?->id])
+                ->merge($employee ? $employee->subordinates()->pluck('employees.id') : [])
+                ->filter()
+                ->unique()
+                ->values();
+            $filters['employee_id'] = $visibleIds->isEmpty() ? -1 : $visibleIds->all();
+        }
 
         $perPage = (int) $request->input('per_page', 15);
         $leaves = $this->service->getLeaves($filters, $perPage);
@@ -62,6 +80,8 @@ class LeaveController extends Controller
 
     public function show(Leave $leave_request): JsonResponse
     {
+        abort_unless($leave_request->canBeManagedBy(request()->user()), 403);
+
         $leave_request->load(['employee.user', 'employee.department', 'leaveType', 'approver', 'histories.user']);
 
         return $this->success('Leave request retrieved successfully', [
@@ -71,6 +91,8 @@ class LeaveController extends Controller
 
     public function update(UpdateLeaveRequest $request, Leave $leave_request): JsonResponse
     {
+        abort_unless($leave_request->canBeManagedBy($request->user()), 403);
+
         try {
             $updatedLeave = $this->service->updateLeave($leave_request, $request->validated());
             $updatedLeave->load(['employee.user', 'employee.department', 'leaveType', 'approver']);
@@ -85,6 +107,8 @@ class LeaveController extends Controller
 
     public function destroy(Leave $leave_request): JsonResponse
     {
+        abort_unless($leave_request->canBeManagedBy(request()->user()), 403);
+
         $leave_request->delete();
         return $this->success('Leave request deleted successfully');
     }
@@ -119,6 +143,8 @@ class LeaveController extends Controller
 
     public function cancel(Request $request, Leave $leave): JsonResponse
     {
+        abort_unless($leave->canBeManagedBy($request->user()), 403);
+
         $request->validate(['comments' => 'required|string']);
 
         $updatedLeave = $this->service->cancel($leave, $request->comments);

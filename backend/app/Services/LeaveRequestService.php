@@ -24,7 +24,11 @@ class LeaveRequestService
         $query = Leave::with(['employee.user', 'employee.department', 'leaveType', 'approver']);
 
         if (!empty($filters['employee_id'])) {
-            $query->where('employee_id', $filters['employee_id']);
+            if (is_array($filters['employee_id'])) {
+                $query->whereIn('employee_id', $filters['employee_id']);
+            } else {
+                $query->where('employee_id', $filters['employee_id']);
+            }
         }
         if (!empty($filters['status'])) {
             $query->where('status', $filters['status']);

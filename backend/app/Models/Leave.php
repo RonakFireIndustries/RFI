@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Support\Access;
 
 class Leave extends Model
 {
@@ -48,5 +49,23 @@ class Leave extends Model
     public function histories()
     {
         return $this->hasMany(LeaveHistory::class);
+    }
+
+    public function canBeManagedBy(?User $user): bool
+    {
+        if (! $user) {
+            return false;
+        }
+
+        if (Access::isSuperAdmin($user)) {
+            return true;
+        }
+
+        if ($user->hasAnyPermission(['leaves.approve', 'leaves.reject'])) {
+            return true;
+        }
+
+        return $this->employee_id !== null
+            && $this->employee_id === $user->employee?->id;
     }
 }

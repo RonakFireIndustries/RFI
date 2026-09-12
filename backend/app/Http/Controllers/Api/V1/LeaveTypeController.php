@@ -25,7 +25,6 @@ class LeaveTypeController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $this->authorize('leave-types.view');
         $filters = $request->only(['status']);
         $perPage = (int) $request->input('per_page', 100);
 
