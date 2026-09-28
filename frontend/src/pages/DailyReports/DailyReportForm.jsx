@@ -4,6 +4,19 @@ import { useDailyReportsStore } from '../../store/dailyReportStore';
 import { useSiteStore } from '../../store/siteStore';
 import { useAuthStore } from '../../store/authStore';
 import { employeeSiteService } from '../../services/employeeSiteService';
+import FormErrors from '../../components/Shared/FormErrors';
+
+const FIELD_LABELS = {
+  site_id: 'Project Site',
+  date: 'Date',
+  hours_worked: 'Hours Worked',
+  work_description: 'Work Description',
+  tasks_completed: 'Tasks Completed',
+  issues_faced: 'Issues Faced',
+  materials_used: 'Materials Used',
+  equipment_used: 'Equipment Used',
+  status: 'Status',
+};
 
 export default function DailyReportForm() {
   const navigate = useNavigate();
@@ -13,6 +26,7 @@ export default function DailyReportForm() {
   const [loading, setLoading] = useState(false);
   const [assignedSite, setAssignedSite] = useState(null);
   const [siteLoading, setSiteLoading] = useState(false);
+  const [formErrors, setFormErrors] = useState({});
 
   const employeeId = user?.employee?.id;
   const canViewAllSites = !!(user?.is_super_admin || permissions.includes('sites.view'));
@@ -75,10 +89,16 @@ export default function DailyReportForm() {
         status: isSubmit ? 'Submitted' : 'Draft',
       };
       await createItem(payload);
+      setFormErrors({});
       alert(`Report successfully ${isSubmit ? 'submitted' : 'saved as draft'}!`);
       navigate('/dashboard/daily-reports');
     } catch (err) {
-      alert(`Failed to save report: ${err.message || err.response?.data?.message || 'Unknown error'}`);
+      const data = err.response?.data;
+      if (data?.errors) {
+        setFormErrors(data.errors);
+      } else {
+        setFormErrors({ message: data?.message || err.message || 'Something went wrong. Please try again.' });
+      }
     } finally {
       setLoading(false);
     }
@@ -92,6 +112,7 @@ export default function DailyReportForm() {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+        <FormErrors errors={formErrors} fieldLabels={FIELD_LABELS} className="m-6 mb-0" />
         <form className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>

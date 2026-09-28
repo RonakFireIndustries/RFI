@@ -130,6 +130,7 @@ class AccessControlController extends Controller
 
         DB::transaction(function () use ($user, $validNames) {
             $user->syncPermissions($validNames);
+            Access::applyImpliedPermissions($user);
         });
 
         return response()->json([
@@ -153,6 +154,7 @@ class AccessControlController extends Controller
         ]);
 
         $user->givePermissionTo($request->input('permission'));
+        Access::applyImpliedPermissions($user);
 
         return response()->json([
             'success' => true,

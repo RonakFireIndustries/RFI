@@ -47,6 +47,10 @@ class SyncEmployeeRoles extends Command
                     $user->revokePermissionTo($retiredValid);
                 }
                 $user->roles()->detach();
+
+                // Implied permissions must be applied INSIDE the transaction so
+                // the guaranteed grants live on the same rows as the triggers.
+                Access::applyImpliedPermissions($user);
             });
 
             if ($hadRoles || !$hadGrants) {

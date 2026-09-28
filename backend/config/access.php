@@ -84,15 +84,23 @@ return [
         'Payroll' => [
             'payroll' => [
                 'label' => 'Payroll',
-                'actions' => ['view', 'manage'],
+                'actions' => ['view', 'manage', 'update'],
             ],
             'salary-structures' => [
                 'label' => 'Salary Structures',
-                'actions' => ['view', 'manage'],
+                'actions' => ['view', 'manage', 'update'],
             ],
             'payslips' => [
                 'label' => 'Payslips',
-                'actions' => ['view', 'manage'],
+                'actions' => ['view', 'manage', 'update'],
+            ],
+            'payroll-period' => [
+                'label' => 'Payroll Period',
+                'actions' => ['view', 'create', 'update'],
+            ],
+            'process-payroll' => [
+                'label' => 'Process Payroll',
+                'actions' => ['view', 'create', 'update'],
             ],
         ],
 
@@ -138,19 +146,19 @@ return [
             ],
             'stock' => [
                 'label' => 'Stock',
-                'actions' => ['view', 'create'],
+                'actions' => ['view', 'create', 'update'],
             ],
             'stock-transactions' => [
                 'label' => 'Stock Transactions',
-                'actions' => ['view', 'create'],
+                'actions' => ['view', 'create', 'update'],
             ],
             'stock-requests' => [
                 'label' => 'Stock Requests',
-                'actions' => ['view', 'create', 'approve', 'issue', 'receive'],
+                'actions' => ['view', 'create', 'update', 'approve', 'issue', 'receive'],
             ],
             'stock-transfers' => [
                 'label' => 'Stock Transfers',
-                'actions' => ['view', 'create', 'approve'],
+                'actions' => ['view', 'create', 'update', 'approve'],
             ],
         ],
 
@@ -463,5 +471,51 @@ return [
         'quotations.create',
         'quotations.update',
         'quotations.delete',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Implied permissions
+    |--------------------------------------------------------------------------
+    |
+    | Permissions that are AUTO-GRANTED (never auto-revoked) the moment an
+    | employee is granted ANY permission belonging to one of the listed
+    | trigger modules. A supplier or customer list is almost always required to
+    | work with products or with purchase/sales documents, so we grant read
+    | access automatically instead of asking admins to remember to add it.
+    |
+    | Key = the permission to auto-grant when a trigger module is granted.
+    | Value = modules whose ANY action permission triggers the grant.
+    |
+    */
+    'implied_permissions' => [
+        // Product section / procurement-selling workflows need to pick suppliers.
+        'suppliers.view' => [
+            'products',
+            'stock',
+            'purchase-orders',
+            'purchase-quotations',
+            'purchase-returns',
+            'delivery-notes',
+            'sales-orders',
+            'sales-quotations',
+            'sales-returns',
+            'invoices',
+            'payments',
+            'goods-receipt-notes',
+        ],
+        // Purchase & sales workflows need the customer list too.
+        'customers.view' => [
+            'purchase-orders',
+            'purchase-quotations',
+            'purchase-returns',
+            'delivery-notes',
+            'sales-orders',
+            'sales-quotations',
+            'sales-returns',
+            'invoices',
+            'payments',
+            'goods-receipt-notes',
+        ],
     ],
 ];

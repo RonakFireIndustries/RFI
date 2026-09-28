@@ -1,0 +1,44 @@
+{
+    "dailyReport": {
+        "site_id": {
+            "type": "string",
+            "exists": "sites,id"
+        },
+        "date": {
+            "type": "date",
+            "required": true
+        },
+        "work_description": {
+            "type": "string",
+            "required": true
+        },
+        "tasks_completed": {
+            "type": "string"
+        },
+        "hours_worked": {
+            "type": "number",
+            "required": true,
+            "min": 0,
+            "max": 24
+        },
+        "issues_faced": {
+            "type": "string"
+        },
+        "materials_used": {
+            "type": "string"
+        },
+        "equipment_used": {
+            "type": "string"
+        },
+        "status": {
+            "in": [
+                "Draft",
+                "Submitted"
+            ]
+        }
+    },
+    "employee": [],
+    "leave": [],
+    "product": [],
+    "site": []
+}

@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\Permission;
 use App\Models\User;
 
 class Access
@@ -84,8 +85,7 @@ class Access
         }
         return $user->hasRole('Admin') || $user->hasRole('Super Admin');
     }
-
-    /**
+/**
      * All canonical permission names a user has, as plain strings
      * (union of direct + role-derived, deduped).
      *
@@ -102,5 +102,50 @@ class Access
             ->unique()
             ->values()
             ->toArray();
+    }
+
+    /**
+     * Auto-grant implied permissions (see config('access.implied_permissions')).
+     *
+     * If the user holds ANY permission from one of a grant's trigger modules,
+     * the corresponding implied permission (e.g. suppliers.view) is granted.
+     * Implied permissions are only ever added, never revoked.
+     *
+     * @return array<int, string> the permission names newly granted by this pass
+     */
+    public static function applyImpliedPermissions(User $user): array
+    {
+        if (static::isSuperAdmin($user)) {
+            return [];
+        }
+
+        $implied = config('access.implied_permissions', []);
+        if (!$implied) {
+            return [];
+        }
+
+        $modules = static::modules();
+        $held = $user->getAllPermissions()->pluck('name')->all();
+        $newlyGranted = [];
+
+        foreach ($implied as $grantName => $triggerModules) {
+            if ($user->hasPermissionTo($grantName)) {
+                continue;
+            }
+
+            $triggers = [];
+            foreach ($triggerModules as $module) {
+                foreach ($modules[$module]['actions'] ?? [] as $action) {
+                    $triggers[] = static::permissionName($module, $action);
+                }
+            }
+
+            if (array_intersect($triggers, $held) && Permission::where('name', $grantName)->exists()) {
+                $user->givePermissionTo($grantName);
+                $newlyGranted[] = $grantName;
+            }
+        }
+
+        return $newlyGranted;
     }
 }
