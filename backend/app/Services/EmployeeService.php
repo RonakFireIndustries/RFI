@@ -98,6 +98,41 @@ class EmployeeService
     }
 
     /**
+     * Create the login account for an employee that was added without one.
+     *
+     * Employees created without `create_user_account` have no `user_id`, which
+     * leaves the employees list Email column blank (the column reads
+     * user.email through the relation). This backfills that account using the
+     * same collision-safe email and baseline grants as normal creation.
+     *
+     * Returns the generated credentials, or null when the employee already has
+     * a valid linked user, so it is safe to call repeatedly.
+     */
+    public function createAccountFor(Employee $employee): ?array
+    {
+        if ($employee->user()->exists()) {
+            return null;
+        }
+
+        return DB::transaction(function () use ($employee) {
+            $tempPassword = Str::random(16);
+            $email = $this->uniqueEmployeeEmail($employee->full_name);
+
+            $user = User::create([
+                'name' => $employee->full_name,
+                'email' => $email,
+                'password' => Hash::make($tempPassword),
+            ]);
+
+            $this->applyBaseline($user);
+
+            $employee->update(['user_id' => $user->id]);
+
+            return ['email' => $email, 'temp_password' => $tempPassword];
+        });
+    }
+
+    /**
      * Build a collision-safe login email from the employee's name so that
      * employees sharing a name (or with whitespace/special characters) do not
      * violate the users_email_unique constraint.
