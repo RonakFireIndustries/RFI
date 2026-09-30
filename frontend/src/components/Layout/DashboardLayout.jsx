@@ -1,5 +1,6 @@
 import { Link, useLocation, Outlet, Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import { can, isSuperAdmin as isSuperAdminUser } from '../../utils/permissions';
 import { useState, useEffect, useRef } from 'react';
 import api from '../../services/api';
 import { 
@@ -193,18 +194,12 @@ export default function DashboardLayout() {
     return () => clearTimeout(debounceTimer);
   }, [searchQuery]);
 
-  const isSuperAdmin = !!user?.is_super_admin || permissions.includes('__super_admin__');
+  const isSuperAdmin = isSuperAdminUser(user, permissions);
 
-  const canAccess = (required) => {
-    required = required || [];
-    if (isSuperAdmin) return true;
-    if (required.includes('*')) return true;
-    if (required.includes('__super_admin__')) return false;
-    if (required.length > 0) {
-      return required.some(p => permissions.includes(p));
-    }
-    return true;
-  };
+  // Single shared implementation so the sidebar gate and the in-page
+  // PermissionGate buttons can never drift apart.
+  const permissionContext = { user, permissions };
+  const canAccess = (required) => can(permissionContext, required);
 
     return (
     <div className="min-h-screen bg-background flex font-sans text-foreground">

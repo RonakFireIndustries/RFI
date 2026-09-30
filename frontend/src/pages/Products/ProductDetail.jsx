@@ -1,13 +1,11 @@
 import { useMemo } from 'react';
 import ModuleDetailPage from '../ERP/ModuleDetailPage';
 import { useProductsStore } from '../../store/productsStore';
-import { useAuthStore } from '../../store/authStore';
-
-const FINANCE_ROLES = ['Admin', 'Accountant'];
+import Money from '../../components/Shared/Money';
+import { usePriceVisibility } from '../../hooks/usePriceVisibility';
 
 export default function ProductDetail() {
-  const userRoles = useAuthStore((s) => s.roles);
-  const canFinance = userRoles.some((r) => FINANCE_ROLES.includes(r));
+  const { canSeePrices } = usePriceVisibility();
 
   const fields = useMemo(() => {
     const flds = [
@@ -17,12 +15,18 @@ export default function ProductDetail() {
       { label: 'Supplier', path: 'supplier.name' },
       { label: 'Status', path: 'status' },
     ];
-    if (canFinance) {
-      flds.splice(3, 0, { label: 'Purchase Price', path: 'purchase_price' });
-      flds.splice(4, 0, { label: 'Selling Price', path: 'selling_price' });
+    if (canSeePrices) {
+      flds.splice(3, 0, {
+        label: 'Purchase Price',
+        render: (product) => <Money value={product.purchase_price} />,
+      });
+      flds.splice(4, 0, {
+        label: 'Selling Price',
+        render: (product) => <Money value={product.selling_price} />,
+      });
     }
     return flds;
-  }, [canFinance]);
+  }, [canSeePrices]);
 
   return (
     <ModuleDetailPage

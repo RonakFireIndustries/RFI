@@ -15,6 +15,7 @@ export default function ConversionsPage() {
       title="Unit Conversions"
       description="Manage conversion rates between units (e.g., KG to Gram)"
       store={useUnitConversionStore}
+      module="unit-conversions"
       detailBasePath="/dashboard/inventory/conversions"
       hideView
       searchPlaceholder="Search conversions..."

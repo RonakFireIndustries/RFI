@@ -25,6 +25,7 @@ export default function ShiftListPage() {
     <ModuleListPage
       title="Shifts"
       store={useShiftsStore}
+      module="shifts"
       columns={columns}
       fields={fields}
     />

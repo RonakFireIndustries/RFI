@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Building2, ChevronRight, ChevronDown, MapPin, TrendingUp } from 'lucide-react';
 import { useOpportunityStore } from '../../store/opportunityStore';
+import { usePriceVisibility } from '../../hooks/usePriceVisibility';
 import { format } from 'date-fns';
 
 const STAGES = ['Prospect', 'Follow-Up', 'Quotation Sent', 'Negotiation', 'Won', 'Lost'];
@@ -15,6 +16,7 @@ const STAGE_COLORS = {
 };
 
 export default function Opportunities() {
+  const { canSeePrices, maskedValue } = usePriceVisibility();
   const navigate = useNavigate();
   const { items: opportunities, loading, fetchItems } = useOpportunityStore();
   const [search, setSearch] = useState('');
@@ -27,6 +29,7 @@ export default function Opportunities() {
   }, [fetchItems, search, stageFilter]);
 
   const formatCurrency = (val) => {
+    if (!canSeePrices) return maskedValue;
     if (!val) return '-';
     return `₹${parseFloat(val).toLocaleString('en-IN')}`;
   };

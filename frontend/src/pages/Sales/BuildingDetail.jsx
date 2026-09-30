@@ -5,6 +5,7 @@ import { useBuildingStore } from '../../store/buildingStore';
 import { buildingDetailService } from '../../services/buildingDetailService';
 import { salesDocumentService } from '../../services/salesDocumentService';
 import api from '../../services/api';
+import Money from '../../components/Shared/Money';
 import { format } from 'date-fns';
 
 const TABS = ['Overview', 'Wings', 'Site Visits', 'Follow-ups', 'Opportunities', 'Invoices', 'Fire Systems', 'Contacts', 'AMCs', 'Documents'];
@@ -782,7 +783,7 @@ function AmcsTab({ amcs, buildingId, reload, editing }) {
                 <td className="px-4 py-2 text-sm">{amc.contract_number || '-'}</td>
                 <td className="px-4 py-2 text-sm">{amc.contract_type || '-'}</td>
                 <td className="px-4 py-2 text-sm">{amc.start_date ? format(new Date(amc.start_date), 'dd MMM yy') : '?'} - {amc.end_date ? format(new Date(amc.end_date), 'dd MMM yy') : '?'}</td>
-                <td className="px-4 py-2 text-sm">{amc.amount ? `₹${Number(amc.amount).toLocaleString()}` : '-'}</td>
+                <td className="px-4 py-2 text-sm"><Money value={amc.amount} decimals={0} masked="-" /></td>
                 <td className="px-4 py-2 text-sm">{amc.frequency || '-'}</td>
                 <td className="px-4 py-2 text-sm">
                   <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${amc.status === 'Active' ? 'bg-green-100 text-green-700' : amc.status === 'Expired' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>{amc.status}</span>
@@ -916,7 +917,7 @@ function OpportunitiesTab({ opportunities, buildingId }) {
                 <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${op.status === 'Active' ? 'bg-green-100 text-green-700' : op.status === 'Won' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>{op.status}</span>
               </div>
               {op.stage && <p className="text-xs text-gray-500 mb-1">Stage: {op.stage}</p>}
-              {op.estimated_value && <p className="text-sm font-medium text-gray-900">Value: ₹{Number(op.estimated_value).toLocaleString()}</p>}
+              {op.estimated_value && <p className="text-sm font-medium text-gray-900">Value: <Money value={op.estimated_value} decimals={0} /></p>}
               {op.description && <p className="text-xs text-gray-500 mt-2 line-clamp-2">{op.description}</p>}
             </div>
           ))}
@@ -951,7 +952,7 @@ function InvoicesTab({ invoices }) {
                 <tr key={inv.id} className="hover:bg-gray-50">
                   <td className="px-4 py-2 text-sm font-medium">{inv.invoice_number || `INV-${inv.id}`}</td>
                   <td className="px-4 py-2 text-sm">{inv.customer?.name || '-'}</td>
-                  <td className="px-4 py-2 text-sm font-medium">₹{Number(inv.total_amount || inv.grand_total || 0).toLocaleString()}</td>
+                  <td className="px-4 py-2 text-sm font-medium"><Money value={inv.total_amount || inv.grand_total} decimals={0} /></td>
                   <td className="px-4 py-2 text-sm">
                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${inv.status === 'Paid' ? 'bg-green-100 text-green-700' : inv.status === 'Sent' ? 'bg-yellow-100 text-yellow-700' : inv.status === 'Overdue' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'}`}>{inv.status}</span>
                   </td>

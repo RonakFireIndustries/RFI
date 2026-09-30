@@ -1,13 +1,11 @@
 import { useMemo } from 'react';
 import ModuleDetailPage from '../ERP/ModuleDetailPage';
 import { useSuppliersStore } from '../../store/suppliersStore';
-import { useAuthStore } from '../../store/authStore';
-
-const FINANCE_ROLES = ['Admin', 'Accountant'];
+import Money from '../../components/Shared/Money';
+import { usePriceVisibility } from '../../hooks/usePriceVisibility';
 
 export default function SupplierProfile() {
-  const userRoles = useAuthStore((s) => s.roles);
-  const canFinance = userRoles.some((r) => FINANCE_ROLES.includes(r));
+  const { canSeePrices } = usePriceVisibility();
 
   const productColumns = useMemo(() => {
     const cols = [
@@ -15,11 +13,15 @@ export default function SupplierProfile() {
       { header: 'Product', accessorKey: 'name' },
       { header: 'Category', accessorKey: 'category.name' },
     ];
-    if (canFinance) {
-      cols.push({ header: 'Selling Price', accessorKey: 'selling_price' });
+    if (canSeePrices) {
+      cols.push({
+        header: 'Selling Price',
+        accessorKey: 'selling_price',
+        cell: ({ getValue }) => <Money value={getValue()} />,
+      });
     }
     return cols;
-  }, [canFinance]);
+  }, [canSeePrices]);
 
   return (
     <ModuleDetailPage
@@ -31,7 +33,7 @@ export default function SupplierProfile() {
         { label: 'Phone', path: 'phone' },
         { label: 'GST Number', path: 'gst_number' },
         { label: 'Products', render: (supplier) => supplier.products_count ?? supplier.products?.length ?? 0 },
-        { label: 'Balance', render: (supplier) => Number(supplier.balance || 0).toFixed(2) },
+        { label: 'Balance', render: (supplier) => <Money value={supplier.balance} /> },
       ]}
       sections={[
         {
@@ -47,7 +49,11 @@ export default function SupplierProfile() {
           columns: [
             { header: 'Order #', accessorKey: 'id' },
             { header: 'Status', accessorKey: 'status' },
-            { header: 'Total', accessorKey: 'total_amount' },
+            {
+              header: 'Total',
+              accessorKey: 'total_amount',
+              cell: ({ getValue }) => <Money value={getValue()} />,
+            },
           ],
         },
       ]}

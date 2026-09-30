@@ -14,6 +14,7 @@ export default function LocationsPage() {
       title="Inventory Locations"
       description="Manage warehouses, sites, workshops, and stores"
       store={useInventoryLocationStore}
+      module="inventory-locations"
       detailBasePath="/dashboard/inventory/locations"
       searchPlaceholder="Search locations..."
       columns={[

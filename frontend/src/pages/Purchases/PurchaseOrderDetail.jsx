@@ -3,11 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Eye, Loader2, FileText, Printer, CheckCircle, XCircle, PackageCheck, X, Banknote } from 'lucide-react';
 import api from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
+import { usePriceVisibility } from '../../hooks/usePriceVisibility';
 
 export default function PurchaseOrderDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { permissions } = useAuthStore();
+  const { canSeePrices, maskedValue } = usePriceVisibility();
   const canPay = permissions.includes('create_payments');
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -145,6 +147,7 @@ export default function PurchaseOrderDetail() {
   };
 
   const formatCurrency = (val) => {
+    if (!canSeePrices) return maskedValue;
     const num = parseFloat(val || 0);
     return '₹' + num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };

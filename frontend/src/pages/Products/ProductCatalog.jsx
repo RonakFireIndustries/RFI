@@ -2,12 +2,14 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ChevronDown, ChevronRight, ChevronsDownUp, ChevronsUpDown, Edit2, Filter, FolderTree, Layers, Package, Trash2, X } from 'lucide-react';
 import ModuleListPage from '../ERP/ModuleListPage';
+import PermissionGate from '../../components/Guards/PermissionGate';
 import api from '../../services/api';
 import { unwrapList } from '../../services/resourceHelpers';
 import { useProductsStore } from '../../store/productsStore';
-import { useAuthStore } from '../../store/authStore';
+import Money from '../../components/Shared/Money';
+import { usePriceVisibility } from '../../hooks/usePriceVisibility';
 
-const FINANCE_ROLES = ['Admin', 'Accountant'];
+const MODULE = 'products';
 
 const getPlacement = (product, categoryById) => {
   const sub = product.category;
@@ -51,8 +53,7 @@ const buildCategoryTree = (products, getPlacementFor) => {
 export default function ProductCatalog() {
   const { items } = useProductsStore();
   const [lookups, setLookups] = useState({ categories: [], suppliers: [], sites: [], units: [] });
-  const userRoles = useAuthStore((s) => s.roles);
-  const canFinance = userRoles.some((r) => FINANCE_ROLES.includes(r));
+  const { canSeePrices } = usePriceVisibility();
   const [searchParams] = useSearchParams();
   const categoryId = searchParams.get('category_id');
 
@@ -214,11 +215,14 @@ export default function ProductCatalog() {
       { header: 'Stock', cellValue: (row) => row.total_stock ?? 0 },
       { header: 'Status', accessor: 'status' },
     ];
-    if (canFinance) {
-      cols.splice(5, 0, { header: 'Selling Price', cellValue: (row) => Number(row.selling_price || 0).toFixed(2) });
+    if (canSeePrices) {
+      cols.splice(5, 0, {
+        header: 'Selling Price',
+        cell: (row) => <Money value={row.selling_price} />,
+      });
     }
     return cols;
-  }, [canFinance]);
+  }, [canSeePrices]);
 
   const fields = useMemo(() => {
     const flds = [
@@ -231,7 +235,7 @@ export default function ProductCatalog() {
       { name: 'subcategory_id', label: 'Sub Category', type: 'select', optionsKey: 'subCategories', emptyAsNull: true },
       { name: 'supplier_id', label: 'Supplier', type: 'select', optionsKey: 'suppliers', emptyAsNull: true },
     ];
-    if (canFinance) {
+    if (canSeePrices) {
       flds.push({ name: 'purchase_price', label: 'Purchase Price', type: 'number', step: '0.01', required: true });
       flds.push({ name: 'selling_price', label: 'Selling Price', type: 'number', step: '0.01', required: true });
     }
@@ -241,7 +245,7 @@ export default function ProductCatalog() {
       { name: 'status', label: 'Status', type: 'select', defaultValue: 'active', options: [{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }] },
     );
     return flds;
-  }, [canFinance]);
+  }, [canSeePrices]);
 
   const renderItems = (products, { openModal, deleteItem, detailBasePath }) => {
     const categoryById = new Map(lookups.categories.map((c) => [c.id, c]));
@@ -378,7 +382,7 @@ export default function ProductCatalog() {
                   <div className="space-y-6 border-t border-gray-100 px-4 py-4">
                     {group.direct.length > 0 && (
                       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                        {group.direct.map((product) => renderCard(product, { openModal, deleteItem, detailBasePath, canFinance }))}
+                        {group.direct.map((product) => renderCard(product, { openModal, deleteItem, detailBasePath, canSeePrices }))}
                       </div>
                     )}
 
@@ -400,7 +404,7 @@ export default function ProductCatalog() {
                           </button>
                           {!isSubCollapsed && (
                             <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                              {sub.products.map((product) => renderCard(product, { openModal, deleteItem, detailBasePath, canFinance }))}
+                              {sub.products.map((product) => renderCard(product, { openModal, deleteItem, detailBasePath, canSeePrices }))}
                             </div>
                           )}
                         </div>
@@ -421,6 +425,7 @@ export default function ProductCatalog() {
       title={categoryTitle}
       description="Manage catalog items with category, supplier, and warehouse inventory relationships."
       store={useProductsStore}
+      module={MODULE}
       detailBasePath="/dashboard/products"
       searchPlaceholder="Search products or SKUs..."
       lookups={formLookups}
@@ -435,7 +440,7 @@ export default function ProductCatalog() {
   );
 }
 
-const renderCard = (product, { openModal, deleteItem, detailBasePath, canFinance }) => (
+const renderCard = (product, { openModal, deleteItem, detailBasePath, canSeePrices }) => (
   <div key={product.id} className="flex flex-col rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
     <div className="flex items-start justify-between gap-3">
       <div className="min-w-0">
@@ -454,10 +459,10 @@ const renderCard = (product, { openModal, deleteItem, detailBasePath, canFinance
     </div>
 
     <dl className="mt-3 flex-1 space-y-1 text-sm">
-      {canFinance && (
+      {canSeePrices && (
         <div className="flex items-center justify-between">
           <dt className="text-gray-500">Price</dt>
-          <dd className="font-semibold text-gray-900">{Number(product.selling_price || 0).toFixed(2)}</dd>
+          <dd className="font-semibold text-gray-900"><Money value={product.selling_price} /></dd>
         </div>
       )}
       <div className="flex items-center justify-between">
@@ -483,19 +488,23 @@ const renderCard = (product, { openModal, deleteItem, detailBasePath, canFinance
         View
       </Link>
       <div className="flex items-center gap-1">
-        <button type="button" className="rounded-md p-1.5 text-blue-600 hover:bg-blue-50" onClick={() => openModal(product)} title="Edit">
-          <Edit2 className="h-4 w-4" />
-        </button>
-        <button
-          type="button"
-          className="rounded-md p-1.5 text-red-600 hover:bg-red-50"
-          onClick={() => {
-            if (window.confirm(`Delete ${product.name}?`)) deleteItem(product.id);
-          }}
-          title="Delete"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
+        <PermissionGate module={MODULE} action="update" subject="this product">
+          <button type="button" className="rounded-md p-1.5 text-blue-600 hover:bg-blue-50 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent" onClick={() => openModal(product)} title="Edit">
+            <Edit2 className="h-4 w-4" />
+          </button>
+        </PermissionGate>
+        <PermissionGate module={MODULE} action="delete" subject="this product">
+          <button
+            type="button"
+            className="rounded-md p-1.5 text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent"
+            onClick={() => {
+              if (window.confirm(`Delete ${product.name}?`)) deleteItem(product.id);
+            }}
+            title="Delete"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </PermissionGate>
       </div>
     </div>
   </div>

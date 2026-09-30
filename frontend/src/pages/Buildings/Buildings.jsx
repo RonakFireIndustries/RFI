@@ -4,6 +4,7 @@ import { useBuildingStore } from '../../store/buildingStore';
 import { useSiteStore } from '../../store/siteStore';
 import { buildingDetailService } from '../../services/buildingDetailService';
 import MapPicker from '../../components/MapPicker';
+import PermissionGate from '../../components/Guards/PermissionGate';
 import {
   Plus, Edit, Trash2, Search, MapPin, Building2, Info, X, Compass, Copy,
   Shield, Flame, Hammer, User, Phone, FileText, ChevronDown, ChevronUp, Eye
@@ -465,10 +466,12 @@ export default function Buildings() {
           <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Buildings</h1>
           <p className="text-gray-500 mt-1">Manage building details, safety info, and construction data.</p>
         </div>
-        <button onClick={openAddModal} className="inline-flex items-center justify-center w-full sm:w-auto px-5 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary/90 transition-all shadow-md">
-          <Plus className="w-5 h-5 mr-2" />
-          Add Building
-        </button>
+        <PermissionGate module="buildings" action="create" subject="buildings">
+          <button onClick={openAddModal} className="inline-flex items-center justify-center w-full sm:w-auto px-5 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary/90 transition-all shadow-md disabled:cursor-not-allowed disabled:bg-gray-300 disabled:hover:bg-gray-300 disabled:shadow-none">
+            <Plus className="w-5 h-5 mr-2" />
+            Add Building
+          </button>
+        </PermissionGate>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -614,8 +617,12 @@ export default function Buildings() {
 
               <div className="bg-gray-50/50 px-6 py-3 border-t border-gray-100 flex justify-end gap-2">
                 <button onClick={() => navigate(`/dashboard/buildings/${b.id}`)} className="p-2 text-gray-600 hover:text-blue-600 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-gray-100" title="View"><Eye className="w-4 h-4" /></button>
-                <button onClick={() => openEditModal(b)} className="p-2 text-gray-600 hover:text-blue-600 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-gray-100" title="Edit"><Edit className="w-4 h-4" /></button>
-                <button onClick={() => handleDelete(b.id)} className="p-2 text-gray-600 hover:text-red-600 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-gray-100" title="Delete"><Trash2 className="w-4 h-4" /></button>
+                <PermissionGate module="buildings" action="update" subject="this building">
+                  <button onClick={() => openEditModal(b)} className="p-2 text-gray-600 hover:text-blue-600 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-gray-100 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent" title="Edit"><Edit className="w-4 h-4" /></button>
+                </PermissionGate>
+                <PermissionGate module="buildings" action="delete" subject="this building">
+                  <button onClick={() => handleDelete(b.id)} className="p-2 text-gray-600 hover:text-red-600 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-gray-100 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent" title="Delete"><Trash2 className="w-4 h-4" /></button>
+                </PermissionGate>
               </div>
             </div>
           ))}

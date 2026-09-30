@@ -18,6 +18,7 @@ export default function DesignationsPage() {
       title="Designations"
       description="Manage job titles and roles."
       store={useDesignationStore}
+      module="designations"
       searchPlaceholder="Search designations..."
       lookups={lookups}
       resourceName="designations"

@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Package, MapPin, AlertTriangle, TrendingUp, ArrowUpDown, Layers } from 'lucide-react';
 import { useInventoryDashboardStore } from '../../store/inventoryDashboardStore';
+import { usePriceVisibility } from '../../hooks/usePriceVisibility';
 
 export default function InventoryDashboard() {
   const { data, loading, fetch } = useInventoryDashboardStore();
   const navigate = useNavigate();
+  const { money } = usePriceVisibility();
 
   useEffect(() => {
     fetch();
@@ -38,7 +40,7 @@ export default function InventoryDashboard() {
     },
     {
       label: 'Stock Value',
-      value: data?.total_stock_value ? `₹${Number(data.total_stock_value).toLocaleString()}` : '₹0',
+      value: money(data?.total_stock_value),
       icon: TrendingUp,
       color: 'text-purple-600',
       bg: 'bg-purple-50',

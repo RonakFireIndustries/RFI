@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Trash2, Save, FileText, ArrowLeft, Loader2, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
+import Money from '../../components/Shared/Money';
 
 export default function InvoiceBuilder() {
   const navigate = useNavigate();
@@ -317,7 +318,7 @@ export default function InvoiceBuilder() {
                         />
                       </td>
                       <td className="p-4 align-top text-right font-medium text-gray-900">
-                        ₹{((parseFloat(item.quantity) || 0) * (parseFloat(item.unit_price) || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        <Money value={(parseFloat(item.quantity) || 0) * (parseFloat(item.unit_price) || 0)} />
                       </td>
                       <td className="p-4 align-top text-center">
                         <button
@@ -354,34 +355,34 @@ export default function InvoiceBuilder() {
             <div className="space-y-3 text-sm">
               <div className="flex justify-between text-gray-600">
                 <span>Subtotal</span>
-                <span className="font-medium text-gray-900">₹{totals.subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <span className="font-medium text-gray-900"><Money value={totals.subtotal} /></span>
               </div>
 
               {totals.cgst_total > 0 && (
                 <div className="flex justify-between text-gray-600">
                   <span>CGST</span>
-                  <span className="font-medium text-gray-900">₹{totals.cgst_total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span className="font-medium text-gray-900"><Money value={totals.cgst_total} /></span>
                 </div>
               )}
 
               {totals.sgst_total > 0 && (
                 <div className="flex justify-between text-gray-600">
                   <span>SGST</span>
-                  <span className="font-medium text-gray-900">₹{totals.sgst_total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span className="font-medium text-gray-900"><Money value={totals.sgst_total} /></span>
                 </div>
               )}
 
               {totals.igst_total > 0 && (
                 <div className="flex justify-between text-gray-600">
                   <span>IGST</span>
-                  <span className="font-medium text-gray-900">₹{totals.igst_total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span className="font-medium text-gray-900"><Money value={totals.igst_total} /></span>
                 </div>
               )}
 
               <div className="pt-3 mt-3 border-t border-gray-200 flex justify-between items-center">
                 <span className="font-bold text-gray-900 text-base">Grand Total</span>
                 <span className="font-bold text-primary text-xl">
-                  ₹{totals.grand_total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  <Money value={totals.grand_total} />
                 </span>
               </div>
             </div>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Printer, Download, Mail, Edit, Share2 } from 'lucide-react';
 import api from '../../services/api';
+import Money from '../../components/Shared/Money';
 
 export default function InvoicePreview() {
   const { id } = useParams();
@@ -167,8 +168,8 @@ export default function InvoicePreview() {
                     </td>
                     <td className="py-4 px-4 text-center text-gray-600">{item.hsn_code || '-'}</td>
                     <td className="py-4 px-4 text-center font-medium text-gray-900">{item.quantity}</td>
-                    <td className="py-4 px-4 text-right text-gray-600">₹{parseFloat(item.unit_price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                    <td className="py-4 px-4 text-right font-medium text-gray-900">₹{parseFloat(item.total).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    <td className="py-4 px-4 text-right text-gray-600"><Money value={item.unit_price} /></td>
+                    <td className="py-4 px-4 text-right font-medium text-gray-900"><Money value={item.total} /></td>
                   </tr>
                 ))}
               </tbody>
@@ -196,34 +197,34 @@ export default function InvoicePreview() {
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal</span>
-                  <span className="font-medium text-gray-900">₹{parseFloat(invoice.subtotal).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                  <span className="font-medium text-gray-900"><Money value={invoice.subtotal} /></span>
                 </div>
                 
                 {parseFloat(invoice.cgst_total) > 0 && (
                   <div className="flex justify-between text-gray-600">
                     <span>CGST</span>
-                    <span className="font-medium text-gray-900">₹{parseFloat(invoice.cgst_total).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                    <span className="font-medium text-gray-900"><Money value={invoice.cgst_total} /></span>
                   </div>
                 )}
                 
                 {parseFloat(invoice.sgst_total) > 0 && (
                   <div className="flex justify-between text-gray-600">
                     <span>SGST</span>
-                    <span className="font-medium text-gray-900">₹{parseFloat(invoice.sgst_total).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                    <span className="font-medium text-gray-900"><Money value={invoice.sgst_total} /></span>
                   </div>
                 )}
                 
                 {parseFloat(invoice.igst_total) > 0 && (
                   <div className="flex justify-between text-gray-600">
                     <span>IGST</span>
-                    <span className="font-medium text-gray-900">₹{parseFloat(invoice.igst_total).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                    <span className="font-medium text-gray-900"><Money value={invoice.igst_total} /></span>
                   </div>
                 )}
   
                 <div className="pt-4 mt-4 border-t border-gray-200 flex justify-between items-center">
                   <span className="font-bold text-gray-900">Grand Total</span>
                   <span className="font-black text-primary text-xl">
-                    ₹{parseFloat(invoice.grand_total).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                    <Money value={invoice.grand_total} />
                   </span>
                 </div>
 
@@ -231,11 +232,11 @@ export default function InvoicePreview() {
                   <>
                     <div className="flex justify-between text-green-600 pt-2 mt-2 border-t border-gray-100">
                       <span>Amount Paid</span>
-                      <span className="font-medium">₹{parseFloat(invoice.paid_amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                      <span className="font-medium"><Money value={invoice.paid_amount} /></span>
                     </div>
                     <div className="flex justify-between text-red-600 font-bold mt-1">
                       <span>Balance Due</span>
-                      <span>₹{(parseFloat(invoice.grand_total) - parseFloat(invoice.paid_amount)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                      <span><Money value={invoice.grand_total - invoice.paid_amount} /></span>
                     </div>
                   </>
                 )}

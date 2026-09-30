@@ -4,6 +4,7 @@ import { ArrowLeft, Edit2, Save, X, Plus, Trash2, Calendar, Building2, DollarSig
 import { opportunityService } from '../../services/opportunityService';
 import { buildingDetailService } from '../../services/buildingDetailService';
 import { useBuildingStore } from '../../store/buildingStore';
+import { usePriceVisibility } from '../../hooks/usePriceVisibility';
 import { format } from 'date-fns';
 
 const STAGES = ['Prospect', 'Follow-Up', 'Quotation Sent', 'Negotiation', 'Won', 'Lost'];
@@ -13,6 +14,7 @@ export default function OpportunityDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { items: buildings, fetchItems: fetchBuildings } = useBuildingStore();
+  const { canSeePrices, maskedValue } = usePriceVisibility();
   const [opp, setOpp] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -79,7 +81,10 @@ export default function OpportunityDetail() {
     return <div className="text-center py-12 text-gray-500">Opportunity not found</div>;
   }
 
-  const formatCurrency = (val) => val ? `₹${parseFloat(val).toLocaleString('en-IN')}` : '-';
+  const formatCurrency = (val) => {
+    if (!canSeePrices) return maskedValue;
+    return val ? `₹${parseFloat(val).toLocaleString('en-IN')}` : '-';
+  };
 
   return (
     <div className="space-y-6">

@@ -5,11 +5,13 @@ import {
   Clock, MapPin, ArrowRight, Plus 
 } from 'lucide-react';
 import { useSalesDashboardStore } from '../../store/salesDashboardStore';
+import { usePriceVisibility } from '../../hooks/usePriceVisibility';
 import { format } from 'date-fns';
 
 export default function SalesDashboard() {
   const navigate = useNavigate();
   const { stats, loading, fetchStats } = useSalesDashboardStore();
+  const { money } = usePriceVisibility();
 
   useEffect(() => {
     fetchStats();
@@ -77,11 +79,11 @@ export default function SalesDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-white rounded-lg border p-4">
           <p className="text-sm text-gray-500">Active Pipeline Value</p>
-          <p className="text-2xl font-bold text-gray-900">₹{totalPipelineValue.toLocaleString('en-IN')}</p>
+          <p className="text-2xl font-bold text-gray-900">{money(totalPipelineValue, { decimals: 0 })}</p>
         </div>
         <div className="bg-white rounded-lg border p-4">
           <p className="text-sm text-gray-500">Won Value</p>
-          <p className="text-2xl font-bold text-green-600">₹{wonValue.toLocaleString('en-IN')}</p>
+          <p className="text-2xl font-bold text-green-600">{money(wonValue, { decimals: 0 })}</p>
         </div>
       </div>
 
@@ -102,7 +104,7 @@ export default function SalesDashboard() {
                       <span className="text-xs font-medium whitespace-nowrap">{data.count}</span>
                     </div>
                   </div>
-                  <span className="text-xs text-gray-500 w-20 text-right">₹{(data.value || 0).toLocaleString('en-IN')}</span>
+                  <span className="text-xs text-gray-500 w-20 text-right">{money(data.value, { decimals: 0 })}</span>
                 </div>
               );
             })}

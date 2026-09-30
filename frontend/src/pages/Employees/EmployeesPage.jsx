@@ -24,6 +24,7 @@ export default function EmployeesPage() {
       title="Employees"
       description="Manage employee records with department, designation, site, attendance, leave, and payroll relationships."
       store={useEmployeesStore}
+      module="employees"
       detailBasePath="/dashboard/employees"
       searchPlaceholder="Search employees..."
       lookups={lookups}

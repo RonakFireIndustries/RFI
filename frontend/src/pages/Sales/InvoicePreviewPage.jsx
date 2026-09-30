@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import { usePriceVisibility } from '../../hooks/usePriceVisibility';
 import api from '../../services/api';
 import {
   ArrowLeft, Download, Printer, Mail, CheckCircle, AlertTriangle, XCircle,
@@ -26,6 +27,7 @@ export default function InvoicePreviewPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, permissions, roles } = useAuthStore();
+  const { canSeePrices, maskedValue } = usePriceVisibility();
   const printRef = useRef(null);
 
   const [data, setData] = useState(null);
@@ -147,6 +149,7 @@ export default function InvoicePreviewPage() {
   };
 
   const formatCurrency = (val) => {
+    if (!canSeePrices) return maskedValue;
     const num = parseFloat(val || 0);
     return '₹' + num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };

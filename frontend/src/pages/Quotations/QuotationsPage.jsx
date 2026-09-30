@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import api from '../../services/api';
 import { buildingService } from '../../services/buildingService';
 import { productsService } from '../../services/productsService';
+import PermissionGate from '../../components/Guards/PermissionGate';
+import { usePriceVisibility } from '../../hooks/usePriceVisibility';
 import {
   Plus, Search, Edit3, Trash2, FileDown, ArrowLeft, FileText, Building2, Loader2,
   Eye, CheckCircle2, XCircle, Clock, Send, Layers, ChevronDown, ChevronUp,
@@ -24,6 +26,8 @@ let uid = 0;
 const nextKey = () => `s${Date.now()}_${uid++}`;
 
 export default function QuotationsPage() {
+  const { canSeePrices, maskedValue } = usePriceVisibility();
+  const money = (n) => (canSeePrices ? fm(n) : maskedValue);
   const [mode, setMode] = useState('list'); // list | form | detail
   const [quotations, setQuotations] = useState([]);
   const [pagination, setPagination] = useState(null);
@@ -307,12 +311,14 @@ export default function QuotationsPage() {
             <ArrowLeft className="w-4 h-4" /> Back
           </button>
           <div className="flex gap-2">
-            <button
-              onClick={() => gotoForm(detail.id)}
-              className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-50"
-            >
-              <Edit3 className="w-4 h-4" /> Edit
-            </button>
+            <PermissionGate module="quotations" action="update" subject="this quotation">
+              <button
+                onClick={() => gotoForm(detail.id)}
+                className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-50 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400 disabled:hover:bg-transparent"
+              >
+                <Edit3 className="w-4 h-4" /> Edit
+              </button>
+            </PermissionGate>
             <button
               onClick={() => downloadPdf(detail)}
               disabled={downloadKey === detail.id}
@@ -372,7 +378,7 @@ export default function QuotationsPage() {
                     {section.name || 'Section'}
                     {isCollapsed ? <ChevronDown className="w-4 h-4 text-indigo-400" /> : <ChevronUp className="w-4 h-4 text-indigo-400" />}
                   </button>
-                  <span className="text-sm font-semibold text-gray-800">{fm(section.subtotal)}</span>
+                  <span className="text-sm font-semibold text-gray-800">{money(section.subtotal)}</span>
                 </div>
                 {!isCollapsed && (
                   <div className="overflow-x-auto">
@@ -394,15 +400,15 @@ export default function QuotationsPage() {
                             <td className="py-3 px-4 text-gray-800">{it.description || '—'}</td>
                             <td className="py-3 px-4 text-gray-500">{it.unit || '—'}</td>
                             <td className="py-3 px-4 text-right text-gray-700">{Number(it.qty)}</td>
-                            <td className="py-3 px-4 text-right text-gray-700">{fm(it.rate)}</td>
-                            <td className="py-3 px-6 text-right font-medium text-gray-800">{fm(it.amount)}</td>
+                            <td className="py-3 px-4 text-right text-gray-700">{money(it.rate)}</td>
+                            <td className="py-3 px-6 text-right font-medium text-gray-800">{money(it.amount)}</td>
                           </tr>
                         ))}
                         <tr className="bg-indigo-50/40">
                           <td colSpan="5" className="py-2 px-6 text-right text-xs font-bold text-gray-500 uppercase">
                             {section.name || 'Section'} Subtotal
                           </td>
-                          <td className="py-2 px-6 text-right font-semibold text-gray-800">{fm(section.subtotal)}</td>
+                          <td className="py-2 px-6 text-right font-semibold text-gray-800">{money(section.subtotal)}</td>
                         </tr>
                       </tbody>
                     </table>
@@ -414,15 +420,15 @@ export default function QuotationsPage() {
 
           <div className="px-6 py-5 flex justify-end">
             <div className="w-72 space-y-1.5 text-sm">
-              <div className="flex justify-between text-gray-600"><span>Subtotal</span><span>{fm(detail.subtotal)}</span></div>
+              <div className="flex justify-between text-gray-600"><span>Subtotal</span><span>{money(detail.subtotal)}</span></div>
               {Number(detail.discount) > 0 && (
-                <div className="flex justify-between text-gray-600"><span>Discount</span><span>- {fm(detail.discount)}</span></div>
+                <div className="flex justify-between text-gray-600"><span>Discount</span><span>- {money(detail.discount)}</span></div>
               )}
               {Number(detail.gst_percent) > 0 && (
-                <div className="flex justify-between text-gray-600"><span>GST ({Number(detail.gst_percent)}%)</span><span>{fm(detail.grand_total - (detail.subtotal - Number(detail.discount || 0)))}</span></div>
+                <div className="flex justify-between text-gray-600"><span>GST ({Number(detail.gst_percent)}%)</span><span>{money(detail.grand_total - (detail.subtotal - Number(detail.discount || 0)))}</span></div>
               )}
               <div className="flex justify-between font-bold text-gray-900 text-lg border-t border-gray-200 pt-2">
-                <span>Grand Total</span><span>{fm(detail.grand_total)}</span>
+                <span>Grand Total</span><span>{money(detail.grand_total)}</span>
               </div>
             </div>
           </div>
@@ -640,7 +646,7 @@ export default function QuotationsPage() {
                             <input type="number" min="0" step="any" value={row.rate} onChange={(e) => updateSectionItem(si, ii, 'rate', e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                           </div>
                           <div className="md:col-span-1 text-right">
-                            <div className="text-sm font-semibold text-gray-800">{fm(lineAmount(row))}</div>
+                            <div className="text-sm font-semibold text-gray-800">{money(lineAmount(row))}</div>
                             <button type="button" onClick={() => removeItemFromSection(si, ii)} disabled={section.items.length <= 1} className="mt-1 text-gray-400 hover:text-red-500 disabled:opacity-40">
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -653,7 +659,7 @@ export default function QuotationsPage() {
                         <Plus className="w-4 h-4" /> Add Item
                       </button>
                       <span className="text-sm font-semibold text-gray-700">
-                        {section.name || 'Section'} subtotal: <span className="text-gray-900">{fm(sectionSubtotal(section))}</span>
+                        {section.name || 'Section'} subtotal: <span className="text-gray-900">{money(sectionSubtotal(section))}</span>
                       </span>
                     </div>
                   </div>
@@ -663,7 +669,7 @@ export default function QuotationsPage() {
 
             <div className="flex justify-end mt-4">
               <div className="w-72 space-y-1.5 text-sm">
-                <div className="flex justify-between text-gray-600"><span>Subtotal</span><span>{fm(subtotal)}</span></div>
+                <div className="flex justify-between text-gray-600"><span>Subtotal</span><span>{money(subtotal)}</span></div>
                 <div className="flex justify-between items-center text-gray-600">
                   <span>Discount</span>
                   <input type="number" min="0" step="any" value={form.discount}
@@ -677,7 +683,7 @@ export default function QuotationsPage() {
                     className="w-28 text-right px-2 py-1 border border-gray-200 rounded-md text-sm" />
                 </div>
                 <div className="flex justify-between font-bold text-gray-900 text-base border-t border-gray-200 pt-2">
-                  <span>Grand Total</span><span>{fm(grandTotal)}</span>
+                  <span>Grand Total</span><span>{money(grandTotal)}</span>
                 </div>
               </div>
             </div>
@@ -730,12 +736,14 @@ export default function QuotationsPage() {
         >
           <Search className="w-4 h-4" /> Filters
         </button>
-        <button
-          onClick={openCreate}
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700"
-        >
-          <Plus className="w-4 h-4" /> New Quotation
-        </button>
+        <PermissionGate module="quotations" action="create" subject="quotations">
+          <button
+            onClick={openCreate}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:hover:bg-gray-300"
+          >
+            <Plus className="w-4 h-4" /> New Quotation
+          </button>
+        </PermissionGate>
       </div>
 
       <div className={`bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-4 gap-3 ${expanded ? 'block' : 'hidden'} md:flex`}>
@@ -810,7 +818,7 @@ export default function QuotationsPage() {
                       </td>
                       <td className="py-3 px-4 text-right text-gray-600">{q.sections?.length || 0}</td>
                       <td className="py-3 px-4 text-right text-gray-600">{q.item_count || 0}</td>
-                      <td className="py-3 px-4 text-right font-semibold text-gray-800">{fm(q.grand_total)}</td>
+                      <td className="py-3 px-4 text-right font-semibold text-gray-800">{money(q.grand_total)}</td>
                       <td className="py-3 px-4">
                         <div className="flex items-center justify-end gap-1">
                           <button
@@ -820,13 +828,15 @@ export default function QuotationsPage() {
                           >
                             <Eye className="w-4 h-4" />
                           </button>
-                          <button
-                            onClick={() => gotoForm(q.id)}
-                            title="Edit"
-                            className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
-                          >
-                            <Edit3 className="w-4 h-4" />
-                          </button>
+                          <PermissionGate module="quotations" action="update" subject="this quotation">
+                            <button
+                              onClick={() => gotoForm(q.id)}
+                              title="Edit"
+                              className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent"
+                            >
+                              <Edit3 className="w-4 h-4" />
+                            </button>
+                          </PermissionGate>
                           <button
                             onClick={() => downloadPdf(q)}
                             title="Download PDF"
@@ -834,13 +844,15 @@ export default function QuotationsPage() {
                           >
                             {downloadKey === q.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
                           </button>
-                          <button
-                            onClick={() => handleDelete(q)}
-                            title="Delete"
-                            className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          <PermissionGate module="quotations" action="delete" subject="this quotation">
+                            <button
+                              onClick={() => handleDelete(q)}
+                              title="Delete"
+                              className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </PermissionGate>
                         </div>
                       </td>
                     </tr>

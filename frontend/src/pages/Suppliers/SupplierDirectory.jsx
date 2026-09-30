@@ -1,4 +1,5 @@
 import ModuleListPage from '../ERP/ModuleListPage';
+import Money from '../../components/Shared/Money';
 import { useSuppliersStore } from '../../store/suppliersStore';
 
 export default function SupplierDirectory() {
@@ -7,6 +8,7 @@ export default function SupplierDirectory() {
       title="Suppliers"
       description="Manage suppliers and inspect linked products and purchase activity."
       store={useSuppliersStore}
+      module="suppliers"
       detailBasePath="/dashboard/suppliers"
       searchPlaceholder="Search suppliers..."
       columns={[
@@ -14,7 +16,7 @@ export default function SupplierDirectory() {
         { header: 'Email', accessor: 'email' },
         { header: 'Phone', accessor: 'phone' },
         { header: 'Products', cellValue: (row) => row.products_count ?? row.products?.length ?? 0 },
-        { header: 'Balance', cellValue: (row) => Number(row.balance || 0).toFixed(2) },
+        { header: 'Balance', cell: (row) => <Money value={row.balance} /> },
       ]}
       fields={[
         { name: 'name', label: 'Name', required: true },

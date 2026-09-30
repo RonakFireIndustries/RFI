@@ -4,10 +4,14 @@ import {
   Plus, Search, Download, TrendingUp, Clock, AlertCircle, Filter, ChevronDown, Trash2, FileText, CheckCircle, Truck, Package, List, Eye
 } from 'lucide-react';
 import api from '../../services/api';
+import Money from '../../components/Shared/Money';
+import PermissionGate from '../../components/Guards/PermissionGate';
+import { usePriceVisibility } from '../../hooks/usePriceVisibility';
 import ProductSelect from '../../components/Shared/ProductSelect';
 
 export default function SalesOrdersPage() {
   const navigate = useNavigate();
+  const { money } = usePriceVisibility();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -237,13 +241,15 @@ export default function SalesOrdersPage() {
             <Download className="w-4 h-4 mr-2" />
             Export
           </button>
-          <button 
-            onClick={() => setIsModalOpen(true)}
-            className="inline-flex items-center px-4 py-2 bg-primary hover:bg-primary/90 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Sales Order
-          </button>
+          <PermissionGate module="sales-orders" action="create" subject="sales orders">
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="inline-flex items-center px-4 py-2 bg-primary hover:bg-primary/90 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              New Sales Order
+            </button>
+          </PermissionGate>
         </div>
       </div>
 
@@ -255,7 +261,7 @@ export default function SalesOrdersPage() {
           </div>
           <div>
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Total Revenue</p>
-            <h3 className="text-2xl font-bold text-gray-900">₹{totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h3>
+            <h3 className="text-2xl font-bold text-gray-900">{money(totalAmount)}</h3>
           </div>
         </div>
         
@@ -377,7 +383,7 @@ export default function SalesOrdersPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
-                      ₹{parseFloat(order.total_amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                      <Money value={order.total_amount} />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getPaymentBadge(order.status)}

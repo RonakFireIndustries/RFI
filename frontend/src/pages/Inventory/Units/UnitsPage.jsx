@@ -7,6 +7,7 @@ export default function UnitsPage() {
       title="Units"
       description="Manage measurement units for products"
       store={useUnitStore}
+      module="units"
       detailBasePath="/dashboard/inventory/units"
       searchPlaceholder="Search units..."
       columns={[

@@ -8,6 +8,7 @@ export default function DepartmentsPage() {
       title="Departments"
       description="Manage organization departments."
       store={useDepartmentStore}
+      module="departments"
       searchPlaceholder="Search departments..."
       resourceName="departments"
       columns={[

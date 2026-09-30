@@ -2,11 +2,14 @@ import { useState, useEffect } from 'react';
 import { Search, Plus, Filter, Download, FileText, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
+import Money from '../../components/Shared/Money';
+import { usePriceVisibility } from '../../hooks/usePriceVisibility';
 
 export default function InvoiceList() {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const { money } = usePriceVisibility();
 
   useEffect(() => {
     fetchInvoices();
@@ -90,7 +93,7 @@ export default function InvoiceList() {
           </div>
           <div>
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Total Billed</p>
-            <h3 className="text-2xl font-bold text-gray-900">₹{totalRevenue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h3>
+            <h3 className="text-2xl font-bold text-gray-900">{money(totalRevenue)}</h3>
           </div>
         </div>
         
@@ -100,7 +103,7 @@ export default function InvoiceList() {
           </div>
           <div>
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Outstanding Balance</p>
-            <h3 className="text-2xl font-bold text-gray-900">₹{outstanding.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h3>
+            <h3 className="text-2xl font-bold text-gray-900">{money(outstanding)}</h3>
           </div>
         </div>
 
@@ -181,7 +184,7 @@ export default function InvoiceList() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
                       <div className="font-bold text-gray-900">
-                        ₹{parseFloat(invoice.grand_total).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                        <Money value={invoice.grand_total} />
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

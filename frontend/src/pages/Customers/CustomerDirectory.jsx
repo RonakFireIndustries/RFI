@@ -1,4 +1,5 @@
 import ModuleListPage from '../ERP/ModuleListPage';
+import Money from '../../components/Shared/Money';
 import { useCustomersStore } from '../../store/customersStore';
 
 export default function CustomerDirectory() {
@@ -7,6 +8,7 @@ export default function CustomerDirectory() {
       title="Customers"
       description="Manage customers and inspect their sales order history."
       store={useCustomersStore}
+      module="customers"
       detailBasePath="/dashboard/customers"
       searchPlaceholder="Search customers..."
       columns={[
@@ -14,7 +16,7 @@ export default function CustomerDirectory() {
         { header: 'Email', accessor: 'email' },
         { header: 'Phone', accessor: 'phone' },
         { header: 'Orders', cellValue: (row) => row.orders_count ?? row.sales_orders?.length ?? 0 },
-        { header: 'Balance', cellValue: (row) => Number(row.balance || row.outstanding_balance || 0).toFixed(2) },
+        { header: 'Balance', cell: (row) => <Money value={row.balance ?? row.outstanding_balance} /> },
       ]}
       fields={[
         { name: 'name', label: 'Name', required: true },

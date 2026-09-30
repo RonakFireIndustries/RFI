@@ -4,6 +4,7 @@ import {
   Info, X, AlertTriangle, CheckCircle2, ShieldAlert, Paperclip, Download, FileText, Upload, ArrowLeft, User, Phone,
 } from 'lucide-react';
 import api from '../../services/api';
+import PermissionGate from '../../components/Guards/PermissionGate';
 
 const iso = (d) => {
   if (!d) return '';
@@ -372,13 +373,15 @@ export default function FireExtinguishers() {
           <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Fire Extinguishers</h1>
           <p className="text-gray-500 mt-1">Track extinguishers per building along with installation and next refill dates.</p>
         </div>
-        <button
-          onClick={openAdd}
-          className="inline-flex items-center justify-center w-full sm:w-auto px-5 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary/90 transition-all shadow-md shadow-blue-200"
-        >
-          <Plus className="w-5 h-5 mr-2" />
-          Add Extinguishers
-        </button>
+        <PermissionGate module="extinguishers" action="create" subject="extinguishers">
+          <button
+            onClick={openAdd}
+            className="inline-flex items-center justify-center w-full sm:w-auto px-5 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary/90 transition-all shadow-md shadow-blue-200 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:hover:bg-gray-300 disabled:shadow-none"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            Add Extinguishers
+          </button>
+        </PermissionGate>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -482,13 +485,15 @@ export default function FireExtinguishers() {
                     >
                       View Details
                     </button>
-                    <button
-                      onClick={() => handleDeleteBuilding(b.id, b.name)}
-                      className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Delete all extinguishers in this building"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <PermissionGate module="extinguishers" action="delete" subject="all extinguishers in this building">
+                      <button
+                        onClick={() => handleDeleteBuilding(b.id, b.name)}
+                        className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent"
+                        title="Delete all extinguishers in this building"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </PermissionGate>
                   </div>
                 </div>
               );
@@ -515,20 +520,24 @@ export default function FireExtinguishers() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => openCertUpload(selectedBuilding.items[0])}
-                className="inline-flex items-center px-4 py-2 border border-blue-200 text-blue-700 text-sm rounded-lg hover:bg-blue-50 transition-colors font-semibold"
-              >
-                <Paperclip className="w-4 h-4 mr-2" />
-                Add Certificate
-              </button>
-              <button
-                onClick={() => handleDeleteBuilding(selectedBuilding.id, selectedBuilding.name)}
-                className="inline-flex items-center px-4 py-2 border border-red-200 text-red-600 text-sm rounded-lg hover:bg-red-50 transition-colors font-semibold"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete All
-              </button>
+              <PermissionGate module="extinguishers" action="update" subject="certificates">
+                <button
+                  onClick={() => openCertUpload(selectedBuilding.items[0])}
+                  className="inline-flex items-center px-4 py-2 border border-blue-200 text-blue-700 text-sm rounded-lg hover:bg-blue-50 transition-colors font-semibold disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400 disabled:hover:bg-transparent"
+                >
+                  <Paperclip className="w-4 h-4 mr-2" />
+                  Add Certificate
+                </button>
+              </PermissionGate>
+              <PermissionGate module="extinguishers" action="delete" subject="all extinguishers in this building">
+                <button
+                  onClick={() => handleDeleteBuilding(selectedBuilding.id, selectedBuilding.name)}
+                  className="inline-flex items-center px-4 py-2 border border-red-200 text-red-600 text-sm rounded-lg hover:bg-red-50 transition-colors font-semibold disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400 disabled:hover:bg-transparent"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete All
+                </button>
+              </PermissionGate>
             </div>
           </div>
 
@@ -578,9 +587,11 @@ export default function FireExtinguishers() {
                     <button onClick={() => downloadCertificate(c)} className="p-1 hover:text-blue-900" title="Download">
                       <Download className="w-4 h-4" />
                     </button>
-                    <button onClick={() => deleteCertificate(c)} className="p-1 hover:text-red-600" title="Delete">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <PermissionGate module="extinguishers" action="delete" subject="this certificate">
+                      <button onClick={() => deleteCertificate(c)} className="p-1 hover:text-red-600 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:text-inherit" title="Delete">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </PermissionGate>
                   </div>
                 ))}
               </div>
@@ -608,13 +619,15 @@ export default function FireExtinguishers() {
                       ) : (
                         <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700">OK</span>
                       )}
-                      <button
-                        onClick={() => handleDelete(x)}
-                        className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Delete this extinguisher"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <PermissionGate module="extinguishers" action="delete" subject="this extinguisher">
+                        <button
+                          onClick={() => handleDelete(x)}
+                          className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent"
+                          title="Delete this extinguisher"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </PermissionGate>
                     </div>
                   </div>
 
