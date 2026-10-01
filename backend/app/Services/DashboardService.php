@@ -23,9 +23,17 @@ use App\Models\User;
 use App\Models\EmployeeSite;
 use App\Models\DashboardWidget;
 use App\Models\Category;
+use App\Models\Payslip;
+use App\Models\Task;
+use App\Models\ActivityLog;
+use App\Models\CompanySetting;
+use App\Support\Access;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 class DashboardService
 {
@@ -36,7 +44,7 @@ class DashboardService
         'Admin'                => 'admin',
         'System Admin'         => 'admin',
         'Manager'              => 'admin',
-        'General Manager'      => 'admin',
+        'General Manager'      => 'executive',
         'HR'                   => 'hr',
         'HR Manager'           => 'hr',
         'Accountant'           => 'finance',
@@ -45,9 +53,10 @@ class DashboardService
         'Developer'            => 'it',
         'Production Manager'   => 'production',
         'Workshop Supervisor'  => 'production',
+        'Sales'                => 'sales',
         'Design Manager'       => 'employee',
         'Designer'             => 'employee',
-        'Sales'                => 'employee',
+        'Employee'             => 'employee',
         'Fitter'               => 'employee',
         'Welder'               => 'employee',
         'Electrician'          => 'employee',
@@ -56,27 +65,27 @@ class DashboardService
 
     private const DASHBOARD_WIDGETS = [
         'admin' => [
-            'cards' => ['total_employees', 'present_today', 'employees_on_leave', 'active_sites', 'inventory_value', 'low_stock', 'revenue', 'expenses', 'payroll_cost', 'pending_approvals'],
-            'charts' => ['attendance_trend', 'payroll_trend', 'inventory_trend', 'sales_trend', 'department_headcount'],
+            'cards' => ['total_employees', 'present_today', 'employees_on_leave', 'active_sites', 'inventory_value', 'low_stock', 'revenue', 'expenses', 'payroll_cost', 'pending_approvals', 'employee_summary', 'attendance_summary', 'dpr_summary', 'recent_activity'],
+            'charts' => ['attendance_trend', 'payroll_trend', 'inventory_trend', 'sales_trend', 'department_headcount', 'department_performance', 'site_performance'],
             'quick_actions' => ['add_employee', 'generate_payroll', 'approve_leave', 'create_purchase_order', 'create_sales_order'],
-            'alerts' => ['low_stock_alert', 'pending_payroll_alert', 'absenteeism_alert', 'document_expiry_alert'],
+            'alerts' => ['low_stock_alert', 'pending_payroll_alert', 'absenteeism_alert', 'document_expiry_alert', 'site_delays_alert'],
         ],
         'executive' => [
-            'cards' => ['total_employees', 'present_today', 'employees_on_leave', 'revenue', 'payroll_cost', 'pending_approvals'],
-            'charts' => ['attendance_trend', 'revenue_vs_expenses', 'department_headcount'],
+            'cards' => ['company_overview', 'total_employees', 'present_today', 'employees_on_leave', 'revenue', 'payroll_cost', 'pending_approvals', 'employee_summary'],
+            'charts' => ['attendance_trend', 'revenue_vs_expenses', 'department_headcount', 'department_performance', 'site_performance'],
             'quick_actions' => ['add_employee', 'approve_leave', 'approve_dpr'],
             'alerts' => ['absenteeism_alert', 'pending_payroll_alert'],
         ],
         'hr' => [
-            'cards' => ['total_employees', 'present_today', 'absent_today', 'employees_on_leave', 'new_joiners', 'pending_leave_requests', 'pending_dpr_approvals', 'document_expiry'],
+            'cards' => ['total_employees', 'present_today', 'absent_today', 'employees_on_leave', 'new_joiners', 'pending_leave_requests', 'pending_dpr_approvals', 'document_expiry', 'attendance_summary', 'leave_summary'],
             'charts' => ['attendance_trend', 'leave_trend', 'employee_growth', 'department_headcount'],
-            'quick_actions' => ['add_employee', 'assign_site', 'approve_leave', 'upload_documents'],
+            'quick_actions' => ['add_employee', 'assign_site', 'approve_leave', 'upload_documents', 'review_attendance'],
             'alerts' => ['document_expiry_alert', 'absenteeism_alert'],
         ],
         'finance' => [
-            'cards' => ['payroll_cost', 'salary_processed', 'pending_payroll', 'approved_payroll', 'paid_payroll', 'outstanding_payments'],
+            'cards' => ['payroll_cost', 'salary_processed', 'pending_payroll', 'approved_payroll', 'paid_payroll', 'outstanding_payments', 'payroll_records', 'payslips', 'payroll_summary', 'pending_payments'],
             'charts' => ['payroll_trend', 'department_salary_cost', 'expense_trend'],
-            'quick_actions' => ['generate_payroll', 'lock_payroll', 'export_payslips'],
+            'quick_actions' => ['generate_payroll', 'lock_payroll', 'export_payslips', 'generate_payslip', 'export_payroll'],
             'alerts' => ['pending_payroll_alert'],
         ],
         'inventory' => [
@@ -86,10 +95,10 @@ class DashboardService
             'alerts' => ['low_stock_alert'],
         ],
         'production' => [
-            'cards' => ['present_today', 'absent_today', 'production_workforce', 'pending_dpr_approvals', 'completed_work_reports'],
+            'cards' => ['present_today', 'absent_today', 'production_workforce', 'pending_dpr_approvals', 'completed_work_reports', 'site_productivity', 'assigned_employees', 'pending_work_reports', 'dpr_summary'],
             'charts' => ['attendance_by_site', 'dpr_trend', 'workforce_utilization'],
             'quick_actions' => ['approve_dpr', 'view_team_attendance', 'transfer_employee'],
-            'alerts' => ['absenteeism_alert', 'dpr_reminder'],
+            'alerts' => ['absenteeism_alert', 'dpr_reminder', 'site_delays_alert'],
         ],
         'sales' => [
             'cards' => ['revenue', 'pending_payments', 'customers_count', 'sales_trend'],
@@ -98,36 +107,252 @@ class DashboardService
             'alerts' => [],
         ],
         'it' => [
-            'cards' => ['active_users', 'system_health'],
+            'cards' => ['active_users', 'system_health', 'audit_logs', 'server_status', 'user_activity'],
             'charts' => ['attendance_trend'],
-            'quick_actions' => ['manage_users', 'manage_roles', 'view_logs'],
-            'alerts' => [],
+            'quick_actions' => ['manage_users', 'manage_roles', 'view_logs', 'manage_access', 'manage_permissions', 'system_settings'],
+            'alerts' => ['server_alert'],
         ],
         'employee' => [
-            'cards' => ['attendance_today', 'current_site', 'leave_balance', 'pending_leave_requests_mine'],
+            'cards' => ['attendance_today', 'current_site', 'leave_balance', 'pending_leave_requests_mine', 'today_attendance', 'my_tasks'],
             'charts' => [],
-            'quick_actions' => ['check_attendance', 'submit_dpr', 'apply_leave', 'download_payslip'],
+            'quick_actions' => ['check_attendance', 'submit_dpr', 'apply_leave', 'download_payslip', 'check_in', 'check_out'],
             'alerts' => ['attendance_reminder', 'dpr_reminder', 'leave_expiry_alert'],
             'widgets' => ['my_attendance', 'my_dpr', 'my_documents', 'my_payslips'],
         ],
     ];
 
+    /**
+ * Icons for synthesized widgets, so a dashboard rendered before the seeder has
+ * run still looks like the seeded one.
+ */
+private const FALLBACK_ICONS = [
+        'total_employees' => 'Users',
+        'present_today' => 'UserCheck',
+        'absent_today' => 'UserX',
+        'employees_on_leave' => 'UserMinus',
+        'active_sites' => 'Building2',
+        'inventory_value' => 'Package',
+        'low_stock' => 'AlertTriangle',
+        'out_of_stock' => 'XCircle',
+        'revenue' => 'TrendingUp',
+        'expenses' => 'TrendingDown',
+        'payroll_cost' => 'DollarSign',
+        'pending_approvals' => 'ClipboardList',
+        'new_joiners' => 'UserPlus',
+        'pending_leave_requests' => 'CalendarClock',
+        'pending_dpr_approvals' => 'FileText',
+        'document_expiry' => 'FileWarning',
+        'attendance_today' => 'Calendar',
+        'today_attendance' => 'Fingerprint',
+        'current_site' => 'MapPin',
+        'leave_balance' => 'CalendarDays',
+        'my_tasks' => 'ListChecks',
+        'my_attendance' => 'Calendar',
+        'my_dpr' => 'FileText',
+        'my_documents' => 'FileText',
+        'my_payslips' => 'CreditCard',
+        'check_in' => 'LogIn',
+        'check_out' => 'LogOut',
+        'check_attendance' => 'CheckSquare',
+        'submit_dpr' => 'FileText',
+        'apply_leave' => 'CalendarDays',
+        'download_payslip' => 'CreditCard',
+        'attendance_reminder' => 'Clock',
+        'dpr_reminder' => 'Clock',
+        'leave_expiry_alert' => 'CalendarDays',
+        'active_users' => 'Users',
+        'system_health' => 'Server',
+        'server_status' => 'Server',
+        'audit_logs' => 'ScrollText',
+        'recent_activity' => 'Activity',
+        'user_activity' => 'Activity',
+        'company_overview' => 'Briefcase',
+    ];
+
+    /**
+     * The seeded roles that belong to each dashboard type. Widget role lists are
+     * derived from this (see rolesForWidgetKey) so they cannot drift from the
+     * widget configuration above.
+     */
+    private const TYPE_ROLES = [
+        'admin'      => ['Admin', 'Manager', 'System Admin'],
+        'executive'  => ['General Manager'],
+        'hr'         => ['HR', 'HR Manager'],
+        'finance'    => ['Accountant'],
+        'inventory'  => ['Store Manager'],
+        'production' => ['Workshop Supervisor', 'Production Manager'],
+        'sales'      => ['Sales'],
+        'it'         => ['IT Manager', 'Developer'],
+        'employee'   => ['Employee', 'Designer', 'Design Manager', 'Fitter', 'Welder', 'Electrician', 'Helper'],
+    ];
+
+    /**
+     * Every dashboard type that renders the given widget key, with the roles
+     * those types belong to. Returns an empty array for unknown keys.
+     */
+    public static function rolesForWidgetKey(string $widgetKey): array
+    {
+        $roles = [];
+
+        foreach (self::DASHBOARD_WIDGETS as $type => $config) {
+            $keys = array_merge(
+                $config['cards'] ?? [],
+                $config['charts'] ?? [],
+                $config['quick_actions'] ?? [],
+                $config['alerts'] ?? [],
+                $config['widgets'] ?? [],
+            );
+
+            if (in_array($widgetKey, $keys, true)) {
+                foreach (self::TYPE_ROLES[$type] ?? [] as $role) {
+                    $roles[$role] = true;
+                }
+            }
+        }
+
+        return array_keys($roles);
+    }
+
     public function forUser($user): static
     {
         $this->user = $user;
-        $this->employee = $user->employee;
+
+        try {
+            $this->employee = $user->employee;
+        } catch (\Throwable $e) {
+            $this->employee = null;
+        }
+
         return $this;
     }
 
     public function getDashboardType(): string
     {
-        $roleNames = $this->user->roles->pluck('name')->toArray();
+        try {
+            $roleNames = $this->user->roles->pluck('name')->toArray();
+        } catch (\Throwable $e) {
+            return 'employee';
+        }
+
         foreach ($roleNames as $role) {
             if (isset(self::ROLE_MAP[$role])) {
                 return self::ROLE_MAP[$role];
             }
         }
         return 'employee';
+    }
+
+    /**
+     * A widget's `permission` is the primary gate. When a widget carries no
+     * permission we fall back to its role list.
+     */
+    private function canSeeWidget(DashboardWidget $widget): bool
+    {
+        $permission = $widget->permission;
+
+        if ($permission !== null && $permission !== '') {
+            try {
+                return Access::can($this->user, $permission);
+            } catch (\Throwable $e) {
+                // Permission store unavailable - treat as not permitted.
+                return false;
+            }
+        }
+
+        if ($widget->relationLoaded('roles')) {
+            $widgetRoles = $widget->roles->pluck('name');
+        } elseif ($widget->exists) {
+            try {
+                $widgetRoles = $widget->roles()->pluck('name');
+            } catch (\Throwable $e) {
+                $widgetRoles = collect();
+            }
+        } else {
+            // Synthesized default: no role list, so it is shown to everyone.
+            $widgetRoles = collect();
+        }
+
+        if ($widgetRoles->isEmpty()) {
+            return true;
+        }
+
+        try {
+            $userRoles = $this->user->roles->pluck('name');
+        } catch (\Throwable $e) {
+            return false;
+        }
+
+        return $widgetRoles->intersect($userRoles)->isNotEmpty();
+    }
+
+    /**
+     * Turn a widget_key such as `pending_leave_requests_mine` into
+     * "Pending Leave Requests Mine".
+     */
+    private static function humanizeKey(string $key): string
+    {
+        $words = str_replace(['-', '_'], ' ', $key);
+        return ucwords($words);
+    }
+
+    /**
+     * Build an in-memory widget for keys that have no row in
+     * dashboard_widgets. This keeps every user on a working dashboard even
+     * before the seeder has run.
+     */
+    private function synthesizeWidget(string $key, array $config, string $type): DashboardWidget
+    {
+        $chartType = null;
+        foreach (['charts'] as $bucket) {
+            if (in_array($key, $config[$bucket] ?? [], true)) {
+                $chartType = 'bar';
+            }
+        }
+
+        $widget = new DashboardWidget();
+        $widget->widget_key = $key;
+        $widget->name = self::humanizeKey($key);
+        $widget->icon = self::FALLBACK_ICONS[$key] ?? null;
+        $widget->chart_type = $chartType;
+        $widget->permission = null;
+        $widget->order = 0;
+        $widget->setRelation('roles', collect());
+
+        return $widget;
+    }
+
+    /**
+     * Load the widget rows for the given keys. Keys with no row at all are
+     * replaced with a synthesized default; rows that exist but fail the
+     * permission check are dropped and never re-added.
+     */
+    private function loadWidgets(array $allKeys, array $config): Collection
+    {
+        try {
+            $records = DashboardWidget::where('is_active', true)
+                ->whereIn('widget_key', $allKeys)
+                ->with('roles')
+                ->orderBy('order')
+                ->get();
+        } catch (\Throwable $e) {
+            // Missing/unmigrated dashboard_widgets table - fall through to defaults.
+            $records = collect();
+        }
+
+        $permitted = $records
+            ->filter(fn(DashboardWidget $widget) => $this->canSeeWidget($widget))
+            ->keyBy('widget_key');
+
+        $known = $records->keyBy('widget_key');
+
+        foreach ($allKeys as $key) {
+            if ($known->has($key)) {
+                continue;
+            }
+            $permitted->put($key, $this->synthesizeWidget($key, $config));
+        }
+
+        return $permitted;
     }
 
     public function getDashboard(): array
@@ -143,29 +368,54 @@ class DashboardService
             $config['widgets'] ?? [],
         );
 
-        $widgets = DashboardWidget::where('is_active', true)
-            ->whereIn('widget_key', $allKeys)
-            ->with('designations')
-            ->orderBy('order')
-            ->get()
-            ->filter(function ($widget) {
-                if ($widget->designations->isEmpty()) return true;
-                $userDesignationIds = $this->user->roles
-                    ->pluck('name')
-                    ->pipe(fn($names) => Designation::whereIn('name', $names)->pluck('id'));
-                return $widget->designations->pluck('id')->intersect($userDesignationIds)->isNotEmpty();
-            })
-            ->keyBy('widget_key');
+        $widgets = $this->loadWidgets($allKeys, $config);
 
+        $payload = $this->buildPayload($type, $config, $widgets);
+
+        if ($this->payloadIsEmpty($payload) && $type !== 'employee') {
+            // Nothing survived the permission check - guarantee the user a
+            // working, self-scoped dashboard rather than an empty page.
+            $fallbackConfig = self::DASHBOARD_WIDGETS['employee'];
+            $fallbackKeys = array_merge(
+                $fallbackConfig['cards'] ?? [],
+                $fallbackConfig['quick_actions'] ?? [],
+                $fallbackConfig['alerts'] ?? [],
+                $fallbackConfig['widgets'] ?? [],
+            );
+            $payload = $this->buildPayload(
+                'employee',
+                $fallbackConfig,
+                $this->loadWidgets($fallbackKeys, $fallbackConfig)
+            );
+        }
+
+        return $payload;
+    }
+
+    private function payloadIsEmpty(array $payload): bool
+    {
+        foreach (['cards', 'charts', 'quick_actions', 'alerts', 'widgets'] as $bucket) {
+            if (!empty($payload[$bucket])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private function buildPayload(string $type, array $config, Collection $widgets): array
+    {
         $cards = [];
         $charts = [];
         $quickActions = [];
         $alerts = [];
         $widgetsOutput = [];
 
-        foreach ($config['cards'] ?? [] as $key) {
-            $widget = $widgets->get($key);
-            if (!$widget) continue;
+        // $widgets is already ordered by the seeder-managed `order` column, so
+        // each bucket is emitted in database order rather than config order.
+        $bucket = fn(string $name): array => $config[$name] ?? [];
+
+        foreach ($widgets as $key => $widget) {
+            if (!in_array($key, $bucket('cards'), true)) continue;
             $data = $this->computeWidgetData($widget);
             if ($data === null) continue;
             $cards[] = array_merge([
@@ -175,9 +425,8 @@ class DashboardService
             ], $data);
         }
 
-        foreach ($config['charts'] ?? [] as $key) {
-            $widget = $widgets->get($key);
-            if (!$widget) continue;
+        foreach ($widgets as $key => $widget) {
+            if (!in_array($key, $bucket('charts'), true)) continue;
             $data = $this->computeWidgetData($widget);
             if ($data === null) continue;
             $charts[] = array_merge([
@@ -188,9 +437,8 @@ class DashboardService
             ], $data);
         }
 
-        foreach ($config['quick_actions'] ?? [] as $key) {
-            $widget = $widgets->get($key);
-            if (!$widget) continue;
+        foreach ($widgets as $key => $widget) {
+            if (!in_array($key, $bucket('quick_actions'), true)) continue;
             $data = $this->computeWidgetData($widget);
             if ($data === null) continue;
             $quickActions[] = array_merge([
@@ -203,9 +451,8 @@ class DashboardService
             ], $data);
         }
 
-        foreach ($config['alerts'] ?? [] as $key) {
-            $widget = $widgets->get($key);
-            if (!$widget) continue;
+        foreach ($widgets as $key => $widget) {
+            if (!in_array($key, $bucket('alerts'), true)) continue;
             $data = $this->computeWidgetData($widget);
             if ($data === null) continue;
             $alerts[] = array_merge([
@@ -218,9 +465,8 @@ class DashboardService
             ], $data);
         }
 
-        foreach ($config['widgets'] ?? [] as $key) {
-            $widget = $widgets->get($key);
-            if (!$widget) continue;
+        foreach ($widgets as $key => $widget) {
+            if (!in_array($key, $bucket('widgets'), true)) continue;
             $data = $this->computeWidgetData($widget);
             if ($data === null) continue;
             $widgetsOutput[] = array_merge([
@@ -243,10 +489,17 @@ class DashboardService
     protected function computeWidgetData($widget): ?array
     {
         $method = 'widget' . str_replace(' ', '', ucwords(str_replace(['-', '_'], ' ', $widget->widget_key)));
-        if (method_exists($this, $method)) {
-            return $this->$method();
+        if (!method_exists($this, $method)) {
+            return null;
         }
-        return null;
+
+        try {
+            return $this->$method();
+        } catch (\Throwable $e) {
+            // A single unavailable table must not blank the whole dashboard.
+            report($e);
+            return ['value' => '—', 'subtitle' => 'Unavailable'];
+        }
     }
 
     // ─── CARD COMPUTATIONS ───────────────────────────────────────
@@ -261,7 +514,7 @@ class DashboardService
     protected function widgetPresentToday(): array
     {
         $count = Attendance::whereDate('date', Carbon::today())
-            ->whereIn('status', ['Present', 'Late', 'Half Day'])->count();
+            ->whereIn('status', ['present', 'late', 'half-day'])->count();
         return ['value' => $count, 'subtitle' => 'Checked in today'];
     }
 
@@ -269,7 +522,7 @@ class DashboardService
     {
         $total = Employee::count();
         $present = Attendance::whereDate('date', Carbon::today())
-            ->whereIn('status', ['Present', 'Late', 'Half Day'])->count();
+            ->whereIn('status', ['present', 'late', 'half-day'])->count();
         return ['value' => $total - $present, 'subtitle' => 'Not checked in'];
     }
 
@@ -326,10 +579,24 @@ class DashboardService
         return ['value' => round($cost, 2), 'prefix' => '₹', 'subtitle' => 'Current period'];
     }
 
+    /**
+     * The `daily_reports` table has no `status` column. Review state is derived
+     * from the submitted_at / approved_at timestamps.
+     */
+    private function dprPendingQuery(): Builder
+    {
+        return DailyReport::whereNotNull('submitted_at')->whereNull('approved_at');
+    }
+
+    private function dprApprovedQuery(): Builder
+    {
+        return DailyReport::whereNotNull('approved_at');
+    }
+
     protected function widgetPendingApprovals(): array
     {
-        $leaves = Leave::where('status', 'Submitted')->count();
-        $dprs = DailyReport::where('status', 'Submitted')->count();
+        $leaves = Leave::where('status', 'Pending')->count();
+        $dprs = $this->dprPendingQuery()->count();
         return ['value' => $leaves + $dprs, 'subtitle' => "{$leaves} leaves, {$dprs} DPRs"];
     }
 
@@ -342,13 +609,13 @@ class DashboardService
 
     protected function widgetPendingLeaveRequests(): array
     {
-        $count = Leave::where('status', 'Submitted')->count();
+        $count = Leave::where('status', 'Pending')->count();
         return ['value' => $count, 'subtitle' => 'Awaiting approval'];
     }
 
     protected function widgetPendingDprApprovals(): array
     {
-        $count = DailyReport::where('status', 'Submitted')->count();
+        $count = $this->dprPendingQuery()->count();
         return ['value' => $count, 'subtitle' => 'Awaiting review'];
     }
 
@@ -364,7 +631,7 @@ class DashboardService
         $latestPeriod = PayrollPeriod::latest('id')->value('id');
         $total = Payroll::when($latestPeriod, fn($q) => $q->where('payroll_period_id', $latestPeriod))->count();
         $processed = Payroll::when($latestPeriod, fn($q) => $q->where('payroll_period_id', $latestPeriod))
-            ->whereIn('status', ['Approved', 'Locked', 'Paid'])->count();
+            ->where('status', 'Approved')->count();
         $percent = $total > 0 ? round(($processed / $total) * 100) : 0;
         return ['value' => "{$percent}%", 'subtitle' => "{$processed}/{$total} processed"];
     }
@@ -383,8 +650,11 @@ class DashboardService
 
     protected function widgetPaidPayroll(): array
     {
-        $cost = Payroll::where('status', 'Paid')->sum('net_salary');
-        return ['value' => round($cost, 2), 'prefix' => '₹', 'subtitle' => 'Paid'];
+        $latestPeriod = PayrollPeriod::latest('id')->value('id');
+        $cost = Payroll::when($latestPeriod, fn($q) => $q->where('payroll_period_id', $latestPeriod))
+            ->where('status', 'Approved')
+            ->sum('net_salary');
+        return ['value' => round($cost, 2), 'prefix' => '₹', 'subtitle' => 'Latest period'];
     }
 
     protected function widgetOutstandingPayments(): array
@@ -403,7 +673,7 @@ class DashboardService
     protected function widgetCompletedWorkReports(): array
     {
         if (!$this->employee) return null;
-        $count = DailyReport::where('employee_id', $this->employee->id)->where('status', 'Approved')->count();
+        $count = $this->dprApprovedQuery()->where('employee_id', $this->employee->id)->count();
         return ['value' => $count, 'subtitle' => 'Approved DPRs'];
     }
 
@@ -431,7 +701,7 @@ class DashboardService
     protected function widgetPendingLeaveRequestsMine(): array
     {
         if (!$this->employee) return null;
-        $count = Leave::where('employee_id', $this->employee->id)->where('status', 'Submitted')->count();
+        $count = Leave::where('employee_id', $this->employee->id)->where('status', 'Pending')->count();
         return ['value' => $count, 'subtitle' => 'Awaiting approval'];
     }
 
@@ -448,7 +718,7 @@ class DashboardService
 
     protected function widgetPendingTransfers(): array
     {
-        $count = \App\Models\InventoryTransfer::where('status', 'Pending')->count();
+        $count = \App\Models\InventoryTransfer::where('status', 'pending')->count();
         return ['value' => $count, 'subtitle' => 'Awaiting transfer'];
     }
 
@@ -472,13 +742,224 @@ class DashboardService
 
     // ─── CHART COMPUTATIONS ──────────────────────────────────────
 
+    protected function widgetEmployeeSummary(): array
+    {
+        $active = Employee::where('status', 'active')->count();
+        $other = Employee::where('status', '!=', 'active')->count();
+        return ['value' => $active, 'subtitle' => "{$active} active, {$other} inactive"];
+    }
+
+    protected function widgetAttendanceSummary(): array
+    {
+        $today = Carbon::today();
+        $present = Attendance::whereDate('date', $today)->whereIn('status', ['present', 'late', 'half-day'])->count();
+        $absent = Attendance::whereDate('date', $today)->where('status', 'absent')->count();
+        $late = Attendance::whereDate('date', $today)->where('status', 'late')->count();
+        return ['value' => $present, 'subtitle' => "{$present} present, {$absent} absent, {$late} late"];
+    }
+
+    protected function widgetLeaveSummary(): array
+    {
+        $pending = Leave::where('status', 'Pending')->count();
+        $approved = Leave::where('status', 'Approved')->count();
+        $rejected = Leave::where('status', 'Rejected')->count();
+        return ['value' => $pending, 'subtitle' => "{$pending} pending, {$approved} approved, {$rejected} rejected"];
+    }
+
+    protected function widgetDprSummary(): array
+    {
+        $from = Carbon::now()->startOfMonth()->toDateString();
+        $total = DailyReport::where('report_date', '>=', $from)->count();
+        $pending = $this->dprPendingQuery()->where('report_date', '>=', $from)->count();
+        $approved = $this->dprApprovedQuery()->where('report_date', '>=', $from)->count();
+        return ['value' => $total, 'subtitle' => "{$pending} pending, {$approved} approved this month"];
+    }
+
+    protected function widgetPayrollSummary(): array
+    {
+        $total = Payroll::count();
+        $draft = Payroll::where('status', 'Draft')->count();
+        $approved = Payroll::where('status', 'Approved')->count();
+        return ['value' => $total, 'subtitle' => "{$draft} draft, {$approved} approved"];
+    }
+
+    protected function widgetPayrollRecords(): array
+    {
+        $count = Payroll::count();
+        $periods = PayrollPeriod::count();
+        return ['value' => $count, 'subtitle' => "Across {$periods} payroll period(s)"];
+    }
+
+    protected function widgetPayslips(): array
+    {
+        $count = Payslip::count();
+        $generated = Payslip::whereNotNull('generated_at')->count();
+        return ['value' => $count, 'subtitle' => "{$generated} generated"];
+    }
+
+    protected function widgetPendingPayments(): array
+    {
+        $count = Invoice::whereIn('status', ['Unpaid', 'Overdue', 'Partially Paid'])->count();
+        $overdue = Invoice::where('status', 'Overdue')->count();
+        return ['value' => $count, 'subtitle' => "{$overdue} overdue"];
+    }
+
+    protected function widgetCompanyOverview(): array
+    {
+        $settings = CompanySetting::first();
+        $name = $settings->company_name ?? config('app.name');
+        return ['value' => $name, 'subtitle' => 'Company profile'];
+    }
+
+    protected function widgetSitePerformance(): array
+    {
+        $since = Carbon::now()->subDays(30)->toDateString();
+        $sites = Site::where('status', 'Active')->count();
+        $withStaff = EmployeeSite::distinct()->count('site_id');
+        $reports = DailyReport::whereNotNull('site_id')->where('report_date', '>=', $since)->count();
+        return ['value' => $sites, 'subtitle' => "{$withStaff} with staff · {$reports} DPRs (30d)"];
+    }
+
+    protected function widgetDepartmentPerformance(): array
+    {
+        $departments = Department::count();
+        $top = Department::withCount('employees')->orderByDesc('employees_count')->first();
+        return [
+            'value' => $departments,
+            'subtitle' => $top ? "Largest: {$top->name} ({$top->employees_count})" : 'No departments',
+        ];
+    }
+
+    protected function widgetSiteProductivity(): array
+    {
+        $since = Carbon::now()->subDays(30)->toDateString();
+        $reports = DailyReport::whereNotNull('site_id')->where('report_date', '>=', $since)->count();
+        $sites = Site::where('status', 'Active')->count();
+        $avg = $sites > 0 ? round($reports / $sites, 1) : 0;
+        return ['value' => $avg, 'subtitle' => 'Avg DPRs per site (30d)'];
+    }
+
+    protected function widgetAssignedEmployees(): array
+    {
+        $count = EmployeeSite::distinct()->count('employee_id');
+        $sites = Site::where('status', 'Active')->count();
+        return ['value' => $count, 'subtitle' => "Across {$sites} active site(s)"];
+    }
+
+    protected function widgetPendingWorkReports(): array
+    {
+        $count = $this->dprPendingQuery()->count();
+        return ['value' => $count, 'subtitle' => 'Awaiting approval'];
+    }
+
+    protected function widgetMyTasks(): array
+    {
+        if (!$this->employee) {
+            return ['value' => 0, 'subtitle' => 'No employee record'];
+        }
+        $open = Task::where('employee_id', $this->employee->id)->where('status', '!=', 'Completed')->count();
+        $total = Task::where('employee_id', $this->employee->id)->count();
+        return ['value' => $open, 'subtitle' => "{$total} assigned"];
+    }
+
+    protected function widgetTodayAttendance(): array
+    {
+        if (!$this->employee) {
+            return ['value' => '—', 'subtitle' => 'No employee record'];
+        }
+        $record = Attendance::where('employee_id', $this->employee->id)
+            ->whereDate('date', Carbon::today())->first();
+
+        if (!$record) {
+            return ['value' => 'Not marked', 'subtitle' => 'No attendance today'];
+        }
+
+        $checkIn = $record->check_in ? Carbon::parse($record->check_in)->format('h:i A') : '—';
+        $checkOut = $record->check_out ? Carbon::parse($record->check_out)->format('h:i A') : '—';
+
+        return [
+            'value' => ucfirst((string) $record->status),
+            'subtitle' => "In {$checkIn} · Out {$checkOut}",
+        ];
+    }
+
+    protected function widgetAuditLogs(): array
+    {
+        $since = Carbon::now()->subDays(30);
+        $count = ActivityLog::where('created_at', '>=', $since)->count();
+        return ['value' => $count, 'subtitle' => 'Events in last 30 days'];
+    }
+
+    protected function widgetUserActivity(): array
+    {
+        $since = Carbon::now()->subDays(7);
+        $users = ActivityLog::whereNotNull('user_id')->where('created_at', '>=', $since)
+            ->distinct()->count('user_id');
+        $events = ActivityLog::where('created_at', '>=', $since)->count();
+        return ['value' => $users, 'subtitle' => "{$events} events in last 7 days"];
+    }
+
+    protected function widgetServerStatus(): array
+    {
+        $issues = [];
+
+        if (!$this->databaseIsReachable()) {
+            $issues[] = 'database unreachable';
+        }
+
+        $pending = $this->pendingMigrationCount();
+        if ($pending > 0) {
+            $issues[] = "{$pending} pending migration(s)";
+        }
+
+        return [
+            'value' => $issues ? 'Degraded' : 'Healthy',
+            'subtitle' => $issues ? implode(', ', $issues) : 'All checks passed',
+        ];
+    }
+
+    private function databaseIsReachable(): bool
+    {
+        try {
+            DB::connection()->getPdo();
+            return true;
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    private function pendingMigrationCount(): int
+    {
+        try {
+            $applied = DB::table('migrations')->pluck('migration')->all();
+            $files = glob(database_path('migrations') . DIRECTORY_SEPARATOR . '*.php') ?: [];
+            $names = array_map(fn($file) => basename($file, '.php'), $files);
+            return count(array_diff($names, $applied));
+        } catch (\Throwable $e) {
+            return 0;
+        }
+    }
+
+    protected function widgetRecentActivity(): array
+    {
+        $since = Carbon::now()->subDays(7);
+        $events = ActivityLog::where('created_at', '>=', $since)->count();
+        $last = ActivityLog::where('created_at', '>=', $since)
+            ->orderByDesc('created_at')->value('description');
+
+        return [
+            'value' => $events,
+            'subtitle' => $last ? Str::limit((string) $last, 60) : 'Events in last 7 days',
+        ];
+    }
+
     protected function widgetAttendanceTrend(): array
     {
         $data = [];
         for ($i = 5; $i >= 0; $i--) {
             $date = Carbon::now()->subMonths($i);
             $present = Attendance::whereMonth('date', $date->month)->whereYear('date', $date->year)
-                ->whereIn('status', ['Present', 'Late', 'Half Day'])
+                ->whereIn('status', ['present', 'late', 'half-day'])
                 ->count();
             $data[] = ['name' => $date->format('M'), 'value' => $present];
         }
@@ -593,7 +1074,7 @@ class DashboardService
             $employeeIds = EmployeeSite::where('site_id', $site->id)->pluck('employee_id');
             $present = Attendance::whereIn('employee_id', $employeeIds)
                 ->whereDate('date', Carbon::today())
-                ->whereIn('status', ['Present', 'Late', 'Half Day'])
+                ->whereIn('status', ['present', 'late', 'half-day'])
                 ->count();
             return ['name' => $site->name, 'value' => $present];
         });
@@ -605,7 +1086,7 @@ class DashboardService
         $data = [];
         for ($i = 5; $i >= 0; $i--) {
             $date = Carbon::now()->subMonths($i);
-            $count = DailyReport::whereMonth('date', $date->month)->whereYear('date', $date->year)->count();
+            $count = DailyReport::whereMonth('report_date', $date->month)->whereYear('report_date', $date->year)->count();
             $data[] = ['name' => $date->format('M'), 'value' => $count];
         }
         return ['data' => $data, 'chart_type' => 'bar'];
@@ -614,7 +1095,7 @@ class DashboardService
     protected function widgetWorkforceUtilization(): array
     {
         $total = Employee::count();
-        $present = Attendance::whereDate('date', Carbon::today())->whereIn('status', ['Present', 'Late', 'Half Day'])->count();
+        $present = Attendance::whereDate('date', Carbon::today())->whereIn('status', ['present', 'late', 'half-day'])->count();
         return ['data' => [
             ['name' => 'Present', 'value' => $present],
             ['name' => 'Absent', 'value' => $total - $present],
@@ -753,7 +1234,47 @@ class DashboardService
 
     protected function widgetManageUsers(): array
     {
-        return ['label' => 'Manage Users', 'link' => '/dashboard/user-access'];
+        return ['label' => 'Manage Users', 'link' => '/dashboard/access-control'];
+    }
+
+    protected function widgetManageAccess(): array
+    {
+        return ['label' => 'Manage Access', 'link' => '/dashboard/access-control'];
+    }
+
+    protected function widgetManagePermissions(): array
+    {
+        return ['label' => 'Manage Permissions', 'link' => '/dashboard/permissions'];
+    }
+
+    protected function widgetSystemSettings(): array
+    {
+        return ['label' => 'System Settings', 'link' => '/dashboard/settings'];
+    }
+
+    protected function widgetGeneratePayslip(): array
+    {
+        return ['label' => 'Generate Payslip', 'link' => '/dashboard/my-payroll'];
+    }
+
+    protected function widgetExportPayroll(): array
+    {
+        return ['label' => 'Export Payroll', 'link' => '/dashboard/process-payroll'];
+    }
+
+    protected function widgetReviewAttendance(): array
+    {
+        return ['label' => 'Review Attendance', 'link' => '/dashboard/attendance'];
+    }
+
+    protected function widgetCheckIn(): array
+    {
+        return ['label' => 'Check In', 'link' => '/dashboard/my-attendance'];
+    }
+
+    protected function widgetCheckOut(): array
+    {
+        return ['label' => 'Check Out', 'link' => '/dashboard/my-attendance'];
     }
 
     protected function widgetManageRoles(): array
@@ -767,6 +1288,44 @@ class DashboardService
     }
 
     // ─── ALERTS ───────────────────────────────────────────────────
+
+    protected function widgetSiteDelaysAlert(): ?array
+    {
+        $delayed = Site::where('status', 'Active')
+            ->whereNotNull('end_date')
+            ->whereDate('end_date', '<', Carbon::today())
+            ->count();
+
+        if ($delayed === 0) return null;
+
+        return [
+            'value' => "{$delayed} sites past end date",
+            'subtitle' => 'Review schedule or extend',
+            'severity' => 'warning',
+        ];
+    }
+
+    protected function widgetServerAlert(): ?array
+    {
+        $issues = [];
+
+        if (!$this->databaseIsReachable()) {
+            $issues[] = 'database unreachable';
+        }
+
+        $pending = $this->pendingMigrationCount();
+        if ($pending > 0) {
+            $issues[] = "{$pending} pending migration(s)";
+        }
+
+        if (!$issues) return null;
+
+        return [
+            'value' => 'System issues detected',
+            'subtitle' => implode(' · ', $issues),
+            'severity' => in_array('database unreachable', $issues, true) ? 'critical' : 'warning',
+        ];
+    }
 
     protected function widgetLowStockAlert(): ?array
     {
@@ -794,7 +1353,7 @@ class DashboardService
     {
         $total = Employee::count();
         $present = Attendance::whereDate('date', Carbon::today())
-            ->whereIn('status', ['Present', 'Late', 'Half Day'])->count();
+            ->whereIn('status', ['present', 'late', 'half-day'])->count();
         $absentPercent = $total > 0 ? round((($total - $present) / $total) * 100) : 0;
         if ($absentPercent < 30) return null;
         return ['value' => "{$absentPercent}% absenteeism today", 'subtitle' => "$present present out of $total", 'severity' => $absentPercent > 50 ? 'critical' : 'warning'];
@@ -811,7 +1370,7 @@ class DashboardService
     protected function widgetDprReminder(): ?array
     {
         if (!$this->employee) return null;
-        $submitted = DailyReport::where('employee_id', $this->employee->id)->whereDate('date', Carbon::today())->exists();
+        $submitted = DailyReport::where('employee_id', $this->employee->id)->whereDate('report_date', Carbon::today())->exists();
         if ($submitted) return null;
         return ['value' => 'DPR not submitted', 'subtitle' => 'Submit your daily report', 'severity' => 'info'];
     }
@@ -829,7 +1388,7 @@ class DashboardService
     protected function widgetMyAttendance(): ?array
     {
         if (!$this->employee) return null;
-        $present = Attendance::where('employee_id', $this->employee->id)->whereIn('status', ['Present', 'Late', 'Half Day'])
+        $present = Attendance::where('employee_id', $this->employee->id)->whereIn('status', ['present', 'late', 'half-day'])
             ->whereMonth('date', Carbon::now()->month)->count();
         return ['type' => 'mini_card', 'value' => $present, 'subtitle' => 'Days this month'];
     }
@@ -837,7 +1396,7 @@ class DashboardService
     protected function widgetMyDpr(): ?array
     {
         if (!$this->employee) return null;
-        $count = DailyReport::where('employee_id', $this->employee->id)->whereMonth('date', Carbon::now()->month)->count();
+        $count = DailyReport::where('employee_id', $this->employee->id)->whereMonth('report_date', Carbon::now()->month)->count();
         return ['type' => 'mini_card', 'value' => $count, 'subtitle' => 'Reports this month'];
     }
 

@@ -7,8 +7,6 @@ import DashboardAlerts from './DashboardAlerts';
 import DashboardWidgets from './DashboardWidgets';
 import DashboardSkeleton from './DashboardSkeleton';
 import DashboardEmptyState from './DashboardEmptyState';
-import { Download, Plus } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 const DASHBOARD_TITLES = {
   admin: { title: 'Admin Dashboard', subtitle: 'Full system overview at a glance.' },
@@ -23,18 +21,20 @@ const DASHBOARD_TITLES = {
 };
 
 export default function DashboardRenderer() {
-  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetch = async () => {
       setLoading(true);
+      setError(null);
       try {
         const res = await dashboardService.getDashboard();
         setData(res?.data || res);
-      } catch (error) {
-        console.error('Failed to fetch dashboard data', error);
+      } catch (err) {
+        console.error('Failed to fetch dashboard data', err);
+        setError(err?.response?.data?.message || err?.message || 'Could not load your dashboard.');
       } finally {
         setLoading(false);
       }
@@ -43,7 +43,17 @@ export default function DashboardRenderer() {
   }, []);
 
   if (loading) return <DashboardSkeleton />;
-  if (!data) return null;
+
+  if (error) {
+    return (
+      <div className="rounded-xl border border-destructive/30 bg-card p-6">
+        <h1 className="text-lg font-bold text-foreground">Dashboard unavailable</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{error}</p>
+      </div>
+    );
+  }
+
+  if (!data) return <DashboardEmptyState dashboardType="employee" />;
 
   const dashboardType = data.dashboard_type || 'employee';
   const dashboardInfo = DASHBOARD_TITLES[dashboardType] || DASHBOARD_TITLES.employee;
@@ -54,24 +64,9 @@ export default function DashboardRenderer() {
 
   return (
     <div className="space-y-6 pb-12">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">{dashboardInfo.title}</h1>
-          <p className="text-sm text-muted-foreground">{dashboardInfo.subtitle}</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button className="inline-flex items-center px-3 py-2 bg-card border border-input rounded-md text-sm font-medium text-foreground hover:bg-muted">
-            <Download className="w-4 h-4 mr-2" />
-            Export Report
-          </button>
-          <button
-            onClick={() => navigate('/dashboard/sales')}
-            className="inline-flex items-center px-3 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Transaction
-          </button>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">{dashboardInfo.title}</h1>
+        <p className="text-sm text-muted-foreground">{dashboardInfo.subtitle}</p>
       </div>
 
       {cards?.length > 0 && (

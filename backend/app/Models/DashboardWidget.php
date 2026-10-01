@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Permission\Models\Role;
 
 class DashboardWidget extends Model
 {
@@ -19,5 +20,10 @@ class DashboardWidget extends Model
     public function designations()
     {
         return $this->belongsToMany(Designation::class, 'dashboard_widget_designation');
+    }
+
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class, 'dashboard_widget_role');
     }
 }
