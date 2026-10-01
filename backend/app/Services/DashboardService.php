@@ -179,20 +179,77 @@ class DashboardService
     }
 
     /**
+ * Designation name -> dashboard type.
+ *
+ * Mirrors the designations created by
+ * 2026_06_25_000001_update_departments_and_designations_data. Used as a
+ * fallback when the account carries no mapped Spatie role, because access is
+ * driven by the Access Control panel rather than by role assignment.
+ */
+private const DESIGNATION_MAP = [
+        'Admin'                => 'admin',
+        'Manager'              => 'admin',
+        'System Admin'         => 'admin',
+        'General Manager'      => 'executive',
+        'HR Manager'           => 'hr',
+        'HR'                   => 'hr',
+        'Accountant'           => 'finance',
+        'Store Manager'        => 'inventory',
+        'IT Manager'           => 'it',
+        'Developer'            => 'it',
+        'Production Manager'   => 'production',
+        'Workshop Supervisor'  => 'production',
+        'Sales'                => 'sales',
+        'Design Manager'       => 'employee',
+        'Designer'             => 'employee',
+        'Employee'             => 'employee',
+        'Fitter'               => 'employee',
+        'Welder'               => 'employee',
+        'Electrician'          => 'employee',
+        'Helper'               => 'employee',
+    ];
+
+    /**
+     * Department name -> dashboard type. Mirrors the departments created by
+     * 2026_06_25_000001_update_departments_and_designations_data. Applied last,
+     * after roles and designations, so it only decides the dashboard when
+     * neither of those identifies the person.
+     */
+    private const DEPARTMENT_MAP = [
+        'Administration'        => 'admin',
+        'HR'                   => 'hr',
+        'Human Resources'      => 'hr',
+        'Accounts'             => 'finance',
+        'Finance'              => 'finance',
+        'Inventory & Warehouse' => 'inventory',
+        'Warehouse'            => 'inventory',
+        'IT'                   => 'it',
+        'Sales'                => 'sales',
+        'Production'           => 'production',
+        'Designer'             => 'employee',
+        'Design'               => 'employee',
+        'Other'                => 'employee',
+    ];
+
+    /**
      * The seeded roles that belong to each dashboard type. Widget role lists are
      * derived from this (see rolesForWidgetKey) so they cannot drift from the
      * widget configuration above.
+     *
+     * Each list carries the Spatie role names, the designation names and the
+     * department names that resolve to the same type, so a widget stays
+     * visible to somebody identified by any of the three.
      */
     private const TYPE_ROLES = [
-        'admin'      => ['Admin', 'Manager', 'System Admin'],
+        'admin'      => ['Admin', 'Manager', 'System Admin', 'Administration'],
         'executive'  => ['General Manager'],
-        'hr'         => ['HR', 'HR Manager'],
-        'finance'    => ['Accountant'],
-        'inventory'  => ['Store Manager'],
-        'production' => ['Workshop Supervisor', 'Production Manager'],
+        'hr'         => ['HR', 'HR Manager', 'Human Resources'],
+        'finance'    => ['Accountant', 'Accounts', 'Finance'],
+        'inventory'  => ['Store Manager', 'Inventory & Warehouse', 'Warehouse'],
+        'production' => ['Workshop Supervisor', 'Production Manager', 'Production'],
         'sales'      => ['Sales'],
-        'it'         => ['IT Manager', 'Developer'],
-        'employee'   => ['Employee', 'Designer', 'Design Manager', 'Fitter', 'Welder', 'Electrician', 'Helper'],
+        'it'         => ['IT Manager', 'Developer', 'IT'],
+        'employee'   => ['Employee', 'Designer', 'Design Manager', 'Fitter', 'Welder', 'Electrician', 'Helper', 'Other', 'Design'],
     ];
 
     /**
@@ -235,19 +292,69 @@ class DashboardService
         return $this;
     }
 
-    public function getDashboardType(): string
+    /**
+     * Every name this user can be identified by: their Spatie roles, their
+     * designation and their department. Widget role lists and the dashboard
+     * type are both resolved against this set, so somebody without a mapped
+     * Spatie role is still recognised through their HR record.
+     */
+    private function identityNames(): array
     {
+        $names = [];
+
         try {
-            $roleNames = $this->user->roles->pluck('name')->toArray();
+            $names = $this->user->roles->pluck('name')->all();
         } catch (\Throwable $e) {
-            return 'employee';
+            $names = [];
         }
 
-        foreach ($roleNames as $role) {
-            if (isset(self::ROLE_MAP[$role])) {
-                return self::ROLE_MAP[$role];
+        try {
+            if ($designation = $this->employee?->designation?->name) {
+                $names[] = $designation;
             }
+            if ($department = $this->employee?->department?->name) {
+                $names[] = $department;
+            }
+        } catch (\Throwable $e) {
+            // Designations/departments are optional; fall back to roles only.
         }
+
+        return array_values(array_unique(array_filter($names)));
+    }
+
+    public function getDashboardType(): string
+    {
+        // Resolution order: Spatie role, then designation, then department.
+        // Access is driven by the Access Control panel rather than by role
+        // assignment, so most employees are identified by their HR record.
+        try {
+            foreach ($this->user->roles->pluck('name') as $role) {
+                if (isset(self::ROLE_MAP[$role])) {
+                    return self::ROLE_MAP[$role];
+                }
+            }
+        } catch (\Throwable $e) {
+            // Fall through to the employee record.
+        }
+
+        try {
+            $designation = $this->employee?->designation?->name;
+            if ($designation && isset(self::DESIGNATION_MAP[$designation])) {
+                return self::DESIGNATION_MAP[$designation];
+            }
+        } catch (\Throwable $e) {
+            // Designations are optional.
+        }
+
+        try {
+            $department = $this->employee?->department?->name;
+            if ($department && isset(self::DEPARTMENT_MAP[$department])) {
+                return self::DEPARTMENT_MAP[$department];
+            }
+        } catch (\Throwable $e) {
+            // Departments are optional.
+        }
+
         return 'employee';
     }
 
@@ -281,17 +388,19 @@ class DashboardService
             $widgetRoles = collect();
         }
 
+        // The pivot only contains names that exist in the roles table, so
+        // department names such as "Inventory & Warehouse" would be missing.
+        // Merging the code-derived list keeps designation/department based
+        // access working even when the pivot is incomplete.
+        if ($widget->exists) {
+            $widgetRoles = $widgetRoles->merge(self::rolesForWidgetKey($widget->widget_key));
+        }
+
         if ($widgetRoles->isEmpty()) {
             return true;
         }
 
-        try {
-            $userRoles = $this->user->roles->pluck('name');
-        } catch (\Throwable $e) {
-            return false;
-        }
-
-        return $widgetRoles->intersect($userRoles)->isNotEmpty();
+        return $widgetRoles->intersect($this->identityNames())->isNotEmpty();
     }
 
     /**
@@ -335,8 +444,12 @@ class DashboardService
      * Load the widget rows for the given keys. Keys with no row at all are
      * replaced with a synthesized default; rows that exist but fail the
      * permission check are dropped and never re-added.
+     *
+     * Permissive mode is reserved for the last-resort employee dashboard: it
+     * keeps every configured key so a user whose role/permissions match no
+     * widget at all still gets a working page.
      */
-    private function loadWidgets(array $allKeys, array $config): Collection
+    private function loadWidgets(array $allKeys, array $config, bool $permissive = false): Collection
     {
         try {
             $records = DashboardWidget::where('is_active', true)
@@ -349,9 +462,11 @@ class DashboardService
             $records = collect();
         }
 
-        $permitted = $records
-            ->filter(fn(DashboardWidget $widget) => $this->canSeeWidget($widget))
-            ->keyBy('widget_key');
+        $permitted = $permissive
+            ? $records->keyBy('widget_key')
+            : $records
+                ->filter(fn(DashboardWidget $widget) => $this->canSeeWidget($widget))
+                ->keyBy('widget_key');
 
         $known = $records->keyBy('widget_key');
 
@@ -378,13 +493,22 @@ class DashboardService
             $config['widgets'] ?? [],
         );
 
-        $widgets = $this->loadWidgets($allKeys, $config);
+        // The employee dashboard is the universal default and contains only
+        // self-scoped widgets (my attendance, my leave, my payslips, check-in,
+        // etc.). Render it for every authenticated user regardless of role
+        // name, otherwise any user whose role is absent from the seeded role
+        // list - including roles that do not exist yet - resolves to the
+        // employee type and then gets an empty page.
+        $widgets = $this->loadWidgets($allKeys, $config, $type === 'employee');
 
         $payload = $this->buildPayload($type, $config, $widgets);
 
-        if ($this->payloadIsEmpty($payload) && $type !== 'employee') {
-            // Nothing survived the permission check - guarantee the user a
-            // working, self-scoped dashboard rather than an empty page.
+        if ($this->payloadIsEmpty($payload)) {
+            // Nothing survived the permission/role gate. Guarantee every user a
+            // working, self-scoped employee dashboard rather than an empty page.
+            // This must also run when the resolved type is already 'employee',
+            // because that is precisely the case where every employee widget
+            // was filtered out and there is nothing left to fall back to.
             $fallbackConfig = self::DASHBOARD_WIDGETS['employee'];
             $fallbackKeys = array_merge(
                 $fallbackConfig['cards'] ?? [],
@@ -395,11 +519,56 @@ class DashboardService
             $payload = $this->buildPayload(
                 'employee',
                 $fallbackConfig,
-                $this->loadWidgets($fallbackKeys, $fallbackConfig)
+                $this->loadWidgets($fallbackKeys, $fallbackConfig, true)
             );
         }
 
+        // Every employee needs these self-scoped actions regardless of the
+        // dashboard they landed on, and a heavily permission-gated dashboard
+        // (a Sales user with baseline permissions, say) can otherwise render
+        // almost nothing to do.
+        $payload['quick_actions'] = $this->withUniversalActions($payload['quick_actions']);
+
         return $payload;
+    }
+
+    /**
+     * Append the universally available employee actions to whatever quick
+     * actions a dashboard already resolved, skipping any duplicates.
+     */
+    private function withUniversalActions(array $actions): array
+    {
+        $universalKeys = self::DASHBOARD_WIDGETS['employee']['quick_actions'] ?? [];
+
+        if ($universalKeys === []) {
+            return $actions;
+        }
+
+        $present = array_column($actions, 'key');
+
+        $widgets = $this->loadWidgets($universalKeys, self::DASHBOARD_WIDGETS['employee'], true);
+
+        foreach ($widgets as $key => $widget) {
+            if (in_array($key, $present, true)) {
+                continue;
+            }
+
+            $data = $this->computeWidgetData($widget);
+            if ($data === null) {
+                continue;
+            }
+
+            $actions[] = array_merge([
+                'key' => $widget->widget_key,
+                'name' => $widget->name,
+                'icon' => $widget->icon,
+                'label' => $data['label'] ?? $widget->name,
+                'link' => $data['link'] ?? '#',
+                'permission' => $data['permission'] ?? null,
+            ], $data);
+        }
+
+        return $actions;
     }
 
     private function payloadIsEmpty(array $payload): bool

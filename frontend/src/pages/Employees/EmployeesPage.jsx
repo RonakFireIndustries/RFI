@@ -63,7 +63,7 @@ export default function EmployeesPage() {
         { name: 'employment_bond_status', label: 'Employment Bond?', type: 'select', emptyAsNull: true, options: [{ value: 1, label: 'Yes' }, { value: 0, label: 'No' }] },
         { name: 'previous_termination_status', label: 'Previously Terminated?', type: 'select', emptyAsNull: true, options: [{ value: 1, label: 'Yes' }, { value: 0, label: 'No' }] },
         { name: 'legal_proceedings_status', label: 'Legal Proceedings?', type: 'select', emptyAsNull: true, options: [{ value: 1, label: 'Yes' }, { value: 0, label: 'No' }] },
-        { name: 'create_user_account', label: 'Create User Account?', type: 'select', emptyAsNull: true, options: [{ value: 1, label: 'Yes' }, { value: 0, label: 'No' }] },
+        { name: 'create_user_account', label: 'Create User Account?', type: 'select', defaultValue: 1, options: [{ value: 1, label: 'Yes' }, { value: 0, label: 'No' }] },
 
         { type: 'heading', label: 'Documents (Uploads)', fullWidth: true },
         { name: 'photo', label: 'Profile Photo', type: 'file', accept: 'image/*' },

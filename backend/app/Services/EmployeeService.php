@@ -6,8 +6,8 @@ use App\Models\Employee;
 use App\Models\User;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class EmployeeService
 {
@@ -69,8 +69,8 @@ class EmployeeService
 
             // Phase 5: Employee User Linking (if requested auto creation)
             $credentials = null;
-            if (isset($data['create_user_account']) && $data['create_user_account']) {
-                $tempPassword = Str::random(16);
+            if ($this->shouldCreateAccount($data)) {
+                $tempPassword = $this->defaultPassword();
                 $email = $this->uniqueEmployeeEmail($data['full_name']);
                 $user = User::create([
                     'name' => $data['full_name'],
@@ -115,7 +115,7 @@ class EmployeeService
         }
 
         return DB::transaction(function () use ($employee) {
-            $tempPassword = Str::random(16);
+            $tempPassword = $this->defaultPassword();
             $email = $this->uniqueEmployeeEmail($employee->full_name);
 
             $user = User::create([
@@ -133,13 +133,41 @@ class EmployeeService
     }
 
     /**
+     * Whether to provision a login for a newly created employee.
+     *
+     * Creating an employee has always produced a login automatically, so an
+     * absent or null flag means "create". Only an explicit No (0, false, "0",
+     * "false") opts out - a select left untouched must never silently skip it.
+     */
+    protected function shouldCreateAccount(array $data): bool
+    {
+        if (!array_key_exists('create_user_account', $data) || $data['create_user_account'] === null) {
+            return true;
+        }
+
+        return filter_var($data['create_user_account'], FILTER_VALIDATE_BOOLEAN);
+    }
+
+    /**
+     * The password assigned to a newly provisioned employee login.
+     */
+    protected function defaultPassword(): string
+    {
+        return (string) config('employees.default_password', 'password123');
+    }
+
+    /**
      * Build a collision-safe login email from the employee's name so that
      * employees sharing a name (or with whitespace/special characters) do not
      * violate the users_email_unique constraint.
      */
     protected function uniqueEmployeeEmail(string $fullName): string
     {
-        $slug = strtolower(trim(preg_replace('/[^a-z0-9]+/', '.', $fullName), '.'));
+        // Transliterate and lowercase BEFORE stripping non-alphanumerics.
+        // Applying the [^a-z0-9] pattern to a mixed-case name would replace
+        // every capital letter with a separator, turning "Rohit Ambedkar" into
+        // "ohit.mbedkar".
+        $slug = trim(preg_replace('/[^a-z0-9]+/', '.', Str::lower(Str::ascii($fullName))), '.');
         $slug = $slug === '' ? 'employee' : $slug;
 
         $email = $slug . '@ronakfire.com';
