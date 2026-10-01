@@ -92,7 +92,8 @@ export default function DashboardRenderer() {
       {quick_actions?.length > 0 && <DashboardQuickActions quickActions={quick_actions} />}
 
       <div className="text-center text-xs text-muted-foreground font-medium tracking-wider mt-12 mb-4">
-        &copy; 2024 NEXUS INTELLIGENCE SYSTEMS &bull; PLATFORM V4.2.0
+        &copy; {new Date().getFullYear()} Copywrited By Ronak Fire Industries &bull; PLATFORM V4.2.0
+        <a href="https://prasad-droid.netlify.app" target="_blank" rel="noopener noreferrer" className="ml-1 underline hidden">Develpoed By Prasad Kalvikatti </a>
       </div>
     </div>
   );

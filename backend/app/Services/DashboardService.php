@@ -122,52 +122,61 @@ class DashboardService
     ];
 
     /**
- * Icons for synthesized widgets, so a dashboard rendered before the seeder has
- * run still looks like the seeded one.
- */
-private const FALLBACK_ICONS = [
-        'total_employees' => 'Users',
-        'present_today' => 'UserCheck',
-        'absent_today' => 'UserX',
-        'employees_on_leave' => 'UserMinus',
-        'active_sites' => 'Building2',
-        'inventory_value' => 'Package',
-        'low_stock' => 'AlertTriangle',
-        'out_of_stock' => 'XCircle',
-        'revenue' => 'TrendingUp',
-        'expenses' => 'TrendingDown',
-        'payroll_cost' => 'DollarSign',
-        'pending_approvals' => 'ClipboardList',
-        'new_joiners' => 'UserPlus',
-        'pending_leave_requests' => 'CalendarClock',
-        'pending_dpr_approvals' => 'FileText',
-        'document_expiry' => 'FileWarning',
-        'attendance_today' => 'Calendar',
-        'today_attendance' => 'Fingerprint',
-        'current_site' => 'MapPin',
-        'leave_balance' => 'CalendarDays',
-        'my_tasks' => 'ListChecks',
-        'my_attendance' => 'Calendar',
-        'my_dpr' => 'FileText',
-        'my_documents' => 'FileText',
-        'my_payslips' => 'CreditCard',
-        'check_in' => 'LogIn',
-        'check_out' => 'LogOut',
-        'check_attendance' => 'CheckSquare',
-        'submit_dpr' => 'FileText',
-        'apply_leave' => 'CalendarDays',
-        'download_payslip' => 'CreditCard',
-        'attendance_reminder' => 'Clock',
-        'dpr_reminder' => 'Clock',
-        'leave_expiry_alert' => 'CalendarDays',
-        'active_users' => 'Users',
-        'system_health' => 'Server',
-        'server_status' => 'Server',
-        'audit_logs' => 'ScrollText',
-        'recent_activity' => 'Activity',
-        'user_activity' => 'Activity',
-        'company_overview' => 'Briefcase',
+     * Ordered keyword -> lucide-icon rules used to pick an icon for a
+     * synthesized widget, so a dashboard rendered before the seeder has run
+     * still looks like the seeded one. Keyword matching (rather than a
+     * key => icon table) keeps every widget covered automatically as widgets
+     * are added.
+     */
+    private const ICON_RULES = [
+        [['trend', 'growth', 'movement', 'utilization', 'performance', 'distribution', 'productivity', 'summary', 'overview', 'comparison'], 'BarChart3'],
+        [['alert', 'low', 'expiry', 'reminder', 'delay'], 'AlertTriangle'],
+        [['audit', 'log', 'activity', 'history'], 'ScrollText'],
+        [['permission', 'access', 'role'], 'ShieldCheck'],
+        [['setting', 'system', 'server', 'health'], 'Settings'],
+        [['lock'], 'LockKeyhole'],
+        [['export', 'download'], 'Download'],
+        [['import', 'upload'], 'Upload'],
+        [['payslip'], 'CreditCard'],
+        [['payroll', 'salary', 'pay'], 'Wallet'],
+        [['expense', 'payment'], 'Receipt'],
+        [['revenue', 'income'], 'TrendingUp'],
+        [['sales', 'order', 'customer'], 'ShoppingCart'],
+        [['stock', 'inventory', 'warehouse', 'material', 'category', 'product'], 'Package'],
+        [['site'], 'MapPin'],
+        [['employee', 'staff', 'user', 'workforce', 'headcount', 'people', 'manager', 'joiner'], 'Users'],
+        [['leave'], 'CalendarDays'],
+        [['attendance', 'absentee', 'check_in', 'check_out', 'present', 'absent'], 'CalendarCheck'],
+        [['dpr', 'report', 'document', 'file', 'task'], 'FileText'],
+        [['approval', 'approve', 'review', 'pending'], 'ClipboardCheck'],
+        [['transfer'], 'ArrowLeftRight'],
+        [['add', 'create', 'generate', 'submit', 'apply', 'assign', 'manage', 'check'], 'PlusCircle'],
     ];
+
+    /**
+     * Resolve a lucide icon name from a widget key. The first matching keyword
+     * rule wins; anything unrecognised falls back to a neutral chart icon,
+     * which the frontend also uses for missing icons.
+     *
+     * Keywords match on word prefix so plural and inflected forms resolve to
+     * the same icon (employee/employees, payslip/payslips).
+     */
+    private static function fallbackIcon(string $key): string
+    {
+        $words = preg_split('/[_\-\s]+/', strtolower($key));
+
+        foreach (self::ICON_RULES as [$keywords, $icon]) {
+            foreach ($keywords as $keyword) {
+                foreach ($words as $word) {
+                    if ($word !== '' && str_starts_with($word, $keyword)) {
+                        return $icon;
+                    }
+                }
+            }
+        }
+
+        return 'BarChart3';
+    }
 
     /**
      * The seeded roles that belong to each dashboard type. Widget role lists are
@@ -291,6 +300,7 @@ private const FALLBACK_ICONS = [
      */
     private static function humanizeKey(string $key): string
     {
+        $key = preg_replace('/_(mine|my)$/', '', $key);
         $words = str_replace(['-', '_'], ' ', $key);
         return ucwords($words);
     }
@@ -300,7 +310,7 @@ private const FALLBACK_ICONS = [
      * dashboard_widgets. This keeps every user on a working dashboard even
      * before the seeder has run.
      */
-    private function synthesizeWidget(string $key, array $config, string $type): DashboardWidget
+    private function synthesizeWidget(string $key, array $config): DashboardWidget
     {
         $chartType = null;
         foreach (['charts'] as $bucket) {
@@ -312,7 +322,7 @@ private const FALLBACK_ICONS = [
         $widget = new DashboardWidget();
         $widget->widget_key = $key;
         $widget->name = self::humanizeKey($key);
-        $widget->icon = self::FALLBACK_ICONS[$key] ?? null;
+        $widget->icon = self::fallbackIcon($key);
         $widget->chart_type = $chartType;
         $widget->permission = null;
         $widget->order = 0;
