@@ -259,6 +259,15 @@ export default function ModuleListPage({
                       onChange={(event) => setFormData((current) => ({ ...current, [field.name]: event.target.files[0] }))}
                       className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
                     />
+                  ) : field.type === 'textarea' ? (
+                    <textarea
+                      required={field.required}
+                      rows={field.rows || 3}
+                      placeholder={field.placeholder}
+                      value={formData[field.name] ?? ''}
+                      onChange={(event) => setFormData((current) => ({ ...current, [field.name]: event.target.value }))}
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
+                    />
                   ) : (
                     <input
                       required={field.required}

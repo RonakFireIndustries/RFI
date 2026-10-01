@@ -76,6 +76,7 @@ class QuotationController extends Controller
             'sections.*.items' => ['required', 'array', 'min:1'],
             'sections.*.items.*.product_id' => ['nullable', 'exists:products,id'],
             'sections.*.items.*.description' => ['nullable', 'string', 'max:500'],
+            'sections.*.items.*.product_description' => ['nullable', 'string', 'max:1000'],
             'sections.*.items.*.unit' => ['nullable', 'string', 'max:100'],
             'sections.*.items.*.qty' => ['required', 'numeric', 'min:0.01'],
             'sections.*.items.*.rate' => ['required', 'numeric', 'min:0'],
@@ -124,6 +125,7 @@ class QuotationController extends Controller
             'sections.*.items.*.id' => ['nullable', 'exists:quotation_items,id'],
             'sections.*.items.*.product_id' => ['nullable', 'exists:products,id'],
             'sections.*.items.*.description' => ['nullable', 'string', 'max:500'],
+            'sections.*.items.*.product_description' => ['nullable', 'string', 'max:1000'],
             'sections.*.items.*.unit' => ['nullable', 'string', 'max:100'],
             'sections.*.items.*.qty' => ['required', 'numeric', 'min:0.01'],
             'sections.*.items.*.rate' => ['required', 'numeric', 'min:0'],
@@ -264,12 +266,22 @@ class QuotationController extends Controller
         return [
             'product_id' => $row['product_id'] ?? null,
             'description' => $description,
+            'product_description' => $this->normaliseText($row['product_description'] ?? null),
             'unit' => $row['unit'] ?? null,
             'qty' => $qty,
             'rate' => $rate,
             'installment' => $installment,
             'amount' => round(($qty * $rate) + ($qty * $installment), 2),
         ];
+    }
+
+    /**
+     * Collapse whitespace and store blank strings as null.
+     */
+    protected function normaliseText(?string $value): ?string
+    {
+        $value = trim((string) $value);
+        return $value === '' ? null : $value;
     }
 
     /**
@@ -333,6 +345,7 @@ class QuotationController extends Controller
             'id' => $i->id,
             'product_id' => $i->product_id,
             'description' => $i->description,
+            'product_description' => $i->product_description,
             'unit' => $i->unit,
             'qty' => (float) $i->qty,
             'rate' => (float) $i->rate,

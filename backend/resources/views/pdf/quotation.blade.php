@@ -133,6 +133,9 @@
                         <td>{{ $i + 1 }}</td>
                         <td>
                             {{ $item->description ?? '—' }}
+                            @if (!empty($item->product_description))
+                                <div style="color:#4b5563; font-size:10px; font-style:italic;">Description: {{ $item->product_description }}</div>
+                            @endif
                             @if ($item->product && ($item->product->sku || $item->product->dimension))
                                 <div style="color:#6b7280; font-size:10px;">SKU:
                                     {{ $item->product->sku ?? '—' }}@if($item->product->dimension) · Dim: {{ $item->product->dimension }} @endif

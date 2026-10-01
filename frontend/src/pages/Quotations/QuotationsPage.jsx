@@ -19,7 +19,10 @@ const STATUS_META = {
 const fm = (n) =>
   new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n || 0));
 
-const emptyItem = () => ({ id: null, product_id: null, description: '', unit: '', qty: '', rate: '', installment: '', sku: '', dimension: '' });
+const emptyItem = () => ({
+  id: null, product_id: null, description: '', product_description: '',
+  unit: '', qty: '', rate: '', installment: '', sku: '', dimension: '',
+});
 const emptySection = () => ({ key: Date.now() + Math.random(), id: null, name: 'Ground Floor', items: [emptyItem()] });
 
 let uid = 0;
@@ -120,6 +123,7 @@ export default function QuotationsPage() {
         name: s.name || '',
         items: (s.items || []).map((i) => ({
           id: i.id, product_id: i.product_id || '', description: i.description || '',
+          product_description: i.product_description || '',
           unit: i.unit || '', qty: i.qty, rate: i.rate, installment: i.installment ?? '',
           sku: i.product_sku || '', dimension: i.product_dimension || '',
         })),
@@ -168,6 +172,7 @@ export default function QuotationsPage() {
   const selectProduct = (si, ii, p) => {
     updateSectionItem(si, ii, 'product_id', String(p.id));
     updateSectionItem(si, ii, 'description', p.name || '');
+    updateSectionItem(si, ii, 'product_description', p.description || '');
     updateSectionItem(si, ii, 'unit', p.unit?.name || '');
     updateSectionItem(si, ii, 'sku', p.sku || '');
     updateSectionItem(si, ii, 'dimension', p.dimension || '');
@@ -227,6 +232,7 @@ export default function QuotationsPage() {
             id: r.id || undefined,
             product_id: r.product_id ? Number(r.product_id) : null,
             description: r.description,
+            product_description: r.product_description,
             unit: r.unit,
             qty: Number(r.qty),
             rate: Number(r.rate),
@@ -441,7 +447,12 @@ export default function QuotationsPage() {
                         {(section.items || []).map((it, i) => (
                           <tr key={it.id ?? i} className="border-b border-gray-50">
                             <td className="py-3 px-6 text-gray-400">{i + 1}</td>
-                            <td className="py-3 px-4 text-gray-800">{it.description || '—'}</td>
+                            <td className="py-3 px-4 text-gray-800">
+                              {it.description || '—'}
+                              {it.product_description && (
+                                <div className="mt-0.5 text-xs italic text-gray-500">Description: {it.product_description}</div>
+                              )}
+                            </td>
                             <td className="py-3 px-4 text-gray-500">{it.unit || '—'}</td>
                             <td className="py-3 px-4 text-right text-gray-700">{Number(it.qty)}</td>
                             <td className="py-3 px-4 text-right text-gray-700">{money(it.rate)}</td>
@@ -677,6 +688,17 @@ export default function QuotationsPage() {
                                 {row.dimension && <span>{row.sku ? ' · ' : ''}Dim: {row.dimension}</span>}
                               </div>
                             )}
+                            <label className="block text-[10px] font-bold text-gray-500 uppercase mt-2 mb-1">Description</label>
+                            <textarea
+                              rows={2}
+                              value={row.product_description}
+                              onChange={(e) => updateSectionItem(si, ii, 'product_description', e.target.value)}
+                              placeholder="Spec / scope note for this BOQ line..."
+                              className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                            <p className="mt-1 text-[10px] text-gray-400 leading-tight">
+                              Copied from the product when selected. Edits apply to this BOQ line only and never change the product master.
+                            </p>
                           </div>
                           <div>
                             <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Unit</label>
