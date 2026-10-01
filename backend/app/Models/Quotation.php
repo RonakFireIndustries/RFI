@@ -56,11 +56,27 @@ class Quotation extends Model
     }
 
     /**
-     * Sub-total before discount/GST = sum of line amounts.
+     * Sub-total before discount/GST = sum of line amounts (supply + installation).
      */
     public function getSubtotalAttribute(): float
     {
-        return (float) $this->items->sum('amount');
+        return round((float) $this->items->sum('amount'), 2);
+    }
+
+    /**
+     * Supply component across every item: sum of qty * rate.
+     */
+    public function getSupplyTotalAttribute(): float
+    {
+        return round((float) $this->items->sum(fn ($i) => $i->supply_amount), 2);
+    }
+
+    /**
+     * Installation component across every item: sum of qty * installment.
+     */
+    public function getInstallationTotalAttribute(): float
+    {
+        return round((float) $this->items->sum(fn ($i) => $i->installation_amount), 2);
     }
 
     /**

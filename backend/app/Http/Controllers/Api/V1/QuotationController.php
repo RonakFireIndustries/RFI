@@ -79,6 +79,7 @@ class QuotationController extends Controller
             'sections.*.items.*.unit' => ['nullable', 'string', 'max:100'],
             'sections.*.items.*.qty' => ['required', 'numeric', 'min:0.01'],
             'sections.*.items.*.rate' => ['required', 'numeric', 'min:0'],
+            'sections.*.items.*.installment' => ['nullable', 'numeric', 'min:0'],
         ]);
 
         $quotation = DB::transaction(function () use ($request, $validated) {
@@ -126,6 +127,7 @@ class QuotationController extends Controller
             'sections.*.items.*.unit' => ['nullable', 'string', 'max:100'],
             'sections.*.items.*.qty' => ['required', 'numeric', 'min:0.01'],
             'sections.*.items.*.rate' => ['required', 'numeric', 'min:0'],
+            'sections.*.items.*.installment' => ['nullable', 'numeric', 'min:0'],
         ]);
 
         $quotation = DB::transaction(function () use ($quotation, $validated) {
@@ -161,10 +163,20 @@ class QuotationController extends Controller
     public function pdf(Quotation $quotation)
     {
         $this->authorize('quotations.view');
-        $quotation->load(['building:id,name', 'sections.items.product:id,name,sku,product_code,dimension', 'creator:id,name']);
+        $quotation->load(['building:id,name', 'items', 'sections.items.product:id,name,sku,product_code,dimension', 'creator:id,name']);
 
-        $pdf = Pdf::loadView('pdf.quotation', ['quotation' => $quotation, 'sections' => $quotation->sections])
-            ->setPaper('a4');
+        $sectionSummary = $quotation->sections->map(fn ($section) => [
+            'name' => $section->name,
+            'supply_amount' => $section->supply_amount,
+            'installation_amount' => $section->installation_amount,
+            'total_amount' => $section->total_amount,
+        ])->values()->all();
+
+        $pdf = Pdf::loadView('pdf.quotation', [
+            'quotation' => $quotation,
+            'sections' => $quotation->sections,
+            'sectionSummary' => $sectionSummary,
+        ])->setPaper('a4');
 
         return $pdf->download("BOQ_{$quotation->quotation_no}.pdf");
     }
@@ -248,13 +260,15 @@ class QuotationController extends Controller
         }
         $qty = (float) $row['qty'];
         $rate = (float) $row['rate'];
+        $installment = (float) ($row['installment'] ?? 0);
         return [
             'product_id' => $row['product_id'] ?? null,
             'description' => $description,
             'unit' => $row['unit'] ?? null,
             'qty' => $qty,
             'rate' => $rate,
-            'amount' => round($qty * $rate, 2),
+            'installment' => $installment,
+            'amount' => round(($qty * $rate) + ($qty * $installment), 2),
         ];
     }
 
@@ -283,7 +297,10 @@ class QuotationController extends Controller
             'id' => $section->id,
             'name' => $section->name,
             'sort_order' => $section->sort_order,
-            'subtotal' => round($section->items->sum('amount'), 2),
+            'supply_amount' => $section->supply_amount,
+            'installation_amount' => $section->installation_amount,
+            'total_amount' => $section->total_amount,
+            'subtotal' => $section->subtotal,
             'items' => $section->items->map(fn ($i) => $this->itemBrief($i))->values(),
         ])->values();
 
@@ -300,6 +317,8 @@ class QuotationController extends Controller
             'terms' => $q->terms,
             'notes' => $q->notes,
             'created_by' => $q->creator?->name,
+            'supply_total' => $q->supply_total,
+            'installation_total' => $q->installation_total,
             'subtotal' => round($q->subtotal, 2),
             'grand_total' => round($q->grand_total, 2),
             'item_count' => $q->items->count(),
@@ -317,6 +336,9 @@ class QuotationController extends Controller
             'unit' => $i->unit,
             'qty' => (float) $i->qty,
             'rate' => (float) $i->rate,
+            'installment' => (float) ($i->installment ?? 0),
+            'supply_amount' => $i->supply_amount,
+            'installation_amount' => $i->installation_amount,
             'amount' => (float) $i->amount,
             'product_sku' => $product?->sku,
             'product_dimension' => $product?->dimension,

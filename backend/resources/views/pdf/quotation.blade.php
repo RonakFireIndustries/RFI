@@ -22,6 +22,16 @@
         table.items tr.section-name td, table.items tr.section-total td { background: #eef2ff; }
         table.items td.section-name { font-weight: bold; color: #1e40af; text-transform: uppercase; letter-spacing: .03em; }
         .num { text-align: right; }
+        table.summary { width: 100%; border-collapse: collapse; margin-bottom: 18px; }
+        table.summary caption {
+            caption-side: top; text-align: left; font-size: 12px; font-weight: bold;
+            color: #1e40af; text-transform: uppercase; letter-spacing: .03em;
+            padding-bottom: 6px;
+        }
+        table.summary th { background: #1e40af; color: #fff; padding: 7px 8px; font-size: 11px; text-align: right; }
+        table.summary th:first-child { text-align: left; }
+        table.summary td { border: 1px solid #e5e7eb; padding: 7px 8px; }
+        table.summary tr.grand td { background: #eef2ff; font-weight: bold; color: #1e40af; border-top: 2px solid #1e40af; }
         .totals { width: 260px; margin-left: auto; border-collapse: collapse; }
         .totals td { padding: 5px 8px; }
         .totals .grand td { font-size: 14px; font-weight: bold; color: #1e40af; border-top: 2px solid #1e40af; }
@@ -57,6 +67,40 @@
         </tr>
     </table>
 
+    @php
+        $summarySupply = round(array_sum(array_column($sectionSummary, 'supply_amount')), 2);
+        $summaryInstall = round(array_sum(array_column($sectionSummary, 'installation_amount')), 2);
+        $summaryTotal = round($summarySupply + $summaryInstall, 2);
+    @endphp
+
+    <table class="summary">
+        <caption>Section Summary</caption>
+        <thead>
+            <tr>
+                <th>Section</th>
+                <th>Supply Amount</th>
+                <th>Installation Amount</th>
+                <th>Total Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach ($sectionSummary as $row)
+                <tr>
+                    <td>{{ $row['name'] }}</td>
+                    <td class="num">{{ number_format($row['supply_amount'], 2) }}</td>
+                    <td class="num">{{ number_format($row['installation_amount'], 2) }}</td>
+                    <td class="num">{{ number_format($row['total_amount'], 2) }}</td>
+                </tr>
+            @endforeach
+            <tr class="grand">
+                <td>Grand Total</td>
+                <td class="num">{{ number_format($summarySupply, 2) }}</td>
+                <td class="num">{{ number_format($summaryInstall, 2) }}</td>
+                <td class="num">{{ number_format($summaryTotal, 2) }}</td>
+            </tr>
+        </tbody>
+    </table>
+
     <table class="items">
         <thead>
             <tr>
@@ -65,6 +109,7 @@
                 <th style="width:60px">Unit</th>
                 <th class="num" style="width:70px">Qty</th>
                 <th class="num" style="width:90px">Rate</th>
+                <th class="num" style="width:90px">Installment</th>
                 <th class="num" style="width:100px">Amount</th>
             </tr>
         </thead>
@@ -73,13 +118,15 @@
     @php $running = 0; @endphp
     @foreach ($sections as $section)
         @php
-            $sub = round($section->items->sum('amount'), 2);
+            $supply = $section->supply_amount;
+            $installation = $section->installation_amount;
+            $sub = $section->total_amount;
             $running += $sub;
         @endphp
         <table class="items section">
             <tbody>
                 <tr>
-                    <td colspan="6" class="section-name">{{ $section->name }}</td>
+                    <td colspan="7" class="section-name">{{ $section->name }}</td>
                 </tr>
                 @foreach ($section->items as $i => $item)
                     <tr>
@@ -95,11 +142,12 @@
                         <td>{{ $item->unit ?? '—' }}</td>
                         <td class="num">{{ rtrim(rtrim(number_format((float)$item->qty, 2), '0'), '.') }}</td>
                         <td class="num">{{ number_format((float)$item->rate, 2) }}</td>
+                        <td class="num">{{ number_format((float)($item->installment ?? 0), 2) }}</td>
                         <td class="num">{{ number_format((float)$item->amount, 2) }}</td>
                     </tr>
                 @endforeach
                 <tr class="section-total">
-                    <td colspan="5" style="text-align:right; font-weight:bold;">{{ $section->name }} Subtotal</td>
+                    <td colspan="6" style="text-align:right; font-weight:bold;">{{ $section->name }} Subtotal</td>
                     <td class="num" style="font-weight:bold;">{{ number_format($sub, 2) }}</td>
                 </tr>
             </tbody>

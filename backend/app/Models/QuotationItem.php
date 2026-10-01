@@ -18,12 +18,14 @@ class QuotationItem extends Model
         'unit',
         'qty',
         'rate',
+        'installment',
         'amount',
     ];
 
     protected $casts = [
         'qty' => 'decimal:2',
         'rate' => 'decimal:2',
+        'installment' => 'decimal:2',
         'amount' => 'decimal:2',
     ];
 
@@ -40,5 +42,29 @@ class QuotationItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    /**
+     * Supply component of this line: qty * rate.
+     */
+    public function getSupplyAmountAttribute(): float
+    {
+        return round((float) $this->qty * (float) $this->rate, 2);
+    }
+
+    /**
+     * Installation component of this line: qty * installment.
+     */
+    public function getInstallationAmountAttribute(): float
+    {
+        return round((float) $this->qty * (float) ($this->installment ?? 0), 2);
+    }
+
+    /**
+     * Supply + installation for this line. Stored in `amount` on save.
+     */
+    public function getLineTotalAttribute(): float
+    {
+        return round($this->supply_amount + $this->installation_amount, 2);
     }
 }

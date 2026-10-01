@@ -19,7 +19,7 @@ const STATUS_META = {
 const fm = (n) =>
   new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n || 0));
 
-const emptyItem = () => ({ id: null, product_id: null, description: '', unit: '', qty: '', rate: '', sku: '', dimension: '' });
+const emptyItem = () => ({ id: null, product_id: null, description: '', unit: '', qty: '', rate: '', installment: '', sku: '', dimension: '' });
 const emptySection = () => ({ key: Date.now() + Math.random(), id: null, name: 'Ground Floor', items: [emptyItem()] });
 
 let uid = 0;
@@ -120,7 +120,7 @@ export default function QuotationsPage() {
         name: s.name || '',
         items: (s.items || []).map((i) => ({
           id: i.id, product_id: i.product_id || '', description: i.description || '',
-          unit: i.unit || '', qty: i.qty, rate: i.rate,
+          unit: i.unit || '', qty: i.qty, rate: i.rate, installment: i.installment ?? '',
           sku: i.product_sku || '', dimension: i.product_dimension || '',
         })),
       })),
@@ -175,8 +175,14 @@ export default function QuotationsPage() {
   };
 
   // ---- totals ----
-  const lineAmount = (r) => Number(r.qty || 0) * Number(r.rate || 0);
+  const lineSupply = (r) => Number(r.qty || 0) * Number(r.rate || 0);
+  const lineInstallation = (r) => Number(r.qty || 0) * Number(r.installment || 0);
+  const lineAmount = (r) => lineSupply(r) + lineInstallation(r);
+  const sectionSupply = (s) => s.items.reduce((sum, r) => sum + lineSupply(r), 0);
+  const sectionInstallation = (s) => s.items.reduce((sum, r) => sum + lineInstallation(r), 0);
   const sectionSubtotal = (s) => s.items.reduce((sum, r) => sum + lineAmount(r), 0);
+  const supplyTotal = sections.reduce((sum, s) => sum + sectionSupply(s), 0);
+  const installationTotal = sections.reduce((sum, s) => sum + sectionInstallation(s), 0);
   const subtotal = sections.reduce((sum, s) => sum + sectionSubtotal(s), 0);
   const discount = Number(form.discount || 0);
   const gstPct = Number(form.gst_percent || 0);
@@ -216,7 +222,7 @@ export default function QuotationsPage() {
         id: s.id || undefined,
         name: (s.name || '').trim(),
         items: s.items
-          .filter((r) => Number(r.qty) > 0 && Number(r.rate) > 0 && (r.description || r.product_id))
+          .filter((r) => Number(r.qty) > 0 && (Number(r.rate) > 0 || Number(r.installment) > 0) && (r.description || r.product_id))
           .map((r) => ({
             id: r.id || undefined,
             product_id: r.product_id ? Number(r.product_id) : null,
@@ -224,6 +230,7 @@ export default function QuotationsPage() {
             unit: r.unit,
             qty: Number(r.qty),
             rate: Number(r.rate),
+            installment: Number(r.installment || 0),
           })),
       }))
       .filter((s) => s.name && s.items.length > 0);
@@ -364,6 +371,42 @@ export default function QuotationsPage() {
             </div>
           </div>
 
+          {(detail.sections || []).length > 0 && (
+            <div className="border-t border-gray-100 px-6 py-5">
+              <p className="text-xs font-bold text-gray-400 uppercase mb-2">Section Summary</p>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-100 text-left text-xs font-bold text-gray-500 uppercase bg-gray-50">
+                      <th className="py-2.5 px-4">Section</th>
+                      <th className="py-2.5 px-4 text-right">Supply Amount</th>
+                      <th className="py-2.5 px-4 text-right">Installation Amount</th>
+                      <th className="py-2.5 px-4 text-right">Total Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(detail.sections || []).map((section, si) => (
+                      <tr key={section.id ?? si} className="border-b border-gray-50">
+                        <td className="py-2.5 px-4 text-gray-800">{section.name || '—'}</td>
+                        <td className="py-2.5 px-4 text-right text-gray-700">{money(section.supply_amount)}</td>
+                        <td className="py-2.5 px-4 text-right text-gray-700">{money(section.installation_amount)}</td>
+                        <td className="py-2.5 px-4 text-right font-medium text-gray-800">{money(section.total_amount)}</td>
+                      </tr>
+                    ))}
+                    <tr className="bg-indigo-50/40">
+                      <td className="py-2.5 px-4 text-xs font-bold text-gray-500 uppercase">Grand Total</td>
+                      <td className="py-2.5 px-4 text-right font-semibold text-gray-800">{money(detail.supply_total)}</td>
+                      <td className="py-2.5 px-4 text-right font-semibold text-gray-800">{money(detail.installation_total)}</td>
+                      <td className="py-2.5 px-4 text-right font-semibold text-gray-800">
+                        {money(Number(detail.supply_total || 0) + Number(detail.installation_total || 0))}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
           {(detail.sections || []).map((section, si) => {
             const isCollapsed = collapsedDetailSections[si];
             return (
@@ -390,6 +433,7 @@ export default function QuotationsPage() {
                           <th className="py-3 px-4">Unit</th>
                           <th className="py-3 px-4 text-right">Qty</th>
                           <th className="py-3 px-4 text-right">Rate</th>
+                          <th className="py-3 px-4 text-right">Installment</th>
                           <th className="py-3 px-6 text-right">Amount</th>
                         </tr>
                       </thead>
@@ -401,11 +445,12 @@ export default function QuotationsPage() {
                             <td className="py-3 px-4 text-gray-500">{it.unit || '—'}</td>
                             <td className="py-3 px-4 text-right text-gray-700">{Number(it.qty)}</td>
                             <td className="py-3 px-4 text-right text-gray-700">{money(it.rate)}</td>
+                            <td className="py-3 px-4 text-right text-gray-700">{money(it.installment)}</td>
                             <td className="py-3 px-6 text-right font-medium text-gray-800">{money(it.amount)}</td>
                           </tr>
                         ))}
                         <tr className="bg-indigo-50/40">
-                          <td colSpan="5" className="py-2 px-6 text-right text-xs font-bold text-gray-500 uppercase">
+                          <td colSpan="6" className="py-2 px-6 text-right text-xs font-bold text-gray-500 uppercase">
                             {section.name || 'Section'} Subtotal
                           </td>
                           <td className="py-2 px-6 text-right font-semibold text-gray-800">{money(section.subtotal)}</td>
@@ -576,8 +621,8 @@ export default function QuotationsPage() {
                     {section.items.map((row, ii) => {
                       const isActive = activeSearch?.section === si && activeSearch?.item === ii;
                       return (
-                        <div key={ii} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end bg-gray-50/60 p-3 rounded-lg border border-gray-100">
-                          <div className="md:col-span-5 relative">
+                        <div key={ii} className="grid grid-cols-1 md:grid-cols-[5fr_2fr_2fr_2fr_2fr_1fr] gap-3 items-end bg-gray-50/60 p-3 rounded-lg border border-gray-100">
+                          <div className="relative">
                             <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Item / Description</label>
                             <input
                               type="text"
@@ -633,19 +678,23 @@ export default function QuotationsPage() {
                               </div>
                             )}
                           </div>
-                          <div className="md:col-span-2">
+                          <div>
                             <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Unit</label>
                             <input type="text" value={row.unit} onChange={(e) => updateSectionItem(si, ii, 'unit', e.target.value)} placeholder="Nos" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                           </div>
-                          <div className="md:col-span-2">
+                          <div>
                             <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Qty</label>
                             <input type="number" min="0" step="any" value={row.qty} onChange={(e) => updateSectionItem(si, ii, 'qty', e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                           </div>
-                          <div className="md:col-span-2">
+                          <div>
                             <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Rate</label>
                             <input type="number" min="0" step="any" value={row.rate} onChange={(e) => updateSectionItem(si, ii, 'rate', e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                           </div>
-                          <div className="md:col-span-1 text-right">
+                          <div>
+                            <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Installment</label>
+                            <input type="number" min="0" step="any" value={row.installment} onChange={(e) => updateSectionItem(si, ii, 'installment', e.target.value)} placeholder="0.00" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                          </div>
+                          <div className="text-right">
                             <div className="text-sm font-semibold text-gray-800">{money(lineAmount(row))}</div>
                             <button type="button" onClick={() => removeItemFromSection(si, ii)} disabled={section.items.length <= 1} className="mt-1 text-gray-400 hover:text-red-500 disabled:opacity-40">
                               <Trash2 className="w-4 h-4" />
@@ -658,9 +707,15 @@ export default function QuotationsPage() {
                       <button type="button" onClick={() => addItemToSection(si)} className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700">
                         <Plus className="w-4 h-4" /> Add Item
                       </button>
-                      <span className="text-sm font-semibold text-gray-700">
-                        {section.name || 'Section'} subtotal: <span className="text-gray-900">{money(sectionSubtotal(section))}</span>
-                      </span>
+                      <div className="text-right text-sm">
+                        <div className="text-gray-500">
+                          Supply: <span className="text-gray-800">{money(sectionSupply(section))}</span>
+                          {' · '}Install: <span className="text-gray-800">{money(sectionInstallation(section))}</span>
+                        </div>
+                        <div className="font-semibold text-gray-700">
+                          {section.name || 'Section'} subtotal: <span className="text-gray-900">{money(sectionSubtotal(section))}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -669,6 +724,8 @@ export default function QuotationsPage() {
 
             <div className="flex justify-end mt-4">
               <div className="w-72 space-y-1.5 text-sm">
+                <div className="flex justify-between text-gray-600"><span>Supply Total</span><span>{money(supplyTotal)}</span></div>
+                <div className="flex justify-between text-gray-600"><span>Installation Total</span><span>{money(installationTotal)}</span></div>
                 <div className="flex justify-between text-gray-600"><span>Subtotal</span><span>{money(subtotal)}</span></div>
                 <div className="flex justify-between items-center text-gray-600">
                   <span>Discount</span>

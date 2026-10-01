@@ -29,10 +29,34 @@ class QuotationSection extends Model
     }
 
     /**
-     * Sub-total of every item inside this section.
+     * Sub-total of every item inside this section (supply + installation).
      */
     public function getSubtotalAttribute(): float
     {
-        return (float) $this->items->sum('amount');
+        return round((float) $this->items->sum('amount'), 2);
+    }
+
+    /**
+     * Supply component of the section: sum of qty * rate.
+     */
+    public function getSupplyAmountAttribute(): float
+    {
+        return round((float) $this->items->sum(fn ($i) => $i->supply_amount), 2);
+    }
+
+    /**
+     * Installation component of the section: sum of qty * installment.
+     */
+    public function getInstallationAmountAttribute(): float
+    {
+        return round((float) $this->items->sum(fn ($i) => $i->installation_amount), 2);
+    }
+
+    /**
+     * Section total: supply + installation.
+     */
+    public function getTotalAmountAttribute(): float
+    {
+        return round($this->supply_amount + $this->installation_amount, 2);
     }
 }
