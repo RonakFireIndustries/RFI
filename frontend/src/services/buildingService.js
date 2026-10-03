@@ -7,4 +7,11 @@ export const buildingService = {
   create: async (payload) => unwrapItem((await api.post('/buildings', payload)).data),
   update: async (id, payload) => unwrapItem((await api.put(`/buildings/${id}`, payload)).data),
   remove: async (id) => api.delete(`/buildings/${id}`),
+  /**
+   * Promote a building into a working site.
+   *
+   * Idempotent - converting an already-converted building refreshes the site
+   * it produced instead of creating a second one.
+   */
+  convertToSite: async (id) => unwrapItem((await api.post(`/buildings/${id}/convert-to-site`)).data),
 };

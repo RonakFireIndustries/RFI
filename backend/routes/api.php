@@ -127,6 +127,7 @@ Route::prefix('v1')->group(function () {
     // Sites / Construction
     Route::apiResource('sites', \App\Http\Controllers\Api\V1\SiteController::class);
     Route::apiResource('buildings', \App\Http\Controllers\Api\V1\BuildingController::class);
+    Route::post('buildings/{building}/convert-to-site', [\App\Http\Controllers\Api\V1\BuildingController::class, 'convertToSite']);
     Route::get('employees/{employee}/sites', [\App\Http\Controllers\Api\V1\EmployeeSiteAssignmentController::class, 'index']);
     Route::get('employees/{employee}/sites/history', [\App\Http\Controllers\Api\V1\EmployeeSiteAssignmentController::class, 'history']);
     Route::post('employees/{employee}/sites', [\App\Http\Controllers\Api\V1\EmployeeSiteAssignmentController::class, 'assign']);

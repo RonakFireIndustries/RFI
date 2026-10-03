@@ -65,7 +65,8 @@ class UpdateBuildingRequest extends FormRequest
             'pmc_consultant_contact' => ['nullable', 'string', 'max:255'],
             'provisional_noc' => ['boolean'],
             'provisional_noc_details' => ['nullable', 'string'],
-            'site_id' => ['nullable', 'exists:sites,id'],
+            // site_id is intentionally not accepted here. A building is linked to a
+            // site only by POST /buildings/{id}/convert-to-site, never by hand.
             'status' => ['sometimes', 'required', 'string', 'in:Active,Inactive'],
         ];
     }

@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Building;
 use App\Services\BuildingService;
+use App\Services\BuildingConversionService;
 use App\Http\Requests\StoreBuildingRequest;
 use App\Http\Requests\UpdateBuildingRequest;
 use App\Http\Resources\BuildingResource;
+use App\Http\Resources\SiteResource;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -83,5 +85,32 @@ class BuildingController extends Controller
         $this->buildingService->deleteBuilding($building);
 
         return $this->success('Building deleted successfully');
+    }
+
+    /**
+     * Promote a building into a working Site.
+     *
+     * Idempotent: converting an already-converted building refreshes the Site
+     * it produced rather than creating a second one.
+     */
+    public function convertToSite(Building $building, BuildingConversionService $conversion): JsonResponse
+    {
+        $this->authorize('sites.create');
+
+        $result = $conversion->convert($building);
+
+        $message = $result['already_converted']
+            ? 'Building refreshed on its existing site'
+            : ($result['created']
+                ? 'Building converted to a new site successfully'
+                : 'Building linked to the existing site successfully');
+
+        return $this->success($message, [
+            'building' => new BuildingResource($result['building']),
+            'site' => new SiteResource($result['site']),
+            'created' => $result['created'],
+            'already_converted' => $result['already_converted'],
+            'children_moved' => $result['children_moved'],
+        ]);
     }
 }

@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBuildingStore } from '../../store/buildingStore';
-import { useSiteStore } from '../../store/siteStore';
 import { buildingDetailService } from '../../services/buildingDetailService';
+import { buildingService } from '../../services/buildingService';
 import MapPicker from '../../components/MapPicker';
 import PermissionGate from '../../components/Guards/PermissionGate';
 import {
   Plus, Edit, Trash2, Search, MapPin, Building2, Info, X, Compass, Copy,
-  Shield, Flame, Hammer, User, Phone, FileText, ChevronDown, ChevronUp, Eye
+  Shield, Flame, Hammer, User, Phone, FileText, ChevronDown, ChevronUp, Eye,
+  ArrowRightLeft, CheckCircle2, Loader2
 } from 'lucide-react';
 
 const FIRE_SYSTEM_MAIN_TYPES = [
@@ -64,7 +65,6 @@ const defaultFormData = {
   pmc_consultant_contact: '',
   provisional_noc: false,
   provisional_noc_details: '',
-  site_id: '',
   status: 'Active',
 };
 
@@ -79,8 +79,6 @@ export default function Buildings() {
     deleteItem: deleteBuilding,
   } = useBuildingStore();
 
-  const { items: sites, fetchItems: fetchSites } = useSiteStore();
-
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -91,10 +89,10 @@ export default function Buildings() {
   const [expandedCard, setExpandedCard] = useState(null);
   const [wingsData, setWingsData] = useState([]);
   const [floorsData, setFloorsData] = useState({});
+  const [convertingId, setConvertingId] = useState(null);
 
   useEffect(() => {
     fetchBuildings({ search, status: statusFilter, page: currentPage, per_page: 1000 });
-    fetchSites({ per_page: 1000 });
   }, [search, statusFilter, currentPage]);
 
   const handleInputChange = (e) => {
@@ -334,7 +332,6 @@ export default function Buildings() {
       pmc_consultant_contact: b.pmc_consultant_contact || '',
       provisional_noc: !!b.provisional_noc,
       provisional_noc_details: b.provisional_noc_details || '',
-      site_id: b.site_id || '',
       status: b.status || 'Active',
     });
     setFormErrors({});
@@ -400,7 +397,6 @@ export default function Buildings() {
         no_of_staircase: formData.no_of_staircase !== '' ? parseInt(formData.no_of_staircase) : null,
         no_of_lifts: formData.no_of_lifts !== '' ? parseInt(formData.no_of_lifts) : null,
         no_of_exits_entry: formData.no_of_exits_entry !== '' ? parseInt(formData.no_of_exits_entry) : null,
-        site_id: formData.site_id ? parseInt(formData.site_id) : null,
         fire_systems: formData.fire_systems.filter(fs => fs.system_type).map(fs => ({
           ...(fs.id ? { id: fs.id } : {}),
           system_type: fs.system_type,
@@ -447,6 +443,34 @@ export default function Buildings() {
         await deleteBuilding(id);
         fetchBuildings({ search, status: statusFilter, page: currentPage, per_page: 1000 });
       } catch (err) { alert(err.message || 'Failed to delete building.'); }
+    }
+  };
+
+  /**
+   * Promote a building into a working site.
+   *
+   * The site is created on demand rather than picked from a dropdown, so the
+   * survey data is always carried across in full. Re-running this on an already
+   * converted building refreshes the site it produced instead of duplicating.
+   */
+  const handleConvertToSite = async (b) => {
+    const already = !!b.converted_at;
+    const prompt = already
+      ? `Refresh the site "${b.converted_site_name || b.name}" from this building's current survey data?`
+      : `Convert "${b.name}" into a working site?\n\nThis creates a site with the building's survey details, which then becomes available for attendance and stock movements. The building record stays as-is.`;
+
+    if (!window.confirm(prompt)) return;
+
+    setConvertingId(b.id);
+    try {
+      const res = await buildingService.convertToSite(b.id);
+      const site = res?.site || res;
+      await fetchBuildings({ search, status: statusFilter, page: currentPage, per_page: 1000 });
+      alert(`"${b.name}" is now the site "${site?.name}".`);
+    } catch (err) {
+      alert(err.message || 'Failed to convert building to a site.');
+    } finally {
+      setConvertingId(null);
     }
   };
 
@@ -539,6 +563,14 @@ export default function Buildings() {
                   <div className="flex flex-col items-end gap-1">
                     <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${b.status === 'Active' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{b.status}</span>
                     {b.under_construction && <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700">Under Construction</span>}
+                    {b.converted_at && (
+                      <span
+                        title={`Converted to site "${b.converted_site_name}" on ${new Date(b.converted_at).toLocaleDateString()}`}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700"
+                      >
+                        <CheckCircle2 className="w-3 h-3" /> Site
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -617,6 +649,18 @@ export default function Buildings() {
 
               <div className="bg-gray-50/50 px-6 py-3 border-t border-gray-100 flex justify-end gap-2">
                 <button onClick={() => navigate(`/dashboard/buildings/${b.id}`)} className="p-2 text-gray-600 hover:text-blue-600 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-gray-100" title="View"><Eye className="w-4 h-4" /></button>
+                <PermissionGate module="sites" action="create" subject="this building">
+                  <button
+                    onClick={() => handleConvertToSite(b)}
+                    disabled={convertingId === b.id}
+                    title={b.converted_at ? 'Refresh the site from this building' : 'Convert this building into a working site'}
+                    className="p-2 text-gray-600 hover:text-emerald-600 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-gray-100 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent"
+                  >
+                    {convertingId === b.id
+                      ? <Loader2 className="w-4 h-4 animate-spin" />
+                      : (b.converted_at ? <CheckCircle2 className="w-4 h-4" /> : <ArrowRightLeft className="w-4 h-4" />)}
+                  </button>
+                </PermissionGate>
                 <PermissionGate module="buildings" action="update" subject="this building">
                   <button onClick={() => openEditModal(b)} className="p-2 text-gray-600 hover:text-blue-600 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-gray-100 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent" title="Edit"><Edit className="w-4 h-4" /></button>
                 </PermissionGate>
@@ -661,14 +705,17 @@ export default function Buildings() {
                     <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Plot No</label>
                     <input type="text" name="plot_no" value={formData.plot_no} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                   </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Linked Site</label>
-                    <select name="site_id" value={formData.site_id} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                      <option value="">None</option>
-                      {sites?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                    </select>
-                  </div>
                 </div>
+
+                {editingBuilding?.converted_at && (
+                  <div className="flex items-start gap-2 mt-4 p-3 rounded-lg bg-emerald-50 border border-emerald-100">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+                    <p className="text-xs text-emerald-800">
+                      This building is the site <span className="font-bold">{editingBuilding.converted_site_name}</span>.
+                      Changes saved here are copied across when you refresh the site from the list.
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div>

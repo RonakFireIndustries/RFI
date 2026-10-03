@@ -27,6 +27,7 @@ class Building extends Model
         'pmc_consultant_name', 'pmc_consultant_contact',
         'provisional_noc', 'provisional_noc_details',
         'site_id', 'status',
+        'converted_at', 'converted_site_name',
         'construction_year', 'occupancy_certificate_year', 'fire_noc_status',
         'basement_levels', 'terrace_available', 'refuge_floors',
         'equipment_condition_notes', 'last_serviced_date', 'last_amc_company', 'overall_equipment_condition',
@@ -50,7 +51,16 @@ class Building extends Model
         'terrace_available' => 'boolean',
         'refuge_floors' => 'integer',
         'last_serviced_date' => 'date',
+        'converted_at' => 'datetime',
     ];
+
+    /**
+     * Whether this building has been promoted into a working site.
+     */
+    public function isConverted(): bool
+    {
+        return $this->converted_at !== null && $this->site_id !== null;
+    }
 
     public function site(): BelongsTo
     {

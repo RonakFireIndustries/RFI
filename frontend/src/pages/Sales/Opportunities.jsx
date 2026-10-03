@@ -1,8 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Building2, ChevronRight, ChevronDown, MapPin, TrendingUp } from 'lucide-react';
+import { Plus, Search, Building2, ChevronRight, ChevronDown, MapPin, TrendingUp, ArrowRightLeft, CheckCircle2, Loader2 } from 'lucide-react';
 import { useOpportunityStore } from '../../store/opportunityStore';
 import { usePriceVisibility } from '../../hooks/usePriceVisibility';
+import { buildingService } from '../../services/buildingService';
+import PermissionGate from '../../components/Guards/PermissionGate';
 import { format } from 'date-fns';
 
 const STAGES = ['Prospect', 'Follow-Up', 'Quotation Sent', 'Negotiation', 'Won', 'Lost'];
@@ -23,10 +25,41 @@ export default function Opportunities() {
   const [stageFilter, setStageFilter] = useState('');
   const [viewMode, setViewMode] = useState('list');
   const [expanded, setExpanded] = useState({});
+  const [convertingId, setConvertingId] = useState(null);
 
   useEffect(() => {
     fetchItems({ search, stage: stageFilter });
   }, [fetchItems, search, stageFilter]);
+
+  /**
+   * Promote the opportunity's building into a working site.
+   *
+   * Mirrors the action on the Buildings list: the site is created on demand
+   * from the building's survey data, and re-running it refreshes the site the
+   * building already produced.
+   */
+  const handleConvertToSite = async (group) => {
+    if (!group.id) return;
+
+    const building = group.opportunities[0]?.building;
+    const already = !!building?.converted_at;
+    const prompt = already
+      ? `Refresh the site "${building.converted_site_name || group.name}" from this building's current survey data?`
+      : `Convert "${group.name}" into a working site?\n\nThis creates a site with the building's survey details, which then becomes available for attendance and stock movements. The building record stays as-is.`;
+
+    if (!window.confirm(prompt)) return;
+
+    setConvertingId(group.id);
+    try {
+      await buildingService.convertToSite(group.id);
+      await fetchItems({ search, stage: stageFilter });
+      alert(`"${group.name}" is now a working site.`);
+    } catch (err) {
+      alert(err.message || 'Failed to convert building to a site.');
+    } finally {
+      setConvertingId(null);
+    }
+  };
 
   const formatCurrency = (val) => {
     if (!canSeePrices) return maskedValue;
@@ -45,6 +78,8 @@ export default function Opportunities() {
           id: building?.id ?? null,
           name: building?.name || 'Unknown Building',
           address: [building?.address, building?.area, building?.city].filter(Boolean).join(', '),
+          converted_at: building?.converted_at || null,
+          converted_site_name: building?.converted_site_name || null,
           opportunities: [],
         });
       }
@@ -116,6 +151,14 @@ export default function Opportunities() {
                       <div>
                         <p className="font-medium text-gray-900">{group.name}</p>
                         <p className="text-sm text-gray-500 mt-0.5">{group.address || 'No address'}</p>
+                        {group.converted_at && (
+                          <span
+                            title={`Converted to site "${group.converted_site_name}" on ${new Date(group.converted_at).toLocaleDateString()}`}
+                            className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 text-[11px] font-bold rounded-full bg-emerald-50 text-emerald-700"
+                          >
+                            <CheckCircle2 className="w-3 h-3" /> Working Site
+                          </span>
+                        )}
                       </div>
                     </div>
                     <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
@@ -123,6 +166,22 @@ export default function Opportunities() {
                   <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
                     <span className="flex items-center gap-1"><TrendingUp className="w-3 h-3" />{group.opportunities.length} {group.opportunities.length === 1 ? 'opportunity' : 'opportunities'}</span>
                     <span className="flex items-center gap-1"><TrendingUp className="w-3 h-3" />{formatCurrency(totalValue)}</span>
+                    <span className="ml-auto">
+                      <PermissionGate module="sites" action="create" subject="this building">
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); handleConvertToSite(group); }}
+                          disabled={!group.id || convertingId === group.id}
+                          title={group.converted_at ? 'Refresh the site from this building' : 'Convert this building into a working site'}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold border border-gray-200 text-gray-600 hover:text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50 transition-colors disabled:cursor-not-allowed disabled:text-gray-300 disabled:border-gray-100 disabled:hover:bg-transparent"
+                        >
+                          {convertingId === group.id
+                            ? <Loader2 className="w-3 h-3 animate-spin" />
+                            : (group.converted_at ? <CheckCircle2 className="w-3 h-3" /> : <ArrowRightLeft className="w-3 h-3" />)}
+                          {group.converted_at ? 'Refresh Site' : 'Convert to Site'}
+                        </button>
+                      </PermissionGate>
+                    </span>
                   </div>
                 </button>
 
