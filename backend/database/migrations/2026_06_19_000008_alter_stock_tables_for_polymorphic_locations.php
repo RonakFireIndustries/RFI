@@ -21,8 +21,6 @@ return new class extends Migration
 
     public function up(): void
     {
-        Schema::dropIfExists('inventory_locations');
-
         $this->dropForeignIfExists('product_stock', 'product_id');
         $this->dropForeignIfExists('product_stock', 'location_id');
         Schema::table('product_stock', function (Blueprint $table) {
@@ -59,6 +57,8 @@ return new class extends Migration
                 $table->string('to_location_type')->default('App\\Models\\Branch');
             }
         });
+
+        Schema::dropIfExists('inventory_locations');
     }
 
     public function down(): void

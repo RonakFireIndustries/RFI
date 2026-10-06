@@ -439,7 +439,7 @@ export default function QuotationsPage() {
                           <th className="py-3 px-4">Unit</th>
                           <th className="py-3 px-4 text-right">Qty</th>
                           <th className="py-3 px-4 text-right">Rate</th>
-                          <th className="py-3 px-4 text-right">Installment</th>
+                          <th className="py-3 px-4 text-right">Installation</th>
                           <th className="py-3 px-6 text-right">Amount</th>
                         </tr>
                       </thead>

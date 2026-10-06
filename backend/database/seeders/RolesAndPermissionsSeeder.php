@@ -63,6 +63,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'inventory.dashboard.view',
             'building.view', 'building.create', 'building.edit', 'building.delete',
             'view reports', 'create reports', 'update reports', 'delete reports', 'export reports', 'schedule reports',
+            'salary-structure.view',
         ];
 
         $permissions = array_values(array_unique(array_merge($legacyPermissions, $policyPermissions)));
@@ -227,14 +228,14 @@ class RolesAndPermissionsSeeder extends Seeder
             'daily-report.create', 'daily-report.view', 'daily-report.submit',
         ];
         foreach (['Fitter', 'Welder', 'Electrician', 'Helper'] as $workerRole) {
-            $role = Role::findByName($workerRole);
+            $role = Role::firstWhere('name', $workerRole);
             if ($role) {
                 $role->syncPermissions($workerPermissions);
             }
         }
 
         // Design Manager: building access + attendance
-        $designManager = Role::findByName('Design Manager');
+        $designManager = Role::firstWhere('name', 'Design Manager');
         if ($designManager) {
             $designManager->syncPermissions([
                 'view dashboard',
@@ -247,7 +248,7 @@ class RolesAndPermissionsSeeder extends Seeder
         }
 
         // General Manager: admin-level read access
-        $gm = Role::findByName('General Manager');
+        $gm = Role::firstWhere('name', 'General Manager');
         if ($gm) {
             $gm->syncPermissions([
                 'view dashboard',
@@ -263,7 +264,7 @@ class RolesAndPermissionsSeeder extends Seeder
         }
 
         // Workshop Supervisor: production read + attendance
-        $ws = Role::findByName('Workshop Supervisor');
+        $ws = Role::firstWhere('name', 'Workshop Supervisor');
         if ($ws) {
             $ws->syncPermissions([
                 'view dashboard',

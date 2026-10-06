@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement('ALTER TABLE products MODIFY id bigint(20) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY');
+        DB::statement('ALTER TABLE products MODIFY id bigint(20) unsigned NOT NULL AUTO_INCREMENT');
     }
 
     public function down(): void

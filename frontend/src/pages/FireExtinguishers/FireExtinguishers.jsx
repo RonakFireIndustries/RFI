@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import {
   Plus, Trash2, Search, Flame, Building2, CalendarDays, CalendarClock,
   Info, X, AlertTriangle, CheckCircle2, ShieldAlert, Paperclip, Download, FileText, Upload, ArrowLeft, User, Phone,
+  Wrench, RotateCcw, Undo2, FileClock,
 } from 'lucide-react';
 import api from '../../services/api';
 import PermissionGate from '../../components/Guards/PermissionGate';
@@ -13,6 +14,22 @@ const iso = (d) => {
 };
 
 const isValidDate = (d) => d && !isNaN(new Date(d).getTime());
+
+const STATUS_LABELS = {
+  Available: 'Available',
+  'Taken for Refilling': 'Out for Refilling',
+  Damaged: 'Damaged',
+  Decommissioned: 'Decommissioned',
+};
+
+const STATUS_CLASSES = {
+  Available: 'bg-green-50 text-green-700',
+  'Taken for Refilling': 'bg-amber-50 text-amber-700',
+  Damaged: 'bg-red-50 text-red-700',
+  Decommissioned: 'bg-gray-100 text-gray-600',
+};
+
+const statusOf = (x) => x?.status || 'Available';
 
 const EXTINGUISHER_TYPES = [
   'ABC',
@@ -37,6 +54,17 @@ export default function FireExtinguishers() {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [dueOnly, setDueOnly] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('');
+
+  // Refill flow
+  const [returnTarget, setReturnTarget] = useState(null);
+  const [returnDate, setReturnDate] = useState('');
+  const [returnRemark, setReturnRemark] = useState('');
+  const [returnError, setReturnError] = useState('');
+  const [historyTarget, setHistoryTarget] = useState(null);
+  const [historyRows, setHistoryRows] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [transitioning, setTransitioning] = useState(null);
 
   // Certificates keyed by building_id
   const [certificates, setCertificates] = useState({});
@@ -71,7 +99,7 @@ export default function FireExtinguishers() {
     loadExtinguishers();
     loadCertificates();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dueOnly]);
+  }, [dueOnly, statusFilter]);
 
   const loadCertificates = async () => {
     setCertsLoading(true);
@@ -96,7 +124,7 @@ export default function FireExtinguishers() {
     setLoading(true);
     try {
       const res = await api.get('/extinguishers', {
-        params: { per_page: 500, due: dueOnly ? '1' : undefined },
+        params: { per_page: 500, due: dueOnly ? '1' : undefined, status: statusFilter || undefined },
       });
       setExtinguishers(Array.isArray(res.data) ? res.data : (res.data?.extinguishers ?? []));
     } catch {
@@ -326,6 +354,86 @@ export default function FireExtinguishers() {
     }
   };
 
+  const patchExtinguisher = (updated) => {
+    if (!updated || typeof updated !== 'object' || Array.isArray(updated)) return;
+    setExtinguishers(prev => prev.map(x => (x.id === updated.id ? { ...x, ...updated } : x)));
+  };
+
+  const sendForRefill = async (x) => {
+    if (!window.confirm(`Send "${x.label || 'this extinguisher'}" for refilling?`)) return;
+    const remark = window.prompt('Remark (optional):', '');
+    if (remark === null) return;
+    setTransitioning(x.id);
+    try {
+      const res = await api.post(`/extinguishers/${x.id}/take-for-refilling`, remark.trim() ? { remark: remark.trim() } : {});
+      patchExtinguisher(res.data?.extinguisher ?? res.data);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to send for refilling.');
+    }
+    setTransitioning(null);
+  };
+
+  const submitReturn = async (e) => {
+    e.preventDefault();
+    if (!returnTarget || !returnDate || transitioning) return;
+    setTransitioning(returnTarget.id);
+    setReturnError('');
+    try {
+      const payload = { next_refill_date: iso(returnDate) };
+      if (returnRemark.trim()) payload.remark = returnRemark.trim();
+      const res = await api.post(`/extinguishers/${returnTarget.id}/return-from-refilling`, payload);
+      patchExtinguisher(res.data?.extinguisher ?? res.data);
+      setReturnTarget(null);
+      setReturnDate('');
+      setReturnRemark('');
+    } catch (err) {
+      setReturnError(err.response?.data?.message || 'Failed to mark as returned.');
+    }
+    setTransitioning(null);
+  };
+
+  const markStatus = async (x, status) => {
+    if (!window.confirm(`Mark "${x.label || 'this extinguisher'}" as ${status.toLowerCase()}?`)) return;
+    const remark = window.prompt('Remark (optional):', '');
+    if (remark === null) return;
+    setTransitioning(x.id);
+    try {
+      const res = await api.post(`/extinguishers/${x.id}/mark-status`, {
+        status,
+        remark: remark.trim() ? remark.trim() : null,
+      });
+      patchExtinguisher(res.data?.extinguisher ?? res.data);
+    } catch (err) {
+      alert(err.response?.data?.message || `Failed to mark as ${status.toLowerCase()}.`);
+    }
+    setTransitioning(null);
+  };
+
+  const restoreExtinguisher = async (x) => {
+    if (!window.confirm(`Restore "${x.label || 'this extinguisher'}" to Available?`)) return;
+    setTransitioning(x.id);
+    try {
+      const res = await api.post(`/extinguishers/${x.id}/restore`);
+      patchExtinguisher(res.data?.extinguisher ?? res.data);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to restore extinguisher.');
+    }
+    setTransitioning(null);
+  };
+
+  const openHistory = async (x) => {
+    setHistoryTarget(x);
+    setHistoryRows([]);
+    setHistoryLoading(true);
+    try {
+      const res = await api.get(`/extinguishers/${x.id}/movements`);
+      setHistoryRows(Array.isArray(res.data) ? res.data : (res.data?.movements ?? []));
+    } catch {
+      setHistoryRows([]);
+    }
+    setHistoryLoading(false);
+  };
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
     return extinguishers.filter((x) => {
@@ -361,6 +469,7 @@ export default function FireExtinguishers() {
   }, [selectedBuildingId, groupedBuildings, extinguishers]);
 
   const totalCount = extinguishers.length;
+  const outForRefillCount = extinguishers.filter((x) => statusOf(x) === 'Taken for Refilling').length;
   const dueCount = extinguishers.filter((x) => {
     const d = x.next_refill_date;
     return d && new Date(d) <= new Date();
@@ -384,7 +493,7 @@ export default function FireExtinguishers() {
         </PermissionGate>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center">
           <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center mr-4 text-blue-600">
             <Flame className="w-6 h-6" />
@@ -412,6 +521,15 @@ export default function FireExtinguishers() {
             <div className="text-sm text-gray-500 font-medium">Up to Date</div>
           </div>
         </div>
+        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center">
+          <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center mr-4 text-amber-600">
+            <Wrench className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-gray-900">{outForRefillCount}</div>
+            <div className="text-sm text-gray-500 font-medium">Out for Refilling</div>
+          </div>
+        </div>
       </div>
 
       <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm mb-6 flex flex-col md:flex-row gap-4 items-center justify-between">
@@ -425,16 +543,29 @@ export default function FireExtinguishers() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <label className="flex items-center cursor-pointer gap-2 text-sm text-gray-700">
-          <input
-            type="checkbox"
-            checked={dueOnly}
-            onChange={(e) => setDueOnly(e.target.checked)}
-            className="rounded border-gray-300"
-          />
-          <AlertTriangle className="w-4 h-4 text-red-500" />
-          Refill due only
-        </label>
+        <div className="flex items-center gap-3 flex-wrap">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">All statuses</option>
+            <option value="Available">Available</option>
+            <option value="Taken for Refilling">Out for Refilling</option>
+            <option value="Damaged">Damaged</option>
+            <option value="Decommissioned">Decommissioned</option>
+          </select>
+          <label className="flex items-center cursor-pointer gap-2 text-sm text-gray-700">
+            <input
+              type="checkbox"
+              checked={dueOnly}
+              onChange={(e) => setDueOnly(e.target.checked)}
+              className="rounded border-gray-300"
+            />
+            <AlertTriangle className="w-4 h-4 text-red-500" />
+            Refill due only
+          </label>
+        </div>
       </div>
 
       {loading ? (
@@ -452,6 +583,7 @@ export default function FireExtinguishers() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {groupedBuildings.map((b) => {
               const bDue = b.items.filter((x) => x.next_refill_date && new Date(x.next_refill_date) <= new Date()).length;
+              const bOut = b.items.filter((x) => statusOf(x) === 'Taken for Refilling').length;
               const bCerts = (certificates[b.id] || []).length;
               return (
                 <div key={b.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow p-5 flex flex-col hover:border-blue-200 group">
@@ -471,6 +603,9 @@ export default function FireExtinguishers() {
                       <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-red-50 text-red-700">{bDue} refill due</span>
                     ) : (
                       <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700">Up to date</span>
+                    )}
+                    {bOut > 0 && (
+                      <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700">{bOut} out for refilling</span>
                     )}
                     {bCerts > 0 && (
                       <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700">
@@ -613,12 +748,69 @@ export default function FireExtinguishers() {
                         <p className="text-xs text-gray-500">{x.location || 'No location set'}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 flex-wrap justify-end">
                       {due ? (
                         <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-red-50 text-red-700">Due</span>
                       ) : (
                         <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700">OK</span>
                       )}
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${STATUS_CLASSES[statusOf(x)] || STATUS_CLASSES.Available}`}>
+                        {STATUS_LABELS[statusOf(x)] || STATUS_LABELS.Available}
+                      </span>
+                      <PermissionGate module="extinguishers" action="update" subject="this extinguisher">
+                        {statusOf(x) === 'Available' && (
+                          <button
+                            onClick={() => sendForRefill(x)}
+                            disabled={transitioning === x.id}
+                            className="p-2 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-colors disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent"
+                            title="Send for refilling"
+                          >
+                            <Wrench className="w-4 h-4" />
+                          </button>
+                        )}
+                        {statusOf(x) === 'Taken for Refilling' && (
+                          <button
+                            onClick={() => { setReturnTarget(x); setReturnDate(''); setReturnRemark(''); setReturnError(''); }}
+                            disabled={transitioning === x.id}
+                            className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent"
+                            title="Mark as returned from refilling"
+                          >
+                            <RotateCcw className="w-4 h-4" />
+                          </button>
+                        )}
+                        {(statusOf(x) === 'Damaged' || statusOf(x) === 'Decommissioned') && (
+                          <button
+                            onClick={() => restoreExtinguisher(x)}
+                            disabled={transitioning === x.id}
+                            className="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent"
+                            title="Restore to available"
+                          >
+                            <Undo2 className="w-4 h-4" />
+                          </button>
+                        )}
+                        {statusOf(x) !== 'Damaged' && statusOf(x) !== 'Decommissioned' && (
+                          <select
+                            value=""
+                            onChange={(e) => {
+                              if (e.target.value === 'Damaged') markStatus(x, 'Damaged');
+                              if (e.target.value === 'Decommissioned') markStatus(x, 'Decommissioned');
+                            }}
+                            className="text-xs border border-gray-200 rounded-lg py-1 px-1 text-gray-500 hover:border-red-200 focus:outline-none bg-white w-[104px]"
+                            title="Mark as damaged or decommissioned"
+                          >
+                            <option value="">Mark…</option>
+                            <option value="Damaged">Damaged</option>
+                            <option value="Decommissioned">Decommissioned</option>
+                          </select>
+                        )}
+                      </PermissionGate>
+                      <button
+                        onClick={() => openHistory(x)}
+                        className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                        title="View refill history"
+                      >
+                        <FileClock className="w-4 h-4" />
+                      </button>
                       <PermissionGate module="extinguishers" action="delete" subject="this extinguisher">
                         <button
                           onClick={() => handleDelete(x)}
@@ -1034,6 +1226,129 @@ export default function FireExtinguishers() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {returnTarget && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl">
+            <div className="flex justify-between items-center px-6 py-4 border-b border-gray-150">
+              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <RotateCcw className="w-5 h-5 text-blue-600" />
+                Mark Returned
+              </h2>
+              <button onClick={() => setReturnTarget(null)} className="text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={submitReturn} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Extinguisher</label>
+                <p className="text-sm text-gray-700 font-medium">{returnTarget.label || returnTarget.location || 'Extinguisher'}</p>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">
+                  Next Refill Date <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={returnDate}
+                  onChange={(e) => { setReturnDate(e.target.value); setReturnError(''); }}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Remark (Optional)</label>
+                <input
+                  type="text"
+                  value={returnRemark}
+                  onChange={(e) => setReturnRemark(e.target.value)}
+                  placeholder="Any notes..."
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              {returnError && (
+                <div className="bg-red-50 text-red-700 p-3 rounded-lg text-sm flex items-center">
+                  <ShieldAlert className="w-5 h-5 mr-2" />
+                  {returnError}
+                </div>
+              )}
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-150">
+                <button
+                  type="button"
+                  onClick={() => setReturnTarget(null)}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={transitioning === returnTarget.id || !returnDate}
+                  className="inline-flex items-center px-5 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary/90 transition-colors font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {transitioning === returnTarget.id ? (
+                    <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></span>
+                  ) : (
+                    <RotateCcw className="w-4 h-4 mr-2" />
+                  )}
+                  {transitioning === returnTarget.id ? 'Saving...' : 'Mark Returned'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {historyTarget && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl max-w-lg w-full max-h-[85vh] flex flex-col shadow-2xl">
+            <div className="flex justify-between items-center px-6 py-4 border-b border-gray-150">
+              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <FileClock className="w-5 h-5 text-gray-500" />
+                Refill History
+              </h2>
+              <button onClick={() => setHistoryTarget(null)} className="text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="px-6 py-3 border-b border-gray-100">
+              <p className="text-sm text-gray-700 font-medium">{historyTarget.label || historyTarget.location || 'Extinguisher'}</p>
+              <p className="text-xs text-gray-500">
+                Status: <span className={`font-semibold ${STATUS_CLASSES[statusOf(historyTarget)] || STATUS_CLASSES.Available}`}>{STATUS_LABELS[statusOf(historyTarget)] || STATUS_LABELS.Available}</span>
+              </p>
+            </div>
+            <div className="p-6 overflow-y-auto">
+              {historyLoading ? (
+                <div className="flex justify-center py-10">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              ) : historyRows.length === 0 ? (
+                <p className="text-center text-gray-500 text-sm py-10">No movements recorded yet.</p>
+              ) : (
+                <div className="space-y-4">
+                  {historyRows.map((m) => (
+                    <div key={m.id} className="flex gap-3">
+                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 shrink-0">
+                        <FileClock className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1 bg-gray-50 rounded-lg px-4 py-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-sm font-bold text-gray-800">{m.action}</span>
+                          <span className="text-xs text-gray-400">{new Date(m.created_at).toLocaleString()}</span>
+                        </div>
+                        {m.next_refill_date && (
+                          <p className="text-xs text-gray-500 mt-1">Next refill date: {m.next_refill_date}</p>
+                        )}
+                        {m.remark && <p className="text-xs text-gray-500 mt-1">{m.remark}</p>}
+                        {m.performed_by && <p className="text-xs text-gray-400 mt-1">By {m.performed_by}</p>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

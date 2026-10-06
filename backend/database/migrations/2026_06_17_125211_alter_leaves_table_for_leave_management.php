@@ -10,7 +10,9 @@ return new class extends Migration
     {
         Schema::table('leaves', function (Blueprint $table) {
             // Drop old string-based leave_type column
-            $table->dropColumn('leave_type');
+            if (Schema::hasColumn('leaves', 'leave_type')) {
+                $table->dropColumn('leave_type');
+            }
 
             // Add new relations and fields
             $table->foreignId('leave_type_id')->nullable()->after('employee_id')->constrained()->nullOnDelete();

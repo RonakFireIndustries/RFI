@@ -7,13 +7,21 @@ return new class extends Migration
 {
     public function up(): void
     {
+        $column = DB::selectOne(
+            "SELECT EXTRA FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'categories' AND COLUMN_NAME = 'id'"
+        );
+        if ($column && stripos((string) $column->EXTRA, 'auto_increment') !== false) {
+            return;
+        }
+
         DB::statement('ALTER TABLE categories ADD COLUMN __row bigint unsigned NOT NULL AUTO_INCREMENT UNIQUE');
 
         DB::statement('DELETE c FROM categories c JOIN categories c2 ON c.id = c2.id AND c.__row > c2.__row');
 
         DB::statement('ALTER TABLE categories DROP COLUMN __row');
 
-        DB::statement('ALTER TABLE categories MODIFY id bigint(20) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY');
+        DB::statement('ALTER TABLE categories MODIFY id bigint(20) unsigned NOT NULL AUTO_INCREMENT');
     }
 
     public function down(): void

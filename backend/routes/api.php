@@ -365,6 +365,13 @@ Route::prefix('v1')->group(function () {
     Route::put('/extinguishers/{fireSystem}', [\App\Http\Controllers\Api\V1\FireExtinguisherController::class, 'update']);
     Route::delete('/extinguishers/{fireSystem}', [\App\Http\Controllers\Api\V1\FireExtinguisherController::class, 'destroy']);
 
+    // Extinguisher refill tracking
+    Route::get('/extinguishers/{fireSystem}/movements', [\App\Http\Controllers\Api\V1\FireExtinguisherController::class, 'movements']);
+    Route::post('/extinguishers/{fireSystem}/take-for-refilling', [\App\Http\Controllers\Api\V1\FireExtinguisherController::class, 'takeForRefilling']);
+    Route::post('/extinguishers/{fireSystem}/return-from-refilling', [\App\Http\Controllers\Api\V1\FireExtinguisherController::class, 'returnFromRefilling']);
+    Route::post('/extinguishers/{fireSystem}/mark-status', [\App\Http\Controllers\Api\V1\FireExtinguisherController::class, 'markStatus']);
+    Route::post('/extinguishers/{fireSystem}/restore', [\App\Http\Controllers\Api\V1\FireExtinguisherController::class, 'restore']);
+
     // Fire Extinguisher Certificates (per building)
     Route::get('/extinguishers/certificates', [\App\Http\Controllers\Api\V1\FireExtinguisherController::class, 'listCertificates']);
     Route::post('/extinguishers/certificates', [\App\Http\Controllers\Api\V1\FireExtinguisherController::class, 'uploadCertificate']);

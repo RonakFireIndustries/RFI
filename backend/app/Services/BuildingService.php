@@ -73,7 +73,7 @@ class BuildingService
 
                             if (!empty($flatsData)) {
                                 foreach ($flatsData as $flatDatum) {
-                                    $floor->buildingFlats()->create([
+                                    $floor->flats()->create([
                                         'building_id' => $building->id,
                                         'wing_id' => $wing->id,
                                         'name' => $flatDatum['name'],
@@ -201,7 +201,7 @@ class BuildingService
                                     ->map(fn ($id) => (int) $id)
                                     ->toArray();
 
-                                $floor->buildingFlats()
+                                $floor->flats()
                                     ->whereNotIn('id', $existingFlatIds)
                                     ->delete();
 
@@ -217,11 +217,11 @@ class BuildingService
                                     ];
 
                                     if (!empty($flatDatum['id'])) {
-                                        $floor->buildingFlats()
+                                        $floor->flats()
                                             ->where('id', $flatDatum['id'])
                                             ->update($flatPayload);
                                     } else {
-                                        $floor->buildingFlats()->create($flatPayload);
+                                        $floor->flats()->create($flatPayload);
                                     }
                                 }
                             }

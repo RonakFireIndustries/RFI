@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Building;
 use App\Models\Document;
+use App\Models\ExtinguisherMovement;
 use App\Models\FireSystem;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class FireExtinguisherController extends Controller
@@ -33,6 +35,10 @@ class FireExtinguisherController extends Controller
             // only extinguishers whose next refill is due on/before today
             $query->whereNotNull('next_refill_date')
                   ->whereDate('next_refill_date', '<=', now()->toDateString());
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->string('status')->toString());
         }
 
         $extinguishers = $query->orderBy('id', 'desc')->paginate($request->integer('per_page', 50));
@@ -184,6 +190,183 @@ class FireExtinguisherController extends Controller
     }
 
     /**
+     * Full movement (refill tracking) history for one extinguisher.
+     */
+    public function movements(FireSystem $fireSystem): JsonResponse
+    {
+        $this->authorize('extinguishers.view');
+        $this->ensureExtinguisher($fireSystem);
+
+        $movements = $fireSystem->movements()
+            ->with('user:id,name')
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn ($m) => [
+                'id' => $m->id,
+                'action' => $m->action,
+                'remark' => $m->remark,
+                'next_refill_date' => $m->next_refill_date?->toDateString(),
+                'performed_by' => $m->user?->name ?? null,
+                'created_at' => $m->created_at?->toDateTimeString(),
+            ]);
+
+        return $this->success('Movements retrieved', [
+            'movements' => $movements,
+        ]);
+    }
+
+    /**
+     * Mark an available extinguisher as taken for refilling.
+     */
+    public function takeForRefilling(Request $request, FireSystem $fireSystem): JsonResponse
+    {
+        $this->authorize('extinguishers.update');
+        $this->ensureExtinguisher($fireSystem);
+
+        if ($fireSystem->status !== FireSystem::STATUS_AVAILABLE) {
+            return $this->error(
+                "Only available extinguishers can be taken for refilling (current status: {$fireSystem->status}).",
+                [], 422
+            );
+        }
+
+        $validated = $request->validate([
+            'remark' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        DB::transaction(function () use ($fireSystem, $validated) {
+            $fireSystem->update(['status' => FireSystem::STATUS_REFILLING]);
+
+            $fireSystem->movements()->create([
+                'action' => ExtinguisherMovement::ACTION_TAKEN,
+                'remark' => $validated['remark'] ?? null,
+                'user_id' => Auth::id(),
+            ]);
+        });
+
+        return $this->success('Extinguisher taken for refilling', [
+            'extinguisher' => $this->present($fireSystem->fresh()),
+        ]);
+    }
+
+    /**
+     * Mark an extinguisher as returned from refilling; new next refill date is required.
+     */
+    public function returnFromRefilling(Request $request, FireSystem $fireSystem): JsonResponse
+    {
+        $this->authorize('extinguishers.update');
+        $this->ensureExtinguisher($fireSystem);
+
+        if ($fireSystem->status !== FireSystem::STATUS_REFILLING) {
+            return $this->error(
+                "Only extinguishers taken for refilling can be marked as returned (current status: {$fireSystem->status}).",
+                [], 422
+            );
+        }
+
+        $validated = $request->validate([
+            'next_refill_date' => ['required', 'date'],
+            'remark' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        DB::transaction(function () use ($fireSystem, $validated) {
+            $fireSystem->update([
+                'status' => FireSystem::STATUS_AVAILABLE,
+                'next_refill_date' => $validated['next_refill_date'],
+            ]);
+
+            $fireSystem->movements()->create([
+                'action' => ExtinguisherMovement::ACTION_RETURNED,
+                'remark' => $validated['remark'] ?? null,
+                'next_refill_date' => $validated['next_refill_date'],
+                'user_id' => Auth::id(),
+            ]);
+        });
+
+        return $this->success('Extinguisher returned from refilling', [
+            'extinguisher' => $this->present($fireSystem->fresh()),
+        ]);
+    }
+
+    /**
+     * Mark an extinguisher as Damaged or Decommissioned.
+     */
+    public function markStatus(Request $request, FireSystem $fireSystem): JsonResponse
+    {
+        $this->authorize('extinguishers.update');
+        $this->ensureExtinguisher($fireSystem);
+
+        $validated = $request->validate([
+            'status' => ['required', 'string', 'in:' . implode(',', [
+                FireSystem::STATUS_DAMAGED,
+                FireSystem::STATUS_DECOMMISSIONED,
+            ])],
+            'remark' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        if (!in_array($fireSystem->status, [FireSystem::STATUS_AVAILABLE, FireSystem::STATUS_REFILLING], true)) {
+            return $this->error(
+                "Only available or in-refilling extinguishers can be marked (current status: {$fireSystem->status}).",
+                [], 422
+            );
+        }
+
+        $action = $validated['status'] === FireSystem::STATUS_DAMAGED
+            ? ExtinguisherMovement::ACTION_DAMAGED
+            : ExtinguisherMovement::ACTION_DECOMMISSIONED;
+
+        DB::transaction(function () use ($fireSystem, $validated, $action) {
+            $fireSystem->update(['status' => $validated['status']]);
+
+            $fireSystem->movements()->create([
+                'action' => $action,
+                'remark' => $validated['remark'] ?? null,
+                'user_id' => Auth::id(),
+            ]);
+        });
+
+        return $this->success("Extinguisher marked as {$validated['status']}", [
+            'extinguisher' => $this->present($fireSystem->fresh()),
+        ]);
+    }
+
+    /**
+     * Restore a damaged/decommissioned extinguisher back to Available.
+     */
+    public function restore(FireSystem $fireSystem): JsonResponse
+    {
+        $this->authorize('extinguishers.update');
+        $this->ensureExtinguisher($fireSystem);
+
+        if (!in_array($fireSystem->status, [FireSystem::STATUS_DAMAGED, FireSystem::STATUS_DECOMMISSIONED], true)) {
+            return $this->error(
+                "Only damaged or decommissioned extinguishers can be restored (current status: {$fireSystem->status}).",
+                [], 422
+            );
+        }
+
+        DB::transaction(function () use ($fireSystem) {
+            $fireSystem->update(['status' => FireSystem::STATUS_AVAILABLE]);
+
+            $fireSystem->movements()->create([
+                'action' => ExtinguisherMovement::ACTION_RESTORED,
+                'user_id' => Auth::id(),
+            ]);
+        });
+
+        return $this->success('Extinguisher restored to Available', [
+            'extinguisher' => $this->present($fireSystem->fresh()),
+        ]);
+    }
+
+    protected function ensureExtinguisher(FireSystem $fireSystem): void
+    {
+        if ($fireSystem->system_type !== FireSystem::TYPE_EXTINGUISHER) {
+            abort(404, 'Extinguisher not found');
+        }
+    }
+
+    /**
      * List certificates attached to buildings (optionally filtered by building).
      */
     public function listCertificates(Request $request): JsonResponse
@@ -311,6 +494,7 @@ class FireExtinguisherController extends Controller
             'label' => $e->label,
             'location' => $e->location,
             'type' => $e->type,
+            'status' => $e->status ?? FireSystem::STATUS_AVAILABLE,
             'capacity' => $e->capacity !== null ? (int) $e->capacity : null,
             'installation_date' => $e->installation_date?->toDateString(),
             'next_refill_date' => $e->next_refill_date?->toDateString(),

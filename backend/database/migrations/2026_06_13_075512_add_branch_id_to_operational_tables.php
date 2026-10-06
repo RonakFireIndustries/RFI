@@ -12,20 +12,28 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('employees', function (Blueprint $table) {
-            $table->foreignId('branch_id')->nullable()->constrained('branches')->cascadeOnDelete();
-            $table->string('designation')->nullable();
-            $table->foreignId('reporting_manager_id')->nullable()->constrained('users')->nullOnDelete();
+            if (!Schema::hasColumn('employees', 'branch_id')) {
+                $table->foreignId('branch_id')->nullable()->constrained('branches')->cascadeOnDelete();
+            }
+            if (!Schema::hasColumn('employees', 'designation')) {
+                $table->string('designation')->nullable();
+            }
+            if (!Schema::hasColumn('employees', 'reporting_manager_id')) {
+                $table->foreignId('reporting_manager_id')->nullable()->constrained('users')->nullOnDelete();
+            }
         });
 
         $tables = [
-            'invoices', 'payments', 'payrolls', 'tasks', 
+            'invoices', 'payments', 'payrolls', 'tasks',
             'attendances', 'customers', 'suppliers'
         ];
 
         foreach ($tables as $tableName) {
-            Schema::table($tableName, function (Blueprint $table) {
-                $table->foreignId('branch_id')->nullable()->constrained('branches')->cascadeOnDelete();
-            });
+            if (!Schema::hasColumn($tableName, 'branch_id')) {
+                Schema::table($tableName, function (Blueprint $table) use ($tableName) {
+                    $table->foreignId('branch_id')->nullable()->constrained('branches')->cascadeOnDelete();
+                });
+            }
         }
     }
 

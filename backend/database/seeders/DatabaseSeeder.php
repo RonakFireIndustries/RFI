@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
         }
 
         $this->call([
+            CanonicalPermissionsSeeder::class,
             RolesAndPermissionsSeeder::class,
             DashboardWidgetSeeder::class,
             InventorySeeder::class,

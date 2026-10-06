@@ -12,9 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('employees', function (Blueprint $table) {
-            $table->boolean('employment_bond_status')->nullable()->change();
-            $table->boolean('previous_termination_status')->nullable()->change();
-            $table->boolean('legal_proceedings_status')->nullable()->change();
+            if (Schema::hasColumn('employees', 'employment_bond_status')) {
+                $table->boolean('employment_bond_status')->nullable()->change();
+            }
+            if (Schema::hasColumn('employees', 'previous_termination_status')) {
+                $table->boolean('previous_termination_status')->nullable()->change();
+            }
+            if (Schema::hasColumn('employees', 'legal_proceedings_status')) {
+                $table->boolean('legal_proceedings_status')->nullable()->change();
+            }
             if (Schema::hasColumn('employees', 'create_user_account')) {
                 $table->boolean('create_user_account')->nullable()->change();
             }

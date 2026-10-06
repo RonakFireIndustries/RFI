@@ -38,7 +38,7 @@ return new class extends Migration
                 DB::statement("ALTER TABLE `$table` DROP COLUMN __row");
             }
 
-            DB::statement("ALTER TABLE `$table` MODIFY id bigint(20) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY");
+            DB::statement("ALTER TABLE `$table` MODIFY id bigint(20) unsigned NOT NULL AUTO_INCREMENT");
         }
     }
 
