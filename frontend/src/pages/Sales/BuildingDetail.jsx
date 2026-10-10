@@ -41,6 +41,7 @@ export default function BuildingDetail() {
   const [activeTab, setActiveTab] = useState('Overview');
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({});
+  const [saving, setSaving] = useState(false);
   const [statuses, setStatuses] = useState([]);
 
   // Sub-entity states
@@ -163,12 +164,16 @@ export default function BuildingDetail() {
   };
 
   const handleSave = async () => {
+    if (saving) return;
+    setSaving(true);
     try {
       await useBuildingStore.getState().updateItem(id, form);
       setEditing(false);
       fetchItem(id);
     } catch (err) {
       console.error(err);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -235,8 +240,8 @@ export default function BuildingDetail() {
           </button>
           {editing ? (
             <>
-              <button onClick={handleSave} className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg text-sm"><Save className="w-4 h-4" /> Save</button>
-              <button onClick={() => setEditing(false)} className="flex items-center gap-2 px-4 py-2 border rounded-lg text-sm"><X className="w-4 h-4" /> Cancel</button>
+              <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg text-sm disabled:bg-gray-300 disabled:cursor-not-allowed"><Save className="w-4 h-4" /> {saving ? 'Saving...' : 'Save'}</button>
+              <button onClick={() => setEditing(false)} disabled={saving} className="flex items-center gap-2 px-4 py-2 border rounded-lg text-sm disabled:opacity-60 disabled:cursor-not-allowed"><X className="w-4 h-4" /> Cancel</button>
             </>
           ) : (
             <button onClick={() => setEditing(true)} className="flex items-center gap-2 px-4 py-2 border rounded-lg text-sm"><Edit2 className="w-4 h-4" /> Edit</button>
@@ -436,8 +441,11 @@ function WingsTab({ wings, floors, flats, buildingId, reload, editing }) {
   const [form, setForm] = useState({ name: '', floors: '', flats_per_floor: '', flat_configuration: '', total_flats: '' });
   const [editingId, setEditingId] = useState(null);
   const [expandedWing, setExpandedWing] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
+    if (saving) return;
+    setSaving(true);
     try {
       if (editingId) {
         await buildingDetailService.updateWing(buildingId, editingId, form);
@@ -448,7 +456,7 @@ function WingsTab({ wings, floors, flats, buildingId, reload, editing }) {
       setEditingId(null);
       setForm({ name: '', floors: '', flats_per_floor: '', flat_configuration: '', total_flats: '' });
       reload();
-    } catch (err) { console.error(err); }
+    } catch (err) { console.error(err); } finally { setSaving(false); }
   };
 
   const handleEdit = (wing) => {
@@ -476,7 +484,7 @@ function WingsTab({ wings, floors, flats, buildingId, reload, editing }) {
             <input placeholder="Total Flats" type="number" value={form.total_flats} onChange={e => setForm({ ...form, total_flats: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
           </div>
           <div className="flex gap-2">
-            <button onClick={handleSave} className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm">{editingId ? 'Update' : 'Save'}</button>
+            <button onClick={handleSave} disabled={saving} className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm disabled:bg-gray-300 disabled:cursor-not-allowed">{saving ? 'Saving...' : (editingId ? 'Update' : 'Save')}</button>
             <button onClick={() => { setShowForm(false); setEditingId(null); }} className="px-3 py-1.5 border rounded-lg text-sm">Cancel</button>
           </div>
         </div>
@@ -557,8 +565,11 @@ function FireSystemsTab({ systems, buildingId, reload, editing }) {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ system_type: '', sub_type: '', quantity: '', capacity: '', brand: '', installation_year: '', last_testing_date: '' });
   const [editingId, setEditingId] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
+    if (saving) return;
+    setSaving(true);
     try {
       const payload = { ...form };
       Object.keys(payload).forEach(k => { if (payload[k] === '') delete payload[k]; });
@@ -570,7 +581,7 @@ function FireSystemsTab({ systems, buildingId, reload, editing }) {
       setShowForm(false); setEditingId(null);
       setForm({ system_type: '', sub_type: '', quantity: '', capacity: '', brand: '', installation_year: '', last_testing_date: '' });
       reload();
-    } catch (err) { console.error(err); }
+    } catch (err) { console.error(err); } finally { setSaving(false); }
   };
 
   return (
@@ -594,7 +605,7 @@ function FireSystemsTab({ systems, buildingId, reload, editing }) {
             <input placeholder="Last Tested" type="date" value={form.last_testing_date} onChange={e => setForm({ ...form, last_testing_date: e.target.value })} className="px-3 py-2 border rounded-lg text-sm" />
           </div>
           <div className="flex gap-2">
-            <button onClick={handleSave} className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm">{editingId ? 'Update' : 'Save'}</button>
+            <button onClick={handleSave} disabled={saving} className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm disabled:bg-gray-300 disabled:cursor-not-allowed">{saving ? 'Saving...' : (editingId ? 'Update' : 'Save')}</button>
             <button onClick={() => { setShowForm(false); setEditingId(null); }} className="px-3 py-1.5 border rounded-lg text-sm">Cancel</button>
           </div>
         </div>
@@ -639,8 +650,11 @@ function ContactsTab({ contacts, buildingId, reload, editing }) {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ full_name: '', role: '', role_category: 'society', mobile_number: '', whatsapp_number: '', email: '', notes: '' });
   const [editingId, setEditingId] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
+    if (saving) return;
+    setSaving(true);
     try {
       if (editingId) {
         await buildingDetailService.updateContact(buildingId, editingId, form);
@@ -650,7 +664,7 @@ function ContactsTab({ contacts, buildingId, reload, editing }) {
       setShowForm(false); setEditingId(null);
       setForm({ full_name: '', role: '', role_category: 'society', mobile_number: '', whatsapp_number: '', email: '', notes: '' });
       reload();
-    } catch (err) { console.error(err); }
+    } catch (err) { console.error(err); } finally { setSaving(false); }
   };
 
   return (
@@ -673,7 +687,7 @@ function ContactsTab({ contacts, buildingId, reload, editing }) {
           </div>
           <textarea placeholder="Notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} className="w-full px-3 py-2 border rounded-lg text-sm" />
           <div className="flex gap-2">
-            <button onClick={handleSave} className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm">{editingId ? 'Update' : 'Save'}</button>
+            <button onClick={handleSave} disabled={saving} className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm disabled:bg-gray-300 disabled:cursor-not-allowed">{saving ? 'Saving...' : (editingId ? 'Update' : 'Save')}</button>
             <button onClick={() => { setShowForm(false); setEditingId(null); }} className="px-3 py-1.5 border rounded-lg text-sm">Cancel</button>
           </div>
         </div>
@@ -709,8 +723,11 @@ function AmcsTab({ amcs, buildingId, reload, editing }) {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ vendor_name: '', contract_number: '', contract_type: '', start_date: '', end_date: '', amount: '', frequency: 'Annual', status: 'Active', scope: '', last_service_date: '', next_service_date: '', notes: '' });
   const [editingId, setEditingId] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
+    if (saving) return;
+    setSaving(true);
     try {
       const payload = { ...form };
       Object.keys(payload).forEach(k => { if (payload[k] === '') delete payload[k]; });
@@ -722,7 +739,7 @@ function AmcsTab({ amcs, buildingId, reload, editing }) {
       setShowForm(false); setEditingId(null);
       setForm({ vendor_name: '', contract_number: '', contract_type: '', start_date: '', end_date: '', amount: '', frequency: 'Annual', status: 'Active', scope: '', last_service_date: '', next_service_date: '', notes: '' });
       reload();
-    } catch (err) { console.error(err); }
+    } catch (err) { console.error(err); } finally { setSaving(false); }
   };
 
   const handleEdit = (amc) => {
@@ -783,7 +800,7 @@ function AmcsTab({ amcs, buildingId, reload, editing }) {
           </div>
           <textarea placeholder="Notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} className="w-full px-3 py-2 border rounded-lg text-sm" />
           <div className="flex gap-2">
-            <button onClick={handleSave} className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm">{editingId ? 'Update' : 'Save'}</button>
+            <button onClick={handleSave} disabled={saving} className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm disabled:bg-gray-300 disabled:cursor-not-allowed">{saving ? 'Saving...' : (editingId ? 'Update' : 'Save')}</button>
             <button onClick={() => { setShowForm(false); setEditingId(null); }} className="px-3 py-1.5 border rounded-lg text-sm">Cancel</button>
           </div>
         </div>

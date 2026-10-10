@@ -23,6 +23,7 @@ export default function PurchaseOrdersPage() {
   const [newOrder, setNewOrder] = useState({ supplier_id: '', site_id: '', gst_type: 'cgst', shipping_cost: 0, other_cost: 0, other_cost_note: '', terms_conditions: '', items: [{ parent_category_id: '', category_id: '', product_id: '', custom_product_name: '', quantity: 1, unit_cost: 0, gst_rate: 18, hsn_code: '' }] });
   const [activeTab, setActiveTab] = useState('All Orders');
   const [currentPage, setCurrentPage] = useState(1);
+  const [saving, setSaving] = useState(false);
   const pageSize = 25;
 
   const parentCategories = useMemo(
@@ -84,6 +85,8 @@ export default function PurchaseOrdersPage() {
       if (item.unit_cost < 0) return alert("Unit cost cannot be negative.");
     }
 
+    if (saving) return;
+    setSaving(true);
     try {
       await api.post('/purchases/orders', { ...newOrder, status });
       setIsModalOpen(false);
@@ -93,39 +96,53 @@ export default function PurchaseOrdersPage() {
       console.error("Error creating PO:", error);
       const msg = error.response?.data?.message || "Failed to create Purchase Order.";
       alert(msg);
+    } finally {
+      setSaving(false);
     }
   };
 
   const approveOrder = async (id) => {
     if (!window.confirm("Are you sure you want to approve this Purchase Order?")) return;
+    if (saving) return;
+    setSaving(true);
     try {
       await api.post(`/purchases/orders/${id}/approve`);
       fetchOrders();
     } catch (error) {
       console.error("Error approving order:", error);
       alert("Failed to approve order.");
+    } finally {
+      setSaving(false);
     }
   };
 
   const rejectOrder = async (id) => {
     if (!window.confirm("Are you sure you want to reject this Purchase Order?")) return;
+    if (saving) return;
+    setSaving(true);
     try {
       await api.post(`/purchases/orders/${id}/reject`);
       fetchOrders();
     } catch (error) {
       console.error("Error rejecting order:", error);
       alert("Failed to reject order.");
+    } finally {
+      setSaving(false);
     }
   };
 
   const deleteOrder = async (id) => {
     if (!window.confirm("Are you sure you want to delete this Purchase Order? This cannot be undone.")) return;
+    if (saving) return;
+    setSaving(true);
     try {
       await api.delete(`/purchases/orders/${id}`);
       fetchOrders();
     } catch (error) {
       console.error("Error deleting order:", error);
       alert("Failed to delete Purchase Order.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -395,13 +412,15 @@ export default function PurchaseOrdersPage() {
                           <>
                             <button
                               onClick={() => approveOrder(order.id)}
-                              className="text-green-600 hover:text-green-800 mr-3 font-semibold"
+                              disabled={saving}
+                              className="text-green-600 hover:text-green-800 mr-3 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               Approve
                             </button>
                             <button
                               onClick={() => rejectOrder(order.id)}
-                              className="text-red-600 hover:text-red-800 mr-3 font-semibold"
+                              disabled={saving}
+                              className="text-red-600 hover:text-red-800 mr-3 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               Reject
                             </button>
@@ -409,7 +428,8 @@ export default function PurchaseOrdersPage() {
                         )}
                         <button
                           onClick={() => deleteOrder(order.id)}
-                          className="text-red-400 hover:text-red-600"
+                          disabled={saving}
+                          className="text-red-400 hover:text-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
                           title="Delete Order"
                         >
                           <Trash2 className="w-5 h-5" />
@@ -478,9 +498,10 @@ export default function PurchaseOrdersPage() {
                 </span>
                 <button
                   onClick={handleCreatePO}
-                  className="inline-flex items-center px-6 py-2 bg-primary hover:bg-primary/90 text-white text-sm font-bold rounded-lg shadow-sm transition-colors"
+                  disabled={saving}
+                  className="inline-flex items-center px-6 py-2 bg-primary hover:bg-primary/90 text-white text-sm font-bold rounded-lg shadow-sm transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
-                  Submit for Approval
+                  {saving ? 'Submitting...' : 'Submit for Approval'}
                 </button>
               </div>
             </div>
@@ -835,9 +856,10 @@ export default function PurchaseOrdersPage() {
                     <button
                       type="button"
                       onClick={(e) => handleCreatePO(e, 'Draft')}
-                      className="w-full px-4 py-3 bg-white border-2 border-gray-200 text-primary font-bold rounded-lg hover:bg-gray-50 transition-colors"
+                      disabled={saving}
+                      className="w-full px-4 py-3 bg-white border-2 border-gray-200 text-primary font-bold rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                      Save as Draft
+                      {saving ? 'Saving...' : 'Save as Draft'}
                     </button>
                   </div>
                 </div>

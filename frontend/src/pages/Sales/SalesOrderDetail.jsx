@@ -26,6 +26,7 @@ export default function SalesOrderDetail() {
   const [payNotes, setPayNotes] = useState('');
   const [payError, setPayError] = useState(null);
   const [savingPayment, setSavingPayment] = useState(false);
+  const [acting, setActing] = useState(false);
 
   useEffect(() => {
     fetchOrder();
@@ -47,21 +48,29 @@ export default function SalesOrderDetail() {
 
   const handleApprove = async () => {
     if (!window.confirm('Approve this sales order?')) return;
+    if (acting) return;
+    setActing(true);
     try {
       const res = await api.post(`/sales/orders/${id}/approve`);
       setOrder(res.data?.data || res.data);
     } catch (error) {
       alert(error.response?.data?.message || 'Failed to approve order.');
+    } finally {
+      setActing(false);
     }
   };
 
   const handleReject = async () => {
     if (!window.confirm('Reject this sales order?')) return;
+    if (acting) return;
+    setActing(true);
     try {
       const res = await api.post(`/sales/orders/${id}/reject`);
       setOrder(res.data?.data || res.data);
     } catch (error) {
       alert(error.response?.data?.message || 'Failed to reject order.');
+    } finally {
+      setActing(false);
     }
   };
 
@@ -200,10 +209,10 @@ export default function SalesOrderDetail() {
         <div className="flex items-center gap-2">
           {(order.status === 'Pending Approval' || order.status === 'Pending') && (
             <>
-              <button onClick={handleApprove} className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700">
-                <CheckCircle className="w-4 h-4 mr-1.5" /> Approve
+              <button onClick={handleApprove} disabled={acting} className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50">
+                <CheckCircle className="w-4 h-4 mr-1.5" /> {acting ? 'Working...' : 'Approve'}
               </button>
-              <button onClick={handleReject} className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700">
+              <button onClick={handleReject} disabled={acting} className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50">
                 <XCircle className="w-4 h-4 mr-1.5" /> Reject
               </button>
             </>

@@ -8,6 +8,7 @@ import { useAttendanceStore } from '../../store/attendanceStore';
 import { useDailyReportsStore } from '../../store/dailyReportStore';
 import DataTable from '../../components/Shared/DataTable';
 import { STORAGE_URL } from '../../services/api';
+import { useSubmitGuard } from '../../hooks/useSubmitGuard';
 import EmployeeDocumentsPage from './documents/EmployeeDocumentsPage';
 import DocumentHistory from './documents/DocumentHistory';
 import { 
@@ -45,6 +46,7 @@ export default function EmployeeDetail() {
   const { items: dailyReports, fetchItems: fetchDailyReports, loading: dailyReportsLoading } = useDailyReportsStore();
 
   const [activeTab, setActiveTab] = useState('profile');
+  const { submitting, guard } = useSubmitGuard();
 
   // Modals for site allocation
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
@@ -139,6 +141,7 @@ export default function EmployeeDetail() {
       return;
     }
 
+    return guard(async () => {
     try {
       await assignEmployee(selected.id, {
         site_id: parseInt(selectedSiteId),
@@ -153,6 +156,7 @@ export default function EmployeeDetail() {
     } catch (err) {
       setErrors({ general: err.message || 'Failed to assign site.' });
     }
+    });
   };
 
   const handleTransfer = async (e) => {
@@ -163,6 +167,7 @@ export default function EmployeeDetail() {
       return;
     }
 
+    return guard(async () => {
     try {
       await transferEmployee(selected.id, {
         current_site_id: parseInt(selectedCurrentSiteId),
@@ -178,11 +183,13 @@ export default function EmployeeDetail() {
     } catch (err) {
       setErrors({ general: err.message || 'Failed to transfer employee.' });
     }
+    });
   };
 
   const handleRemove = async (e) => {
     e.preventDefault();
     setErrors({});
+    return guard(async () => {
     try {
       await removeEmployee(selected.id, parseInt(selectedCurrentSiteId), remarks);
       setIsRemoveModalOpen(false);
@@ -190,6 +197,7 @@ export default function EmployeeDetail() {
     } catch (err) {
       setErrors({ general: err.message || 'Failed to remove assignment.' });
     }
+    });
   };
 
   const openTransferModal = (currentSiteId) => {
@@ -677,9 +685,10 @@ export default function EmployeeDetail() {
                 </button>
                 <button 
                   type="submit" 
-                  className="px-4 py-2 bg-primary text-white rounded-lg text-xs hover:bg-primary/90 font-semibold"
+                  disabled={submitting}
+                  className="px-4 py-2 bg-primary text-white rounded-lg text-xs hover:bg-primary/90 font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
-                  Assign Site
+                  {submitting ? 'Saving...' : 'Assign Site'}
                 </button>
               </div>
             </form>
@@ -755,9 +764,10 @@ export default function EmployeeDetail() {
                 </button>
                 <button 
                   type="submit" 
-                  className="px-4 py-2 bg-primary text-white rounded-lg text-xs hover:bg-primary/90 font-semibold"
+                  disabled={submitting}
+                  className="px-4 py-2 bg-primary text-white rounded-lg text-xs hover:bg-primary/90 font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
-                  Confirm Transfer
+                  {submitting ? 'Saving...' : 'Confirm Transfer'}
                 </button>
               </div>
             </form>
@@ -810,9 +820,10 @@ export default function EmployeeDetail() {
                 </button>
                 <button 
                   type="submit" 
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg text-xs hover:bg-red-700 font-semibold"
+                  disabled={submitting}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg text-xs hover:bg-red-700 font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
-                  Remove Assignment
+                  {submitting ? 'Removing...' : 'Remove Assignment'}
                 </button>
               </div>
             </form>

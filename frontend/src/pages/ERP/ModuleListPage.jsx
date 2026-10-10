@@ -4,6 +4,7 @@ import { Edit2, Plus, Search, Trash2, X } from 'lucide-react';
 import DataTable from '../../components/Shared/DataTable';
 import PermissionGate from '../../components/Guards/PermissionGate';
 import { usePermission } from '../../hooks/usePermission';
+import { useSubmitGuard } from '../../hooks/useSubmitGuard';
 
 const getPathValue = (row, path) => typeof path === 'string' ? path.split('.').reduce((value, key) => value?.[key], row) : undefined;
 
@@ -42,6 +43,7 @@ export default function ModuleListPage({
   module,
 }) {
   const { items, loading, fetchItems, createItem, updateItem, deleteItem } = store();
+  const { submitting, guard } = useSubmitGuard();
   const [search, setSearch] = useState('');
   const [editing, setEditing] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -77,6 +79,7 @@ export default function ModuleListPage({
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    return guard(async () => {
     let payload = coercePayload(fields, formData);
     if (transformPayload) payload = transformPayload(payload);
     
@@ -115,6 +118,7 @@ export default function ModuleListPage({
         alert(error.response?.data?.message || error.message || 'An error occurred while saving.');
       }
     }
+    });
   };
 
   const tableColumns = useMemo(() => {
@@ -283,8 +287,11 @@ export default function ModuleListPage({
                 </div>
               </div>
               <div className="flex shrink-0 justify-end gap-3 border-t border-gray-100 bg-gray-50 p-4 rounded-b-lg">
-                <button type="button" onClick={closeModal} className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
-                <button type="submit" className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90">Save</button>
+                <button type="button" onClick={closeModal} disabled={submitting} className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60">Cancel</button>
+                <button type="submit" disabled={submitting} className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:hover:bg-gray-300">
+                  {submitting && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
+                  {submitting ? 'Saving...' : 'Save'}
+                </button>
               </div>
             </form>
           </div>

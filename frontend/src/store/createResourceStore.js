@@ -4,6 +4,7 @@ export const createResourceStore = (service) => create((set, get) => ({
   items: [],
   selected: null,
   loading: false,
+  saving: false,
   error: null,
 
   fetchItems: async (params) => {
@@ -31,21 +32,39 @@ export const createResourceStore = (service) => create((set, get) => ({
   },
 
   createItem: async (payload) => {
-    const result = await service.create(payload);
-    const item = result?.employee ?? result;
-    set({ items: [item, ...get().items] });
-    return result;
+    set({ saving: true, error: null });
+    try {
+      const result = await service.create(payload);
+      const item = result?.employee ?? result;
+      set({ items: [item, ...get().items], saving: false });
+      return result;
+    } catch (error) {
+      set({ error, saving: false });
+      throw error;
+    }
   },
 
   updateItem: async (id, payload) => {
-    const item = await service.update(id, payload);
-    set({ items: get().items.map((current) => current.id === id ? item : current) });
-    return item;
+    set({ saving: true, error: null });
+    try {
+      const item = await service.update(id, payload);
+      set({ items: get().items.map((current) => current.id === id ? item : current), saving: false });
+      return item;
+    } catch (error) {
+      set({ error, saving: false });
+      throw error;
+    }
   },
 
   deleteItem: async (id) => {
-    await service.remove(id);
-    set({ items: get().items.filter((item) => item.id !== id) });
+    set({ saving: true, error: null });
+    try {
+      await service.remove(id);
+      set({ items: get().items.filter((item) => item.id !== id), saving: false });
+    } catch (error) {
+      set({ error, saving: false });
+      throw error;
+    }
   },
 
   clearSelected: () => set({ selected: null }),

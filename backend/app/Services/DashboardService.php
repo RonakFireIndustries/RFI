@@ -504,15 +504,25 @@ private const DESIGNATION_MAP = [
     /**
      * Whether the user may view the given role dashboard.
      *
-     * Super admins bypass the check. The personal `employee` dashboard is
-     * always visible (it is self-scoped and part of the baseline). Every other
-     * type requires the matching `dashboard.<type>` permission.
+     * The personal `employee` dashboard is always visible (it is self-scoped
+     * and part of the baseline). Additionally, every user can always view the
+     * dashboard their own role / designation / department (or an admin-assigned
+     * override) resolves to, so role dashboards unlock automatically without a
+     * separate `dashboard.<type>` grant. Super admins bypass the check, and any
+     * explicitly requested dashboard other than the resolved one still requires
+     * the matching `dashboard.<type>` permission.
      */
     public function canViewDashboard(?string $type = null): bool
     {
-        $type = $type ?: $this->getDashboardType();
+        $resolved = $this->getDashboardType();
+        $type = $type ?: $resolved;
 
         if ($type === 'employee') {
+            return true;
+        }
+
+        // Auto-unlock: the dashboard the user's own identity resolves to.
+        if ($type === $resolved) {
             return true;
         }
 

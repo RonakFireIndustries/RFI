@@ -19,6 +19,7 @@ export default function SiteVisitDetail() {
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [saving, setSaving] = useState(false);
   const timerRef = useRef(null);
 
   useEffect(() => {
@@ -46,12 +47,16 @@ export default function SiteVisitDetail() {
   };
 
   const handleSave = async () => {
+    if (saving) return;
+    setSaving(true);
     try {
       const updated = await siteVisitService.update(id, form);
       setVisit(updated);
       setEditing(false);
     } catch (err) {
       console.error(err);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -156,8 +161,8 @@ export default function SiteVisitDetail() {
         <div className="flex gap-2">
           {editing ? (
             <>
-              <button onClick={handleSave} className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg text-sm"><Save className="w-4 h-4" /> Save</button>
-              <button onClick={() => setEditing(false)} className="flex items-center gap-2 px-4 py-2 border rounded-lg text-sm"><X className="w-4 h-4" /> Cancel</button>
+              <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg text-sm disabled:bg-gray-300 disabled:cursor-not-allowed"><Save className="w-4 h-4" /> {saving ? 'Saving...' : 'Save'}</button>
+              <button onClick={() => setEditing(false)} disabled={saving} className="flex items-center gap-2 px-4 py-2 border rounded-lg text-sm disabled:opacity-60 disabled:cursor-not-allowed"><X className="w-4 h-4" /> Cancel</button>
             </>
           ) : (
             <button onClick={() => setEditing(true)} className="flex items-center gap-2 px-4 py-2 border rounded-lg text-sm"><Edit2 className="w-4 h-4" /> Edit</button>

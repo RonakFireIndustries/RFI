@@ -21,7 +21,7 @@ const statusColors = {
 };
 
 export default function StockRequestsPage() {
-  const { items, loading, fetchItems, approve, issue, receive, createItem } = useStockRequestStore();
+  const { items, loading, saving, fetchItems, approve, issue, receive, createItem } = useStockRequestStore();
   const { items: products, fetchItems: fetchProducts } = useProductsStore();
   const { items: locations, fetchItems: fetchLocations } = useInventoryLocationStore();
   const { items: employees, fetchItems: fetchEmployees } = useEmployeesStore();
@@ -42,6 +42,7 @@ export default function StockRequestsPage() {
 
   const handleCreate = async (e) => {
     e.preventDefault();
+    if (saving) return;
     try {
       await createItem(form);
       setIsModalOpen(false);
@@ -77,17 +78,17 @@ export default function StockRequestsPage() {
             View
           </Link>
           {row.original.status === 'requested' && (
-            <button onClick={() => approve(row.original.id)} className="rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100">
+            <button onClick={() => approve(row.original.id)} disabled={saving} className="rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed">
               Approve
             </button>
           )}
           {row.original.status === 'approved' && (
-            <button onClick={() => issue(row.original.id)} className="rounded-md bg-purple-50 px-2 py-1 text-xs font-medium text-purple-700 hover:bg-purple-100">
+            <button onClick={() => issue(row.original.id)} disabled={saving} className="rounded-md bg-purple-50 px-2 py-1 text-xs font-medium text-purple-700 hover:bg-purple-100 disabled:opacity-50 disabled:cursor-not-allowed">
               Issue
             </button>
           )}
           {row.original.status === 'issued' && (
-            <button onClick={() => receive(row.original.id)} className="rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 hover:bg-green-100">
+            <button onClick={() => receive(row.original.id)} disabled={saving} className="rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed">
               Receive
             </button>
           )}
@@ -175,8 +176,8 @@ export default function StockRequestsPage() {
                 <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" rows={2} />
               </div>
               <div className="flex justify-end gap-3">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Cancel</button>
-                <button type="submit" className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90">Submit Request</button>
+                <button type="button" onClick={() => setIsModalOpen(false)} disabled={saving} className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed">Cancel</button>
+                <button type="submit" disabled={saving} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:bg-gray-300 disabled:cursor-not-allowed">{saving ? 'Submitting...' : 'Submit Request'}</button>
               </div>
             </form>
           </div>

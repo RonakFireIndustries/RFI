@@ -6,6 +6,7 @@ import { buildingService } from '../../services/buildingService';
 import { salesDocumentService } from '../../services/salesDocumentService';
 import MapPicker from '../../components/MapPicker';
 import PermissionGate from '../../components/Guards/PermissionGate';
+import { useSubmitGuard } from '../../hooks/useSubmitGuard';
 import {
   Plus, Edit, Trash2, Search, MapPin, Building2, Info, X, Compass, Copy,
   Shield, Flame, Hammer, User, Phone, FileText, ChevronDown, ChevronUp, Eye,
@@ -93,6 +94,7 @@ export default function Buildings() {
   const [convertingId, setConvertingId] = useState(null);
   const [pmcDocs, setPmcDocs] = useState([]);
   const [newPmcFiles, setNewPmcFiles] = useState([]);
+  const { submitting, guard } = useSubmitGuard();
 
   useEffect(() => {
     fetchBuildings({ search, status: statusFilter, page: currentPage, per_page: 1000 });
@@ -401,6 +403,7 @@ export default function Buildings() {
     e.preventDefault();
     setFormErrors({});
     if (!formData.name) { setFormErrors({ name: 'Building name is required' }); return; }
+    return guard(async () => {
     try {
       const payload = {
         ...formData,
@@ -461,6 +464,7 @@ export default function Buildings() {
       if (err.response?.data?.errors) setFormErrors(err.response.data.errors);
       else setFormErrors({ general: serverMessage || err.message || 'An error occurred.' });
     }
+    });
   };
 
   const handleDelete = async (id) => {
@@ -1207,9 +1211,9 @@ export default function Buildings() {
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-gray-150">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-50 transition-colors">Cancel</button>
-                <button type="submit" className="px-5 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary/90 transition-colors font-semibold">
-                  {editingBuilding ? 'Save Changes' : 'Create Building'}
+                <button type="button" onClick={() => setIsModalOpen(false)} disabled={submitting} className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">Cancel</button>
+                <button type="submit" disabled={submitting} className="px-5 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary/90 transition-colors font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed">
+                  {submitting ? 'Saving...' : (editingBuilding ? 'Save Changes' : 'Create Building')}
                 </button>
               </div>
             </form>

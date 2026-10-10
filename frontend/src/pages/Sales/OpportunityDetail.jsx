@@ -21,6 +21,7 @@ export default function OpportunityDetail() {
   const [form, setForm] = useState({});
   const [workTypes, setWorkTypes] = useState([]);
   const [newWorkType, setNewWorkType] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     loadOpportunity();
@@ -52,6 +53,8 @@ export default function OpportunityDetail() {
   };
 
   const handleSave = async () => {
+    if (saving) return;
+    setSaving(true);
     try {
       const payload = { ...form, work_types: workTypes };
       const updated = await opportunityService.update(id, payload);
@@ -59,6 +62,8 @@ export default function OpportunityDetail() {
       setEditing(false);
     } catch (err) {
       console.error(err);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -100,8 +105,8 @@ export default function OpportunityDetail() {
         <div className="flex gap-2">
           {editing ? (
             <>
-              <button onClick={handleSave} className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"><Save className="w-4 h-4" /> Save</button>
-              <button onClick={() => setEditing(false)} className="flex items-center gap-2 px-4 py-2 border rounded-lg text-sm hover:bg-gray-50"><X className="w-4 h-4" /> Cancel</button>
+              <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm disabled:bg-gray-300 disabled:cursor-not-allowed"><Save className="w-4 h-4" /> {saving ? 'Saving...' : 'Save'}</button>
+              <button onClick={() => setEditing(false)} disabled={saving} className="flex items-center gap-2 px-4 py-2 border rounded-lg text-sm hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed"><X className="w-4 h-4" /> Cancel</button>
             </>
           ) : (
             <button onClick={() => setEditing(true)} className="flex items-center gap-2 px-4 py-2 border rounded-lg text-sm hover:bg-gray-50"><Edit2 className="w-4 h-4" /> Edit</button>

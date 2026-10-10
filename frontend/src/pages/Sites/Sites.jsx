@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import LocationPicker from '../../components/Map/LocationPicker';
 import api from '../../services/api';
+import { useSubmitGuard } from '../../hooks/useSubmitGuard';
 
 export default function Sites() {
   const { 
@@ -26,6 +27,7 @@ export default function Sites() {
   } = useEmployeeStore();
 
   const navigate = useNavigate();
+  const { submitting, guard } = useSubmitGuard();
 
   // Search & Filter
   const [search, setSearch] = useState('');
@@ -258,6 +260,7 @@ export default function Sites() {
       return;
     }
 
+    return guard(async () => {
     try {
       const payload = {
         ...formData,
@@ -282,6 +285,7 @@ export default function Sites() {
         setFormErrors({ general: err.message || 'An error occurred.' });
       }
     }
+    });
   };
 
   const handleDelete = async (id) => {
@@ -832,15 +836,17 @@ export default function Sites() {
                 <button 
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-50 transition-colors"
+                  disabled={submitting}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit"
-                  className="px-5 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary/90 transition-colors font-semibold"
+                  disabled={submitting}
+                  className="px-5 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary/90 transition-colors font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
-                  {editingSite ? 'Save Changes' : 'Create Site'}
+                  {submitting ? 'Saving...' : (editingSite ? 'Save Changes' : 'Create Site')}
                 </button>
               </div>
             </form>

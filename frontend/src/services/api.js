@@ -71,6 +71,40 @@ const buildQueryString = (params) => {
   return '?' + new URLSearchParams(entries).toString();
 };
 
+/*
+ * In-flight mutation dedupe.
+ *
+ * Double-clicking a submit button (or a slow network) could otherwise fire the
+ * same POST/PUT/DELETE twice and create duplicate records. While an identical
+ * mutation is pending we return its existing promise instead of starting a new
+ * request, so the same form can never submit the same data twice concurrently.
+ */
+const inFlightMutations = new Map();
+
+const buildMutationKey = (method, endpoint, body) => {
+  if (body instanceof FormData) {
+    return `${method} ${endpoint} [formdata]`;
+  }
+  try {
+    return `${method} ${endpoint} ${JSON.stringify(body ?? null)}`;
+  } catch {
+    return `${method} ${endpoint}`;
+  }
+};
+
+const dedupeMutation = (key, factory) => {
+  if (inFlightMutations.has(key)) {
+    return inFlightMutations.get(key);
+  }
+  const promise = Promise.resolve()
+    .then(factory)
+    .finally(() => {
+      inFlightMutations.delete(key);
+    });
+  inFlightMutations.set(key, promise);
+  return promise;
+};
+
 const api = {
   get: async (endpoint, config) => {
     const query = buildQueryString(config?.params);
@@ -83,6 +117,7 @@ const api = {
   },
 
   post: async (endpoint, body) => {
+    return dedupeMutation(buildMutationKey('POST', endpoint, body), async () => {
     const isFormData = body instanceof FormData;
     const headers = buildHeaders();
     if (isFormData) {
@@ -108,9 +143,11 @@ const api = {
       }
       throw error;
     }
+    });
   },
 
   put: async (endpoint, body) => {
+    return dedupeMutation(buildMutationKey('PUT', endpoint, body), async () => {
     const isFormData = body instanceof FormData;
     const headers = buildHeaders();
 
@@ -144,6 +181,7 @@ const api = {
       }
       throw error;
     }
+    });
   },
 
   getBlob: async (endpoint) => {
@@ -161,12 +199,14 @@ const api = {
   },
 
   delete: async (endpoint) => {
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
-      method: 'DELETE',
-      headers: buildHeaders(),
-      credentials: 'include',
+    return dedupeMutation(buildMutationKey('DELETE', endpoint), async () => {
+      const response = await fetch(`${BASE_URL}${endpoint}`, {
+        method: 'DELETE',
+        headers: buildHeaders(),
+        credentials: 'include',
+      });
+      return handleResponse(response);
     });
-    return handleResponse(response);
   },
 
   setAuthHeader: (token) => {

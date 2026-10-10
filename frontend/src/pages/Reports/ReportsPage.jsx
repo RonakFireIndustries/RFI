@@ -119,6 +119,8 @@ export default function ReportsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [newReportForm, setNewReportForm] = useState({ name: '', description: '', category_id: '', status: 'active' });
   const [scheduleForm, setScheduleForm] = useState({ report_id: '', name: '', frequency: 'daily', format: 'pdf', recipients: '' });
+  const [creating, setCreating] = useState(false);
+  const [scheduling, setScheduling] = useState(false);
 
   const canCreate = permissions?.includes('create_reports') || roles?.includes('Admin');
   const canExport = permissions?.includes('export_reports') || roles?.includes('Admin');
@@ -178,6 +180,8 @@ export default function ReportsPage() {
 
   const handleCreateReport = async (e) => {
     e.preventDefault();
+    if (creating) return;
+    setCreating(true);
     try {
       const payload = {
         ...newReportForm,
@@ -189,11 +193,15 @@ export default function ReportsPage() {
       fetchAll({ per_page: 50 });
     } catch (err) {
       alert(err?.response?.data?.message || err.message);
+    } finally {
+      setCreating(false);
     }
   };
 
   const handleCreateSchedule = async (e) => {
     e.preventDefault();
+    if (scheduling) return;
+    setScheduling(true);
     try {
       await useReportsStore.getState().createSchedule(scheduleForm);
       setShowScheduleModal(false);
@@ -201,6 +209,8 @@ export default function ReportsPage() {
       fetchSchedules();
     } catch (err) {
       alert(err?.response?.data?.message || err.message);
+    } finally {
+      setScheduling(false);
     }
   };
 
@@ -712,8 +722,8 @@ export default function ReportsPage() {
                 </select>
               </div>
               <div className="flex justify-end gap-3 pt-2">
-                <button type="button" onClick={() => setShowNewReportModal(false)} className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50">Cancel</button>
-                <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90">Create Report</button>
+                <button type="button" onClick={() => setShowNewReportModal(false)} disabled={creating} className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed">Cancel</button>
+                <button type="submit" disabled={creating} className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90 disabled:bg-gray-300 disabled:cursor-not-allowed">{creating ? 'Creating...' : 'Create Report'}</button>
               </div>
             </form>
           </div>
@@ -765,8 +775,8 @@ export default function ReportsPage() {
                 <input type="text" value={scheduleForm.recipients} onChange={e => setScheduleForm({...scheduleForm, recipients: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-ring focus:border-ring" placeholder="Comma-separated email addresses" />
               </div>
               <div className="flex justify-end gap-3 pt-2">
-                <button type="button" onClick={() => setShowScheduleModal(false)} className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50">Cancel</button>
-                <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90">Create Schedule</button>
+                <button type="button" onClick={() => setShowScheduleModal(false)} disabled={scheduling} className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed">Cancel</button>
+                <button type="submit" disabled={scheduling} className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90 disabled:bg-gray-300 disabled:cursor-not-allowed">{scheduling ? 'Creating...' : 'Create Schedule'}</button>
               </div>
             </form>
           </div>

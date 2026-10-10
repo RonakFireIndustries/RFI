@@ -7,7 +7,7 @@ const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-GB') : '--';
 const toDateInput = (d) => d ? new Date(d).toISOString().split('T')[0] : '';
 
 const SalaryStructuresPage = () => {
-  const { items: structures, loading, error, fetchItems, createItem, updateItem, deleteItem } = useSalaryStructureStore();
+  const { items: structures, loading, saving, error, fetchItems, createItem, updateItem, deleteItem } = useSalaryStructureStore();
   const { items: employees, fetchItems: fetchEmployees } = useEmployeesStore();
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -66,6 +66,7 @@ const SalaryStructuresPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (saving) return;
     
     // Map empty strings to 0 and rename other_allowance to other_earnings
     const payload = {
@@ -220,9 +221,9 @@ const SalaryStructuresPage = () => {
               </div>
 
               <div className="mt-8 flex justify-end gap-3 pt-6 border-t">
-                <button type="button" onClick={handleCloseModal} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancel</button>
-                <button type="submit" className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600">
-                  {editingId ? 'Update Structure' : 'Save Structure'}
+                <button type="button" onClick={handleCloseModal} disabled={saving} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed">Cancel</button>
+                <button type="submit" disabled={saving} className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed">
+                  {saving ? 'Saving...' : (editingId ? 'Update Structure' : 'Save Structure')}
                 </button>
               </div>
             </form>

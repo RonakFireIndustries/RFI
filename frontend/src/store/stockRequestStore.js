@@ -5,6 +5,7 @@ export const useStockRequestStore = create((set, get) => ({
   items: [],
   selected: null,
   loading: false,
+  saving: false,
   error: null,
 
   fetchItems: async (params) => {
@@ -32,27 +33,51 @@ export const useStockRequestStore = create((set, get) => ({
   },
 
   createItem: async (payload) => {
-    const item = await stockRequestService.create(payload);
-    set({ items: [item, ...get().items] });
-    return item;
+    set({ saving: true, error: null });
+    try {
+      const item = await stockRequestService.create(payload);
+      set({ items: [item, ...get().items], saving: false });
+      return item;
+    } catch (error) {
+      set({ error, saving: false });
+      throw error;
+    }
   },
 
   approve: async (id) => {
-    const item = await stockRequestService.approve(id);
-    set({ items: get().items.map((i) => i.id === id ? { ...i, ...item } : i), selected: item });
-    return item;
+    set({ saving: true, error: null });
+    try {
+      const item = await stockRequestService.approve(id);
+      set({ items: get().items.map((i) => i.id === id ? { ...i, ...item } : i), selected: item, saving: false });
+      return item;
+    } catch (error) {
+      set({ error, saving: false });
+      throw error;
+    }
   },
 
   issue: async (id) => {
-    const item = await stockRequestService.issue(id);
-    set({ items: get().items.map((i) => i.id === id ? { ...i, ...item } : i), selected: item });
-    return item;
+    set({ saving: true, error: null });
+    try {
+      const item = await stockRequestService.issue(id);
+      set({ items: get().items.map((i) => i.id === id ? { ...i, ...item } : i), selected: item, saving: false });
+      return item;
+    } catch (error) {
+      set({ error, saving: false });
+      throw error;
+    }
   },
 
   receive: async (id) => {
-    const item = await stockRequestService.receive(id);
-    set({ items: get().items.map((i) => i.id === id ? { ...i, ...item } : i), selected: item });
-    return item;
+    set({ saving: true, error: null });
+    try {
+      const item = await stockRequestService.receive(id);
+      set({ items: get().items.map((i) => i.id === id ? { ...i, ...item } : i), selected: item, saving: false });
+      return item;
+    } catch (error) {
+      set({ error, saving: false });
+      throw error;
+    }
   },
 
   clearSelected: () => set({ selected: null }),
