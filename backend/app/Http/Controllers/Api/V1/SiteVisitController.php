@@ -11,6 +11,7 @@ use App\Services\NotificationService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class SiteVisitController extends Controller
@@ -55,16 +56,32 @@ class SiteVisitController extends Controller
         $this->authorize('buildings.update');
 
         $validated = $request->validate([
-            'building_id' => ['required', 'exists:buildings,id'],
+            'building_id' => ['nullable', 'exists:buildings,id', 'required_without:building_name'],
+            'building_name' => ['nullable', 'string', 'max:255', 'required_without:building_id'],
             'visit_date' => ['required', 'date'],
             'purpose' => ['nullable', 'string', 'max:255'],
             'discussion_notes' => ['nullable', 'string'],
             'next_followup_date' => ['nullable', 'date', 'after_or_equal:today'],
         ]);
 
-        $validated['user_id'] = $request->user()->id;
+        $visit = DB::transaction(function () use ($validated, $request) {
+            $buildingName = $validated['building_name'] ?? null;
 
-        $visit = SiteVisit::create($validated);
+            if (! empty($validated['building_id'])) {
+                $building = Building::findOrFail($validated['building_id']);
+            } else {
+                $building = Building::create([
+                    'name' => $buildingName,
+                    'status' => 'Active',
+                ]);
+            }
+
+            $validated['building_id'] = $building->id;
+            unset($validated['building_name']);
+            $validated['user_id'] = $request->user()->id;
+
+            return SiteVisit::create($validated);
+        });
 
         $this->logActivity($visit, 'created', 'Site visit created');
 

@@ -40,6 +40,16 @@ class DashboardService
     protected $user;
     protected $employee;
 
+    /**
+     * Every dashboard type. Each maps to a `dashboard.<type>` permission used
+     * to gate access to that role dashboard, except `employee` (the personal
+     * "My Dashboard"), which is always available to the signed-in user.
+     */
+    public const TYPES = [
+        'admin', 'executive', 'hr', 'finance', 'inventory',
+        'production', 'sales', 'it', 'employee',
+    ];
+
     private const ROLE_MAP = [
         'Admin'                => 'admin',
         'System Admin'         => 'admin',
@@ -324,6 +334,17 @@ private const DESIGNATION_MAP = [
 
     public function getDashboardType(): string
     {
+        // An admin-assigned override (Access Control panel) wins over the
+        // automatic role/designation/department resolution.
+        try {
+            $assigned = $this->user->dashboard_type ?? null;
+            if ($assigned && isset(self::DASHBOARD_WIDGETS[$assigned])) {
+                return $assigned;
+            }
+        } catch (\Throwable $e) {
+            // Fall through to automatic resolution.
+        }
+
         // Resolution order: Spatie role, then designation, then department.
         // Access is driven by the Access Control panel rather than by role
         // assignment, so most employees are identified by their HR record.
@@ -478,6 +499,58 @@ private const DESIGNATION_MAP = [
         }
 
         return $permitted;
+    }
+
+    /**
+     * Whether the user may view the given role dashboard.
+     *
+     * Super admins bypass the check. The personal `employee` dashboard is
+     * always visible (it is self-scoped and part of the baseline). Every other
+     * type requires the matching `dashboard.<type>` permission.
+     */
+    public function canViewDashboard(?string $type = null): bool
+    {
+        $type = $type ?: $this->getDashboardType();
+
+        if ($type === 'employee') {
+            return true;
+        }
+
+        try {
+            if (Access::isSuperAdmin($this->user)) {
+                return true;
+            }
+
+            return Access::can($this->user, "dashboard.{$type}");
+        } catch (\Throwable $e) {
+            // Permission store unavailable / permission row missing.
+            return false;
+        }
+    }
+
+    /**
+     * The personal, self-scoped "My Dashboard". Always available to the
+     * signed-in user regardless of their role dashboard permission.
+     */
+    public function getMyDashboard(): array
+    {
+        $config = self::DASHBOARD_WIDGETS['employee'];
+        $keys = array_merge(
+            $config['cards'] ?? [],
+            $config['quick_actions'] ?? [],
+            $config['alerts'] ?? [],
+            $config['widgets'] ?? [],
+        );
+
+        $payload = $this->buildPayload(
+            'employee',
+            $config,
+            $this->loadWidgets($keys, $config, true)
+        );
+
+        $payload['quick_actions'] = $this->withUniversalActions($payload['quick_actions']);
+
+        return $payload;
     }
 
     public function getDashboard(): array

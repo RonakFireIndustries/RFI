@@ -25,6 +25,19 @@ const getErrorMessage = (error, fallback) =>
 const stringPerms = (array) =>
   (array || []).map((p) => (typeof p === 'string' ? p : p?.name || p?.permission));
 
+const DASHBOARD_TYPES = [
+  { value: '', label: 'Auto — from role / designation' },
+  { value: 'admin', label: 'Admin' },
+  { value: 'executive', label: 'Executive' },
+  { value: 'hr', label: 'HR' },
+  { value: 'finance', label: 'Finance' },
+  { value: 'inventory', label: 'Inventory' },
+  { value: 'production', label: 'Production' },
+  { value: 'sales', label: 'Sales' },
+  { value: 'it', label: 'IT' },
+  { value: 'employee', label: 'Employee — My Dashboard' },
+];
+
 function GrantModal({ module, employeeName, options, initialChecked, onSave, onCancel }) {
   const [checked, setChecked] = useState(initialChecked);
 
@@ -219,6 +232,22 @@ export default function AccessControl() {
     }
   };
 
+  /** Assign (or clear) the dashboard this user lands on. */
+  const updateDashboardType = async (userId, dashboardType) => {
+    setBusy(true);
+    try {
+      await accessControlService.updateDashboard(userId, dashboardType || null);
+      setUsers((prev) =>
+        prev.map((u) => (u.id === userId ? { ...u, dashboard_type: dashboardType || null } : u)),
+      );
+      setNotice({ type: 'success', text: 'Dashboard updated.' });
+    } catch (err) {
+      setNotice({ type: 'error', text: getErrorMessage(err, 'Could not update the dashboard.') });
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const handleDragStart = (e, moduleKey) => {
     e.dataTransfer.setData('text/plain', moduleKey);
     e.dataTransfer.effectAllowed = 'copy';
@@ -383,6 +412,29 @@ export default function AccessControl() {
                         </p>
                       )}
                     </div>
+                  </div>
+
+                  <div className="mt-5 pt-5 border-t border-gray-100 flex items-center justify-between gap-4">
+                    <div>
+                      <label htmlFor="dashboard-type" className="text-sm font-semibold text-gray-900">
+                        Dashboard
+                      </label>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        Which dashboard {selectedUser.name.split(' ')[0]} lands on. The matching
+                        dashboard permission must also be granted below.
+                      </p>
+                    </div>
+                    <select
+                      id="dashboard-type"
+                      value={selectedUser.dashboard_type || ''}
+                      disabled={busy}
+                      onChange={(e) => updateDashboardType(selectedUser.id, e.target.value)}
+                      className="min-w-[220px] px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none disabled:opacity-50"
+                    >
+                      {DASHBOARD_TYPES.map((opt) => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 

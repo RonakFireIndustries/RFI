@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { dashboardService } from '../../services/dashboardService';
 import DashboardCard from './DashboardCard';
 import DashboardChart from './DashboardChart';
@@ -20,19 +21,29 @@ const DASHBOARD_TITLES = {
   employee: { title: 'My Dashboard', subtitle: 'Your personal attendance, leave, and payslips.' },
 };
 
-export default function DashboardRenderer() {
+export default function DashboardRenderer({ scope = 'role' }) {
+  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const isPersonal = scope === 'my';
 
   useEffect(() => {
     const fetch = async () => {
       setLoading(true);
       setError(null);
       try {
-        const res = await dashboardService.getDashboard();
+        const res = isPersonal
+          ? await dashboardService.getMyDashboard()
+          : await dashboardService.getDashboard();
         setData(res?.data || res);
       } catch (err) {
+        // No permission for the assigned role dashboard: send the user to
+        // the personal dashboard they always have access to.
+        if (!isPersonal && err?.response?.status === 403) {
+          navigate('/dashboard/my-dashboard', { replace: true });
+          return;
+        }
         console.error('Failed to fetch dashboard data', err);
         setError(err?.response?.data?.message || err?.message || 'Could not load your dashboard.');
       } finally {
@@ -40,7 +51,7 @@ export default function DashboardRenderer() {
       }
     };
     fetch();
-  }, []);
+  }, [isPersonal, navigate]);
 
   if (loading) return <DashboardSkeleton />;
 

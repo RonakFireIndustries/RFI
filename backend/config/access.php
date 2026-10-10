@@ -42,6 +42,17 @@ return [
         'download' => 'Download',
         'checkin' => 'Check-in',
         'checkout' => 'Check-out',
+        // Dashboard-type actions. Combined with the 'dashboard' module these
+        // yield dashboard.<type> permissions used to gate each role dashboard.
+        'admin'      => 'Admin Dashboard',
+        'executive'  => 'Executive Dashboard',
+        'hr'         => 'HR Dashboard',
+        'finance'    => 'Finance Dashboard',
+        'inventory'  => 'Inventory Dashboard',
+        'production' => 'Production Dashboard',
+        'sales'      => 'Sales Dashboard',
+        'it'         => 'IT Dashboard',
+        'employee'   => 'My Dashboard',
     ],
 
     // Category-driven grouping mirrors the sidebar so the admin can navigate
@@ -50,7 +61,7 @@ return [
         'Overview' => [
             'dashboard' => [
                 'label' => 'Dashboard',
-                'actions' => ['view'],
+                'actions' => ['view', 'admin', 'executive', 'hr', 'finance', 'inventory', 'production', 'sales', 'it', 'employee'],
             ],
         ],
 
@@ -244,6 +255,13 @@ return [
             ],
         ],
 
+        'Support' => [
+            'issue-reports' => [
+                'label' => 'Issue Reports',
+                'actions' => ['view', 'create', 'update', 'delete'],
+            ],
+        ],
+
         'System' => [
             'reports' => [
                 'label' => 'Reports',
@@ -425,6 +443,7 @@ return [
     */
     'baseline' => [
         'dashboard.view',
+        'dashboard.employee',
         'attendance.checkin',
         'attendance.checkout',
         'daily-reports.view',
@@ -434,6 +453,8 @@ return [
         'leaves.create',
         'leaves.update',
         'payroll.view',
+        'issue-reports.view',
+        'issue-reports.create',
     ],
 
     /*

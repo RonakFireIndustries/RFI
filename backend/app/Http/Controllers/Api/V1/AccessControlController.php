@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Permission;
+use App\Services\DashboardService;
 use App\Support\Access;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -70,6 +71,7 @@ class AccessControlController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'is_super_admin' => Access::isSuperAdmin($user),
+                'dashboard_type' => $user->dashboard_type,
                 // Direct grants only. The Access page edits direct permissions, so
                 // showing role-derived (effective) grants here made removed ones
                 // reappear in the list after a refresh (a role would re-supply them).
@@ -186,6 +188,31 @@ class AccessControlController extends Controller
             'message' => 'Permission revoked.',
             'data' => [
                 'direct' => $user->getDirectPermissions()->pluck('name')->values(),
+            ],
+        ]);
+    }
+
+    /**
+     * Assign (or clear) the dashboard a user lands on. Expects
+     * { dashboard_type: 'hr' | null }.
+     */
+    public function updateDashboard(Request $request, User $user): JsonResponse
+    {
+        $this->authorizeAnAccessControl();
+
+        $request->validate([
+            'dashboard_type' => ['nullable', 'string', 'in:' . implode(',', DashboardService::TYPES)],
+        ]);
+
+        $type = $request->input('dashboard_type');
+        $user->dashboard_type = $type ?: null;
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Dashboard updated successfully.',
+            'data' => [
+                'dashboard_type' => $user->dashboard_type,
             ],
         ]);
     }

@@ -57,11 +57,14 @@ import PayrollDashboardPage from '../../pages/Payroll/PayrollDashboardPage';
 import EmployeePayrollPage from '../../pages/Payroll/EmployeePayrollPage';
 import PayslipPage from '../../pages/Payroll/PayslipPage';
 import Sites from '@/pages/Sites/Sites';
+import SiteDetail from '@/pages/Sites/SiteDetail';
 import Buildings from '@/pages/Buildings/Buildings';
 import FireExtinguishers from '@/pages/FireExtinguishers/FireExtinguishers';
 import QuotationsPage from '@/pages/Quotations/QuotationsPage';
 import ChatPage from '@/pages/Chat/ChatPage';
 import NotificationBell from '../Notifications/NotificationBell';
+import IssueReportButton from '../IssueReports/IssueReportButton';
+import IssueReportsPage from '../../pages/Support/IssueReportsPage';
 import NotificationsPage from '../../pages/Notifications/NotificationsPage';
 import ShiftListPage from '../../pages/Attendance/ShiftListPage';
 import DailyReportsPage from '../../pages/DailyReports/DailyReportsPage';
@@ -395,6 +398,7 @@ export default function DashboardLayout() {
           <div className="ml-2 md:ml-4 flex items-center space-x-2 md:space-x-4">
 
             <NotificationBell />
+            {canAccess('issue-reports.create') && <IssueReportButton />}
             <button className="text-muted-foreground hover:text-foreground">
               <span className="sr-only">Help</span>
               <HelpCircle className="h-5 w-5" />
@@ -420,6 +424,7 @@ export default function DashboardLayout() {
           <div className="max-w-7xl mx-auto">
             <Routes>
               <Route index element={<DashboardRenderer />} />
+              <Route path="my-dashboard" element={<DashboardRenderer scope="my" />} />
               <Route path="inventory" element={<InventoryDashboard />} />
               <Route path="inventory/:id" element={<InventoryDetail />} />
               <Route path="inventory/dashboard" element={<InventoryDashboard />} />
@@ -488,6 +493,7 @@ export default function DashboardLayout() {
               <Route path="permissions-list/create" element={<PermissionForm />} />
               <Route path="permissions-list/:id/edit" element={<PermissionForm />} />
               <Route path="sites" element={<Sites />} />
+              <Route path="sites/:id" element={<SiteDetail />} />
               <Route path="buildings" element={<Buildings />} />
               <Route path="extinguishers" element={<FireExtinguishers />} />
               <Route path="quotations" element={<QuotationsPage />} />
@@ -505,6 +511,7 @@ export default function DashboardLayout() {
               <Route path="follow-ups/new" element={<NewFollowUp />} />
               <Route path="chat" element={<ChatPage />} />
               <Route path="notifications" element={<NotificationsPage />} />
+              <Route path="issue-reports" element={<IssueReportsPage />} />
             </Routes>
           </div>
         </main>

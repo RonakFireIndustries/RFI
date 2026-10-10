@@ -82,6 +82,11 @@ class Building extends Model
         return $this->hasMany(BuildingFlat::class);
     }
 
+    public function flatProducts(): HasMany
+    {
+        return $this->hasMany(BuildingFlatProduct::class);
+    }
+
     public function statuses(): BelongsToMany
     {
         return $this->belongsToMany(BuildingStatus::class, 'building_status_mapping');

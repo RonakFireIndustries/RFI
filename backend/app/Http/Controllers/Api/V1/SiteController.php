@@ -59,6 +59,7 @@ class SiteController extends Controller
         $this->authorize('sites.view');
 
         $site->load('manager');
+        $site->loadCount(['sourceBuildings', 'employeeSites', 'dailyReports', 'stock']);
 
         return $this->success('Site retrieved successfully', [
             'site' => new SiteResource($site)

@@ -355,4 +355,33 @@ class BuildingConversionTest extends TestCase
         $this->assertTrue($result['created']);
         $this->assertArrayNotHasKey('building_wings', $result['children_moved']);
     }
+
+    public function test_it_mirrors_flat_products_to_the_site(): void
+    {
+        // The room-product table ships with `site_id` already on it, so mirror
+        // it here the way the real migration does rather than via 000002.
+        Schema::create('building_flat_products', function (Blueprint $t) {
+            $t->id();
+            $t->unsignedBigInteger('building_id');
+            $t->unsignedBigInteger('site_id')->nullable();
+            $t->timestamps();
+        });
+
+        $building = $this->makeBuilding();
+
+        DB::table('building_flat_products')->insert([
+            'building_id' => $building->id,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $result = $this->conversion->convert($building);
+        $siteId = $result['site']->id;
+
+        $this->assertSame(1, $result['children_moved']['building_flat_products']);
+        $this->assertSame(
+            1,
+            DB::table('building_flat_products')->where('building_id', $building->id)->where('site_id', $siteId)->count()
+        );
+    }
 }

@@ -10,6 +10,7 @@ use App\Models\BuildingStatus;
 use App\Models\BuildingWing;
 use App\Models\BuildingFloor;
 use App\Models\BuildingFlat;
+use App\Models\BuildingFlatProduct;
 use App\Models\FireSystem;
 use App\Http\Resources\BuildingResource;
 use App\Traits\ApiResponse;
@@ -160,6 +161,90 @@ class BuildingDetailController extends Controller
         $this->authorize('buildings.delete');
         $flat->delete();
         return $this->success('Flat deleted');
+    }
+
+    /**
+     * Per-flat product details are a post-conversion feature: they describe the
+     * equipment installed in each room once the building is operating as a site.
+     */
+    public function flatProducts(Building $building): JsonResponse
+    {
+        $this->authorize('buildings.view');
+        $this->ensureConverted($building);
+
+        $products = $building->flatProducts()->with(['flat.wing', 'flat.floor'])->get();
+        return $this->success('Room products retrieved', ['flat_products' => $products]);
+    }
+
+    public function storeFlatProduct(Request $request, Building $building): JsonResponse
+    {
+        $this->authorize('buildings.update');
+        $this->ensureConverted($building);
+
+        $validated = $request->validate([
+            'flat_id' => ['required', 'exists:building_flats,id'],
+            'product_name' => ['required', 'string', 'max:255'],
+            'brand' => ['nullable', 'string', 'max:255'],
+            'model' => ['nullable', 'string', 'max:255'],
+            'quantity' => ['nullable', 'integer', 'min:0'],
+            'notes' => ['nullable', 'string'],
+        ]);
+
+        // The flat must belong to this building.
+        $building->flats()->findOrFail($validated['flat_id']);
+
+        $product = $building->flatProducts()->create(array_merge($validated, [
+            'site_id' => $building->site_id,
+        ]));
+
+        return $this->success('Room product created', ['flat_product' => $product], [], 201);
+    }
+
+    public function updateFlatProduct(Request $request, Building $building, BuildingFlatProduct $flatProduct): JsonResponse
+    {
+        $this->authorize('buildings.update');
+        $this->ensureConverted($building);
+        $this->ensureOwned($building, $flatProduct);
+
+        $validated = $request->validate([
+            'flat_id' => ['sometimes', 'exists:building_flats,id'],
+            'product_name' => ['sometimes', 'required', 'string', 'max:255'],
+            'brand' => ['nullable', 'string', 'max:255'],
+            'model' => ['nullable', 'string', 'max:255'],
+            'quantity' => ['nullable', 'integer', 'min:0'],
+            'notes' => ['nullable', 'string'],
+        ]);
+
+        if (array_key_exists('flat_id', $validated)) {
+            $building->flats()->findOrFail($validated['flat_id']);
+        }
+
+        $flatProduct->update($validated);
+        return $this->success('Room product updated', ['flat_product' => $flatProduct]);
+    }
+
+    public function destroyFlatProduct(Building $building, BuildingFlatProduct $flatProduct): JsonResponse
+    {
+        $this->authorize('buildings.update');
+        $this->ensureConverted($building);
+        $this->ensureOwned($building, $flatProduct);
+
+        $flatProduct->delete();
+        return $this->success('Room product deleted');
+    }
+
+    private function ensureConverted(Building $building): void
+    {
+        abort_unless(
+            $building->isConverted(),
+            422,
+            'Room product details are available only after the building is converted to a site.'
+        );
+    }
+
+    private function ensureOwned(Building $building, BuildingFlatProduct $flatProduct): void
+    {
+        abort_unless($flatProduct->building_id === $building->id, 404, 'Product not found for this building.');
     }
 
     public function fireSystems(Building $building): JsonResponse

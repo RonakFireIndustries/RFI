@@ -60,6 +60,7 @@ Route::prefix('v1')->group(function () {
 
     // Dashboard
     Route::get('/dashboard/summary', [DashboardController::class, 'summary']);
+    Route::get('/dashboard/my', [DashboardController::class, 'my']);
     Route::get('/dashboard', [DashboardController::class, 'index']);
 
     // Core HR
@@ -97,6 +98,7 @@ Route::prefix('v1')->group(function () {
     Route::put('/access-control/users/{user}/permissions', [AccessControlController::class, 'updatePermissions']);
     Route::post('/access-control/users/{user}/permissions/grant', [AccessControlController::class, 'grantPermission']);
     Route::post('/access-control/users/{user}/permissions/revoke', [AccessControlController::class, 'revokePermission']);
+    Route::put('/access-control/users/{user}/dashboard', [AccessControlController::class, 'updateDashboard']);
 
     Route::apiResource('employees', \App\Http\Controllers\Api\V1\EmployeeController::class);
     Route::get('employees/{employee}/subordinates', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'subordinates']);
@@ -353,6 +355,12 @@ Route::prefix('v1')->group(function () {
     Route::put('/buildings/{building}/flats/{flat}', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'updateFlat']);
     Route::delete('/buildings/{building}/flats/{flat}', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'destroyFlat']);
 
+    // Room (flat) Product Details — available only after conversion to a site
+    Route::get('/buildings/{building}/flat-products', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'flatProducts']);
+    Route::post('/buildings/{building}/flat-products', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'storeFlatProduct']);
+    Route::put('/buildings/{building}/flat-products/{flatProduct}', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'updateFlatProduct']);
+    Route::delete('/buildings/{building}/flat-products/{flatProduct}', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'destroyFlatProduct']);
+
     // Fire Systems
     Route::get('/buildings/{building}/fire-systems', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'fireSystems']);
     Route::post('/buildings/{building}/fire-systems', [\App\Http\Controllers\Api\V1\BuildingDetailController::class, 'storeFireSystem']);
@@ -437,6 +445,13 @@ Route::prefix('v1')->group(function () {
     Route::get('/sales-documents/{salesDocument}', [\App\Http\Controllers\Api\V1\SalesDocumentController::class, 'show']);
     Route::get('/sales-documents/{salesDocument}/download', [\App\Http\Controllers\Api\V1\SalesDocumentController::class, 'download']);
     Route::delete('/sales-documents/{salesDocument}', [\App\Http\Controllers\Api\V1\SalesDocumentController::class, 'destroy']);
+
+    // Issue Reports (employees reporting app issues with screenshots)
+    Route::get('/issue-reports', [\App\Http\Controllers\Api\V1\IssueReportController::class, 'index']);
+    Route::post('/issue-reports', [\App\Http\Controllers\Api\V1\IssueReportController::class, 'store']);
+    Route::get('/issue-reports/{issueReport}', [\App\Http\Controllers\Api\V1\IssueReportController::class, 'show']);
+    Route::put('/issue-reports/{issueReport}', [\App\Http\Controllers\Api\V1\IssueReportController::class, 'update']);
+    Route::delete('/issue-reports/{issueReport}', [\App\Http\Controllers\Api\V1\IssueReportController::class, 'destroy']);
 
     // Activity Logs
     Route::get('/activity-logs', [\App\Http\Controllers\Api\V1\ActivityLogController::class, 'index']);

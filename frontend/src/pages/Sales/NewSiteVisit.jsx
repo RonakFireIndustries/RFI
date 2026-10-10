@@ -11,11 +11,14 @@ export default function NewSiteVisit() {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     building_id: searchParams.get('building_id') || '',
+    building_name: '',
     visit_date: new Date().toISOString().split('T')[0],
     purpose: '',
     discussion_notes: '',
     next_followup_date: '',
   });
+
+  const isOtherBuilding = form.building_id === '__other__';
 
   useEffect(() => {
     fetchBuildings();
@@ -26,7 +29,10 @@ export default function NewSiteVisit() {
     setSaving(true);
     try {
       const payload = { ...form };
-      if (!payload.building_id) delete payload.building_id;
+      if (payload.building_id === '__other__' || !payload.building_id) {
+        delete payload.building_id;
+      }
+      if (!payload.building_name) delete payload.building_name;
       if (!payload.next_followup_date) delete payload.next_followup_date;
       const visit = await siteVisitService.create(payload);
       navigate(`/dashboard/site-visits/${visit.id}`);
@@ -48,9 +54,10 @@ export default function NewSiteVisit() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-color-white">Building *</label>
-            <select required value={form.building_id} onChange={e => setForm({ ...form, building_id: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm">
+            <select required value={form.building_id} onChange={e => setForm({ ...form, building_id: e.target.value, building_name: e.target.value === '__other__' ? form.building_name : '' })} className="w-full px-3 py-2 border rounded-lg text-sm">
               <option value="">Select Building</option>
               {(buildings || []).map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+              <option value="__other__">Other (not listed)</option>
             </select>
           </div>
           <div>
@@ -58,6 +65,14 @@ export default function NewSiteVisit() {
             <input type="date" required value={form.visit_date} onChange={e => setForm({ ...form, visit_date: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" />
           </div>
         </div>
+
+        {isOtherBuilding && (
+          <div>
+            <label className="block text-sm font-medium text-color-white">Name *</label>
+            <input type="text" required value={form.building_name} onChange={e => setForm({ ...form, building_name: e.target.value })} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="Enter the building name" />
+            <p className="text-xs text-gray-500 mt-1">A new building will be created. You can edit its full details later from the Buildings section.</p>
+          </div>
+        )}
 
         <div>
           <label className="block text-sm font-medium text-color-white">Purpose</label>

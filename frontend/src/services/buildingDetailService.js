@@ -17,6 +17,11 @@ export const buildingDetailService = {
   updateFlat: async (buildingId, flatId, payload) => unwrapItem((await api.put(`/buildings/${buildingId}/flats/${flatId}`, payload)).data),
   removeFlat: async (buildingId, flatId) => api.delete(`/buildings/${buildingId}/flats/${flatId}`),
 
+  getFlatProducts: async (buildingId) => unwrapList((await api.get(`/buildings/${buildingId}/flat-products`)).data),
+  createFlatProduct: async (buildingId, payload) => unwrapItem((await api.post(`/buildings/${buildingId}/flat-products`, payload)).data),
+  updateFlatProduct: async (buildingId, productId, payload) => unwrapItem((await api.put(`/buildings/${buildingId}/flat-products/${productId}`, payload)).data),
+  removeFlatProduct: async (buildingId, productId) => api.delete(`/buildings/${buildingId}/flat-products/${productId}`),
+
   getFireSystems: async (buildingId) => unwrapList((await api.get(`/buildings/${buildingId}/fire-systems`)).data),
   createFireSystem: async (buildingId, payload) => unwrapItem((await api.post(`/buildings/${buildingId}/fire-systems`, payload)).data),
   updateFireSystem: async (buildingId, systemId, payload) => unwrapItem((await api.put(`/buildings/${buildingId}/fire-systems/${systemId}`, payload)).data),

@@ -2,7 +2,7 @@ import {
   LayoutDashboard, Users, Calendar, ClipboardList, MapPin, Clock, FileText, Briefcase,
   DollarSign, Layers, Package, Boxes, Warehouse, ShoppingCart, Shield, Settings,
   Ruler, GitCompare, Move3D, FileSpreadsheet, FileClock, FileInput, Building2,
-  TrendingUp, Target, Bell, BarChart3, PenTool, Flame,
+  TrendingUp, Target, Bell, BarChart3, PenTool, Flame, LifeBuoy,
 } from 'lucide-react';
 
 /*
@@ -24,6 +24,7 @@ export const menuCategories = [
     title: 'Overview',
     items: [
       { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, permissions: ['*'] },
+      { name: 'My Dashboard', path: '/dashboard/my-dashboard', icon: LayoutDashboard, permissions: ['*'] },
     ],
   },
   {
@@ -98,6 +99,7 @@ export const menuCategories = [
     title: 'System',
     items: [
       { name: 'Reports', path: '/dashboard/reports', icon: ClipboardList, permissions: ['reports.view'] },
+      { name: 'Issue Reports', path: '/dashboard/issue-reports', icon: LifeBuoy, permissions: ['issue-reports.update'] },
       { name: 'Access Control', path: '/dashboard/access-control', icon: Shield, permissions: ['access-control.manage', '__super_admin__'] },
     ],
   },

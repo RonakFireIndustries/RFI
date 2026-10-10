@@ -386,7 +386,11 @@ export default function Sites() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {sites.map(site => (
-            <div key={site.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-all flex flex-col justify-between">
+            <div
+              key={site.id}
+              onClick={() => navigate(`/dashboard/sites/${site.id}`)}
+              className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-all flex flex-col justify-between cursor-pointer"
+            >
               <div className="p-6">
                 {/* Header info */}
                 <div className="flex justify-between items-start mb-4">
@@ -496,28 +500,28 @@ export default function Sites() {
                   </div>
                   <div className="flex gap-2">
                     <button 
-                      onClick={() => openInventoryModal(site)}
+                      onClick={(e) => { e.stopPropagation(); openInventoryModal(site); }}
                       className="p-2 text-gray-600 hover:text-emerald-600 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-gray-100"
                       title="Show Inventory"
                     >
                       <Package className="w-4 h-4" />
                     </button>
                     <button 
-                      onClick={() => openEmployeesModal(site)}
+                      onClick={(e) => { e.stopPropagation(); openEmployeesModal(site); }}
                       className="p-2 text-gray-600 hover:text-indigo-600 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-gray-100"
                       title="Show Employees"
                     >
                       <Users className="w-4 h-4" />
                     </button>
                     <button 
-                      onClick={() => openEditModal(site)}
+                      onClick={(e) => { e.stopPropagation(); openEditModal(site); }}
                       className="p-2 text-gray-600 hover:text-blue-600 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-gray-100"
                       title="Edit Site"
                     >
                       <Edit className="w-4 h-4" />
                     </button>
                     <button 
-                      onClick={() => handleDelete(site.id)}
+                      onClick={(e) => { e.stopPropagation(); handleDelete(site.id); }}
                       className="p-2 text-gray-600 hover:text-red-600 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-gray-100"
                       title="Delete Site"
                     >

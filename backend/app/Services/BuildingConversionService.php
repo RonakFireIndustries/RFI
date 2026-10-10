@@ -32,6 +32,7 @@ class BuildingConversionService
         'building_wings',
         'building_floors',
         'building_flats',
+        'building_flat_products',
         'building_amcs',
         'building_fire_systems',
         'fire_systems',

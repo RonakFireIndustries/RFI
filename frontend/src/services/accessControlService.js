@@ -10,4 +10,6 @@ export const accessControlService = {
     api.post(`/access-control/users/${userId}/permissions/grant`, { permission }),
   revokePermission: (userId, permission) =>
     api.post(`/access-control/users/${userId}/permissions/revoke`, { permission }),
+  updateDashboard: (userId, dashboardType) =>
+    api.put(`/access-control/users/${userId}/dashboard`, { dashboard_type: dashboardType }),
 };

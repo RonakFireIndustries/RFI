@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit2, Save, X, Plus, Trash2, MapPin, Building2, Flame, Users, Calendar, FileText, Download, ExternalLink, Bell, Target, ChevronDown as ChevronDownIcon, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Edit2, Save, X, Plus, Trash2, MapPin, Building2, Flame, Users, Calendar, FileText, Download, ExternalLink, Bell, Target, ChevronDown as ChevronDownIcon, ChevronUp, Package } from 'lucide-react';
 import { useBuildingStore } from '../../store/buildingStore';
 import { buildingDetailService } from '../../services/buildingDetailService';
 import { salesDocumentService } from '../../services/salesDocumentService';
@@ -26,7 +26,7 @@ const FIRE_SYSTEM_SUB_TYPES = {
   'CCTV': ['IP Camera', 'Analog Camera'],
 };
 const CONTACT_CATEGORIES = ['society', 'developer', 'architect', 'pmc', 'other'];
-const DOC_CATEGORIES = ['Fire NOC', 'Building Plan', 'NOC Certificate', 'AMC Agreement', 'Quotation', 'Invoice', 'Site Photo', 'Other'];
+const DOC_CATEGORIES = ['Fire NOC', 'Building Plan', 'NOC Certificate', 'AMC Agreement', 'PMC Document', 'Quotation', 'Invoice', 'Site Photo', 'Other'];
 
 export default function BuildingDetail() {
   const { id } = useParams();
@@ -47,6 +47,7 @@ export default function BuildingDetail() {
   const [wings, setWings] = useState([]);
   const [floors, setFloors] = useState([]);
   const [flats, setFlats] = useState([]);
+  const [flatProducts, setFlatProducts] = useState([]);
   const [fireSystems, setFireSystems] = useState([]);
   const [contacts, setContacts] = useState([]);
   const [amcs, setAmcs] = useState([]);
@@ -64,6 +65,17 @@ export default function BuildingDetail() {
       if (Array.isArray(s)) setStatuses(s);
     }).catch(() => { });
   }, [id, fetchItem]);
+
+  // Room product details only exist once the building has been converted to a site.
+  useEffect(() => {
+    if (building?.converted_at) {
+      buildingDetailService.getFlatProducts(id)
+        .then((fp) => setFlatProducts(Array.isArray(fp) ? fp : []))
+        .catch(() => setFlatProducts([]));
+    } else {
+      setFlatProducts([]);
+    }
+  }, [building?.converted_at, id]);
 
   useEffect(() => {
     if (building) {
@@ -141,6 +153,10 @@ export default function BuildingDetail() {
       if (Array.isArray(fu)) setFollowUps(fu);
       if (Array.isArray(op)) setOpportunities(op);
       if (Array.isArray(inv)) setInvoices(inv);
+      if (building?.converted_at) {
+        const fp = await buildingDetailService.getFlatProducts(id).catch(() => []);
+        if (Array.isArray(fp)) setFlatProducts(fp);
+      }
     } catch (err) {
       console.error(err);
     }
@@ -199,6 +215,9 @@ export default function BuildingDetail() {
     return <div className="text-center py-12 text-gray-500">Building not found</div>;
   }
 
+  const isConverted = !!building.converted_at;
+  const tabs = isConverted ? [...TABS, 'Products'] : TABS;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -245,7 +264,7 @@ export default function BuildingDetail() {
 
       {/* Tabs */}
       <div className="flex border-b overflow-x-auto">
-        {TABS.map(tab => (
+        {tabs.map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={`px-4 py-2 text-sm font-medium border-b-2 whitespace-nowrap ${activeTab === tab ? 'border-red-600 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
             {tab}
@@ -407,6 +426,7 @@ export default function BuildingDetail() {
       {activeTab === 'Contacts' && <ContactsTab contacts={contacts} buildingId={id} reload={loadSubEntities} editing={editing} />}
       {activeTab === 'AMCs' && <AmcsTab amcs={amcs} buildingId={id} reload={loadSubEntities} editing={editing} />}
       {activeTab === 'Documents' && <DocumentsTab documents={documents} buildingId={id} reload={loadSubEntities} />}
+      {activeTab === 'Products' && isConverted && <ProductsTab flats={flats} products={flatProducts} buildingId={id} reload={loadSubEntities} />}
     </div>
   );
 }
@@ -464,6 +484,9 @@ function WingsTab({ wings, floors, flats, buildingId, reload, editing }) {
       <div className="space-y-3">
         {wings.map(wing => {
           const wingFloors = getWingFloors(wing.id);
+          const wingFlatCount = flats.filter(f => f.wing_id === wing.id).length;
+          const floorCount = wingFloors.length || Number(wing.floors) || 0;
+          const totalFlatCount = wingFlatCount || Number(wing.total_flats) || 0;
           const isExpanded = expandedWing === wing.id;
           return (
             <div key={wing.id} className="bg-white rounded-lg border overflow-hidden">
@@ -471,12 +494,10 @@ function WingsTab({ wings, floors, flats, buildingId, reload, editing }) {
                 <div className="flex items-center gap-4">
                   <span className="text-sm font-semibold text-gray-900">{wing.name}</span>
                   <div className="flex gap-3 text-xs text-gray-500">
-                    {wing.floors != null && <span>{wing.floors} floors</span>}
-                    {wing.flats_per_floor != null && <span>{wing.flats_per_floor} flats/floor</span>}
-                    {wing.total_flats != null && <span>{wing.total_flats} total</span>}
+                    {floorCount > 0 && <span>{floorCount} {floorCount === 1 ? 'floor' : 'floors'}</span>}
+                    {totalFlatCount > 0 && <span>{totalFlatCount} {totalFlatCount === 1 ? 'flat' : 'flats'}</span>}
                     {wing.flat_configuration && <span>{wing.flat_configuration}</span>}
                   </div>
-                  <span className="text-[10px] text-gray-400">{wingFloors.length} floors added</span>
                 </div>
                 <div className="flex items-center gap-2">
                   {editing && <button onClick={(e) => { e.stopPropagation(); handleEdit(wing); }} className="text-blue-600 hover:text-blue-800 text-xs">Edit</button>}
@@ -486,14 +507,18 @@ function WingsTab({ wings, floors, flats, buildingId, reload, editing }) {
               </div>
               {isExpanded && wingFloors.length > 0 && (
                 <div className="border-t bg-gray-50 px-4 py-3 space-y-2">
-                  {wingFloors.map(floor => {
+                  {wingFloors.map((floor, fIdx) => {
                     const floorFlats = getFloorFlats(floor.id);
+                    const isDuplicateName = !!floor.name && wingFloors.filter(f => f.name === floor.name).length > 1;
+                    const floorLabel = (!floor.name || isDuplicateName)
+                      ? `Floor ${floor.floor_number ?? (fIdx + 1)}`
+                      : floor.name;
                     return (
                       <div key={floor.id} className="bg-white rounded border p-3">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-gray-700">{floor.name}</span>
-                            {floor.floor_number != null && <span className="text-[10px] text-gray-400">#{floor.floor_number}</span>}
+                            <span className="text-xs font-bold text-gray-700">{floorLabel}</span>
+                            {!isDuplicateName && floor.name && floor.floor_number != null && <span className="text-[10px] text-gray-400">#{floor.floor_number}</span>}
                             {floor.type && <span className="text-[10px] font-medium text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">{floor.type}</span>}
                           </div>
                           <span className="text-[10px] text-gray-400">{floorFlats.length} flats</span>
@@ -1027,6 +1052,171 @@ function DocumentsTab({ documents, buildingId, reload }) {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ProductsTab({ flats, products, buildingId, reload }) {
+  const [activeFlatId, setActiveFlatId] = useState(null);
+  const [form, setForm] = useState({ product_name: '', brand: '', model: '', quantity: '', notes: '' });
+  const [editingId, setEditingId] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  const resetForm = () => {
+    setForm({ product_name: '', brand: '', model: '', quantity: '', notes: '' });
+    setEditingId(null);
+    setActiveFlatId(null);
+  };
+
+  const productsFor = (flatId) => products.filter(p => p.flat_id === flatId);
+
+  const handleSave = async () => {
+    if (!activeFlatId || !form.product_name.trim()) return;
+    setSaving(true);
+    const payload = {
+      flat_id: activeFlatId,
+      product_name: form.product_name.trim(),
+      brand: form.brand || null,
+      model: form.model || null,
+      notes: form.notes || null,
+    };
+    if (form.quantity !== '' && form.quantity !== null) payload.quantity = parseInt(form.quantity);
+    try {
+      if (editingId) {
+        await buildingDetailService.updateFlatProduct(buildingId, editingId, payload);
+      } else {
+        await buildingDetailService.createFlatProduct(buildingId, payload);
+      }
+      resetForm();
+      reload();
+    } catch (err) {
+      console.error(err);
+      alert(err.message || 'Failed to save product details.');
+    }
+    setSaving(false);
+  };
+
+  const handleEdit = (product) => {
+    setActiveFlatId(product.flat_id);
+    setEditingId(product.id);
+    setForm({
+      product_name: product.product_name || '',
+      brand: product.brand || '',
+      model: product.model || '',
+      quantity: product.quantity ?? '',
+      notes: product.notes || '',
+    });
+  };
+
+  const handleDelete = async (product) => {
+    if (!window.confirm('Delete these product details?')) return;
+    try {
+      await buildingDetailService.removeFlatProduct(buildingId, product.id);
+      reload();
+    } catch (err) {
+      console.error(err);
+      alert(err.message || 'Failed to delete product details.');
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900">Room Products ({products.length})</h2>
+          <p className="text-xs text-gray-500">Product details recorded for each flat/room. Available because this building has been converted to a site.</p>
+        </div>
+      </div>
+
+      {flats.length === 0 ? (
+        <div className="text-center py-12 text-gray-500 bg-white border rounded-lg">
+          <Package className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+          <p>No flats configured for this building</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {flats.map(flat => {
+            const flatProducts = productsFor(flat.id);
+            const isActive = activeFlatId === flat.id;
+            return (
+              <div key={flat.id} className="bg-white rounded-lg border overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-semibold text-gray-900">{flat.name}</span>
+                    <div className="flex gap-2 text-[11px] text-gray-500">
+                      {flat.wing?.name && <span>{flat.wing.name}</span>}
+                      {flat.floor?.name && <span>{flat.floor.name}</span>}
+                      {flat.bhk_type && <span>{flat.bhk_type}</span>}
+                    </div>
+                    <span className="text-[10px] text-gray-400">{flatProducts.length} products</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (isActive) {
+                        resetForm();
+                      } else {
+                        setActiveFlatId(flat.id);
+                        setEditingId(null);
+                        setForm({ product_name: '', brand: '', model: '', quantity: '', notes: '' });
+                      }
+                    }}
+                    className="flex items-center gap-1 text-xs text-red-600 hover:text-red-800 font-medium"
+                  >
+                    <Plus className="w-3 h-3" /> {isActive ? 'Cancel' : 'Add Product'}
+                  </button>
+                </div>
+
+                {isActive && (
+                  <div className="p-3 border-b bg-white">
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                      <input placeholder="Product Name *" value={form.product_name} onChange={e => setForm({ ...form, product_name: e.target.value })} className="px-2 py-1.5 border rounded-lg text-xs md:col-span-2" />
+                      <input placeholder="Brand" value={form.brand} onChange={e => setForm({ ...form, brand: e.target.value })} className="px-2 py-1.5 border rounded-lg text-xs" />
+                      <input placeholder="Model" value={form.model} onChange={e => setForm({ ...form, model: e.target.value })} className="px-2 py-1.5 border rounded-lg text-xs" />
+                      <input placeholder="Qty" type="number" min="0" value={form.quantity} onChange={e => setForm({ ...form, quantity: e.target.value })} className="px-2 py-1.5 border rounded-lg text-xs" />
+                    </div>
+                    <textarea placeholder="Notes" rows={2} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} className="w-full mt-2 px-2 py-1.5 border rounded-lg text-xs" />
+                    <div className="flex gap-2 mt-2">
+                      <button onClick={handleSave} disabled={saving || !form.product_name.trim()} className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs disabled:bg-gray-300">{saving ? 'Saving...' : (editingId ? 'Update' : 'Save')}</button>
+                      <button onClick={resetForm} className="px-3 py-1.5 border rounded-lg text-xs">Cancel</button>
+                    </div>
+                  </div>
+                )}
+
+                {flatProducts.length > 0 && (
+                  <table className="w-full">
+                    <thead className="border-b"><tr>
+                      <th className="px-4 py-1.5 text-left text-[10px] font-medium text-gray-500 uppercase">Product</th>
+                      <th className="px-4 py-1.5 text-left text-[10px] font-medium text-gray-500 uppercase">Brand</th>
+                      <th className="px-4 py-1.5 text-left text-[10px] font-medium text-gray-500 uppercase">Model</th>
+                      <th className="px-4 py-1.5 text-left text-[10px] font-medium text-gray-500 uppercase">Qty</th>
+                      <th className="px-4 py-1.5 text-left text-[10px] font-medium text-gray-500 uppercase">Notes</th>
+                      <th className="px-4 py-1.5 text-right text-[10px] font-medium text-gray-500 uppercase">Actions</th>
+                    </tr></thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {flatProducts.map(product => (
+                        <tr key={product.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-2 text-xs font-medium text-gray-900">{product.product_name}</td>
+                          <td className="px-4 py-2 text-xs text-gray-600">{product.brand || '-'}</td>
+                          <td className="px-4 py-2 text-xs text-gray-600">{product.model || '-'}</td>
+                          <td className="px-4 py-2 text-xs text-gray-600">{product.quantity ?? '-'}</td>
+                          <td className="px-4 py-2 text-xs text-gray-500 max-w-xs truncate">{product.notes || '-'}</td>
+                          <td className="px-4 py-2 text-right whitespace-nowrap">
+                            <button onClick={() => handleEdit(product)} className="text-blue-600 hover:text-blue-800 text-xs mr-2">Edit</button>
+                            <button onClick={() => handleDelete(product)} className="text-red-600 hover:text-red-800 text-xs">Delete</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+                {flatProducts.length === 0 && !isActive && (
+                  <p className="px-4 py-3 text-xs text-gray-400">No products recorded for this room</p>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

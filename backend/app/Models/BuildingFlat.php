@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class BuildingFlat extends Model
 {
@@ -29,5 +30,10 @@ class BuildingFlat extends Model
     public function floor(): BelongsTo
     {
         return $this->belongsTo(BuildingFloor::class, 'floor_id');
+    }
+
+    public function products(): HasMany
+    {
+        return $this->hasMany(BuildingFlatProduct::class, 'flat_id');
     }
 }

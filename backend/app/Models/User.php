@@ -30,6 +30,7 @@ class User extends Authenticatable
         'email',
         'password',
         'is_super_admin',
+        'dashboard_type',
     ];
 
     /**
