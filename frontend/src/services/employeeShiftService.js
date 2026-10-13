@@ -33,8 +33,9 @@ export const employeeShiftService = {
   },
 
   remove: async (employeeId, shiftId, remarks) => {
-    const endpoint = `/employees/${employeeId}/shifts/${shiftId}` + (remarks ? `?remarks=${encodeURIComponent(remarks)}` : '');
-    const response = await api.delete(endpoint);
+    const endpoint = shiftId ? `/employees/${employeeId}/shifts/${shiftId}` : `/employees/${employeeId}/shift`;
+    const query = remarks ? `${shiftId ? '?' : '?'}remarks=${encodeURIComponent(remarks)}` : '';
+    const response = await api.delete(endpoint + query);
     return response.data;
   }
 };

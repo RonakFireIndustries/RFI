@@ -15,7 +15,7 @@ import EmployeeDocumentsPage from './documents/EmployeeDocumentsPage';
 import DocumentHistory from './documents/DocumentHistory';
 import { 
   MapPin, Plus, ArrowLeftRight, Trash2, Calendar, User, 
-  MessageSquare, FileText, CheckCircle2, AlertCircle, X, ShieldAlert 
+  MessageSquare, FileText, CheckCircle2, AlertCircle, X, ShieldAlert, Clock 
 } from 'lucide-react';
 
 const valueAt = (item, path) => path.split('.').reduce((value, key) => value?.[key], item);

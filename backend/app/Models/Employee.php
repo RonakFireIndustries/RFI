@@ -78,6 +78,6 @@ class Employee extends Model
 
     public function shiftHistories(): HasMany
     {
-        return $this->hasMany(EmployeeShiftHistory::class);
+        return $this->hasMany(EmployeeShiftHistory::class)->orderBy('created_at', 'desc');
     }
 }

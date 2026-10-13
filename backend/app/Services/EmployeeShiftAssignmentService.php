@@ -16,7 +16,8 @@ class EmployeeShiftAssignmentService
      */
     public function getEmployeeShift(Employee $employee): ?EmployeeShift
     {
-        return $employee->employeeShifts()->with('shift')->first();
+        $assignment = $employee->employeeShifts()->with('shift')->first();
+        return $assignment;
     }
 
     /**

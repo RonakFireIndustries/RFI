@@ -91,7 +91,7 @@ class EmployeeShiftAssignmentController extends Controller
     /**
      * Remove the employee's current shift assignment.
      */
-    public function remove(Request $request, Employee $employee, Shift $shift): JsonResponse
+    public function remove(Request $request, Employee $employee, ?Shift $shift = null): JsonResponse
     {
         $remarks = $request->input('remarks');
 

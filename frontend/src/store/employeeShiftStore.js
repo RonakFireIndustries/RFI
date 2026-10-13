@@ -13,7 +13,8 @@ export const useEmployeeShiftStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       const data = await employeeShiftService.getAssignment(employeeId);
-      set({ assignment: data?.assignment ?? data, currentShift: data?.shift ?? data?.assignment?.shift ?? null, loading: false });
+      const assignment = data?.assignment ?? (data?.shift ? { shift_id: data.shift.id, shift: data.shift } : data);
+      set({ assignment, currentShift: data?.shift ?? assignment?.shift ?? null, loading: false });
       return data;
     } catch (error) {
       set({ error, loading: false });
@@ -25,7 +26,7 @@ export const useEmployeeShiftStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       const history = await employeeShiftService.getHistory(employeeId);
-      set({ history, loading: false });
+      set({ history: history?.history ?? history, loading: false });
       return history;
     } catch (error) {
       set({ error, loading: false });
@@ -37,7 +38,8 @@ export const useEmployeeShiftStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       const data = await employeeShiftService.getCurrentShift(employeeId);
-      set({ currentShift: data?.shift ?? data?.assignment?.shift ?? null, assignment: data?.assignment ?? data, loading: false });
+      const assignment = data?.assignment ?? (data?.shift ? { shift_id: data.shift.id, shift: data.shift } : data);
+      set({ currentShift: data?.shift ?? assignment?.shift ?? null, assignment, loading: false });
       return data;
     } catch (error) {
       set({ error, loading: false });
