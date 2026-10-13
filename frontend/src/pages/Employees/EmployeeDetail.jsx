@@ -3,7 +3,9 @@ import { Link, useParams } from 'react-router-dom';
 import { useEmployeesStore } from '../../store/employeesStore';
 import { useDocumentStore } from '../../store/documentStore';
 import { useEmployeeSiteStore } from '../../store/employeeSiteStore';
+import { useEmployeeShiftStore } from '../../store/employeeShiftStore';
 import { useSiteStore } from '../../store/siteStore';
+import { useShiftsStore } from '../../store/shiftStore';
 import { useAttendanceStore } from '../../store/attendanceStore';
 import { useDailyReportsStore } from '../../store/dailyReportStore';
 import DataTable from '../../components/Shared/DataTable';
@@ -42,7 +44,19 @@ export default function EmployeeDetail() {
     removeEmployee 
   } = useEmployeeSiteStore();
 
+  const {
+    assignment: shiftAssignment,
+    history: shiftHistory,
+    loading: shiftsLoading,
+    fetchAssignment: fetchShiftAssignment,
+    fetchHistory: fetchShiftHistory,
+    assignShift,
+    changeShift,
+    removeShift
+  } = useEmployeeShiftStore();
+
   const { items: allSites, fetchItems: fetchAllSites } = useSiteStore();
+  const { items: allShifts, fetchItems: fetchAllShifts } = useShiftsStore();
   const { items: dailyReports, fetchItems: fetchDailyReports, loading: dailyReportsLoading } = useDailyReportsStore();
 
   const [activeTab, setActiveTab] = useState('profile');
@@ -53,6 +67,11 @@ export default function EmployeeDetail() {
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
 
+  // Modals for shift allocation
+  const [isAssignShiftModalOpen, setIsAssignShiftModalOpen] = useState(false);
+  const [isChangeShiftModalOpen, setIsChangeShiftModalOpen] = useState(false);
+  const [isRemoveShiftModalOpen, setIsRemoveShiftModalOpen] = useState(false);
+
   // Form states
   const [selectedSiteId, setSelectedSiteId] = useState('');
   const [selectedNewSiteId, setSelectedNewSiteId] = useState('');
@@ -61,15 +80,24 @@ export default function EmployeeDetail() {
   const [remarks, setRemarks] = useState('');
   const [errors, setErrors] = useState({});
 
+  // Shift form states
+  const [selectedShiftId, setSelectedShiftId] = useState('');
+  const [selectedNewShiftId, setSelectedNewShiftId] = useState('');
+  const [selectedCurrentShiftId, setSelectedCurrentShiftId] = useState('');
+  const [shiftRemarks, setShiftRemarks] = useState('');
+
   useEffect(() => {
     fetchItem(id);
     fetchAssignments(id);
     fetchHistory(id);
+    fetchShiftAssignment(id);
+    fetchShiftHistory(id);
     fetchAllSites({ status: 'Active', per_page: 100 });
+    fetchAllShifts();
     fetchAttendances({ employee_id: id });
     fetchDailyReports({ employee_id: id });
     return () => clearSelected();
-  }, [clearSelected, fetchItem, id, fetchAssignments, fetchHistory, fetchAllSites, fetchAttendances, fetchDailyReports]);
+  }, [clearSelected, fetchItem, id, fetchAssignments, fetchHistory, fetchShiftAssignment, fetchShiftHistory, fetchAllSites, fetchAllShifts, fetchAttendances, fetchDailyReports]);
 
   if (employeeLoading || !selected) {
     return <div className="rounded-lg border border-gray-200 bg-white p-8 text-center text-sm text-gray-500">Loading detail...</div>;
@@ -216,6 +244,80 @@ export default function EmployeeDetail() {
     setIsRemoveModalOpen(true);
   };
 
+  // Shift handlers
+  const handleAssignShift = async (e) => {
+    e.preventDefault();
+    setErrors({});
+    if (!selectedShiftId) {
+      setErrors({ shift_id: 'Please select a shift' });
+      return;
+    }
+    return guard(async () => {
+      try {
+        await assignShift(selected.id, { shift_id: parseInt(selectedShiftId), remarks: shiftRemarks });
+        setIsAssignShiftModalOpen(false);
+        setSelectedShiftId('');
+        setShiftRemarks('');
+      } catch (err) {
+        setErrors({ general: err.message || 'Failed to assign shift.' });
+      }
+    });
+  };
+
+  const handleChangeShift = async (e) => {
+    e.preventDefault();
+    setErrors({});
+    if (!selectedNewShiftId) {
+      setErrors({ new_shift_id: 'Please select a new shift' });
+      return;
+    }
+    return guard(async () => {
+      try {
+        await changeShift(selected.id, { new_shift_id: parseInt(selectedNewShiftId), remarks: shiftRemarks });
+        setIsChangeShiftModalOpen(false);
+        setSelectedNewShiftId('');
+        setShiftRemarks('');
+      } catch (err) {
+        setErrors({ general: err.message || 'Failed to change shift.' });
+      }
+    });
+  };
+
+  const handleRemoveShift = async (e) => {
+    e.preventDefault();
+    setErrors({});
+    const shiftIdToRemove = shiftAssignment?.shift_id || selectedCurrentShiftId;
+    if (!shiftIdToRemove) {
+      setErrors({ general: 'No shift assignment found.' });
+      return;
+    }
+    return guard(async () => {
+      try {
+        await removeShift(selected.id, shiftIdToRemove, shiftRemarks);
+        setIsRemoveShiftModalOpen(false);
+        setShiftRemarks('');
+        setSelectedCurrentShiftId('');
+      } catch (err) {
+        setErrors({ general: err.message || 'Failed to remove shift.' });
+      }
+    });
+  };
+
+  const openChangeShiftModal = (currentShiftId) => {
+    setSelectedCurrentShiftId(currentShiftId);
+    setSelectedNewShiftId('');
+    setShiftRemarks('');
+    setErrors({});
+    setIsChangeShiftModalOpen(true);
+  };
+
+  const openRemoveShiftModal = (currentShiftId) => {
+    setSelectedCurrentShiftId(currentShiftId);
+    setShiftRemarks('');
+    setErrors({});
+    setIsRemoveShiftModalOpen(true);
+  };
+
   return (
     <div className="space-y-5 pb-10">
       <div>
@@ -236,6 +338,12 @@ export default function EmployeeDetail() {
             className={`whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'sites' ? 'border-primary/30 text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
           >
             Site Allocation & History
+          </button>
+          <button
+            onClick={() => setActiveTab('shifts')}
+            className={`whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'shifts' ? 'border-primary/30 text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+          >
+            Shift Allocation & History
           </button>
           <button
             onClick={() => setActiveTab('documents')}
@@ -442,6 +550,167 @@ export default function EmployeeDetail() {
                             )}
                           </div>
 
+                          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs border-t border-gray-100/60 pt-3 text-gray-500">
+                            <div className="flex items-center gap-1.5">
+                              <User className="w-3.5 h-3.5 text-gray-400" />
+                              <span>Action by: {log.assigned_by?.name || 'System'}</span>
+                            </div>
+                            <div className="flex items-start gap-1.5">
+                              <MessageSquare className="w-3.5 h-3.5 text-gray-400 mt-0.5" />
+                              <span>Remarks: {log.remarks || 'No remarks provided'}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Shifts tab with interactive assignment and history timeline */}
+      {activeTab === 'shifts' && (
+        <div className="space-y-6">
+          {/* Current Shift Assignment Card */}
+          <div className="rounded-lg border border-gray-200 bg-white overflow-hidden shadow-sm">
+            <div className="border-b border-gray-200 bg-gray-50 px-5 py-3 flex justify-between items-center">
+              <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wider">Current Shift Allocation</h3>
+              <button 
+                onClick={() => {
+                  setSelectedShiftId('');
+                  setShiftRemarks('');
+                  setErrors({});
+                  setIsAssignShiftModalOpen(true);
+                }}
+                className="flex items-center text-xs font-bold bg-primary text-white px-3 py-1.5 rounded-lg hover:bg-primary/90 transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5 mr-1" />
+                {shiftAssignment ? 'Change Shift' : 'Assign Shift'}
+              </button>
+            </div>
+            
+            <div className="p-5">
+              {shiftsLoading ? (
+                <div className="text-center py-4 text-sm text-gray-500">Loading assignment...</div>
+              ) : !shiftAssignment ? (
+                <div className="text-center py-8 text-sm text-gray-500">
+                  <Clock className="w-8 h-8 mx-auto text-gray-300 mb-2" />
+                  No active shift assignment for this employee.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-gray-150 text-xs font-bold text-gray-500 uppercase tracking-wider bg-gray-50/50">
+                        <th className="py-3 px-4">Shift Name</th>
+                        <th className="py-3 px-4">Start Time</th>
+                        <th className="py-3 px-4">End Time</th>
+                        <th className="py-3 px-4">Grace Period</th>
+                        <th className="py-3 px-4">Status</th>
+                        <th className="py-3 px-4">Assigned At</th>
+                        <th className="py-3 px-4 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 text-sm">
+                      <tr className="hover:bg-gray-50/50">
+                        <td className="py-3.5 px-4 font-semibold text-gray-800">
+                          {shiftAssignment.shift?.name || 'Unknown Shift'}
+                        </td>
+                        <td className="py-3.5 px-4 font-medium text-gray-600">
+                          {shiftAssignment.shift?.start_time || '-'}
+                        </td>
+                        <td className="py-3.5 px-4 font-medium text-gray-600">
+                          {shiftAssignment.shift?.end_time || '-'}
+                        </td>
+                        <td className="py-3.5 px-4 font-medium text-gray-600">
+                          {shiftAssignment.shift?.grace_period !== undefined ? `${shiftAssignment.shift.grace_period} mins` : '-'}
+                        </td>
+                        <td className="py-3.5 px-4 font-medium text-gray-600">
+                          {shiftAssignment.shift?.status || '-'}
+                        </td>
+                        <td className="py-3.5 px-4 text-gray-500">
+                          {shiftAssignment.assigned_at ? new Date(shiftAssignment.assigned_at).toLocaleDateString() : 'N/A'}
+                        </td>
+                        <td className="py-3.5 px-4 text-right flex justify-end gap-2">
+                          <button
+                            onClick={() => openChangeShiftModal(shiftAssignment.shift_id)}
+                            className="flex items-center text-xs font-semibold text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-300 px-2.5 py-1 rounded bg-blue-50/30"
+                          >
+                            <ArrowLeftRight className="w-3.5 h-3.5 mr-1" />
+                            Change
+                          </button>
+                          <button
+                            onClick={() => openRemoveShiftModal(shiftAssignment.shift_id)}
+                            className="flex items-center text-xs font-semibold text-red-600 hover:text-red-800 border border-red-200 hover:border-red-300 px-2.5 py-1 rounded bg-red-50/30"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 mr-1" />
+                            Remove
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Shift History Card */}
+          <div className="rounded-lg border border-gray-200 bg-white overflow-hidden shadow-sm">
+            <div className="border-b border-gray-200 bg-gray-50 px-5 py-3">
+              <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wider">Shift Assignment History</h3>
+            </div>
+            
+            <div className="p-5">
+              {shiftsLoading ? (
+                <div className="text-center py-4 text-sm text-gray-500">Loading history...</div>
+              ) : shiftHistory?.length === 0 ? (
+                <div className="text-center py-8 text-sm text-gray-500">
+                  <Calendar className="w-8 h-8 mx-auto text-gray-300 mb-2" />
+                  No historical logs found.
+                </div>
+              ) : (
+                <div className="relative border-l border-gray-200 ml-3 space-y-6 py-2">
+                  {shiftHistory.map((log) => {
+                    const hasPrev = !!log.previous_shift;
+                    const hasNew = !!log.new_shift;
+                    let typeColor = 'bg-blue-500';
+                    let typeText = 'Assigned';
+
+                    if (hasPrev && hasNew) {
+                      typeColor = 'bg-amber-500';
+                      typeText = 'Changed';
+                    } else if (hasPrev && !hasNew) {
+                      typeColor = 'bg-red-500';
+                      typeText = 'Removed';
+                    }
+
+                    return (
+                      <div key={log.id} className="relative pl-6">
+                        <div className={`absolute -left-1.5 top-1.5 w-3 h-3 rounded-full ${typeColor} ring-4 ring-white`}></div>
+                        <div className="bg-gray-50/50 border border-gray-100 rounded-xl p-4">
+                          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-2">
+                            <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold text-white ${typeColor}`}>
+                              {typeText}
+                            </span>
+                            <span className="text-xs text-gray-500 font-medium">
+                              {log.created_at ? new Date(log.created_at).toLocaleString() : ''}
+                            </span>
+                          </div>
+                          <div className="text-sm text-gray-700 font-medium space-y-1">
+                            {typeText === 'Assigned' && (
+                              <p>Assigned to <span className="font-bold text-gray-900">{log.new_shift?.name}</span></p>
+                            )}
+                            {typeText === 'Changed' && (
+                              <p>Changed from <span className="font-bold text-gray-900">{log.previous_shift?.name}</span> to <span className="font-bold text-gray-900">{log.new_shift?.name}</span></p>
+                            )}
+                            {typeText === 'Removed' && (
+                              <p>Removed from <span className="font-bold text-gray-900">{log.previous_shift?.name}</span></p>
+                            )}
+                          </div>
                           <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs border-t border-gray-100/60 pt-3 text-gray-500">
                             <div className="flex items-center gap-1.5">
                               <User className="w-3.5 h-3.5 text-gray-400" />
@@ -768,6 +1037,153 @@ export default function EmployeeDetail() {
                   className="px-4 py-2 bg-primary text-white rounded-lg text-xs hover:bg-primary/90 font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
                   {submitting ? 'Saving...' : 'Confirm Transfer'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Shift Modals */}
+      {isAssignShiftModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden">
+            <div className="flex justify-between items-center px-6 py-4 border-b border-gray-150">
+              <h2 className="text-lg font-bold text-gray-900">{shiftAssignment ? 'Change Shift' : 'Assign Shift'}</h2>
+              <button onClick={() => setIsAssignShiftModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleAssignShift} className="p-6 space-y-4">
+              {errors.general && (
+                <div className="bg-red-50 text-red-700 p-3 rounded-lg text-xs flex items-center">
+                  <ShieldAlert className="w-4 h-4 mr-2" />
+                  {errors.general}
+                </div>
+              )}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Select Shift *</label>
+                <select
+                  value={selectedShiftId}
+                  onChange={(e) => setSelectedShiftId(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="">Choose a shift...</option>
+                  {allShifts?.filter(s => s.status === 'Active').map(s => (
+                    <option key={s.id} value={s.id}>{s.name} ({s.start_time} - {s.end_time})</option>
+                  ))}
+                </select>
+                {errors.shift_id && <p className="text-red-500 text-xs mt-1">{errors.shift_id}</p>}
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Remarks</label>
+                <textarea 
+                  value={shiftRemarks}
+                  onChange={(e) => setShiftRemarks(e.target.value)}
+                  rows="3"
+                  placeholder="Reason or notes..."
+                  className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                ></textarea>
+              </div>
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-150">
+                <button type="button" onClick={() => setIsAssignShiftModalOpen(false)} className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-xs hover:bg-gray-50">Cancel</button>
+                <button type="submit" disabled={submitting} className="px-4 py-2 bg-primary text-white rounded-lg text-xs hover:bg-primary/90 font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed">
+                  {submitting ? 'Saving...' : (shiftAssignment ? 'Change Shift' : 'Assign Shift')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {isChangeShiftModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden">
+            <div className="flex justify-between items-center px-6 py-4 border-b border-gray-150">
+              <h2 className="text-lg font-bold text-gray-900">Change Shift</h2>
+              <button onClick={() => setIsChangeShiftModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleChangeShift} className="p-6 space-y-4">
+              {errors.general && (
+                <div className="bg-red-50 text-red-700 p-3 rounded-lg text-xs flex items-center">
+                  <ShieldAlert className="w-4 h-4 mr-2" />
+                  {errors.general}
+                </div>
+              )}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">New Shift *</label>
+                <select
+                  value={selectedNewShiftId}
+                  onChange={(e) => setSelectedNewShiftId(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="">Select new shift...</option>
+                  {allShifts?.filter(s => s.status === 'Active' && s.id !== parseInt(selectedCurrentShiftId)).map(s => (
+                    <option key={s.id} value={s.id}>{s.name} ({s.start_time} - {s.end_time})</option>
+                  ))}
+                </select>
+                {errors.new_shift_id && <p className="text-red-500 text-xs mt-1">{errors.new_shift_id}</p>}
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Remarks *</label>
+                <textarea 
+                  value={shiftRemarks}
+                  onChange={(e) => setShiftRemarks(e.target.value)}
+                  rows="3"
+                  placeholder="Reason for change..."
+                  className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                ></textarea>
+              </div>
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-150">
+                <button type="button" onClick={() => setIsChangeShiftModalOpen(false)} className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-xs hover:bg-gray-50">Cancel</button>
+                <button type="submit" disabled={submitting} className="px-4 py-2 bg-primary text-white rounded-lg text-xs hover:bg-primary/90 font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed">
+                  {submitting ? 'Saving...' : 'Confirm Change'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {isRemoveShiftModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden">
+            <div className="flex justify-between items-center px-6 py-4 border-b border-gray-150">
+              <h2 className="text-lg font-bold text-gray-900">Remove Shift Assignment</h2>
+              <button onClick={() => setIsRemoveShiftModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleRemoveShift} className="p-6 space-y-4">
+              {errors.general && (
+                <div className="bg-red-50 text-red-700 p-3 rounded-lg text-xs flex items-center">
+                  <ShieldAlert className="w-4 h-4 mr-2" />
+                  {errors.general}
+                </div>
+              )}
+              <p className="text-sm text-gray-600">
+                Are you sure you want to remove this employee's shift assignment? This will be logged in the history.
+              </p>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Remarks / Reason *</label>
+                <textarea 
+                  value={shiftRemarks}
+                  onChange={(e) => setShiftRemarks(e.target.value)}
+                  rows="3"
+                  placeholder="Reason for removal..."
+                  className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                ></textarea>
+              </div>
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-150">
+                <button type="button" onClick={() => setIsRemoveShiftModalOpen(false)} className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-xs hover:bg-gray-50">Cancel</button>
+                <button type="submit" disabled={submitting} className="px-4 py-2 bg-red-600 text-white rounded-lg text-xs hover:bg-red-700 font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed">
+                  {submitting ? 'Removing...' : 'Remove Assignment'}
                 </button>
               </div>
             </form>

@@ -140,6 +140,15 @@ Route::prefix('v1')->group(function () {
 
     Route::apiResource('employee-sites', \App\Http\Controllers\EmployeeSiteController::class)->only(['index','store','destroy']);
 
+    // Employee Shift Assignments
+    Route::get('employees/{employee}/shift', [\App\Http\Controllers\Api\V1\EmployeeShiftAssignmentController::class, 'index']);
+    Route::get('employees/{employee}/shifts/history', [\App\Http\Controllers\Api\V1\EmployeeShiftAssignmentController::class, 'history']);
+    Route::post('employees/{employee}/shift', [\App\Http\Controllers\Api\V1\EmployeeShiftAssignmentController::class, 'assign']);
+    Route::post('employees/{employee}/shifts/transfer', [\App\Http\Controllers\Api\V1\EmployeeShiftAssignmentController::class, 'transfer']);
+    Route::delete('employees/{employee}/shifts/{shift}', [\App\Http\Controllers\Api\V1\EmployeeShiftAssignmentController::class, 'remove']);
+    Route::get('employees/{employee}/current-shift', [\App\Http\Controllers\Api\V1\EmployeeShiftAssignmentController::class, 'currentShift']);
+    Route::get('shifts/{shift}/employees', [\App\Http\Controllers\Api\V1\EmployeeShiftAssignmentController::class, 'shiftEmployees']);
+
     // Daily Reports
     Route::apiResource('daily-reports', DailyReportController::class);
     Route::post('daily-reports/{daily_report}/approve', [DailyReportController::class, 'approve']);

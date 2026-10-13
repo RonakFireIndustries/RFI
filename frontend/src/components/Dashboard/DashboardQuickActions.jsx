@@ -20,22 +20,23 @@ export default function DashboardQuickActions({ quickActions }) {
 
   return (
     <div>
-      <h2 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h2>
+      <h2 className="text-lg font-bold text-foreground mb-4">Quick Actions</h2>
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
         {quickActions.map((action) => {
           const Icon = iconMap[action.icon] || Plus;
-          const button = (
+
+          return (
             <button
               key={action.key}
               onClick={() => navigate(action.link)}
-              className="py-4 bg-gray-100 hover:bg-gray-200 rounded-xl flex flex-col items-center justify-center text-gray-700 transition-colors"
+              className="w-full h-full py-4 px-2 bg-card border border-border hover:bg-muted rounded-xl flex flex-col items-center justify-center gap-2 text-foreground transition-colors"
             >
-              <Icon className="w-6 h-6 mb-2" />
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <Icon className="w-5 h-5" />
+              </span>
               <span className="text-xs font-medium text-center leading-tight">{action.label}</span>
             </button>
           );
-
-          return <div key={action.key}>{button}</div>;
         })}
       </div>
     </div>

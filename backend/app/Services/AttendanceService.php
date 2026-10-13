@@ -153,6 +153,12 @@ class AttendanceService
         $status = 'Present';
 
         $shiftId = $data['shift_id'] ?? null;
+        if (!$shiftId && $employee) {
+            $employeeShift = $employee->employeeShifts()->first();
+            if ($employeeShift) {
+                $shiftId = $employeeShift->shift_id;
+            }
+        }
         $shift = $shiftId ? Shift::find($shiftId) : Shift::where('status', 'Active')->first();
 
         if ($shift && $shift->start_time) {
@@ -192,6 +198,8 @@ class AttendanceService
             $attendanceData['shift_id'] = $data['shift_id'];
         } elseif ($shift) {
             $attendanceData['shift_id'] = $shift->id;
+        } elseif ($shiftId) {
+            $attendanceData['shift_id'] = $shiftId;
         }
 
         $attendance = Attendance::create($attendanceData);

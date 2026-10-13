@@ -76,7 +76,7 @@ return [
             ],
             'shifts' => [
                 'label' => 'Shifts',
-                'actions' => ['view', 'create', 'update', 'delete'],
+                'actions' => ['view', 'create', 'update', 'delete', 'assign', 'transfer'],
             ],
             'daily-reports' => [
                 'label' => 'Daily Reports',
@@ -360,6 +360,8 @@ return [
         'shift.create'        => 'shifts.create',
         'shift.edit'          => 'shifts.update',
         'shift.delete'        => 'shifts.delete',
+        'shifts.assign'       => 'shifts.assign',
+        'shifts.transfer'     => 'shifts.transfer',
         'attendance.view'     => 'attendance.view',
         'attendance.create'   => 'attendance.create',
         'attendance.edit'     => 'attendance.update',

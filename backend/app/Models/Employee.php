@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Employee extends Model
 {
@@ -60,5 +61,23 @@ class Employee extends Model
     public function siteHistories(): HasMany
     {
         return $this->hasMany(EmployeeSiteHistory::class);
+    }
+
+    public function employeeShifts(): HasMany
+    {
+        return $this->hasMany(EmployeeShift::class);
+    }
+
+    /**
+     * The employee's current shift assignment (one active shift per employee).
+     */
+    public function currentShift(): HasOne
+    {
+        return $this->hasOne(EmployeeShift::class)->latestOfMany();
+    }
+
+    public function shiftHistories(): HasMany
+    {
+        return $this->hasMany(EmployeeShiftHistory::class);
     }
 }

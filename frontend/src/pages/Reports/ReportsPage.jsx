@@ -655,7 +655,7 @@ export default function ReportsPage() {
 
       {/* Export Progress Notification */}
       {generateProgress && (
-        <div className={`fixed bottom-6 right-6 z-50 px-5 py-4 rounded-xl shadow-lg border transition-all ${
+        <div className={`fixed bottom-6 left-6 z-50 px-5 py-4 rounded-xl shadow-lg border transition-all ${
           generateProgress.success !== undefined
             ? generateProgress.success
               ? 'bg-green-50 border-green-200'
@@ -682,7 +682,7 @@ export default function ReportsPage() {
       {canCreate && (
         <button
           onClick={() => setShowNewReportModal(true)}
-          className="fixed bottom-6 left-6 z-50 w-12 h-12 bg-primary hover:bg-primary/90 text-white rounded-full shadow-lg flex items-center justify-center transition-colors"
+          className="fixed bottom-6 right-6 z-50 w-12 h-12 bg-primary hover:bg-primary/90 text-white rounded-full shadow-lg flex items-center justify-center transition-colors"
           title="Create Report"
         >
           <Plus className="w-6 h-6" />

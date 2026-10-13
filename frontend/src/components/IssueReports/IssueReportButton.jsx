@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Bug, X, Loader2, Upload, Trash2, CheckCircle2, AlertCircle,
   Image as ImageIcon, History, Send, RefreshCw,
@@ -62,6 +63,15 @@ export default function IssueReportButton() {
     return () => document.removeEventListener('keydown', onKey);
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [open]);
+
   const addFiles = (fileList) => {
     const incoming = Array.from(fileList || []).filter((f) => f.type.startsWith('image/'));
     setFiles((prev) => [...prev, ...incoming].slice(0, 10));
@@ -122,9 +132,9 @@ export default function IssueReportButton() {
         <Bug className="h-5 w-5" />
       </button>
 
-      {open && (
+      {open && createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-start justify-center p-3 sm:p-6 bg-black/40 overflow-y-auto"
+          className="fixed inset-0 z-[100] flex items-start justify-center p-3 sm:p-6 bg-black/50 overflow-y-auto"
           onClick={(e) => e.target === e.currentTarget && setOpen(false)}
         >
           <div className="bg-card rounded-xl shadow-2xl border border-border w-full max-w-2xl my-4 animate-in fade-in slide-in-from-top-2 duration-150">
@@ -363,7 +373,8 @@ export default function IssueReportButton() {
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
