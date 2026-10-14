@@ -167,7 +167,19 @@ export default function EmployeeAttendanceHistory() {
                 <tr key={record.id} className="hover:bg-gray-50 transition-colors">
                   <td className="p-4 pl-6 font-semibold text-sm text-gray-900">{formatDate(record.date)}</td>
                   <td className="p-4 text-sm font-semibold text-gray-700">{formatTime(record.check_in)}</td>
-                  <td className="p-4 text-sm font-semibold text-gray-700">{formatTime(record.check_out)}</td>
+                  <td className="p-4 text-sm font-semibold text-gray-700">
+                    <span className="inline-flex items-center gap-1.5">
+                      {formatTime(record.check_out)}
+                      {record.is_auto_checkout && (
+                        <span
+                          className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800"
+                          title="Auto check-out — no check-out was recorded, so the shift end time was used."
+                        >
+                          Auto
+                        </span>
+                      )}
+                    </span>
+                  </td>
                   <td className="p-4 text-sm font-semibold text-gray-700">
                     {record.working_hours ? `${record.working_hours}h` : '--'}
                   </td>

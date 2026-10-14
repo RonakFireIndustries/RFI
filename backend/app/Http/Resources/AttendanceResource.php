@@ -26,6 +26,7 @@ class AttendanceResource extends JsonResource
             'date' => $this->date,
             'check_in' => $this->check_in,
             'check_out' => $this->check_out,
+            'is_auto_checkout' => (bool) $this->is_auto_checkout,
             'status' => $this->status,
             'notes' => $this->remarks ?? $this->notes,
             'working_hours' => $this->working_hours,

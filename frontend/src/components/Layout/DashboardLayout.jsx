@@ -204,6 +204,11 @@ export default function DashboardLayout() {
   const permissionContext = { user, permissions };
   const canAccess = (required) => can(permissionContext, required);
 
+  // Role visibility rules that permissions cannot express. `isSuperAdmin`
+  // already covers the super-admin flag; `roles` is normalised to plain
+  // role-name strings by the auth store. See hideForAdmin in sidebarMenu.js.
+  const isAdmin = isSuperAdmin || (roles || []).includes('Admin');
+
     return (
     <div className="min-h-screen bg-background flex font-sans text-foreground">
       {/* Mobile backdrop */}
@@ -248,7 +253,10 @@ export default function DashboardLayout() {
         <div className="flex-1 py-4 overflow-y-auto">
           <div className="px-3 space-y-6">
             {menuCategories.map((category, index) => {
-              const visibleItems = category.items.filter((item) => canAccess(item.permissions));
+              const visibleItems = category.items.filter((item) => {
+                if (item.hideForAdmin && isAdmin) return false;
+                return canAccess(item.permissions);
+              });
 
               if (visibleItems.length === 0) return null;
 

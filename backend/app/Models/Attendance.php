@@ -10,6 +10,12 @@ class Attendance extends Model
 {
     use HasFactory;
 
+    /**
+     * Remark written on records that were closed automatically because the
+     * employee forgot to check out.
+     */
+    public const AUTO_CHECKOUT_REMARK = 'Auto check-out: no check-out recorded, closed at shift end.';
+
     protected $fillable = [
         'employee_id',
         'site_id',
@@ -17,6 +23,7 @@ class Attendance extends Model
         'date',
         'check_in',
         'check_out',
+        'is_auto_checkout',
         'working_hours',
         'overtime_hours',
         'status',
@@ -40,6 +47,7 @@ class Attendance extends Model
         'date' => 'date:Y-m-d',
         'check_in' => 'datetime',
         'check_out' => 'datetime',
+        'is_auto_checkout' => 'boolean',
         'working_hours' => 'decimal:2',
         'overtime_hours' => 'decimal:2',
         'is_late' => 'boolean',

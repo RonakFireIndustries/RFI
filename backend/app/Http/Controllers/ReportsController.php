@@ -103,8 +103,9 @@ class ReportsController extends Controller
         $query = Leave::with('employee.user');
 
         if ($month && $year) {
-            $query->whereMonth('from_date', $month)
-                ->whereYear('from_date', $year);
+            // leaves.start_date / leaves.end_date - there is no `from_date` column.
+            $query->whereMonth('start_date', $month)
+                ->whereYear('start_date', $year);
         }
 
         $leaves = $query->get();
@@ -114,7 +115,7 @@ class ReportsController extends Controller
             'total_leaves' => $leaves->count(),
             'approved' => $leaves->where('status', 'Approved')->count(),
             'rejected' => $leaves->where('status', 'Rejected')->count(),
-            'pending' => $leaves->where('status', 'Pending')->count(),
+            'pending' => $leaves->whereIn('status', ['Submitted', 'Pending'])->count(),
             'leaves' => $leaves,
         ];
 

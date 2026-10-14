@@ -472,7 +472,19 @@ export default function Attendance() {
                         </div>
                       </td>
                       <td className="p-4 text-sm font-bold text-foreground">{checkIn}</td>
-                      <td className="p-4 text-sm font-bold text-foreground">{checkOut}</td>
+                      <td className="p-4 text-sm font-bold text-foreground">
+                        <span className="inline-flex items-center gap-1.5">
+                          {checkOut}
+                          {log.is_auto_checkout && (
+                            <span
+                              className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800"
+                              title="Auto check-out — no check-out was recorded, so the shift end time was used."
+                            >
+                              Auto
+                            </span>
+                          )}
+                        </span>
+                      </td>
                       <td className="p-4 text-sm font-bold text-foreground">{hours}</td>
                       <td className="p-4 text-right pr-6">
                         <span className={`inline-block px-3 py-1 rounded text-xs font-bold capitalize ${statusBg} ${statusText}`}>
@@ -529,7 +541,19 @@ export default function Attendance() {
                                         <tr key={rec.id} className="hover:bg-white transition-colors">
                                           <td className="p-2 pl-0 text-sm font-bold text-foreground">{rec.date}</td>
                                           <td className="p-2 text-sm text-foreground">{formatDate(rec.check_in)}</td>
-                                          <td className="p-2 text-sm text-foreground">{formatDate(rec.check_out)}</td>
+                                          <td className="p-2 text-sm text-foreground">
+                                            <span className="inline-flex items-center gap-1.5">
+                                              {formatDate(rec.check_out)}
+                                              {rec.is_auto_checkout && (
+                                                <span
+                                                  className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800"
+                                                  title="Auto check-out — no check-out was recorded, so the shift end time was used."
+                                                >
+                                                  Auto
+                                                </span>
+                                              )}
+                                            </span>
+                                          </td>
                                           <td className="p-2 text-sm font-bold text-foreground">{calculateHours(rec.check_in, rec.check_out)}</td>
                                           <td className="p-2">
                                             <span className={`inline-block px-2 py-0.5 rounded text-xs font-bold capitalize ${rStatusBg} ${rStatusText}`}>

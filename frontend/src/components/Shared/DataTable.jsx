@@ -7,7 +7,7 @@ import {
 } from '@tanstack/react-table';
 import { ArrowDownUp } from 'lucide-react';
 
-export default function DataTable({ columns, data, globalFilter, onGlobalFilterChange, emptyText = 'No records found.' }) {
+export default function DataTable({ columns, data, globalFilter, onGlobalFilterChange, emptyText = 'No records found.', onRowClick }) {
   const table = useReactTable({
     data,
     columns,
@@ -17,6 +17,23 @@ export default function DataTable({ columns, data, globalFilter, onGlobalFilterC
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
   });
+
+  // Rows often contain their own controls (View / Edit / Delete). Those should
+  // keep their own behaviour instead of also triggering the row navigation.
+  const handleRowClick = (event, row) => {
+    if (!onRowClick) return;
+    if (event.target.closest('button, a, input, select, textarea, [role="button"]')) return;
+    onRowClick(row.original);
+  };
+
+  const handleRowKeyDown = (event, row) => {
+    if (!onRowClick) return;
+    if (event.target !== event.currentTarget) return;
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onRowClick(row.original);
+    }
+  };
 
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-card">
@@ -51,7 +68,13 @@ export default function DataTable({ columns, data, globalFilter, onGlobalFilterC
               </tr>
             ) : (
               table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="hover:bg-muted/50 transition-colors">
+                <tr
+                  key={row.id}
+                  onClick={(event) => handleRowClick(event, row)}
+                  onKeyDown={(event) => handleRowKeyDown(event, row)}
+                  tabIndex={onRowClick ? 0 : undefined}
+                  className={`transition-colors ${onRowClick ? 'cursor-pointer' : ''} hover:bg-muted/50`}
+                >
                   {row.getVisibleCells().map((cell) => (
                     <td key={cell.id} className="px-4 py-3 align-top text-foreground/80">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}

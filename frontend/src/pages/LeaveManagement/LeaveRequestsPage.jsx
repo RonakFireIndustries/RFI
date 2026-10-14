@@ -1,15 +1,20 @@
 import React, { useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Plus, Eye } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { Plus, Eye, X } from 'lucide-react';
 import { useLeaveRequestStore } from '../../store/leaveRequestStore';
 import DataTable from '../../components/Shared/DataTable';
 
 export default function LeaveRequestsPage() {
   const { items, fetchItems, loading } = useLeaveRequestStore();
+  const [searchParams] = useSearchParams();
+
+  // ?status=Submitted / Approved / Rejected - the Leave dashboard cards link
+  // straight into a filtered view.
+  const statusFilter = searchParams.get('status') || '';
 
   useEffect(() => {
-    fetchItems({ per_page: 100 });
-  }, [fetchItems]);
+    fetchItems({ per_page: 100, ...(statusFilter ? { status: statusFilter } : {}) });
+  }, [fetchItems, statusFilter]);
 
   const columns = [
     { header: 'Employee', accessorKey: 'employee.full_name', cell: ({ row }) => row.original.employee?.full_name || row.original.employee?.name || 'N/A' },
@@ -47,6 +52,14 @@ export default function LeaveRequestsPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Leave Requests</h1>
           <p className="text-gray-500 text-sm mt-1">Manage and track employee leave applications.</p>
+          {statusFilter && (
+            <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-100 px-3 py-1 text-xs font-medium text-blue-700">
+              Filtered by status: {statusFilter}
+              <Link to="/dashboard/leave-management/requests" className="ml-1 hover:text-blue-900" title="Clear filter">
+                <X className="w-3.5 h-3.5" />
+              </Link>
+            </span>
+          )}
         </div>
         <Link
           to="/dashboard/leave-management/requests/new"

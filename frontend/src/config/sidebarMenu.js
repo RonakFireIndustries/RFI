@@ -15,7 +15,15 @@ import {
  *   - Access Control is restricted to super admins / access-control.manage.
  *
  * canAccess() in DashboardLayout resolves an item using the user's permission
- * list ONLY. Role names are no longer used for menu decisions.
+ * list ONLY. Role names are no longer used for permission decisions.
+ *
+ * A flag can additionally declare visibility rules that permissions cannot
+ * express. Currently supported:
+ *
+ *   - hideForAdmin: true   hidden for users holding the Admin role (or the
+ *                          super-admin flag); for admins the role dashboard
+ *                          already covers everything, so the self-scoped
+ *                          "My Dashboard" is redundant.
  *
  * Permission names here MUST match config/access.php in the backend.
  */
@@ -24,7 +32,7 @@ export const menuCategories = [
     title: 'Overview',
     items: [
       { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, permissions: ['*'] },
-      { name: 'My Dashboard', path: '/dashboard/my-dashboard', icon: LayoutDashboard, permissions: ['*'] },
+      { name: 'My Dashboard', path: '/dashboard/my-dashboard', icon: LayoutDashboard, permissions: ['*'], hideForAdmin: true },
     ],
   },
   {

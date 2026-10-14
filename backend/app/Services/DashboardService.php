@@ -132,6 +132,88 @@ class DashboardService
     ];
 
     /**
+     * Where a card/alert takes you when clicked. Keys are the widget keys from
+     * DASHBOARD_WIDGETS; anything omitted renders as a static, non-clickable
+     * card. Keeping this in one table is what makes the dashboards navigable
+     * without touching every widget() computation.
+     */
+    private const WIDGET_LINKS = [
+        // People
+        'total_employees'          => '/dashboard/employees',
+        'employee_summary'         => '/dashboard/employees',
+        'new_joiners'              => '/dashboard/employees',
+        'assigned_employees'       => '/dashboard/employees',
+        'document_expiry'          => '/dashboard/employees',
+        'production_workforce'     => '/dashboard/employees',
+        'active_users'             => '/dashboard/access-control',
+        'user_activity'            => '/dashboard/access-control',
+
+        // Attendance
+        'present_today'            => '/dashboard/attendance',
+        'absent_today'             => '/dashboard/attendance',
+        'attendance_summary'       => '/dashboard/attendance',
+        'absenteeism_alert'        => '/dashboard/attendance',
+        'attendance_today'         => '/dashboard/my-attendance',
+        'today_attendance'         => '/dashboard/my-attendance',
+        'attendance_reminder'      => '/dashboard/my-attendance',
+
+        // Leave
+        'employees_on_leave'       => '/dashboard/leave-management/requests',
+        'pending_approvals'        => '/dashboard/leave-management/requests',
+        'pending_leave_requests'   => '/dashboard/leave-management/requests',
+        'leave_summary'            => '/dashboard/leave-management',
+        'leave_balance'            => '/dashboard/my-leaves',
+        'pending_leave_requests_mine' => '/dashboard/my-leaves',
+        'leave_expiry_alert'       => '/dashboard/my-leaves',
+
+        // Sites
+        'active_sites'             => '/dashboard/sites',
+        'site_productivity'        => '/dashboard/sites',
+        'site_delays_alert'        => '/dashboard/sites',
+
+        // Inventory
+        'inventory_value'          => '/dashboard/inventory/stock',
+        'low_stock'                => '/dashboard/inventory/stock',
+        'out_of_stock'             => '/dashboard/inventory/stock',
+        'low_stock_alert'          => '/dashboard/inventory/stock',
+        'pending_transfers'        => '/dashboard/inventory/transfers',
+        'incoming_stock'           => '/dashboard/inventory/transactions',
+
+        // Sales & finance
+        'revenue'                  => '/dashboard/invoices',
+        'expenses'                 => '/dashboard/purchases',
+        'outstanding_payments'     => '/dashboard/invoices',
+        'pending_payments'         => '/dashboard/invoices',
+        'customers_count'          => '/dashboard/customers',
+        'sales_trend'              => '/dashboard/invoices',
+        'payroll_cost'             => '/dashboard/payroll',
+        'salary_processed'         => '/dashboard/payroll',
+        'payroll_summary'          => '/dashboard/payroll',
+        'pending_payroll'          => '/dashboard/period-payroll',
+        'pending_payroll_alert'    => '/dashboard/period-payroll',
+        'approved_payroll'         => '/dashboard/process-payroll',
+        'paid_payroll'             => '/dashboard/process-payroll',
+        'payroll_records'          => '/dashboard/process-payroll',
+        'payslips'                 => '/dashboard/my-payroll',
+
+        // Daily reports (DPR)
+        'pending_dpr_approvals'    => '/dashboard/daily-reports',
+        'completed_work_reports'   => '/dashboard/daily-reports',
+        'pending_work_reports'     => '/dashboard/daily-reports',
+        'dpr_summary'              => '/dashboard/daily-reports',
+        'dpr_reminder'             => '/dashboard/daily-reports',
+        'my_tasks'                 => '/dashboard/daily-reports',
+
+        // System / misc
+        'company_overview'         => '/dashboard',
+        'recent_activity'          => '/dashboard',
+        'audit_logs'               => '/dashboard',
+        'server_status'            => '/dashboard',
+        'system_health'            => '/dashboard',
+        'server_alert'             => '/dashboard',
+    ];
+
+    /**
      * Ordered keyword -> lucide-icon rules used to pick an icon for a
      * synthesized widget, so a dashboard rendered before the seeder has run
      * still looks like the seeded one. Keyword matching (rather than a
@@ -680,11 +762,14 @@ private const DESIGNATION_MAP = [
             if (!in_array($key, $bucket('cards'), true)) continue;
             $data = $this->computeWidgetData($widget);
             if ($data === null) continue;
-            $cards[] = array_merge([
+            $card = array_merge([
                 'key' => $widget->widget_key,
                 'name' => $widget->name,
                 'icon' => $widget->icon,
             ], $data);
+            // Gives the card a destination so it renders as clickable.
+            $card['link'] = $card['link'] ?? (self::WIDGET_LINKS[$widget->widget_key] ?? null);
+            $cards[] = $card;
         }
 
         foreach ($widgets as $key => $widget) {
@@ -717,7 +802,7 @@ private const DESIGNATION_MAP = [
             if (!in_array($key, $bucket('alerts'), true)) continue;
             $data = $this->computeWidgetData($widget);
             if ($data === null) continue;
-            $alerts[] = array_merge([
+            $alert = array_merge([
                 'key' => $widget->widget_key,
                 'name' => $widget->name,
                 'icon' => $widget->icon,
@@ -725,6 +810,9 @@ private const DESIGNATION_MAP = [
                 'subtitle' => $data['subtitle'] ?? null,
                 'severity' => $data['severity'] ?? 'info',
             ], $data);
+            // Gives the alert a destination so it renders as clickable.
+            $alert['link'] = $alert['link'] ?? (self::WIDGET_LINKS[$widget->widget_key] ?? null);
+            $alerts[] = $alert;
         }
 
         foreach ($widgets as $key => $widget) {
@@ -855,9 +943,22 @@ private const DESIGNATION_MAP = [
         return DailyReport::whereNotNull('approved_at');
     }
 
+    /**
+     * Leaves still awaiting a decision.
+     *
+     * The app writes `Submitted` when a request is filed (LeaveController::myStore
+     * and LeaveRequestService), while the column default and older rows are
+     * `Pending`. Both count as pending - keying on `Pending` alone makes every
+     * "pending" counter read zero.
+     */
+    private function pendingLeaveQuery(): Builder
+    {
+        return Leave::whereIn('status', ['Submitted', 'Pending']);
+    }
+
     protected function widgetPendingApprovals(): array
     {
-        $leaves = Leave::where('status', 'Pending')->count();
+        $leaves = $this->pendingLeaveQuery()->count();
         $dprs = $this->dprPendingQuery()->count();
         return ['value' => $leaves + $dprs, 'subtitle' => "{$leaves} leaves, {$dprs} DPRs"];
     }
@@ -871,7 +972,7 @@ private const DESIGNATION_MAP = [
 
     protected function widgetPendingLeaveRequests(): array
     {
-        $count = Leave::where('status', 'Pending')->count();
+        $count = $this->pendingLeaveQuery()->count();
         return ['value' => $count, 'subtitle' => 'Awaiting approval'];
     }
 
@@ -963,7 +1064,7 @@ private const DESIGNATION_MAP = [
     protected function widgetPendingLeaveRequestsMine(): array
     {
         if (!$this->employee) return null;
-        $count = Leave::where('employee_id', $this->employee->id)->where('status', 'Pending')->count();
+        $count = $this->pendingLeaveQuery()->where('employee_id', $this->employee->id)->count();
         return ['value' => $count, 'subtitle' => 'Awaiting approval'];
     }
 
@@ -1022,7 +1123,7 @@ private const DESIGNATION_MAP = [
 
     protected function widgetLeaveSummary(): array
     {
-        $pending = Leave::where('status', 'Pending')->count();
+        $pending = $this->pendingLeaveQuery()->count();
         $approved = Leave::where('status', 'Approved')->count();
         $rejected = Leave::where('status', 'Rejected')->count();
         return ['value' => $pending, 'subtitle' => "{$pending} pending, {$approved} approved, {$rejected} rejected"];

@@ -7,19 +7,37 @@ const leaveRequest = (response) => payload(response)?.leave_request || payload(r
 
 export const useLeaveRequestStore = create((set, get) => ({
   items: [],
+  myItems: [],
   selected: null,
   loading: false,
+  myLoading: false,
   error: null,
+  // Remembered so approve/reject can refetch the list as the user actually
+  // loaded it, instead of dropping back to the default page size/filter.
+  lastParams: null,
 
   fetchItems: async (params) => {
     set({ loading: true, error: null });
     try {
       const response = await leaveRequestsService.getAll(params);
       const items = leaveRequests(response);
-      set({ items, loading: false });
+      set({ items, loading: false, lastParams: params ?? null });
       return items;
     } catch (error) {
       set({ error: error.message, loading: false });
+      throw error;
+    }
+  },
+
+  fetchMyLeaves: async (params) => {
+    set({ myLoading: true, error: null });
+    try {
+      const response = await leaveRequestsService.myList(params);
+      const items = leaveRequests(response);
+      set({ myItems: items, myLoading: false });
+      return items;
+    } catch (error) {
+      set({ error: error.message, myLoading: false });
       throw error;
     }
   },
@@ -80,7 +98,7 @@ export const useLeaveRequestStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       await leaveRequestsService.approve(id, data);
-      await get().fetchItems();
+      await get().fetchItems(get().lastParams);
       set({ loading: false });
     } catch (error) {
       set({ error: error.message, loading: false });
@@ -92,7 +110,7 @@ export const useLeaveRequestStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       await leaveRequestsService.reject(id, data);
-      await get().fetchItems();
+      await get().fetchItems(get().lastParams);
       set({ loading: false });
     } catch (error) {
       set({ error: error.message, loading: false });
@@ -104,7 +122,7 @@ export const useLeaveRequestStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       await leaveRequestsService.cancel(id, data);
-      await get().fetchItems();
+      await get().fetchItems(get().lastParams);
       set({ loading: false });
     } catch (error) {
       set({ error: error.message, loading: false });

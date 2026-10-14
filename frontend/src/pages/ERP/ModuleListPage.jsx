@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Edit2, Plus, Search, Trash2, X } from 'lucide-react';
 import DataTable from '../../components/Shared/DataTable';
 import PermissionGate from '../../components/Guards/PermissionGate';
@@ -43,6 +43,7 @@ export default function ModuleListPage({
   module,
 }) {
   const { items, loading, fetchItems, createItem, updateItem, deleteItem } = store();
+  const navigate = useNavigate();
   const { submitting, guard } = useSubmitGuard();
   const [search, setSearch] = useState('');
   const [editing, setEditing] = useState(null);
@@ -53,6 +54,10 @@ export default function ModuleListPage({
   const canCreate = canModule(module, 'create');
   const canUpdate = canModule(module, 'update');
   const canDelete = canModule(module, 'delete');
+
+  // Clicking a row opens the record, matching the View link in the actions
+  // column. Skipped for read-only tables or modules with no detail route.
+  const rowClickEnabled = Boolean(detailBasePath) && !hideView && !readOnly;
 
   useEffect(() => {
     fetchItems(fetchParams);
@@ -214,7 +219,13 @@ export default function ModuleListPage({
           denialFor,
         })
       ) : (
-        <DataTable columns={tableColumns} data={filteredItems} globalFilter={search} onGlobalFilterChange={setSearch} />
+        <DataTable
+          columns={tableColumns}
+          data={filteredItems}
+          globalFilter={search}
+          onGlobalFilterChange={setSearch}
+          onRowClick={rowClickEnabled ? (row) => navigate(`${detailBasePath}/${row.id}`) : undefined}
+        />
       )}
 
       {isModalOpen && (

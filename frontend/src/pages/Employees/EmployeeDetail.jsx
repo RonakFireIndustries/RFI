@@ -772,11 +772,12 @@ export default function EmployeeDetail() {
                       const d = new Date(val);
                       return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
                     }},
-                    { header: 'Check Out', accessorKey: 'check_out', cell: ({ getValue }) => {
+                    { header: 'Check Out', accessorKey: 'check_out', cell: ({ getValue, row }) => {
                       const val = getValue();
                       if (!val) return '-';
                       const d = new Date(val);
-                      return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+                      const time = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+                      return row?.original?.is_auto_checkout ? `${time} (auto)` : time;
                     }},
                     { header: 'Working Hours', accessorKey: 'working_hours', cell: ({ getValue }) => {
                       const val = getValue();

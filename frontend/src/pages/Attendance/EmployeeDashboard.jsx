@@ -182,8 +182,9 @@ export default function EmployeeDashboard() {
 
   const allowedRadius = currentSite?.allowed_radius ?? 100;
   const isInsideRadius = distance !== null && distance <= allowedRadius;
+  const isAutoClosed = !!todayAttendance?.is_auto_checkout;
   const isCheckedIn = !!todayAttendance?.check_in && !todayAttendance?.check_out;
-  const isCheckedOut = !!todayAttendance?.check_out;
+  const isCheckedOut = !!todayAttendance?.check_out && !isAutoClosed;
 
   const buttonStatus = useMemo(() => {
     if (gpsLoading) return 'gps_loading';
@@ -386,8 +387,16 @@ export default function EmployeeDashboard() {
           </div>
           <div className="bg-gray-50 rounded-lg p-3">
             <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Check Out</p>
-            <p className="text-lg font-bold text-gray-900 mt-1">
+            <p className="text-lg font-bold text-gray-900 mt-1 flex items-center gap-1.5">
               {formatTime(todayAttendance?.check_out)}
+              {isAutoClosed && (
+                <span
+                  className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800"
+                  title="Auto check-out — no check-out was recorded, so the shift end time was used. You can still check out for real."
+                >
+                  Auto
+                </span>
+              )}
             </p>
           </div>
           <div className="bg-gray-50 rounded-lg p-3">
@@ -437,6 +446,7 @@ export default function EmployeeDashboard() {
             onCheckOut={handleCheckOut}
             isCheckedIn={isCheckedIn}
             isCheckedOut={isCheckedOut}
+            isAutoClosed={isAutoClosed}
           />
         )}
       </div>

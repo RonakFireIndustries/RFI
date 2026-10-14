@@ -74,6 +74,7 @@ export default function SlideAttendanceButton({
   onCheckOut,
   isCheckedIn,
   isCheckedOut,
+  isAutoClosed = false,
 }) {
   const [sliding, setSliding] = useState(false);
   const [slidePercent, setSlidePercent] = useState(0);
@@ -84,6 +85,9 @@ export default function SlideAttendanceButton({
   const isDraggingRef = useRef(false);
   const maxTravelRef = useRef(0);
 
+  // An auto-closed record still lets the employee record their real check-out.
+  const canSlideOut = isCheckedIn || isAutoClosed;
+
   const stateKey = transitioning
     ? 'loading_action'
     : status === 'gps_loading' ? 'gps_loading'
@@ -91,11 +95,14 @@ export default function SlideAttendanceButton({
     : status === 'permission_denied' ? 'permission_denied'
     : status === 'gps_error' ? 'gps_error'
     : isCheckedOut ? 'checked_out'
-    : isCheckedIn ? 'checked_in'
+    : canSlideOut ? 'checked_in'
     : 'ready_checkin';
 
   const state = STATES[stateKey];
   const Icon = state.icon;
+  const label = isAutoClosed && stateKey === 'checked_in'
+    ? 'Slide to Check Out (auto-closed)'
+    : state.label;
 
   const handleStart = useCallback((clientX) => {
     if (state.disabled || transitioning) return;
@@ -120,7 +127,7 @@ export default function SlideAttendanceButton({
     isDraggingRef.current = false;
     if (slidePercent >= 85) {
       setTransitioning(true);
-      const action = isCheckedIn ? onCheckOut : onCheckIn;
+      const action = canSlideOut ? onCheckOut : onCheckIn;
       if (action) {
         action().finally(() => {
           setTransitioning(false);
@@ -132,7 +139,7 @@ export default function SlideAttendanceButton({
       setSlidePercent(0);
       setSliding(false);
     }
-  }, [slidePercent, isCheckedIn, onCheckIn, onCheckOut]);
+  }, [slidePercent, canSlideOut, onCheckIn, onCheckOut]);
 
   const handleMouseDown = (e) => handleStart(e.clientX);
   const handleMouseMove = (e) => { if (isDraggingRef.current) handleMove(e.clientX); };
@@ -166,7 +173,7 @@ export default function SlideAttendanceButton({
     >
       <div className="absolute inset-0 flex items-center justify-center">
         <span className={`text-sm font-bold transition-opacity ${state.text} ${slidePercent > 30 ? 'opacity-0' : 'opacity-100'}`}>
-          {state.label}
+          {label}
         </span>
       </div>
 

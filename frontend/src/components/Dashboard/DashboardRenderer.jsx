@@ -9,6 +9,7 @@ import DashboardWidgets from './DashboardWidgets';
 import DashboardSkeleton from './DashboardSkeleton';
 import DashboardEmptyState from './DashboardEmptyState';
 import MonthlyAttendanceReport from './MonthlyAttendanceReport';
+import MyPendingLeaves from './MyPendingLeaves';
 
 const DASHBOARD_TITLES = {
   admin: { title: 'Admin Dashboard', subtitle: 'Full system overview at a glance.' },
@@ -102,6 +103,8 @@ export default function DashboardRenderer({ scope = 'role' }) {
       )}
 
       {widgets?.length > 0 && <DashboardWidgets widgets={widgets} />}
+
+      {showMonthlyReport && <MyPendingLeaves />}
 
       {showMonthlyReport && <MonthlyAttendanceReport />}
 

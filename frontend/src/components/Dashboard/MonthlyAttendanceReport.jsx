@@ -214,7 +214,19 @@ export default function MonthlyAttendanceReport() {
                           </span>
                         </td>
                         <td className="p-3 text-sm text-gray-700">{formatTime(day.check_in)}</td>
-                        <td className="p-3 text-sm text-gray-700">{formatTime(day.check_out)}</td>
+                        <td className="p-3 text-sm text-gray-700">
+                          <span className="inline-flex items-center gap-1.5">
+                            {formatTime(day.check_out)}
+                            {day.is_auto_checkout && (
+                              <span
+                                className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800"
+                                title="Auto check-out — no check-out was recorded, so the shift end time was used."
+                              >
+                                Auto
+                              </span>
+                            )}
+                          </span>
+                        </td>
                         <td className="p-3 text-sm font-semibold text-gray-700">{formatHours(day.working_hours)}</td>
                         <td className="p-3 text-sm text-gray-700">{formatHours(day.overtime_hours)}</td>
                         <td className="p-3 pr-4 text-sm text-gray-600 truncate max-w-[140px]">{day.site || '--'}</td>

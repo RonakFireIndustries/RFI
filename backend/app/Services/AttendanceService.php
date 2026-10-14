@@ -81,8 +81,27 @@ class AttendanceService
             $this->calculateHours($data);
         }
 
+        // A human-supplied check-out supersedes an auto-generated one.
+        if (array_key_exists('check_out', $data) && $data['check_out'] !== null && $attendance->is_auto_checkout) {
+            $data['is_auto_checkout'] = false;
+            if (!array_key_exists('remarks', $data)) {
+                $data['remarks'] = $this->withoutAutoCheckoutRemark($attendance->remarks);
+            }
+        }
+
         $attendance->update($data);
         return $attendance->fresh(['employee', 'site', 'shift']);
+    }
+
+    /**
+     * Strip the auto check-out note from a remarks string, returning null when
+     * nothing else remains.
+     */
+    protected function withoutAutoCheckoutRemark(?string $remarks): ?string
+    {
+        $cleaned = trim(str_replace(Attendance::AUTO_CHECKOUT_REMARK, '', (string) $remarks), " |");
+
+        return $cleaned === '' ? null : $cleaned;
     }
 
     public function deleteAttendance(Attendance $attendance): void
@@ -237,7 +256,7 @@ class AttendanceService
             ];
         }
 
-        if ($attendance->check_out) {
+        if ($attendance->check_out && !$attendance->is_auto_checkout) {
             return [
                 'success' => false,
                 'message' => 'Already checked out today',
@@ -286,8 +305,14 @@ class AttendanceService
 
         $locationVerified = $this->geoLocation->isWithinRadius($distance, $allowedRadius);
 
+        $remarks = $attendance->is_auto_checkout
+            ? $this->withoutAutoCheckoutRemark($attendance->remarks)
+            : $attendance->remarks;
+
         $updateData = [
             'check_out' => $now,
+            'is_auto_checkout' => false,
+            'remarks' => $remarks,
             'checkout_latitude' => $data['latitude'],
             'checkout_longitude' => $data['longitude'],
             'checkout_distance' => round($distance, 2),
@@ -417,6 +442,7 @@ class AttendanceService
                     'status' => $record->status ?: 'Present',
                     'check_in' => $record->check_in?->toDateTimeString(),
                     'check_out' => $record->check_out?->toDateTimeString(),
+                    'is_auto_checkout' => (bool) $record->is_auto_checkout,
                     'working_hours' => $record->working_hours !== null ? (float) $record->working_hours : null,
                     'overtime_hours' => $record->overtime_hours !== null ? (float) $record->overtime_hours : null,
                     'site' => $record->site?->name,
@@ -466,6 +492,7 @@ class AttendanceService
             'status' => $status,
             'check_in' => null,
             'check_out' => null,
+            'is_auto_checkout' => false,
             'working_hours' => null,
             'overtime_hours' => null,
             'site' => null,

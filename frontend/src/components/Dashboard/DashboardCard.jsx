@@ -1,4 +1,4 @@
-import { TrendingUp, TrendingDown, Minus, Users, UserCheck, UserX, UserMinus, Building2, Package, AlertTriangle, XCircle, DollarSign, ClipboardList, UserPlus, CalendarClock, FileText, FileWarning, Percent, Clock, CheckCircle, CreditCard, Database, Wallet, HardHat, BarChart3, ListChecks, Calendar, CalendarDays, Fingerprint, MapPin, Activity, ScrollText, ShieldAlert, Shield, Server, RefreshCw, Briefcase, ArrowLeftRight, Truck, Palette, CheckSquare, Square, TrendingUpDown } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Users, UserCheck, UserX, UserMinus, Building2, Package, AlertTriangle, XCircle, DollarSign, ClipboardList, UserPlus, CalendarClock, FileText, FileWarning, Percent, Clock, CheckCircle, CreditCard, Database, Wallet, HardHat, BarChart3, ListChecks, Calendar, CalendarDays, Fingerprint, MapPin, Activity, ScrollText, ShieldAlert, Shield, Server, RefreshCw, Briefcase, ArrowLeftRight, Truck, Palette, CheckSquare, Square, TrendingUpDown, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const iconMap = {
@@ -28,11 +28,26 @@ export default function DashboardCard({ card }) {
   const TrendIcon = trendIcons[card.trend] || null;
 
   const isAlert = card.key?.includes('low_stock') || card.key?.includes('alert') || card.key?.includes('out_of_stock');
+  const target = card.link && card.link !== '#' ? card.link : null;
+
+  const open = () => { if (target) navigate(target); };
+
+  const onKeyDown = (event) => {
+    if (!target) return;
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      open();
+    }
+  };
 
   return (
     <div
-      onClick={() => card.link ? navigate(card.link) : undefined}
-      className={`bg-card rounded-xl shadow-sm border ${isAlert ? 'border-destructive/30' : 'border-border'} p-6 flex flex-col justify-between relative overflow-hidden ${card.link ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
+      onClick={open}
+      onKeyDown={onKeyDown}
+      role={target ? 'link' : undefined}
+      tabIndex={target ? 0 : undefined}
+      aria-label={target ? `Go to ${card.name}` : undefined}
+      className={`bg-card rounded-xl shadow-sm border ${isAlert ? 'border-destructive/30' : 'border-border'} p-6 flex flex-col justify-between relative overflow-hidden ${target ? 'cursor-pointer hover:shadow-md hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 transition-all' : ''}`}
     >
       {isAlert && (
         <div className="absolute top-0 right-0 p-4 opacity-10 text-destructive">
@@ -60,6 +75,12 @@ export default function DashboardCard({ card }) {
           <span className={`text-sm ${isAlert ? 'text-destructive font-semibold' : 'text-muted-foreground'}`}>
             {card.subtitle}
           </span>
+        </div>
+      )}
+      {target && (
+        <div className="flex items-center justify-end relative z-10 text-xs font-semibold text-primary/80">
+          View details
+          <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
         </div>
       )}
     </div>
