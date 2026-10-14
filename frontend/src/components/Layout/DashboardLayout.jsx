@@ -477,6 +477,10 @@ export default function DashboardLayout() {
               <Route path="process-payroll" element={<PayrollGenerationPage />} />
               <Route path="my-payroll" element={<EmployeePayrollPage />} />
               <Route path="payslip/:id" element={<PayslipPage />} />
+              {/* Same report, rendered straight from the payroll row so an
+                  employee can view their own pay even before a payslip is
+                  generated. */}
+              <Route path="payroll-report/:id" element={<PayslipPage />} />
               <Route path="categories" element={<CategoryDirectory />} />
               <Route path="customers" element={<CustomerDirectory />} />
               <Route path="customers/:id" element={<CustomerProfile />} />

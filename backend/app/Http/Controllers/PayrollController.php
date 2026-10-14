@@ -25,7 +25,18 @@ class PayrollController extends Controller
 
     public function index(Request $request)
     {
-        $this->authorize('payroll.view');
+        // Self-service: an employee may always read their OWN payroll, even
+        // without the payroll.view permission. Anyone listing other employees'
+        // payroll still needs it.
+        $requestedEmployeeId = $request->input('employee_id');
+        $ownEmployeeId = $request->user()?->employee?->id;
+        $ownRecordOnly = $requestedEmployeeId
+            && $ownEmployeeId
+            && (int) $requestedEmployeeId === (int) $ownEmployeeId;
+
+        if (!$ownRecordOnly) {
+            $this->authorize('payroll.view');
+        }
 
         $query = Payroll::with(['employee', 'payrollPeriod', 'payslip']);
 
@@ -33,8 +44,8 @@ class PayrollController extends Controller
             $query->where('payroll_period_id', $request->payroll_period_id);
         }
 
-        if ($request->has('employee_id')) {
-            $query->where('employee_id', $request->employee_id);
+        if ($requestedEmployeeId) {
+            $query->where('employee_id', $requestedEmployeeId);
         }
 
         return response()->json($query->orderBy('created_at', 'desc')->get());
@@ -59,9 +70,26 @@ class PayrollController extends Controller
 
     public function show(Payroll $payroll)
     {
-        $this->authorize('payroll.view');
+        $ownEmployeeId = request()->user()?->employee?->id;
 
-        return response()->json($payroll->load(['employee.department', 'employee.designation', 'payrollPeriod', 'payslip']));
+        // Self-service: an employee may open their own payroll record.
+        if (!$ownEmployeeId || (int) $payroll->employee_id !== (int) $ownEmployeeId) {
+            $this->authorize('payroll.view');
+        }
+
+        $payroll->load(['employee.department', 'employee.designation', 'payrollPeriod', 'payslip']);
+
+        $data = $payroll->toArray();
+
+        // Attendance breakdown behind the numbers, so a payroll report opened
+        // directly (before a payslip row exists) explains itself the same way
+        // the payslip does.
+        if ($payroll->employee && $payroll->payrollPeriod) {
+            $data['breakdown'] = app(PayrollCalculationService::class)
+                ->summarizeAttendance($payroll->employee, $payroll->payrollPeriod);
+        }
+
+        return response()->json($data);
     }
 
     public function generate(Request $request)
@@ -99,6 +127,7 @@ class PayrollController extends Controller
         $employees = $query->get();
         $generatedCount = 0;
         $errors = [];
+        $warnings = [];
 
         DB::beginTransaction();
         try {
@@ -111,6 +140,14 @@ class PayrollController extends Controller
                     $result = $this->payrollService->calculate($employee, $period);
                     Payroll::create($this->payrollAttributes($result, $period, 'Generated'));
                     $generatedCount++;
+
+                    if ((float) ($result['paid_days'] ?? 0) <= 0) {
+                        $warnings[] = sprintf(
+                            'Employee %d (%s): no paid attendance in this period - net pay is 0.',
+                            $employee->id,
+                            $employee->full_name ?? $employee->emp_id ?? '—'
+                        );
+                    }
                 } catch (\Throwable $e) {
                     $errors[] = "Employee {$employee->id}: {$e->getMessage()}";
                 }
@@ -126,6 +163,7 @@ class PayrollController extends Controller
             'message' => "Payroll generated for {$generatedCount} employees.",
             'generated_count' => $generatedCount,
             'errors' => $errors,
+            'warnings' => $warnings,
         ]);
     }
 

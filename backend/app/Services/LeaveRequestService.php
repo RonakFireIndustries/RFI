@@ -31,7 +31,23 @@ class LeaveRequestService
             }
         }
         if (!empty($filters['status'])) {
-            $query->where('status', $filters['status']);
+            // The dashboard approval widget asks for the still-undecided rows in
+            // one request (`status=Submitted,Pending`), so accept a list as well
+            // as the single-status value the Leave Management pages send.
+            $statuses = is_array($filters['status'])
+                ? $filters['status']
+                : explode(',', (string) $filters['status']);
+
+            $statuses = array_values(array_filter(
+                array_map('trim', $statuses),
+                fn ($status) => $status !== ''
+            ));
+
+            if (count($statuses) > 1) {
+                $query->whereIn('status', $statuses);
+            } elseif ($statuses) {
+                $query->where('status', $statuses[0]);
+            }
         }
         if (!empty($filters['leave_type_id'])) {
             $query->where('leave_type_id', $filters['leave_type_id']);

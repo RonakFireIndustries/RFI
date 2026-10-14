@@ -40,10 +40,12 @@ export const usePayrollStore = create((set, get) => ({
     }
   },
 
-  regeneratePayroll: async (payrollId) => {
+  // The endpoint re-derives every payroll row of a period from attendance:
+  // { payroll_period_id, employee_id? } (payroll_id is not accepted).
+  regeneratePayroll: async (payload) => {
     set({ loading: true, error: null });
     try {
-      const response = await api.post('/payroll/regenerate', { payroll_id: payrollId });
+      const response = await api.post('/payroll/regenerate', payload);
       set({ loading: false });
       return response.data;
     } catch (error) {

@@ -10,6 +10,8 @@ import DashboardSkeleton from './DashboardSkeleton';
 import DashboardEmptyState from './DashboardEmptyState';
 import MonthlyAttendanceReport from './MonthlyAttendanceReport';
 import MyPendingLeaves from './MyPendingLeaves';
+import LeaveApprovalsPanel from './LeaveApprovalsPanel';
+import { usePermission } from '../../hooks/usePermission';
 
 const DASHBOARD_TITLES = {
   admin: { title: 'Admin Dashboard', subtitle: 'Full system overview at a glance.' },
@@ -25,6 +27,7 @@ const DASHBOARD_TITLES = {
 
 export default function DashboardRenderer({ scope = 'role' }) {
   const navigate = useNavigate();
+  const { canModule } = usePermission();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -75,7 +78,12 @@ export default function DashboardRenderer({ scope = 'role' }) {
   const isEmployee = dashboardType === 'employee';
   const showMonthlyReport = isPersonal || isEmployee;
 
-  if (!hasContent && !showMonthlyReport) return <DashboardEmptyState dashboardType={dashboardType} />;
+  // Reviewers get an actionable approve/reject panel on their role dashboard.
+  // The personal dashboard already carries the read-only "Pending Leaves" list.
+  const canReviewLeaves = !isPersonal
+    && (canModule('leaves', 'approve') || canModule('leaves', 'reject'));
+
+  if (!hasContent && !showMonthlyReport && !canReviewLeaves) return <DashboardEmptyState dashboardType={dashboardType} />;
 
   return (
     <div className="space-y-6 pb-12">
@@ -83,6 +91,8 @@ export default function DashboardRenderer({ scope = 'role' }) {
         <h1 className="text-2xl font-bold text-foreground">{dashboardInfo.title}</h1>
         <p className="text-sm text-muted-foreground">{dashboardInfo.subtitle}</p>
       </div>
+
+      {canReviewLeaves && <LeaveApprovalsPanel />}
 
       {cards?.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

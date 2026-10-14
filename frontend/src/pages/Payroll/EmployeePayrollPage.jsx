@@ -92,12 +92,17 @@ const EmployeePayrollPage = () => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <span className="px-2 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700">{p.status}</span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  {p.payslip ? (
-                    <a href={`/dashboard/payslip/${p.payslip.id}`} className="text-orange-600 hover:text-orange-900 inline-flex items-center">
-                      <FileText className="w-4 h-4 mr-1" /> View
-                    </a>
-                  ) : (
+                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                  {/* The report is always viewable by its owner. Until a payslip
+                      row exists, open the payroll record directly instead. */}
+                  <button
+                    onClick={() => navigate(p.payslip ? `/dashboard/payslip/${p.payslip.id}` : `/dashboard/payroll-report/${p.id}`)}
+                    title={p.payslip ? 'View payslip' : 'View payroll report'}
+                    className="text-orange-600 hover:text-orange-900 inline-flex items-center"
+                  >
+                    <FileText className="w-4 h-4 mr-1" /> View
+                  </button>
+                  {!p.payslip && (
                     <PermissionGate module="payroll" action="manage" subject="payslips">
                       <button
                         onClick={() => generatePayslip(p)}

@@ -2,21 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, ChevronDown, ChevronRight, Clock, Plus } from 'lucide-react';
 import { useLeaveRequestStore } from '../../store/leaveRequestStore';
-
-// `Submitted` is what the app writes when a request is filed; `Pending` is the
-// column default on older rows. Both are still awaiting a decision.
-const PENDING_STATUSES = ['Submitted', 'Pending'];
-
-const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-// Dates come back as 'YYYY-MM-DD'; splitting the string avoids the UTC shift
-// that `new Date('YYYY-MM-DD')` applies in non-UTC timezones.
-const formatDate = (value) => {
-  if (!value) return '-';
-  const [year, month, day] = String(value).slice(0, 10).split('-');
-  if (!year || !month || !day) return String(value);
-  return `${day} ${MONTH_NAMES[Number(month) - 1]} ${year}`;
-};
+import { PENDING_STATUSES, formatLeaveDate } from '../../utils/leaveRequests';
 
 export default function MyPendingLeaves() {
   const { myItems, myLoading, fetchMyLeaves } = useLeaveRequestStore();
@@ -140,7 +126,7 @@ export default function MyPendingLeaves() {
                         {row.leave_type?.name || 'Leave'}
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        {formatDate(row.start_date)} &ndash; {formatDate(row.end_date)}
+                        {formatLeaveDate(row.start_date)} &ndash; {formatLeaveDate(row.end_date)}
                         {row.total_days != null && <span> &middot; {row.total_days} day(s)</span>}
                       </p>
                     </div>

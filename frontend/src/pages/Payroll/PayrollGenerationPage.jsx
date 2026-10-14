@@ -7,10 +7,11 @@ import { Play, CheckCircle, Lock, RefreshCw, FileText, Trash2 } from 'lucide-rea
 
 const PayrollGenerationPage = () => {
   const navigate = useNavigate();
-  const { payrolls, loading, fetchPayrolls, generatePayroll, approvePayroll, lockPayroll, unlockPayroll, deletePayroll, generatePayslip } = usePayrollStore();
+  const { payrolls, loading, fetchPayrolls, generatePayroll, regeneratePayroll, approvePayroll, lockPayroll, unlockPayroll, deletePayroll, generatePayslip } = usePayrollStore();
   const { items: periods, fetchItems: fetchPeriods } = usePayrollPeriodStore();
   const { items: employees, fetchItems: fetchEmployees } = useEmployeesStore();
   const [selectedPeriod, setSelectedPeriod] = useState('');
+  const [lastRun, setLastRun] = useState(null);
 
   useEffect(() => {
     fetchPeriods();
@@ -23,20 +24,42 @@ const PayrollGenerationPage = () => {
     }
   }, [selectedPeriod, fetchPayrolls]);
 
+  // parseFloat(null) === NaN, which used to render "₹NaN" whenever a column
+  // was absent. Missing money columns simply count as zero.
+  const num = (value) => {
+    const parsed = parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+
+  const reportResult = (result) => {
+    const msg = result?.message || 'Payroll processed';
+    const errs = result?.errors?.filter(Boolean) || [];
+    const warns = result?.warnings?.filter(Boolean) || [];
+    setLastRun({ message: msg, errors: errs, warnings: warns });
+  };
+
   const handleGenerate = async () => {
     if (!selectedPeriod) return alert("Select a period first");
     try {
       const result = await generatePayroll({ payroll_period_id: selectedPeriod });
-      const msg = result?.message || 'Payroll generated';
-      const errs = result?.errors?.filter(Boolean);
-      if (errs?.length) {
-        alert(`${msg}\n\nErrors:\n${errs.join('\n')}`);
-      } else {
-        alert(msg);
-      }
+      reportResult(result);
       fetchPayrolls({ payroll_period_id: selectedPeriod });
     } catch (e) {
       alert(e?.response?.data?.message || e?.message || 'Failed to generate payroll');
+    }
+  };
+
+  // Re-derives every row of the period from the current attendance, leave,
+  // half-day and late data. Existing rows are updated, never duplicated.
+  const handleRegenerate = async () => {
+    if (!selectedPeriod) return alert("Select a period first");
+    if (!window.confirm('Recalculate all payroll rows of this period from the latest attendance?')) return;
+    try {
+      const result = await regeneratePayroll({ payroll_period_id: selectedPeriod });
+      reportResult(result);
+      fetchPayrolls({ payroll_period_id: selectedPeriod });
+    } catch (e) {
+      alert(e?.response?.data?.message || e?.message || 'Failed to recalculate payroll');
     }
   };
 
@@ -60,8 +83,33 @@ const PayrollGenerationPage = () => {
           <button onClick={handleGenerate} disabled={loading || !selectedPeriod} className="w-full sm:w-auto justify-center bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center disabled:opacity-50">
             <Play className="w-4 h-4 mr-2" /> Generate Payroll
           </button>
+
+          <button
+            onClick={handleRegenerate}
+            disabled={loading || !selectedPeriod || payrolls.length === 0}
+            title="Recalculate from the latest attendance, leaves, half days and lates"
+            className="w-full sm:w-auto justify-center bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg flex items-center disabled:opacity-50"
+          >
+            <RefreshCw className="w-4 h-4 mr-2" /> Recalculate
+          </button>
         </div>
       </div>
+
+      {lastRun && (
+        <div className="mb-4 rounded-lg border border-gray-200 bg-white p-4 text-sm">
+          <p className="font-medium text-gray-900">{lastRun.message}</p>
+          {lastRun.warnings.length > 0 && (
+            <ul className="mt-2 space-y-1 text-amber-700">
+              {lastRun.warnings.map((w, i) => <li key={`w-${i}`}>• {w}</li>)}
+            </ul>
+          )}
+          {lastRun.errors.length > 0 && (
+            <ul className="mt-2 space-y-1 text-red-600">
+              {lastRun.errors.map((e, i) => <li key={`e-${i}`}>• {e}</li>)}
+            </ul>
+          )}
+        </div>
+      )}
 
       {loading ? (
         <div className="text-center py-12">Processing...</div>
@@ -80,8 +128,11 @@ const PayrollGenerationPage = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {payrolls.map((p) => {
-                const gross = parseFloat(p.basic_salary) + parseFloat(p.hra) + parseFloat(p.other_allowance) + parseFloat(p.overtime_pay);
-                const deductions = parseFloat(p.pf) + parseFloat(p.esic) + parseFloat(p.tds) + parseFloat(p.late_penalty);
+                const gross = num(p.basic_salary) + num(p.hra) + num(p.other_allowance) + num(p.conveyance)
+                  + num(p.special_allowance) + num(p.site_allowance) + num(p.travel_allowance)
+                  + num(p.food_allowance) + num(p.overtime_pay) + num(p.bonuses);
+                const deductions = num(p.pf) + num(p.esic) + num(p.pt) + num(p.tds)
+                  + num(p.other_deductions) + num(p.late_penalty) + num(p.salary_advance);
                 return (
                   <tr key={p.id}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
