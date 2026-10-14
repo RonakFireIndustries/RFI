@@ -7,9 +7,13 @@ export default function UpdatePrompt() {
   const [updateFn, setUpdateFn] = useState(null);
 
   useEffect(() => {
+    // The dev service worker is disabled in vite.config.js
+    // (`devOptions: { enabled: false }`), so registering /dev-sw.js here would
+    // only fetch index.html and raise a bogus MIME-type error. Production only.
+    if (import.meta.env.DEV) return;
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
 
-    const swUrl = import.meta.env.DEV ? '/dev-sw.js?dev-sw' : '/sw.js';
+    const swUrl = '/sw.js';
 
     const registerSW = async () => {
       try {
@@ -34,8 +38,8 @@ export default function UpdatePrompt() {
             }
           });
         });
-      } catch (e) {
-        if (import.meta.env.DEV) console.debug('SW registration skipped');
+      } catch {
+        // Service worker registration is best-effort.
       }
     };
 

@@ -58,17 +58,31 @@ export default function MonthlyAttendanceReport() {
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [unavailable, setUnavailable] = useState(false);
 
   const loadReport = useCallback(async (targetMonth) => {
     setLoading(true);
     setError(null);
+    setUnavailable(false);
     try {
       const response = await attendancesService.myMonthlyReport({ month: targetMonth });
       const data = response?.data?.report || response?.report || response?.data || null;
       setReport(data);
     } catch (err) {
-      setError(err?.response?.data?.message || err.message || 'Failed to load the monthly report.');
-      setReport(null);
+      const status = err?.response?.status;
+
+      // A 404/405 means this backend build predates the monthly report endpoint.
+      // Hide the card quietly rather than showing an error box on the dashboard.
+      if (status === 404 || status === 405) {
+        if (import.meta.env.DEV) {
+          console.debug(`Monthly attendance report endpoint unavailable (HTTP ${status}).`);
+        }
+        setUnavailable(true);
+        setReport(null);
+      } else {
+        setError(err?.response?.data?.message || err.message || 'Failed to load the monthly report.');
+        setReport(null);
+      }
     } finally {
       setLoading(false);
     }
@@ -86,6 +100,9 @@ export default function MonthlyAttendanceReport() {
 
   const summary = report?.summary;
   const days = report?.days || [];
+
+  // Backend doesn't expose the endpoint yet - render nothing.
+  if (unavailable) return null;
 
   const kpis = summary
     ? [
