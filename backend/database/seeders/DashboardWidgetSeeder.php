@@ -215,12 +215,6 @@ class DashboardWidgetSeeder extends Seeder
 
 
         $this->widget([
-            'widget_key' => 'my_tasks', 'name' => "Today's Tasks", 'type' => 'card', 'icon' => 'ListChecks',
-            'permission' => null, 'order' => ++$order,
-        ]);
-
-
-        $this->widget([
             'widget_key' => 'leave_balance', 'name' => 'Leave Balance', 'type' => 'card', 'icon' => 'CalendarDays',
             'permission' => null, 'order' => ++$order,
         ]);

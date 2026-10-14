@@ -14,7 +14,7 @@ export const useLeaveBalanceStore = create((set, get) => ({
       const response = await leaveBalancesService.getAll(params);
       set({ items: leaveBalances(response), loading: false });
     } catch (error) {
-      set({ error: error.message, loading: false });
+      set({ error: error?.response?.data?.message || error.message || 'Could not load leave balances.', loading: false });
     }
   },
   initialize: async (employeeId, year) => {
@@ -23,7 +23,7 @@ export const useLeaveBalanceStore = create((set, get) => ({
       await leaveBalancesService.initialize(employeeId, year);
       await get().fetchItems({ employee_id: employeeId });
     } catch (error) {
-      set({ error: error.message, loading: false });
+      set({ error: error?.response?.data?.message || error.message || 'Could not initialize leave balances.', loading: false });
     }
   }
 }));

@@ -6,12 +6,6 @@
     <style>
         * { box-sizing: border-box; }
         body { font-family: 'DejaVu Sans', Arial, sans-serif; color: #1f2937; font-size: 12px; margin: 0; }
-        .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #1e40af; padding-bottom: 12px; margin-bottom: 16px; }
-        .brand h1 { margin: 0; font-size: 20px; color: #1e40af; }
-        .brand p { margin: 2px 0; color: #6b7280; font-size: 11px; }
-        .doc-title { text-align: right; }
-        .doc-title h2 { margin: 0; font-size: 18px; color: #1f2937; text-transform: uppercase; }
-        .doc-title .no { font-weight: bold; color: #1e40af; }
         .meta { width: 100%; margin-bottom: 16px; border-collapse: collapse; }
         .meta td { padding: 4px 8px; }
         .meta td.label { width: 140px; color: #6b7280; font-weight: 600; }
@@ -37,33 +31,27 @@
         .totals .grand td { font-size: 14px; font-weight: bold; color: #1e40af; border-top: 2px solid #1e40af; }
         .terms { margin-top: 20px; border-top: 1px solid #e5e7eb; padding-top: 10px; font-size: 11px; color: #374151; }
         .terms h4 { margin: 0 0 4px; color: #1e40af; }
-        .footer { margin-top: 24px; text-align: center; color: #9ca3af; font-size: 10px; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="brand">
-            <h1>Ronak Fire Industries</h1>
-            <p>Fire Safety &amp; Firefighting Systems</p>
-        </div>
-        <div class="doc-title">
-            <h2>Bill of Quantities</h2>
-            <div class="no">{{ $quotation->quotation_no }}</div>
-        </div>
-    </div>
-
     <table class="meta">
         <tr>
-            <td class="label">Building / Site</td>
-            <td>{{ $quotation->display_building_name ?? '—' }}</td>
+            <td class="label">Quotation No</td>
+            <td>{{ $quotation->quotation_no }}</td>
             <td class="label">Quotation Date</td>
             <td>{{ $quotation->quotation_date?->format('d-m-Y') }}</td>
         </tr>
         <tr>
+            <td class="label">Building / Site</td>
+            <td>{{ $quotation->display_building_name ?? '—' }}</td>
             <td class="label">Status</td>
             <td>{{ ucfirst($quotation->status) }}</td>
+        </tr>
+        <tr>
             <td class="label">Prepared By</td>
             <td>{{ $quotation->creator?->name ?? '—' }}</td>
+            <td class="label"></td>
+            <td></td>
         </tr>
     </table>
 
@@ -101,7 +89,8 @@
         </tbody>
     </table>
 
-    <table class="items">
+    {{-- Page 1 ends here: metadata + section-wise summary. Itemised lines start on page 2. --}}
+    <table class="items" style="page-break-before: always;">
         <thead>
             <tr>
                 <th style="width:30px">#</th>
@@ -186,7 +175,5 @@
             <div>{!! nl2br(e($quotation->terms)) !!}</div>
         </div>
     @endif
-
-    <div class="footer">Generated on {{ now()->format('d-m-Y H:i') }} · Ronak Fire Industries</div>
 </body>
 </html>

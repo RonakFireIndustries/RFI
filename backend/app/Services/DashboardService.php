@@ -24,7 +24,6 @@ use App\Models\EmployeeSite;
 use App\Models\DashboardWidget;
 use App\Models\Category;
 use App\Models\Payslip;
-use App\Models\Task;
 use App\Models\ActivityLog;
 use App\Models\CompanySetting;
 use App\Support\Access;
@@ -123,7 +122,7 @@ class DashboardService
             'alerts' => ['server_alert'],
         ],
         'employee' => [
-            'cards' => ['attendance_today', 'current_site', 'leave_balance', 'pending_leave_requests_mine', 'today_attendance', 'my_tasks'],
+            'cards' => ['attendance_today', 'current_site', 'leave_balance', 'pending_leave_requests_mine', 'today_attendance'],
             'charts' => [],
             'quick_actions' => ['check_attendance', 'submit_dpr', 'apply_leave', 'download_payslip', 'check_in', 'check_out'],
             'alerts' => ['attendance_reminder', 'dpr_reminder', 'leave_expiry_alert'],
@@ -202,7 +201,6 @@ class DashboardService
         'pending_work_reports'     => '/dashboard/daily-reports',
         'dpr_summary'              => '/dashboard/daily-reports',
         'dpr_reminder'             => '/dashboard/daily-reports',
-        'my_tasks'                 => '/dashboard/daily-reports',
 
         // System / misc
         'company_overview'         => '/dashboard',
@@ -930,8 +928,8 @@ private const DESIGNATION_MAP = [
     }
 
     /**
-     * The `daily_reports` table has no `status` column. Review state is derived
-     * from the submitted_at / approved_at timestamps.
+     * Review state is derived from the submitted_at / approved_at timestamps
+     * rather than the `status` column, which only ever carries Draft/Submitted.
      */
     private function dprPendingQuery(): Builder
     {
@@ -954,6 +952,32 @@ private const DESIGNATION_MAP = [
     private function pendingLeaveQuery(): Builder
     {
         return Leave::whereIn('status', ['Submitted', 'Pending']);
+    }
+
+    /**
+     * Balances are only ever created by the per-employee "Initialize" action,
+     * which nothing calls on its own - so a freshly created employee reports
+     * zero remaining days indefinitely. Create this year's rows on first read;
+     * `firstOrCreate` inside initializeBalances() makes this safe to repeat.
+     */
+    private function ensureLeaveBalances(Employee $employee): void
+    {
+        $year = (int) Carbon::now()->year;
+
+        $hasBalances = LeaveBalance::where('employee_id', $employee->id)
+            ->where('year', $year)
+            ->exists();
+
+        if ($hasBalances) {
+            return;
+        }
+
+        try {
+            app(LeaveBalanceService::class)->initializeBalances($employee, $year);
+        } catch (\Throwable $e) {
+            // A failing backfill must not blank the card.
+            report($e);
+        }
     }
 
     protected function widgetPendingApprovals(): array
@@ -1057,8 +1081,11 @@ private const DESIGNATION_MAP = [
     protected function widgetLeaveBalance(): array
     {
         if (!$this->employee) return null;
-        $balance = LeaveBalance::where('employee_id', $this->employee->id)->sum('remaining');
-        return ['value' => $balance, 'subtitle' => 'Days remaining'];
+        $this->ensureLeaveBalances($this->employee);
+        $balance = LeaveBalance::where('employee_id', $this->employee->id)
+            ->where('year', Carbon::now()->year)
+            ->sum('remaining');
+        return ['value' => round((float) $balance, 2), 'subtitle' => 'Days remaining'];
     }
 
     protected function widgetPendingLeaveRequestsMine(): array
@@ -1132,9 +1159,9 @@ private const DESIGNATION_MAP = [
     protected function widgetDprSummary(): array
     {
         $from = Carbon::now()->startOfMonth()->toDateString();
-        $total = DailyReport::where('report_date', '>=', $from)->count();
-        $pending = $this->dprPendingQuery()->where('report_date', '>=', $from)->count();
-        $approved = $this->dprApprovedQuery()->where('report_date', '>=', $from)->count();
+        $total = DailyReport::where('date', '>=', $from)->count();
+        $pending = $this->dprPendingQuery()->where('date', '>=', $from)->count();
+        $approved = $this->dprApprovedQuery()->where('date', '>=', $from)->count();
         return ['value' => $total, 'subtitle' => "{$pending} pending, {$approved} approved this month"];
     }
 
@@ -1179,7 +1206,7 @@ private const DESIGNATION_MAP = [
         $since = Carbon::now()->subDays(30)->toDateString();
         $sites = Site::where('status', 'Active')->count();
         $withStaff = EmployeeSite::distinct()->count('site_id');
-        $reports = DailyReport::whereNotNull('site_id')->where('report_date', '>=', $since)->count();
+        $reports = DailyReport::whereNotNull('site_id')->where('date', '>=', $since)->count();
         return ['value' => $sites, 'subtitle' => "{$withStaff} with staff · {$reports} DPRs (30d)"];
     }
 
@@ -1196,7 +1223,7 @@ private const DESIGNATION_MAP = [
     protected function widgetSiteProductivity(): array
     {
         $since = Carbon::now()->subDays(30)->toDateString();
-        $reports = DailyReport::whereNotNull('site_id')->where('report_date', '>=', $since)->count();
+        $reports = DailyReport::whereNotNull('site_id')->where('date', '>=', $since)->count();
         $sites = Site::where('status', 'Active')->count();
         $avg = $sites > 0 ? round($reports / $sites, 1) : 0;
         return ['value' => $avg, 'subtitle' => 'Avg DPRs per site (30d)'];
@@ -1213,16 +1240,6 @@ private const DESIGNATION_MAP = [
     {
         $count = $this->dprPendingQuery()->count();
         return ['value' => $count, 'subtitle' => 'Awaiting approval'];
-    }
-
-    protected function widgetMyTasks(): array
-    {
-        if (!$this->employee) {
-            return ['value' => 0, 'subtitle' => 'No employee record'];
-        }
-        $open = Task::where('employee_id', $this->employee->id)->where('status', '!=', 'Completed')->count();
-        $total = Task::where('employee_id', $this->employee->id)->count();
-        return ['value' => $open, 'subtitle' => "{$total} assigned"];
     }
 
     protected function widgetTodayAttendance(): array
@@ -1449,7 +1466,7 @@ private const DESIGNATION_MAP = [
         $data = [];
         for ($i = 5; $i >= 0; $i--) {
             $date = Carbon::now()->subMonths($i);
-            $count = DailyReport::whereMonth('report_date', $date->month)->whereYear('report_date', $date->year)->count();
+            $count = DailyReport::whereMonth('date', $date->month)->whereYear('date', $date->year)->count();
             $data[] = ['name' => $date->format('M'), 'value' => $count];
         }
         return ['data' => $data, 'chart_type' => 'bar'];
@@ -1733,7 +1750,7 @@ private const DESIGNATION_MAP = [
     protected function widgetDprReminder(): ?array
     {
         if (!$this->employee) return null;
-        $submitted = DailyReport::where('employee_id', $this->employee->id)->whereDate('report_date', Carbon::today())->exists();
+        $submitted = DailyReport::where('employee_id', $this->employee->id)->whereDate('date', Carbon::today())->exists();
         if ($submitted) return null;
         return ['value' => 'DPR not submitted', 'subtitle' => 'Submit your daily report', 'severity' => 'info'];
     }
@@ -1741,7 +1758,10 @@ private const DESIGNATION_MAP = [
     protected function widgetLeaveExpiryAlert(): ?array
     {
         if (!$this->employee) return null;
-        $totalBalance = LeaveBalance::where('employee_id', $this->employee->id)->sum('remaining');
+        $this->ensureLeaveBalances($this->employee);
+        $totalBalance = LeaveBalance::where('employee_id', $this->employee->id)
+            ->where('year', Carbon::now()->year)
+            ->sum('remaining');
         if ($totalBalance <= 0) return null;
         return ['value' => "{$totalBalance} leave days remaining", 'subtitle' => 'Plan your leaves', 'severity' => 'info'];
     }
@@ -1759,7 +1779,7 @@ private const DESIGNATION_MAP = [
     protected function widgetMyDpr(): ?array
     {
         if (!$this->employee) return null;
-        $count = DailyReport::where('employee_id', $this->employee->id)->whereMonth('report_date', Carbon::now()->month)->count();
+        $count = DailyReport::where('employee_id', $this->employee->id)->whereMonth('date', Carbon::now()->month)->count();
         return ['type' => 'mini_card', 'value' => $count, 'subtitle' => 'Reports this month'];
     }
 

@@ -8,6 +8,7 @@ import { useSiteStore } from '../../store/siteStore';
 import { useShiftsStore } from '../../store/shiftStore';
 import { useAttendanceStore } from '../../store/attendanceStore';
 import { useDailyReportsStore } from '../../store/dailyReportStore';
+import { useLeaveBalanceStore } from '../../store/leaveBalanceStore';
 import DataTable from '../../components/Shared/DataTable';
 import { STORAGE_URL } from '../../services/api';
 import { useSubmitGuard } from '../../hooks/useSubmitGuard';
@@ -21,7 +22,7 @@ import {
 const valueAt = (item, path) => path.split('.').reduce((value, key) => value?.[key], item);
 
 const simpleColumns = [
-  { header: 'Date', accessorKey: 'report_date' },
+  { header: 'Date', accessorKey: 'date' },
   { header: 'Status/Type', accessorKey: 'status' },
   { header: 'Notes', accessorKey: 'content' },
 ];
@@ -58,9 +59,23 @@ export default function EmployeeDetail() {
   const { items: allSites, fetchItems: fetchAllSites } = useSiteStore();
   const { items: allShifts, fetchItems: fetchAllShifts } = useShiftsStore();
   const { items: dailyReports, fetchItems: fetchDailyReports, loading: dailyReportsLoading } = useDailyReportsStore();
+  const {
+    items: leaveBalances,
+    fetchItems: fetchLeaveBalances,
+    loading: leaveBalancesLoading,
+    error: leaveBalancesError,
+  } = useLeaveBalanceStore();
 
   const [activeTab, setActiveTab] = useState('profile');
   const { submitting, guard } = useSubmitGuard();
+
+  // Load the balances only when the Leave tab is opened: the endpoint is
+  // permission gated (leave.balance.view) and per-employee.
+  useEffect(() => {
+    if (activeTab === 'leave') {
+      fetchLeaveBalances({ employee_id: id, per_page: 100 });
+    }
+  }, [activeTab, id, fetchLeaveBalances]);
 
   // Modals for site allocation
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
@@ -102,6 +117,15 @@ export default function EmployeeDetail() {
   if (employeeLoading || !selected) {
     return <div className="rounded-lg border border-gray-200 bg-white p-8 text-center text-sm text-gray-500">Loading detail...</div>;
   }
+
+  const leaveBalanceTotals = (leaveBalances || []).reduce(
+    (acc, b) => ({
+      allocated: acc.allocated + parseFloat(b.allocated || 0),
+      used: acc.used + parseFloat(b.used || 0),
+      remaining: acc.remaining + parseFloat(b.remaining || 0),
+    }),
+    { allocated: 0, used: 0, remaining: 0 }
+  );
 
   const sections = [
     { title: 'Leaves', path: 'leaves', emptyText: 'No leave records.', columns: [{ header: 'Type', accessorKey: 'type' }, { header: 'Status', accessorKey: 'status' }] },
@@ -860,15 +884,56 @@ export default function EmployeeDetail() {
           <div className="rounded-lg border border-gray-200 bg-white overflow-hidden shadow-sm">
             <div className="border-b border-gray-200 bg-gray-50 px-5 py-3 flex justify-between items-center">
               <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wider">Leave Balances</h3>
-            </div>
-            <div className="p-5">
-              <div className="text-sm text-gray-500 mb-4">Leave balance summary will be displayed here.</div>
               <Link 
                 to="/dashboard/leave-management/balances"
                 className="text-blue-600 hover:text-blue-800 text-sm font-medium"
               >
                 View Full Leave Balances
               </Link>
+            </div>
+            <div className="p-5">
+              {leaveBalancesLoading ? (
+                <div className="text-center py-6 text-sm text-gray-500">Loading leave balances...</div>
+              ) : leaveBalancesError ? (
+                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {leaveBalancesError}
+                </div>
+              ) : (leaveBalances || []).length === 0 ? (
+                <div className="text-center py-8 text-sm text-gray-500">
+                  <Calendar className="w-8 h-8 mx-auto text-gray-300 mb-2" />
+                  No leave balances found for this employee yet.
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+                    <div className="bg-gray-50 rounded-lg border border-gray-200 p-4">
+                      <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Total Allocated</p>
+                      <p className="text-2xl font-bold text-gray-900 mt-1">{leaveBalanceTotals.allocated.toFixed(1)}</p>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg border border-gray-200 p-4">
+                      <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Used</p>
+                      <p className="text-2xl font-bold text-orange-600 mt-1">{leaveBalanceTotals.used.toFixed(1)}</p>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg border border-gray-200 p-4">
+                      <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Remaining</p>
+                      <p className="text-2xl font-bold text-green-600 mt-1">{leaveBalanceTotals.remaining.toFixed(1)}</p>
+                    </div>
+                  </div>
+                  <DataTable
+                    columns={[
+                      { header: 'Leave Type', accessorKey: 'leave_type.name', cell: ({ row }) => row.original.leave_type?.name || '-' },
+                      { header: 'Year', accessorKey: 'year' },
+                      { header: 'Allocated', accessorKey: 'allocated', cell: ({ getValue }) => <span className="font-medium">{getValue() ?? '-'}</span> },
+                      { header: 'Used', accessorKey: 'used', cell: ({ getValue }) => <span className="font-medium text-orange-600">{getValue() ?? '-'}</span> },
+                      { header: 'Remaining', accessorKey: 'remaining', cell: ({ getValue }) => <span className="font-semibold text-green-600">{getValue() ?? '-'}</span> },
+                      { header: 'Carry Fwd', accessorKey: 'carry_forward', cell: ({ getValue }) => getValue() ?? '-' },
+                      { header: 'Expired', accessorKey: 'expired', cell: ({ getValue }) => <span className="text-red-500">{getValue() ?? '-'}</span> },
+                    ]}
+                    data={leaveBalances}
+                    emptyText="No leave balances found."
+                  />
+                </>
+              )}
             </div>
           </div>
           

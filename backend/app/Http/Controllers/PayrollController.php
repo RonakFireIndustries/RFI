@@ -9,9 +9,13 @@ use App\Services\PayrollCalculationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class PayrollController extends Controller
 {
+    /** @var array<int,string>|null Cached payrolls column names. */
+    protected static ?array $payrollColumns = null;
+
     protected $payrollService;
 
     public function __construct(PayrollCalculationService $payrollService)
@@ -84,7 +88,10 @@ class PayrollController extends Controller
         } elseif ($request->has('department_id')) {
             $query->where('department_id', $request->department_id);
         } elseif ($request->has('site_id')) {
-            $query->whereHas('sites', function ($q) use ($request) {
+            // Employee has no direct `sites` relation: site membership lives in
+            // employee_site (EmployeeSite). Using the wrong relation name makes
+            // Laravel throw RelationNotFoundException -> 500.
+            $query->whereHas('employeeSites', function ($q) use ($request) {
                 $q->where('site_id', $request->site_id);
             });
         }
@@ -101,24 +108,17 @@ class PayrollController extends Controller
                 }
 
                 try {
-                    $result = $this->payrollService->calculatePayroll($employee, $period);
-                    Payroll::create([
-                        'employee_id' => $employee->id,
-                        'payroll_period_id' => $period->id,
-                        'basic_pay' => $result['basic_pay'],
-                        'allowances' => json_encode($result['allowances']),
-                        'deductions' => json_encode($result['deductions']),
-                        'net_pay' => $result['net_pay'],
-                        'status' => 'Generated',
-                    ]);
+                    $result = $this->payrollService->calculate($employee, $period);
+                    Payroll::create($this->payrollAttributes($result, $period, 'Generated'));
                     $generatedCount++;
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                     $errors[] = "Employee {$employee->id}: {$e->getMessage()}";
                 }
             }
             DB::commit();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
+            Log::error('Payroll generation failed', ['error' => $e->getMessage()]);
             return response()->json(['message' => 'Payroll generation failed', 'error' => $e->getMessage()], 500);
         }
 
@@ -159,21 +159,17 @@ class PayrollController extends Controller
             foreach ($payrolls as $payroll) {
                 try {
                     $employee = Employee::findOrFail($payroll->employee_id);
-                    $result = $this->payrollService->calculatePayroll($employee, $period);
-                    $payroll->update([
-                        'basic_pay' => $result['basic_pay'],
-                        'allowances' => json_encode($result['allowances']),
-                        'deductions' => json_encode($result['deductions']),
-                        'net_pay' => $result['net_pay'],
-                    ]);
+                    $result = $this->payrollService->calculate($employee, $period);
+                    $payroll->fill($this->payrollAttributes($result, $period, $payroll->status))->save();
                     $regeneratedCount++;
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                     $errors[] = "Payroll {$payroll->id}: {$e->getMessage()}";
                 }
             }
             DB::commit();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
+            Log::error('Payroll regeneration failed', ['error' => $e->getMessage()]);
             return response()->json(['message' => 'Payroll regeneration failed', 'error' => $e->getMessage()], 500);
         }
 
@@ -184,13 +180,46 @@ class PayrollController extends Controller
         ]);
     }
 
+    /**
+     * Turn a PayrollCalculationService result into an attribute array that the
+     * Payroll model can mass-assign.
+     *
+     * The service returns every calculated column (net_salary, hra, pf, month,
+     * year, ...) plus a couple of diagnostic values (late_marks,
+     * late_deduction_days) that are not columns. Model::create()/fill() drop
+     * anything that is not fillable, but a key that *is* fillable while the
+     * column is missing from the table makes the INSERT fail, so the payload is
+     * intersected with the real schema first.
+     *
+     * `month_year` is a legacy NOT NULL column with no default on some
+     * installs: without it every insert fails with
+     * "Column 'month_year' cannot be null".
+     */
+    protected function payrollAttributes(array $result, PayrollPeriod $period, string $status): array
+    {
+        $result['status'] = $status;
+
+        $columns = static::$payrollColumns ??= Schema::getColumnListing('payrolls');
+        $attributes = array_intersect_key($result, array_flip($columns));
+
+        if (in_array('month_year', $columns, true)) {
+            $attributes['month_year'] = sprintf('%04d-%02d', (int) $period->year, (int) $period->month);
+        }
+
+        return $attributes;
+    }
+
     public function approve($payroll)
     {
         $this->authorize('payroll.manage');
 
         $payroll = Payroll::findOrFail($payroll);
         $payroll->status = 'Approved';
-        $payroll->approved_at = now();
+        // approved_at is not part of the payrolls schema on every install;
+        // only stamp it when the column exists so approve() never 500s.
+        if (Schema::hasColumn('payrolls', 'approved_at')) {
+            $payroll->approved_at = now();
+        }
         $payroll->save();
 
         return response()->json($payroll);

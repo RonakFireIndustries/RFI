@@ -67,6 +67,11 @@ class EmployeeService
         [$employee, $credentials] = DB::transaction(function () use ($data) {
             $employee = Employee::create($data);
 
+            // Give the new hire this year's allowances so their leave balance is
+            // populated without an admin having to run the per-employee
+            // Initialize action.
+            app(LeaveBalanceService::class)->initializeBalances($employee, (int) now()->year);
+
             // Phase 5: Employee User Linking (if requested auto creation)
             $credentials = null;
             if ($this->shouldCreateAccount($data)) {

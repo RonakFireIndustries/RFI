@@ -10,6 +10,7 @@ class Payroll extends Model
     protected $fillable = [
         'employee_id',
         'payroll_period_id',
+        'month_year',
         'month',
         'year',
         'basic_salary',
