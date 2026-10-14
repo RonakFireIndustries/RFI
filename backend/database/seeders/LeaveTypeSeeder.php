@@ -7,34 +7,62 @@ use App\Models\LeaveType;
 
 class LeaveTypeSeeder extends Seeder
 {
+    /**
+     * The organisation's leave catalogue:
+     *
+     *  - Sick / Casual  are available to every employee.
+     *  - Maternity      is available to female employees only.
+     *  - Paternity      is available to male employees only.
+     *
+     * Maternity and Paternity are capped at 10 days and never carry forward.
+     * Existing leave types are updated in place - nothing is deleted.
+     */
     public function run(): void
     {
-        // Ensure only Paid Leave (21) and Sick Leave (4) exist - nothing more
-        LeaveType::updateOrCreate(
-            ['code' => 'PL'],
+        $types = [
             [
-                'name' => 'Paid Leave',
-                'annual_allocation' => 21,
-                'carry_forward' => false,
-                'max_consecutive_days' => null,
-                'requires_approval' => true,
-                'status' => 'Active',
-            ]
-        );
-
-        LeaveType::updateOrCreate(
-            ['code' => 'SL'],
-            [
+                'code' => 'SL',
                 'name' => 'Sick Leave',
-                'annual_allocation' => 4,
+                'annual_allocation' => 10,
                 'carry_forward' => false,
-                'max_consecutive_days' => null,
+                'max_consecutive_days' => 3,
+                'requires_approval' => false,
+                'gender_restriction' => null,
+            ],
+            [
+                'code' => 'CL',
+                'name' => 'Casual Leave',
+                'annual_allocation' => 7,
+                'carry_forward' => false,
+                'max_consecutive_days' => 2,
                 'requires_approval' => true,
-                'status' => 'Active',
-            ]
-        );
+                'gender_restriction' => null,
+            ],
+            [
+                'code' => 'ML',
+                'name' => 'Maternity Leave',
+                'annual_allocation' => 10,
+                'carry_forward' => false,
+                'max_consecutive_days' => 10,
+                'requires_approval' => true,
+                'gender_restriction' => 'Female',
+            ],
+            [
+                'code' => 'PTL',
+                'name' => 'Paternity Leave',
+                'annual_allocation' => 10,
+                'carry_forward' => false,
+                'max_consecutive_days' => 10,
+                'requires_approval' => true,
+                'gender_restriction' => 'Male',
+            ],
+        ];
 
-        // Remove all other leave types
-        LeaveType::whereNotIn('code', ['PL', 'SL'])->delete();
+        foreach ($types as $type) {
+            LeaveType::updateOrCreate(
+                ['code' => $type['code']],
+                $type + ['status' => 'Active']
+            );
+        }
     }
 }

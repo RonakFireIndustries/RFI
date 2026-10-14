@@ -26,7 +26,15 @@ class LeaveBalanceService
 
     public function initializeBalances(Employee $employee, int $year): void
     {
-        $leaveTypes = LeaveType::where('status', 'Active')->get();
+        $leaveTypes = LeaveType::where('status', 'Active')
+            ->where(function ($query) use ($employee) {
+                $query->whereNull('gender_restriction');
+
+                if ($employee->gender) {
+                    $query->orWhere('gender_restriction', $employee->gender);
+                }
+            })
+            ->get();
 
         foreach ($leaveTypes as $type) {
             LeaveBalance::firstOrCreate(

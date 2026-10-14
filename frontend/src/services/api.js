@@ -1,7 +1,8 @@
 import { config } from '../config/environment';
 
-const API_HOST = config.API_URL;
-
+// Live backend host. To use a local backend instead, set VITE_API_HOST in
+// frontend/.env.local (e.g. VITE_API_HOST=http://localhost:8000) and restart Vite.
+const API_HOST = import.meta.env.VITE_API_HOST || config.API_URL;
 export const BASE_URL = `${API_HOST}/api/v1`;
 export const STORAGE_URL = `${API_HOST}/storage`;
 

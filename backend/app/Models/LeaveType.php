@@ -15,6 +15,7 @@ class LeaveType extends Model
         'annual_allocation',
         'carry_forward',
         'max_consecutive_days',
+        'gender_restriction',
         'requires_approval',
         'status',
     ];

@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLeaveRequestStore } from '../../store/leaveRequestStore';
 import { useLeaveTypeStore } from '../../store/leaveTypeStore';
 import { useEmployeesStore } from '../../store/employeesStore';
+import { filterLeaveTypesForGender } from '../../utils/leaveTypes';
 
 export default function LeaveRequestForm() {
   const navigate = useNavigate();

@@ -175,6 +175,30 @@ class AttendanceController extends Controller
         ]);
     }
 
+    public function myMonthlyReport(Request $request): JsonResponse
+    {
+        $employee = $request->user()->employee;
+
+        if (!$employee) {
+            return $this->error('Employee profile not found', [], 404);
+        }
+
+        if ($request->filled('month')) {
+            $month = $request->input('month');
+            if (!preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $month)) {
+                return $this->error('Invalid month format. Use YYYY-MM.', [], 422);
+            }
+        } else {
+            $month = Carbon::now()->format('Y-m');
+        }
+
+        $report = $this->attendanceService->getMonthlyReport($employee, $month);
+
+        return $this->success('Monthly attendance report retrieved successfully', [
+            'report' => $report,
+        ]);
+    }
+
     public function locationAudit(Request $request): JsonResponse
     {
         $this->authorize('attendance.location.audit');

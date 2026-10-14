@@ -16,6 +16,7 @@ class LeaveTypeResource extends JsonResource
             'annual_allocation' => $this->annual_allocation,
             'carry_forward' => $this->carry_forward,
             'max_consecutive_days' => $this->max_consecutive_days,
+            'gender_restriction' => $this->gender_restriction,
             'requires_approval' => $this->requires_approval,
             'status' => $this->status,
         ];

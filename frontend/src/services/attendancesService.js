@@ -22,5 +22,6 @@ export const attendancesService = {
   checkIn: async (payload) => (await api.post('/attendance/check-in', payload)).data,
   checkOut: async (payload) => (await api.post('/attendance/check-out', payload)).data,
   myAttendance: async (params = {}) => extractList(await api.get(`/my-attendance${normalizeQuery(params)}`)),
+  myMonthlyReport: async (params = {}) => (await api.get(`/my-attendance/monthly${normalizeQuery(params)}`)).data,
   locationAudit: async (params = {}) => extractList(await api.get(`/attendance/location-audit${normalizeQuery(params)}`)),
 };

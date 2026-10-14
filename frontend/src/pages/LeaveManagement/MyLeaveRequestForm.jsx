@@ -1,12 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLeaveTypeStore } from '../../store/leaveTypeStore';
+import { useAuthStore } from '../../store/authStore';
 import { leaveRequestsService } from '../../services/leaveRequestsService';
+import { filterLeaveTypesForGender } from '../../utils/leaveTypes';
 
 export default function MyLeaveRequestForm() {
   const navigate = useNavigate();
+  const { user } = useAuthStore();
   const { items: leaveTypes, fetchItems: fetchLeaveTypes } = useLeaveTypeStore();
   const [loading, setLoading] = useState(false);
+
+  const visibleLeaveTypes = useMemo(
+    () => filterLeaveTypesForGender(leaveTypes, user?.employee?.gender),
+    [leaveTypes, user?.employee?.gender]
+  );
 
   const [formData, setFormData] = useState({
     leave_type_id: '',
@@ -19,6 +27,14 @@ export default function MyLeaveRequestForm() {
   useEffect(() => {
     fetchLeaveTypes({ status: 'Active' });
   }, [fetchLeaveTypes]);
+
+  useEffect(() => {
+    if (!formData.leave_type_id) return;
+    const isVisible = visibleLeaveTypes.some((type) => String(type.id) === String(formData.leave_type_id));
+    if (!isVisible) {
+      setFormData((prev) => ({ ...prev, leave_type_id: '' }));
+    }
+  }, [visibleLeaveTypes, formData.leave_type_id]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -52,7 +68,7 @@ export default function MyLeaveRequestForm() {
               required
             >
               <option value="">Select Leave Type...</option>
-              {leaveTypes.map((type) => (
+              {visibleLeaveTypes.map((type) => (
                 <option key={type.id} value={type.id}>{type.name}</option>
               ))}
             </select>

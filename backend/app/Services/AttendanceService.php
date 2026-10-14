@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Attendance;
 use App\Models\Employee;
+use App\Models\Holiday;
 use App\Models\Site;
 use App\Models\Shift;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -343,6 +344,132 @@ class AttendanceService
         return [
             'success' => true,
             'site' => $site,
+        ];
+    }
+
+    public function getMonthlyReport(Employee $employee, string $month): array
+    {
+        $start = Carbon::parse($month . '-01')->startOfMonth();
+        $end = $start->copy()->endOfMonth();
+        $today = Carbon::today();
+
+        $records = Attendance::with('site')
+            ->where('employee_id', $employee->id)
+            ->whereBetween('date', [$start->toDateString(), $end->toDateString()])
+            ->get()
+            ->keyBy(fn ($attendance) => Carbon::parse($attendance->date)->toDateString());
+
+        $holidays = Holiday::whereBetween('date', [$start->toDateString(), $end->toDateString()])
+            ->pluck('date')
+            ->map(fn ($date) => Carbon::parse($date)->toDateString())
+            ->toArray();
+
+        $summary = [
+            'present' => 0,
+            'late' => 0,
+            'absent' => 0,
+            'leave' => 0,
+            'half_day' => 0,
+            'holidays' => 0,
+            'weekly_off' => 0,
+            'working_days' => 0,
+            'marked_days' => 0,
+            'total_working_hours' => 0,
+            'total_overtime_hours' => 0,
+        ];
+
+        $days = [];
+        $cursor = $start->copy();
+
+        while ($cursor <= $end) {
+            $key = $cursor->toDateString();
+            $record = $records->get($key);
+
+            $isWeeklyOff = $cursor->dayOfWeek === Carbon::SUNDAY;
+            $isHoliday = in_array($key, $holidays, true);
+            $isFuture = $cursor->gt($today);
+
+            if (!$isWeeklyOff && !$isHoliday && !$isFuture) {
+                $summary['working_days']++;
+            }
+
+            if ($record) {
+                $raw = strtolower((string) ($record->status ?? 'present'));
+
+                if (str_contains($raw, 'leave')) {
+                    $summary['leave']++;
+                } elseif (str_contains($raw, 'half')) {
+                    $summary['half_day']++;
+                } elseif ($raw === 'absent') {
+                    $summary['absent']++;
+                } elseif ($raw === 'late') {
+                    $summary['late']++;
+                } else {
+                    $summary['present']++;
+                }
+
+                $summary['marked_days']++;
+                $summary['total_working_hours'] += (float) $record->working_hours;
+                $summary['total_overtime_hours'] += (float) $record->overtime_hours;
+
+                $days[] = [
+                    'date' => $key,
+                    'status' => $record->status ?: 'Present',
+                    'check_in' => $record->check_in?->toDateTimeString(),
+                    'check_out' => $record->check_out?->toDateTimeString(),
+                    'working_hours' => $record->working_hours !== null ? (float) $record->working_hours : null,
+                    'overtime_hours' => $record->overtime_hours !== null ? (float) $record->overtime_hours : null,
+                    'site' => $record->site?->name,
+                    'location_verified' => (bool) $record->location_verified,
+                ];
+            } elseif ($isHoliday) {
+                $summary['holidays']++;
+                $days[] = $this->emptyReportDay($key, 'Holiday');
+            } elseif ($isWeeklyOff) {
+                $summary['weekly_off']++;
+                $days[] = $this->emptyReportDay($key, 'Weekly Off');
+            } elseif ($isFuture) {
+                $days[] = $this->emptyReportDay($key, 'Upcoming');
+            } else {
+                $summary['absent']++;
+                $days[] = $this->emptyReportDay($key, 'Absent');
+            }
+
+            $cursor->addDay();
+        }
+
+        $summary['total_working_hours'] = round($summary['total_working_hours'], 2);
+        $summary['total_overtime_hours'] = round($summary['total_overtime_hours'], 2);
+
+        $attended = $summary['present'] + $summary['late'] + ($summary['half_day'] * 0.5);
+        $summary['attendance_percentage'] = $summary['working_days'] > 0
+            ? min(100, (int) round(($attended / $summary['working_days']) * 100))
+            : 0;
+
+        return [
+            'month' => $start->format('Y-m'),
+            'month_label' => $start->format('F Y'),
+            'employee' => [
+                'id' => $employee->id,
+                'name' => $employee->full_name,
+                'emp_id' => $employee->emp_id,
+            ],
+            'days' => $days,
+            'summary' => $summary,
+        ];
+    }
+
+    protected function emptyReportDay(string $date, string $status): array
+    {
+        return [
+            'date' => $date,
+            'status' => $status,
+            'check_in' => null,
+            'check_out' => null,
+            'working_hours' => null,
+            'overtime_hours' => null,
+            'site' => null,
+            'location_verified' => false,
         ];
     }
 

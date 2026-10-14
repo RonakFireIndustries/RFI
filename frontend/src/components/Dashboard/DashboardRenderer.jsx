@@ -8,6 +8,7 @@ import DashboardAlerts from './DashboardAlerts';
 import DashboardWidgets from './DashboardWidgets';
 import DashboardSkeleton from './DashboardSkeleton';
 import DashboardEmptyState from './DashboardEmptyState';
+import MonthlyAttendanceReport from './MonthlyAttendanceReport';
 
 const DASHBOARD_TITLES = {
   admin: { title: 'Admin Dashboard', subtitle: 'Full system overview at a glance.' },
@@ -70,8 +71,10 @@ export default function DashboardRenderer({ scope = 'role' }) {
   const dashboardInfo = DASHBOARD_TITLES[dashboardType] || DASHBOARD_TITLES.employee;
   const { cards, charts, quick_actions, alerts, widgets } = data;
   const hasContent = cards?.length || charts?.length || quick_actions?.length || alerts?.length || widgets?.length;
+  const isEmployee = dashboardType === 'employee';
+  const showMonthlyReport = isPersonal || isEmployee;
 
-  if (!hasContent) return <DashboardEmptyState dashboardType={dashboardType} />;
+  if (!hasContent && !showMonthlyReport) return <DashboardEmptyState dashboardType={dashboardType} />;
 
   return (
     <div className="space-y-6 pb-12">
@@ -99,6 +102,8 @@ export default function DashboardRenderer({ scope = 'role' }) {
       )}
 
       {widgets?.length > 0 && <DashboardWidgets widgets={widgets} />}
+
+      {showMonthlyReport && <MonthlyAttendanceReport />}
 
       {quick_actions?.length > 0 && <DashboardQuickActions quickActions={quick_actions} />}
 

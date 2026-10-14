@@ -14,6 +14,11 @@ export default function LeaveTypesPage() {
     { header: 'Name', accessorKey: 'name' },
     { header: 'Code', accessorKey: 'code' },
     { header: 'Annual Allocation', accessorKey: 'annual_allocation' },
+    {
+      header: 'Applicable To',
+      accessorKey: 'gender_restriction',
+      cell: ({ getValue }) => getValue() || 'All Genders',
+    },
     { header: 'Carry Forward', accessorKey: 'carry_forward', cell: ({ row }) => row.original.carry_forward ? 'Yes' : 'No' },
     { header: 'Requires Approval', accessorKey: 'requires_approval', cell: ({ row }) => row.original.requires_approval ? 'Yes' : 'No' },
     { 
