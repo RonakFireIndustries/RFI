@@ -460,6 +460,7 @@ export default function DashboardLayout() {
               <Route path="daily-reports" element={<DailyReportsPage />} />
               <Route path="daily-reports/new" element={<DailyReportForm />} />
               <Route path="daily-reports/:id" element={<DailyReportDetail />} />
+              <Route path="daily-reports/:id/edit" element={<DailyReportForm />} />
 
               <Route path="leave-management" element={<LeaveDashboardPage />} />
               <Route path="leave-management/types" element={<LeaveTypesPage />} />

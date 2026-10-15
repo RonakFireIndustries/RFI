@@ -15,6 +15,15 @@ export default function UpdatePrompt() {
 
     const swUrl = '/sw.js';
 
+    // Reload only once the newly installed worker actually takes control.
+    // Reloading immediately after `postMessage` can race the activation and
+    // reload the page straight back into the old bundle.
+    let applyingUpdate = false;
+    const onControllerChange = () => {
+      if (applyingUpdate) window.location.reload();
+    };
+    navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
+
     const registerSW = async () => {
       try {
         const reg = await navigator.serviceWorker.register(swUrl);
@@ -32,8 +41,10 @@ export default function UpdatePrompt() {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
               setNeedRefresh(true);
               setUpdateFn(() => () => {
+                applyingUpdate = true;
                 newWorker.postMessage({ type: 'SKIP_WAITING' });
-                window.location.reload();
+                // Safety net in case `controllerchange` never fires.
+                setTimeout(() => window.location.reload(), 4000);
               });
             }
           });
@@ -44,6 +55,10 @@ export default function UpdatePrompt() {
     };
 
     registerSW();
+
+    return () => {
+      navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
+    };
   }, []);
 
   if (offlineReady) {

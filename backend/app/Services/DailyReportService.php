@@ -58,13 +58,34 @@ class DailyReportService
 
     public function updateReport(DailyReport $report, array $data): DailyReport
     {
-        if (isset($data['status']) && $data['status'] === 'Submitted' && $report->status !== 'Submitted') {
+        $previousStatus = $report->status;
+
+        // Moving a report to another day must not collide with a report that
+        // already exists for that employee + date (rejected ones don't count).
+        if (!empty($data['date'])) {
+            $newDate = $data['date'] instanceof \DateTimeInterface
+                ? $data['date']->format('Y-m-d')
+                : (string) $data['date'];
+
+            if ($newDate !== $report->date?->format('Y-m-d')) {
+                $this->validateDuplicate($report->employee_id, $newDate, $report->id);
+            }
+        }
+
+        if (isset($data['status']) && $data['status'] === 'Submitted' && $previousStatus !== 'Submitted') {
             $data['submitted_at'] = now();
-            // Log submission
+
+            // A resubmission after rework clears any earlier decision so the
+            // report is cleanly back in the manager's queue.
+            if ($previousStatus === 'Rework Required') {
+                $data['approved_at'] = null;
+                $data['approved_by'] = null;
+            }
+
             DailyReportHistory::create([
                 'daily_report_id' => $report->id,
                 'action_by' => auth()->id(),
-                'action' => 'Submitted',
+                'action' => $previousStatus === 'Rework Required' ? 'Resubmitted' : 'Submitted',
             ]);
         }
 
@@ -127,14 +148,17 @@ class DailyReportService
         return $report;
     }
 
-    protected function validateDuplicate($employeeId, $date)
+    protected function validateDuplicate($employeeId, $date, ?int $ignoreId = null)
     {
-        $exists = DailyReport::where('employee_id', $employeeId)
+        $query = DailyReport::where('employee_id', $employeeId)
             ->whereDate('date', $date)
-            ->where('status', '!=', 'Rejected')
-            ->exists();
+            ->where('status', '!=', 'Rejected');
 
-        if ($exists) {
+        if ($ignoreId) {
+            $query->where('id', '!=', $ignoreId);
+        }
+
+        if ($query->exists()) {
             throw new Exception("A Daily Report already exists for this employee on this date.");
         }
     }

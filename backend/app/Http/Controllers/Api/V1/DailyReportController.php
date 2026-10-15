@@ -141,7 +141,14 @@ class DailyReportController extends Controller
 
     public function update(UpdateDailyReportRequest $request, DailyReport $dailyReport): JsonResponse
     {
-        $this->authorize('daily-reports.update');
+        // Managers with an update permission can edit any report; the employee
+        // who filed it may fix their own report while it is a Draft or has been
+        // sent back for rework (see DailyReport::isEditableBy).
+        abort_unless(
+            $dailyReport->isEditableBy($request->user()),
+            403,
+            'You are not allowed to edit this report.'
+        );
 
         try {
             $data = $request->validated();

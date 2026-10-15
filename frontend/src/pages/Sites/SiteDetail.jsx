@@ -14,6 +14,7 @@ import { transactionLedgerService } from '../../services/transactionLedgerServic
 import { stockRequestService } from '../../services/stockRequestService';
 import { dailyReportsService } from '../../services/dailyReportsService';
 import { attendancesService } from '../../services/attendancesService';
+import { formatHoursOrDash } from '../../utils/duration';
 
 const SITE_TYPE = 'App\\Models\\Site';
 
@@ -593,7 +594,7 @@ export default function SiteDetail() {
             { key: 'date', label: 'Date', render: (r) => formatDate(r.date) },
             { key: 'employee', label: 'Employee', render: (r) => dash(r.employee?.full_name || r.employee?.name) },
             { key: 'work_description', label: 'Work Description', className: 'text-gray-600 max-w-md truncate', render: (r) => dash(r.work_description) },
-            { key: 'hours_worked', label: 'Hours', align: 'right', render: (r) => dash(r.hours_worked) },
+            { key: 'hours_worked', label: 'Hours', align: 'right', render: (r) => formatHoursOrDash(r.hours_worked) },
             { key: 'status', label: 'Status', render: (r) => <span className="capitalize">{dash(r.status)}</span> },
           ]}
           rows={reports}

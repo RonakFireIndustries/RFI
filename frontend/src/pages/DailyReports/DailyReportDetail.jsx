@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { CheckCircle, XCircle, AlertTriangle, ArrowLeft, Send } from 'lucide-react';
+import { CheckCircle, XCircle, AlertTriangle, ArrowLeft, Pencil, Plus } from 'lucide-react';
 import { useDailyReportsStore } from '../../store/dailyReportStore';
+import { useAuthStore } from '../../store/authStore';
+import { formatHoursOrDash } from '../../utils/duration';
 
 export default function DailyReportDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { current: report, loading, fetchItem, approve, reject, rework } = useDailyReportsStore();
+  const { user } = useAuthStore();
   const [comment, setComment] = useState('');
   const [actionLoading, setActionLoading] = useState('');
 
@@ -37,17 +40,52 @@ export default function DailyReportDetail() {
     }
   };
 
+  const reworkEntry = report.status === 'Rework Required'
+    ? [...(report.histories || [])].reverse().find((h) => h.action === 'Rework Requested')
+    : null;
+  const isOwnReport = report.employee_id === user?.employee?.id;
+  const canFileNew = isOwnReport && report.status === 'Rejected';
+
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-12">
       <div className="flex items-center gap-4 mb-4">
         <button onClick={() => navigate(-1)} className="p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50">
           <ArrowLeft className="w-5 h-5 text-gray-600" />
         </button>
-        <div>
+        <div className="flex-1">
           <h1 className="text-2xl font-bold text-gray-900">Daily Progress Report #{report.id}</h1>
           <p className="text-sm text-gray-500">Submitted by {report.employee?.full_name} on {new Date(report.date).toLocaleDateString()}</p>
         </div>
+        {report.can_edit && (
+          <button
+            onClick={() => navigate(`/dashboard/daily-reports/${report.id}/edit`)}
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700 transition shadow-sm"
+          >
+            <Pencil className="w-4 h-4" />
+            {report.status === 'Rework Required' ? 'Edit & Resubmit' : 'Edit Report'}
+          </button>
+        )}
+        {canFileNew && (
+          <button
+            onClick={() => navigate(`/dashboard/daily-reports/new?date=${report.date}`)}
+            className="inline-flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-bold text-amber-800 hover:bg-amber-100 transition"
+          >
+            <Plus className="w-4 h-4" />
+            File New Report
+          </button>
+        )}
       </div>
+
+      {reworkEntry && (
+        <div className="rounded-xl border border-orange-300 bg-orange-50 px-4 py-3 text-sm text-orange-900">
+          <div className="flex items-center gap-2 font-bold">
+            <AlertTriangle className="w-4 h-4" />
+            Rework requested
+          </div>
+          {reworkEntry.comments && <p className="mt-1 italic">"{reworkEntry.comments}"</p>}
+          <p className="mt-1">Edit this report and resubmit it for approval.</p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
@@ -102,7 +140,7 @@ export default function DailyReportDetail() {
               </div>
               <div className="flex justify-between items-center py-2 border-b border-gray-100">
                 <span className="text-gray-500">Hours Worked</span>
-                <span className="font-bold text-gray-900">{report.hours_worked} hrs</span>
+                <span className="font-bold text-gray-900">{formatHoursOrDash(report.hours_worked)}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-gray-100">
                 <span className="text-gray-500">Site</span>

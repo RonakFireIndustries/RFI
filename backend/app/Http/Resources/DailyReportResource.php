@@ -30,6 +30,7 @@ class DailyReportResource extends JsonResource
             'approver' => new UserResource($this->whenLoaded('approver')),
             'histories' => $this->whenLoaded('histories'),
             'can_review' => $this->canBeReviewedBy($request->user()),
+            'can_edit' => $this->isEditableBy($request->user()),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

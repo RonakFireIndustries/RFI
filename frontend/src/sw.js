@@ -1,12 +1,34 @@
-import { precacheAndRoute } from 'workbox-precaching';
+import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
 import { NetworkFirst, CacheFirst, StaleWhileRevalidate } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
 import { CacheableResponsePlugin } from 'workbox-cacheable-response';
 import { openDB } from 'idb';
 
+// Drop caches left behind by earlier builds.
+cleanupOutdatedCaches();
+
 // Precaching injected by workbox
 precacheAndRoute(self.__WB_MANIFEST || []);
+
+// --- Update handling -------------------------------------------------------
+// With `registerType: 'autoUpdate'` + `injectManifest`, the service worker
+// itself must promote a newly deployed build. Without the hook below a new
+// worker stays in "waiting" until every tab is closed, so the in-app
+// "Update Available" prompt's Refresh button has no effect and users keep
+// seeing the previous version of the app.
+self.addEventListener('message', (event) => {
+  if (event && event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
+// Take control of open pages as soon as we activate, so the new build is served
+// on the reload that follows.
+self.addEventListener('activate', () => {
+  self.clients.claim();
+});
+
 
 // API Caching Strategy (Network First)
 registerRoute(

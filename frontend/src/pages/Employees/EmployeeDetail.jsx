@@ -12,6 +12,7 @@ import { useLeaveBalanceStore } from '../../store/leaveBalanceStore';
 import DataTable from '../../components/Shared/DataTable';
 import { STORAGE_URL } from '../../services/api';
 import { useSubmitGuard } from '../../hooks/useSubmitGuard';
+import { formatHoursOrDash } from '../../utils/duration';
 import EmployeeDocumentsPage from './documents/EmployeeDocumentsPage';
 import DocumentHistory from './documents/DocumentHistory';
 import { 
@@ -873,8 +874,8 @@ export default function EmployeeDetail() {
                 <DataTable 
                   columns={[
                     { header: 'Date', accessorKey: 'date' },
-                    { header: 'Hours', accessorKey: 'hours_worked' },
-                    { header: 'Site', accessorKey: 'site.name', cell: (row) => row.site?.name || '-' },
+                    { header: 'Hours', accessorKey: 'hours_worked', cell: ({ row }) => formatHoursOrDash(row.original.hours_worked) },
+                    { header: 'Site', accessorKey: 'site.name', cell: ({ row }) => row.original.site?.name || '-' },
                     { header: 'Status', accessorKey: 'status' },
                     { 
                       id: 'actions', 

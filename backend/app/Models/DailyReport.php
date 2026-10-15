@@ -83,4 +83,30 @@ class DailyReport extends Model
             && $this->employee_id !== $reviewer->id
             && $this->employee?->reporting_manager_id === $reviewer->id;
     }
+
+    /**
+     * Whether the given user may edit this report.
+     *
+     * Allowed for: super admins and users with an explicit update permission
+     * (they manage reports), or the employee who filed it while it is still a
+     * Draft or has been sent back as "Rework Required" — so a worker can fix
+     * their own report and resubmit it.
+     */
+    public function isEditableBy(?User $user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        if (Access::isSuperAdmin($user) || $user->hasAnyPermission(['daily-reports.update'])) {
+            return true;
+        }
+
+        $owner = $user->employee;
+
+        return $owner !== null
+            && $this->employee_id !== null
+            && (int) $this->employee_id === (int) $owner->id
+            && in_array($this->status, ['Draft', 'Rework Required'], true);
+    }
 }
