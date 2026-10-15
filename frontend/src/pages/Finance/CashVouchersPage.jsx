@@ -3,10 +3,9 @@ import {
   Plus, X, Edit2, Trash2, CheckCircle2, XCircle, Banknote, Paperclip, Search, RefreshCw,
 } from 'lucide-react';
 import { useCashVoucherStore, cashVoucherService } from '../../store/cashVoucherStore';
-import { useSiteStore } from '../../store/siteStore';
-import { useSuppliersStore } from '../../store/suppliersStore';
-import { useEmployeesStore } from '../../store/employeesStore';
+import { useAuthStore } from '../../store/authStore';
 import PermissionGate from '../../components/Guards/PermissionGate';
+import { usePermission } from '../../hooks/usePermission';
 import { STORAGE_URL } from '../../services/api';
 
 const STATUSES = ['Draft', 'Approved', 'Rejected', 'Paid'];
@@ -44,43 +43,48 @@ const EMPTY_FORM = {
   amount: '',
   payment_mode: 'Cash',
   reference_no: '',
-  site_id: '',
-  employee_id: '',
-  supplier_id: '',
   remarks: '',
 };
 
-const linkLabel = (voucher) => {
-  const parts = [];
-  if (voucher.site?.name) parts.push(voucher.site.name);
-  if (voucher.supplier?.name) parts.push(voucher.supplier.name);
-  if (voucher.employee) parts.push(voucher.employee.full_name || voucher.employee.emp_id);
-  return parts.join(' · ');
+/** "Full Name (EMP-12)" for the reimbursement employee, or null. */
+const employeeText = (emp) => {
+  if (!emp) return null;
+  const name = emp.full_name || emp.name;
+  if (!name) return null;
+  return emp.emp_id ? `${name} (${emp.emp_id})` : name;
 };
+
+/**
+ * Renders the action for a user allowed for a reason other than the module
+ * permission (the employee who raised the voucher), and otherwise falls back to
+ * PermissionGate's disabled + tooltip state.
+ */
+const OwnerOrPermission = ({ allowed, module, action, subject, children }) =>
+  allowed ? <>{children}</> : (
+    <PermissionGate module={module} action={action} subject={subject}>{children}</PermissionGate>
+  );
 
 const CashVouchersPage = () => {
   const { items, loading, saving, error, fetchItems, createItem, updateItem, deleteItem } = useCashVoucherStore();
-  const { items: sites, fetchItems: fetchSites } = useSiteStore();
-  const { items: suppliers, fetchItems: fetchSuppliers } = useSuppliersStore();
-  const { items: employees, fetchItems: fetchEmployees } = useEmployeesStore();
+  const { user } = useAuthStore();
+  const { canModule } = usePermission();
+  // The reimbursement is always the employee raising the voucher.
+  const myEmployee = user?.employee || null;
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({ ...EMPTY_FORM });
+  // Read-only "Reimbursement To": the signed-in employee on create, or the
+  // original employee when an existing draft is being edited.
+  const [reimbursement, setReimbursement] = useState(null);
   const [attachment, setAttachment] = useState(null);
   const [formError, setFormError] = useState(null);
   const [busyId, setBusyId] = useState(null);
   const [rejectTarget, setRejectTarget] = useState(null);
   const [rejectRemarks, setRejectRemarks] = useState('');
   const [rejectError, setRejectError] = useState(null);
-
-  useEffect(() => {
-    fetchSites({ per_page: 1000 });
-    fetchSuppliers({ per_page: 1000 });
-    fetchEmployees({ per_page: 1000 });
-  }, [fetchSites, fetchSuppliers, fetchEmployees]);
 
   // Reload on filter change (small debounce so typing doesn't hammer the API).
   useEffect(() => {
@@ -103,6 +107,7 @@ const CashVouchersPage = () => {
   const openCreate = () => {
     setEditingId(null);
     setForm({ ...EMPTY_FORM });
+    setReimbursement(myEmployee);
     setAttachment(null);
     setFormError(null);
     setShowModal(true);
@@ -118,11 +123,9 @@ const CashVouchersPage = () => {
       amount: voucher.amount ?? '',
       payment_mode: voucher.payment_mode || 'Cash',
       reference_no: voucher.reference_no || '',
-      site_id: voucher.site_id || '',
-      employee_id: voucher.employee_id || '',
-      supplier_id: voucher.supplier_id || '',
       remarks: voucher.remarks || '',
     });
+    setReimbursement(voucher.employee || null);
     setAttachment(null);
     setFormError(null);
     setShowModal(true);
@@ -131,6 +134,7 @@ const CashVouchersPage = () => {
   const closeModal = () => {
     setShowModal(false);
     setEditingId(null);
+    setReimbursement(null);
     setAttachment(null);
   };
 
@@ -147,9 +151,6 @@ const CashVouchersPage = () => {
       amount: form.amount,
       payment_mode: form.payment_mode || 'Cash',
       reference_no: form.reference_no,
-      site_id: form.site_id,
-      employee_id: form.employee_id,
-      supplier_id: form.supplier_id,
       remarks: form.remarks,
     };
 
@@ -263,7 +264,7 @@ const CashVouchersPage = () => {
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
               <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mode</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Linked</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
               <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
@@ -272,6 +273,11 @@ const CashVouchersPage = () => {
             {items.map((v) => {
               const busy = busyId === v.id;
               const isDraft = v.status === 'Draft';
+              // The employee who raised a draft can always fix or withdraw it,
+              // even though that is not part of their baseline permissions.
+              const isOwner = user?.id != null && Number(v.created_by) === Number(user.id);
+              const mayEdit = isOwner || canModule('cash-vouchers', 'update');
+              const mayDelete = isOwner || canModule('cash-vouchers', 'delete');
               return (
                 <tr key={v.id} className={busy ? 'opacity-60' : ''}>
                   <td className="px-4 py-3 whitespace-nowrap text-sm">
@@ -298,7 +304,7 @@ const CashVouchersPage = () => {
                       </a>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-600 max-w-[180px] truncate" title={linkLabel(v)}>{linkLabel(v) || '--'}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600 max-w-[180px] truncate" title={employeeText(v.employee) || ''}>{employeeText(v.employee) || '--'}</td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm">
                     <span className={`px-2 py-1 rounded-full text-xs font-semibold ${statusBadgeClass(v.status)}`}>{v.status}</span>
                     {v.approver?.name && !isDraft && (
@@ -309,11 +315,11 @@ const CashVouchersPage = () => {
                     <div className="inline-flex items-center gap-2">
                       {isDraft && (
                         <>
-                          <PermissionGate module="cash-vouchers" action="update" subject="this voucher">
+                          <OwnerOrPermission allowed={mayEdit} module="cash-vouchers" action="update" subject="this voucher">
                             <button onClick={() => openEdit(v)} title="Edit" className="text-blue-600 hover:text-blue-900">
                               <Edit2 className="w-4 h-4" />
                             </button>
-                          </PermissionGate>
+                          </OwnerOrPermission>
                           <PermissionGate module="cash-vouchers" action="approve" subject="this voucher">
                             <button onClick={() => runAction(v.id, () => cashVoucherService.approve(v.id))} title="Approve" className="text-green-600 hover:text-green-800">
                               <CheckCircle2 className="w-4 h-4" />
@@ -324,11 +330,11 @@ const CashVouchersPage = () => {
                               <XCircle className="w-4 h-4" />
                             </button>
                           </PermissionGate>
-                          <PermissionGate module="cash-vouchers" action="delete" subject="this voucher">
+                          <OwnerOrPermission allowed={mayDelete} module="cash-vouchers" action="delete" subject="this voucher">
                             <button onClick={() => { if (window.confirm(`Remove ${v.voucher_no}?`)) runAction(v.id, () => deleteItem(v.id)); }} title="Remove" className="text-gray-500 hover:text-gray-800">
                               <Trash2 className="w-4 h-4" />
                             </button>
-                          </PermissionGate>
+                          </OwnerOrPermission>
                         </>
                       )}
                       {v.status === 'Approved' && (
@@ -385,7 +391,7 @@ const CashVouchersPage = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Paid To *</label>
-                  <input type="text" required placeholder="Person / shop / vendor paid" className={inputClass}
+                  <input type="text" required placeholder="Person / shop paid" className={inputClass}
                     value={form.paid_to} onChange={(e) => setForm({ ...form, paid_to: e.target.value })} />
                 </div>
                 <div>
@@ -414,28 +420,11 @@ const CashVouchersPage = () => {
                     value={form.purpose} onChange={(e) => setForm({ ...form, purpose: e.target.value })} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Site / Project</label>
-                  <select className={inputClass}
-                    value={form.site_id} onChange={(e) => setForm({ ...form, site_id: e.target.value })}>
-                    <option value="">None</option>
-                    {sites?.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Employee (reimbursement)</label>
-                  <select className={inputClass}
-                    value={form.employee_id} onChange={(e) => setForm({ ...form, employee_id: e.target.value })}>
-                    <option value="">None</option>
-                    {employees?.map((emp) => <option key={emp.id} value={emp.id}>{emp.full_name || emp.first_name} (EMP-{emp.id})</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Supplier / Vendor</label>
-                  <select className={inputClass}
-                    value={form.supplier_id} onChange={(e) => setForm({ ...form, supplier_id: e.target.value })}>
-                    <option value="">None</option>
-                    {suppliers?.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-                  </select>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Reimbursement To</label>
+                  <div className={`${inputClass} bg-gray-50 text-gray-700`}>
+                    {employeeText(reimbursement) || 'No employee profile linked to your account'}
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">Set automatically to the employee raising the voucher.</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Bill Attachment</label>

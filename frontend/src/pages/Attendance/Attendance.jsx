@@ -11,9 +11,23 @@ import { useSiteStore } from '../../store/siteStore';
 import { useShiftsStore } from '../../store/shiftStore';
 import { useEmployeesStore } from '../../store/employeesStore';
 
+const pad2 = (value) => String(value).padStart(2, '0');
+
+// The attendance API can return the day as `YYYY-MM-DD`, `YYYY-MM-DD HH:mm:ss`
+// or a UTC ISO timestamp. Normalise every shape to a local `YYYY-MM-DD` key so
+// the "selected day" filter can never silently match nothing.
+const toDayKey = (value) => {
+  if (!value) return '';
+  const str = String(value);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+  const parsed = new Date(str);
+  if (Number.isNaN(parsed.getTime())) return str.slice(0, 10);
+  return `${parsed.getFullYear()}-${pad2(parsed.getMonth() + 1)}-${pad2(parsed.getDate())}`;
+};
+
 export default function Attendance() {
   const navigate = useNavigate();
-  const { logs, report, loading, error: attendanceError, fetchLogs } = useAttendanceStore();
+  const { logs, report, dayLogs, loading, error: attendanceError, fetchLogs, fetchDayLogs } = useAttendanceStore();
 
   // Reference stores for filters
   const { items: departments, fetchItems: fetchDepartments } = useDepartmentStore();
@@ -41,18 +55,25 @@ export default function Attendance() {
   // Fetch Attendance logs for the selected month and filters
   const applyFilters = () => {
     const year = currentDate.getFullYear();
-    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-    // Start of month to End of month
+    const monthIndex = currentDate.getMonth();
+    const month = String(monthIndex + 1).padStart(2, '0');
+    // Start of month → true end of month. Built from local date parts so a
+    // positive UTC offset can't shift the last day back and drop today's rows.
     const start_date = `${year}-${month}-01`;
-    const end_date = new Date(year, currentDate.getMonth() + 1, 0).toISOString().split('T')[0];
-
-    fetchLogs({
-      start_date,
-      end_date,
+    const lastDay = new Date(year, monthIndex + 1, 0).getDate();
+    const end_date = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
+    const dayKey = `${year}-${month}-${String(currentDate.getDate()).padStart(2, '0')}`;
+    const filters = {
       department_id: departmentId || undefined,
       site_id: siteId || undefined,
-      shift_id: shiftId || undefined
-    });
+      shift_id: shiftId || undefined,
+    };
+
+    // Month fetch powers the heatmap and KPI tiles.
+    fetchLogs({ start_date, end_date, ...filters });
+    // Direct day fetch guarantees the selected day's rows are present even if
+    // the month range or ordering ever drops them.
+    fetchDayLogs({ date: dayKey, ...filters });
   };
 
   useEffect(() => {
@@ -84,9 +105,12 @@ export default function Attendance() {
 
   // Filter logs for the currently selected DAY for the table and KPIs
   const todaysRecords = useMemo(() => {
-    const filtered = (report?.attendance_records || []).filter(r => r.date === selectedDateString);
-    return filtered;
-  }, [report, selectedDateString]);
+    // Prefer the direct day fetch; fall back to filtering the month payload if
+    // it is empty (e.g. no rows for the day, or the day fetch failed).
+    const fromDay = (dayLogs || []).filter(r => toDayKey(r.date) === selectedDateString);
+    if (fromDay.length) return fromDay;
+    return (report?.attendance_records || []).filter(r => toDayKey(r.date) === selectedDateString);
+  }, [dayLogs, report, selectedDateString]);
 
   // Group all month records by employee for expanded history view
   const employeeMonthRecords = useMemo(() => {
@@ -170,7 +194,7 @@ export default function Attendance() {
 
     for (let i = 1; i <= daysInMonth; i++) {
       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-      const recordsForDay = records.filter(r => r.date === dateStr);
+      const recordsForDay = records.filter(r => toDayKey(r.date) === dateStr);
       const d = new Date(dateStr);
       let status = 'weekend';
 
@@ -338,7 +362,10 @@ export default function Attendance() {
                   type="date"
                   value={selectedDateString}
                   onChange={(e) => {
-                    if (e.target.value) setCurrentDate(new Date(e.target.value));
+                    if (e.target.value) {
+                      const [y, m, d] = e.target.value.split('-').map(Number);
+                      setCurrentDate(new Date(y, m - 1, d));
+                    }
                   }}
                   className="w-full pl-9 pr-3 py-2 border border-input rounded-lg text-sm font-semibold bg-card text-foreground"
                 />

@@ -67,6 +67,23 @@ export const useAttendanceStore = create((set, get) => ({
     }
   },
 
+  dayLogs: [],
+
+  // Load a single day's records directly by date. The month range used for the
+  // heatmap can miss the current day (e.g. a month-boundary off-by-one), so the
+  // day view is fetched independently and only used as a fallback source.
+  fetchDayLogs: async (params = {}) => {
+    try {
+      const items = await attendancesService.list({ per_page: 1000, ...params });
+      set({ dayLogs: items });
+      return items;
+    } catch (error) {
+      // A failure here must not surface as a hard error: the page falls back to
+      // the month data, so keep the previously loaded day view.
+      return [];
+    }
+  },
+
   checkIn: async (payload) => {
     const data = await attendancesService.checkIn(payload);
     return data;

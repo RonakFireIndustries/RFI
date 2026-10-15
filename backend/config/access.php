@@ -458,6 +458,10 @@ return [
         'daily-reports.view',
         'daily-reports.create',
         'daily-reports.submit',
+        // Petty-cash reimbursement is self-service: every employee may raise a
+        // voucher for themselves and see their own claims (see CashVoucherController).
+        'cash-vouchers.view',
+        'cash-vouchers.create',
         'leaves.view',
         'leaves.create',
         'leaves.update',

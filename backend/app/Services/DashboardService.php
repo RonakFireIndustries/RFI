@@ -416,13 +416,8 @@ private const DESIGNATION_MAP = [
     {
         // An admin-assigned override (Access Control panel) wins over the
         // automatic role/designation/department resolution.
-        try {
-            $assigned = $this->user->dashboard_type ?? null;
-            if ($assigned && isset(self::DASHBOARD_WIDGETS[$assigned])) {
-                return $assigned;
-            }
-        } catch (\Throwable $e) {
-            // Fall through to automatic resolution.
+        if ($assigned = $this->assignedDashboardType()) {
+            return $assigned;
         }
 
         // Resolution order: Spatie role, then designation, then department.
@@ -601,20 +596,41 @@ private const DESIGNATION_MAP = [
             return true;
         }
 
-        // Auto-unlock: the dashboard the user's own identity resolves to.
-        if ($type === $resolved) {
-            return true;
-        }
-
         try {
             if (Access::isSuperAdmin($this->user)) {
                 return true;
             }
 
+            // An explicit assignment in the Access Control panel is a
+            // deliberate admin decision, so it opens that dashboard directly.
+            if ($this->assignedDashboardType() === $type) {
+                return true;
+            }
+
+            // A type derived from role / designation / department is an
+            // identity guess, not a grant. "Store Manager" is a job title: on
+            // its own it must not hand out the Inventory dashboard to someone
+            // carrying no inventory permissions. Identity only decides WHICH
+            // dashboard would open - Access Control still decides whether it
+            // may be opened.
             return Access::can($this->user, "dashboard.{$type}");
         } catch (\Throwable $e) {
             // Permission store unavailable / permission row missing.
             return false;
+        }
+    }
+
+    /**
+     * The dashboard an admin explicitly assigned in Access Control, if any.
+     */
+    private function assignedDashboardType(): ?string
+    {
+        try {
+            $assigned = $this->user->dashboard_type ?? null;
+
+            return ($assigned && isset(self::DASHBOARD_WIDGETS[$assigned])) ? $assigned : null;
+        } catch (\Throwable $e) {
+            return null;
         }
     }
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAttendanceStore } from '../../store/attendanceStore';
 import { useAuthStore } from '../../store/authStore';
-import { Calendar, Search, MapPin, Clock, Filter, Download } from 'lucide-react';
+import { Calendar, Search, Clock, Filter, Download } from 'lucide-react';
 
 export default function EmployeeAttendanceHistory() {
   const { user } = useAuthStore();
@@ -153,16 +153,15 @@ export default function EmployeeAttendanceHistory() {
                 <th className="p-4">Check Out</th>
                 <th className="p-4">Hours</th>
                 <th className="p-4">Status</th>
-                <th className="p-4">Distance</th>
                 <th className="p-4">Location</th>
                 <th className="p-4 pr-6">Device</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {loading ? (
-                <tr><td colSpan="8" className="p-8 text-center text-sm text-gray-500">Loading records...</td></tr>
+                <tr><td colSpan="7" className="p-8 text-center text-sm text-gray-500">Loading records...</td></tr>
               ) : !items?.length ? (
-                <tr><td colSpan="8" className="p-8 text-center text-sm text-gray-500">No attendance records found.</td></tr>
+                <tr><td colSpan="7" className="p-8 text-center text-sm text-gray-500">No attendance records found.</td></tr>
               ) : items.map((record) => (
                 <tr key={record.id} className="hover:bg-gray-50 transition-colors">
                   <td className="p-4 pl-6 font-semibold text-sm text-gray-900">{formatDate(record.date)}</td>
@@ -187,14 +186,6 @@ export default function EmployeeAttendanceHistory() {
                     <span className={`inline-block px-2.5 py-1 rounded text-xs font-bold ${getStatusBadge(record.status)}`}>
                       {record.status || 'Unknown'}
                     </span>
-                  </td>
-                  <td className="p-4 text-sm text-gray-600">
-                    {record.checkin_distance ? (
-                      <span className="flex items-center gap-1">
-                        <MapPin className="w-3 h-3" />
-                        {record.checkin_distance}m
-                      </span>
-                    ) : '--'}
                   </td>
                   <td className="p-4">
                     {record.location_verified ? (

@@ -66,6 +66,20 @@ class DashboardController extends Controller
     {
         try {
             $dashboardService = app(DashboardService::class)->forUser($request->user());
+
+            // Same gate as index(): without it any authenticated user could
+            // read another dashboard's cards and alerts by calling this
+            // endpoint directly.
+            if (!$dashboardService->canViewDashboard()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You do not have access to this dashboard.',
+                    'dashboard_type' => $dashboardService->getDashboardType(),
+                    'cards' => [],
+                    'alerts' => [],
+                ], 403);
+            }
+
             $data = $dashboardService->getDashboard();
             return response()->json([
                 'dashboard_type' => $data['dashboard_type'],

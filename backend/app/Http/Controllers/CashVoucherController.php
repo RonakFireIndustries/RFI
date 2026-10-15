@@ -16,9 +16,7 @@ class CashVoucherController extends Controller
 {
     /** Columns/relations shared by every response payload. */
     protected const EAGER = [
-        'site:id,name',
         'employee:id,full_name,emp_id',
-        'supplier:id,name',
         'creator:id,name',
         'approver:id,name',
     ];
@@ -28,6 +26,13 @@ class CashVoucherController extends Controller
         $this->authorize('cash-vouchers.view');
 
         $query = CashVoucher::with(self::EAGER);
+
+        // Raising a voucher is a baseline (self-service) permission, so the
+        // register is scoped: only approvers/rejecters see everybody's claims,
+        // everyone else sees just the vouchers they raised.
+        if (! $this->canViewAll($request)) {
+            $query->where('created_by', $request->user()->id);
+        }
 
         if ($status = $request->input('status')) {
             $statuses = is_array($status) ? $status : explode(',', (string) $status);
@@ -54,9 +59,6 @@ class CashVoucherController extends Controller
         if ($request->filled('to')) {
             $query->whereDate('voucher_date', '<=', $request->input('to'));
         }
-        if ($request->filled('site_id')) {
-            $query->where('site_id', $request->input('site_id'));
-        }
 
         return response()->json(
             $query->orderByDesc('voucher_date')->orderByDesc('id')->get()
@@ -72,6 +74,9 @@ class CashVoucherController extends Controller
         $voucher = DB::transaction(function () use ($request, $validated) {
             $validated['voucher_no'] = $this->nextVoucherNo($validated['voucher_date'] ?? null);
             $validated['created_by'] = $request->user()->id;
+            // The reimbursement always belongs to the employee raising the
+            // voucher, so it is taken from the session rather than the form.
+            $validated['employee_id'] = $request->user()->employee?->id;
             $validated['status'] = 'Draft';
 
             if ($request->hasFile('attachment')) {
@@ -85,16 +90,22 @@ class CashVoucherController extends Controller
         return response()->json($voucher->load(self::EAGER), 201);
     }
 
-    public function show(CashVoucher $cashVoucher)
+    public function show(Request $request, CashVoucher $cashVoucher)
     {
         $this->authorize('cash-vouchers.view');
+
+        if (! $this->canViewAll($request) && ! $this->owns($request, $cashVoucher)) {
+            abort(403, 'You can only view vouchers you raised.');
+        }
 
         return response()->json($cashVoucher->load(self::EAGER));
     }
 
     public function update(Request $request, CashVoucher $cashVoucher)
     {
-        $this->authorize('cash-vouchers.update');
+        if (! $this->canManage($request, $cashVoucher, 'update')) {
+            abort(403, 'You can only edit vouchers you raised.');
+        }
 
         if ($cashVoucher->status !== 'Draft') {
             return response()->json(['message' => 'Only draft vouchers can be edited.'], 403);
@@ -121,9 +132,11 @@ class CashVoucherController extends Controller
         return response()->json($cashVoucher->load(self::EAGER));
     }
 
-    public function destroy(CashVoucher $cashVoucher)
+    public function destroy(Request $request, CashVoucher $cashVoucher)
     {
-        $this->authorize('cash-vouchers.delete');
+        if (! $this->canManage($request, $cashVoucher, 'delete')) {
+            abort(403, 'You can only remove vouchers you raised.');
+        }
 
         if ($cashVoucher->status !== 'Draft') {
             return response()->json(['message' => 'Only draft vouchers can be removed.'], 403);
@@ -192,6 +205,9 @@ class CashVoucherController extends Controller
      */
     protected function validated(Request $request): array
     {
+        // site / supplier / employee are intentionally not accepted from the
+        // client any more: a voucher is a reimbursement claim for the employee
+        // raising it (derived in store()).
         return $request->validate([
             'voucher_date' => 'required|date',
             'paid_to' => 'required|string|max:255',
@@ -200,12 +216,38 @@ class CashVoucherController extends Controller
             'amount' => 'required|numeric|min:0',
             'payment_mode' => 'nullable|string|max:50',
             'reference_no' => 'nullable|string|max:255',
-            'site_id' => 'nullable|exists:sites,id',
-            'employee_id' => 'nullable|exists:employees,id',
-            'supplier_id' => 'nullable|exists:suppliers,id',
             'remarks' => 'nullable|string',
             'attachment' => 'nullable|file|max:5120|mimes:jpg,jpeg,png,webp,pdf',
         ]);
+    }
+
+    /**
+     * Whether the signed-in user may see vouchers raised by other employees.
+     * Approvers/rejecters own the register; everyone else only sees their own.
+     */
+    protected function canViewAll(Request $request): bool
+    {
+        $user = $request->user();
+
+        return $user->can('cash-vouchers.approve') || $user->can('cash-vouchers.reject');
+    }
+
+    /** Whether the signed-in user raised this voucher. */
+    protected function owns(Request $request, CashVoucher $voucher): bool
+    {
+        return $voucher->created_by !== null
+            && (int) $voucher->created_by === (int) $request->user()->id;
+    }
+
+    /**
+     * Whether the user may change this voucher: the employee who raised it can
+     * always fix or withdraw their own draft, while finance users may manage
+     * any voucher through the matching permission.
+     */
+    protected function canManage(Request $request, CashVoucher $voucher, string $action): bool
+    {
+        return $this->owns($request, $voucher)
+            || $request->user()->can("cash-vouchers.{$action}");
     }
 
     /**

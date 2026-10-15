@@ -425,11 +425,6 @@ export default function EmployeeDashboard() {
             <span className={`text-xs font-semibold ${todayAttendance.location_verified ? 'text-green-700' : 'text-orange-700'}`}>
               {todayAttendance.location_verified ? 'Location Verified' : 'Location Not Verified'}
             </span>
-            {todayAttendance.checkin_distance && (
-              <span className="text-xs text-gray-400 ml-auto">
-                {todayAttendance.checkin_distance}m from site
-              </span>
-            )}
           </div>
         )}
 
