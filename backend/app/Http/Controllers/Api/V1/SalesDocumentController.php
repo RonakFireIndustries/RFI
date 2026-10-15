@@ -54,7 +54,8 @@ class SalesDocumentController extends Controller
         $this->authorizeAny(['sales-documents.create', 'buildings.update']);
 
         $validated = $request->validate([
-            'file' => ['required', 'file', 'max:20480'],
+            // 500MB. Laravel measures the file `max` rule in kilobytes.
+            'file' => ['required', 'file', 'max:512000'],
             'name' => ['nullable', 'string', 'max:255'],
             'category' => ['required', 'string', 'max:255'],
             'building_id' => ['nullable', 'exists:buildings,id'],

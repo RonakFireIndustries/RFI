@@ -3,8 +3,12 @@
  * building Documents tab, ...).
  */
 
-/** Largest single file the API is configured to accept (backend `max:20480`). */
-export const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
+/**
+ * Largest single file the API is configured to accept (backend `max:512000`).
+ * Keep in step with SalesDocumentController - the server-side PHP and reverse
+ * proxy limits have to allow this too, or the upload 413s before Laravel runs.
+ */
+export const MAX_UPLOAD_BYTES = 500 * 1024 * 1024;
 
 export const formatBytes = (bytes) => {
   const n = Number(bytes);

@@ -1203,7 +1203,7 @@ export default function Buildings() {
                       }}
                       className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm file:mr-3 file:px-3 file:py-1 file:rounded-md file:border-0 file:bg-blue-50 file:text-blue-700 file:text-xs file:font-semibold hover:file:bg-blue-100 disabled:opacity-60"
                     />
-                    <p className="text-[11px] text-gray-400 mt-1">Attach multiple PMC files (PDF, image or document, up to 20MB each).</p>
+                    <p className="text-[11px] text-gray-400 mt-1">Attach multiple PMC files (PDF, image or document, up to 500MB each).</p>
                     {formErrors.pmc && <p className="text-[11px] text-red-600 mt-1">{formErrors.pmc}</p>}
                   </div>
 
