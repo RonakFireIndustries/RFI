@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Notification;
+use App\Services\NotificationService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,9 +17,17 @@ class NotificationController extends Controller
     {
         $perPage = (int) $request->input('per_page', 15);
 
-        $notifications = Notification::where('user_id', $request->user()->id)
-            ->latest()
-            ->paginate($perPage);
+        $query = Notification::where('user_id', $request->user()->id);
+
+        if ($module = $request->input('module')) {
+            $query->where('module', $module);
+        }
+
+        if ($request->boolean('unread')) {
+            $query->where('is_read', false);
+        }
+
+        $notifications = $query->latest()->paginate($perPage);
 
         return $this->success('Notifications retrieved successfully', [
             'data' => $notifications->items(),
@@ -29,6 +38,22 @@ class NotificationController extends Controller
                 'last_page' => $notifications->lastPage(),
             ]
         ]);
+    }
+
+    /**
+     * The modules this user has actually received notifications under, so the
+     * UI only offers filters that will return something.
+     */
+    public function modules(Request $request): JsonResponse
+    {
+        $modules = Notification::where('user_id', $request->user()->id)
+            ->whereNotNull('module')
+            ->distinct()
+            ->orderBy('module')
+            ->pluck('module')
+            ->values();
+
+        return $this->success('Notification modules retrieved', ['modules' => $modules]);
     }
 
     public function unreadCount(Request $request): JsonResponse
@@ -79,10 +104,24 @@ class NotificationController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'message' => ['nullable', 'string'],
             'type' => ['nullable', 'string', 'in:info,success,warning,error'],
+            'module' => ['nullable', 'string', 'max:100'],
             'link' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $notification = Notification::create($validated);
+        // Routed through the service so the recipient's open tab is told about
+        // it immediately, not on the next 30-second poll.
+        $notification = NotificationService::create(
+            (int) $validated['user_id'],
+            $validated['title'],
+            $validated['message'] ?? null,
+            $validated['type'] ?? 'info',
+            $validated['link'] ?? null,
+            $validated['module'] ?? 'General',
+        );
+
+        if ($notification === null) {
+            return $this->error('Could not send notification', [], 500);
+        }
 
         return $this->success('Notification sent', ['notification' => $notification], [], 201);
     }

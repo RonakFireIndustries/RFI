@@ -1,9 +1,20 @@
+@php
+    /*
+     * This BOQ is printed on pre-cut letterhead: the company header and footer
+     * are already on the paper. These two margins (millimetres) keep that band
+     * clear on every page so nothing prints over them. Tune to your letterhead.
+     */
+    $letterheadTop = 32;
+    $letterheadBottom = 22;
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
     <title>BOQ {{ $quotation->quotation_no }}</title>
     <style>
+        @page { margin: {{ $letterheadTop }}mm 12mm {{ $letterheadBottom }}mm 12mm; }
+
         * { box-sizing: border-box; }
         body { font-family: 'DejaVu Sans', Arial, sans-serif; color: #1f2937; font-size: 12px; margin: 0; }
         .meta { width: 100%; margin-bottom: 16px; border-collapse: collapse; }

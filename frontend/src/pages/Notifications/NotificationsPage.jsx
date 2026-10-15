@@ -19,12 +19,16 @@ const TYPE_STYLES = {
 };
 
 export default function NotificationsPage() {
+  // 'all' and 'unread' are special; anything else is a module name.
   const [filter, setFilter] = useState('all');
 
   const {
     notifications,
+    modules,
+    unreadCount,
     loading,
     fetchNotifications,
+    fetchModules,
     markRead,
     markAllRead,
     deleteNotification,
@@ -33,15 +37,20 @@ export default function NotificationsPage() {
   } = useNotificationStore();
 
   useEffect(() => {
-    fetchNotifications();
+    fetchModules();
+  }, [fetchModules]);
+
+  useEffect(() => {
+    const params = { per_page: 100 };
+    if (filter === 'unread') params.unread = 1;
+    else if (filter !== 'all') params.module = filter;
+
+    fetchNotifications(params);
     startPolling(30000);
     return () => stopPolling();
-  }, [fetchNotifications, startPolling, stopPolling]);
+  }, [filter, fetchNotifications, startPolling, stopPolling]);
 
-  const filtered = notifications.filter((n) => {
-    if (filter === 'unread') return !n.is_read;
-    return true;
-  });
+  const filtered = notifications;
 
   const timeAgo = (dateStr) => {
     const diff = Date.now() - new Date(dateStr).getTime();
@@ -86,8 +95,8 @@ export default function NotificationsPage() {
         </div>
       </div>
 
-      <div className="flex gap-1 mb-4 p-1 bg-muted rounded-lg w-fit">
-        {['all', 'unread'].map((f) => (
+      <div className="flex flex-wrap gap-1 mb-4 p-1 bg-muted rounded-lg w-fit">
+        {['all', 'unread', ...modules].map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
@@ -98,9 +107,9 @@ export default function NotificationsPage() {
             }`}
           >
             {f}
-            {f === 'unread' && notifications.filter((n) => !n.is_read).length > 0 && (
+            {f === 'unread' && unreadCount > 0 && (
               <span className="ml-1.5 text-xs text-destructive font-bold">
-                ({notifications.filter((n) => !n.is_read).length})
+                ({unreadCount})
               </span>
             )}
           </button>
@@ -119,7 +128,9 @@ export default function NotificationsPage() {
           <p className="text-sm text-muted-foreground mt-1">
             {filter === 'unread'
               ? 'No unread notifications'
-              : 'No notifications yet'}
+              : filter === 'all'
+              ? 'No notifications yet'
+              : `No ${filter} notifications`}
           </p>
         </div>
       ) : (
@@ -157,6 +168,11 @@ export default function NotificationsPage() {
                       }`}
                     >
                       {notification.type}
+                    </span>
+                  )}
+                  {notification.module && (
+                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground flex-shrink-0">
+                      {notification.module}
                     </span>
                   )}
                   {!notification.is_read && (

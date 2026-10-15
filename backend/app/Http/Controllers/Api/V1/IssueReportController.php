@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\IssueReport;
 use App\Models\User;
-use App\Services\NotificationService;
 use App\Support\Access;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -106,8 +105,6 @@ class IssueReportController extends Controller
             return $report;
         });
 
-        $this->notifyReviewers($report);
-
         return $this->success('Issue reported', ['issue_report' => $report->load(['user', 'screenshots'])], [], 201);
     }
 
@@ -186,28 +183,5 @@ class IssueReportController extends Controller
         }
 
         abort(403, 'You can only view your own reports');
-    }
-
-    protected function notifyReviewers(IssueReport $report): void
-    {
-        try {
-            $reviewers = User::permission('issue-reports.update')->get();
-        } catch (\Throwable $e) {
-            $reviewers = collect();
-        }
-
-        foreach ($reviewers->unique('id') as $reviewer) {
-            if ($reviewer->id === $report->user_id) {
-                continue;
-            }
-
-            NotificationService::create(
-                $reviewer->id,
-                'New issue report',
-                $report->title,
-                'warning',
-                '/dashboard/issue-reports',
-            );
-        }
     }
 }

@@ -7,7 +7,6 @@ use App\Models\Building;
 use App\Models\SiteVisit;
 use App\Models\SiteVisitPhoto;
 use App\Models\SiteVisitVoiceNote;
-use App\Services\NotificationService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -84,14 +83,6 @@ class SiteVisitController extends Controller
         });
 
         $this->logActivity($visit, 'created', 'Site visit created');
-
-        NotificationService::create(
-            $request->user()->id,
-            'Site visit scheduled',
-            'Visit to ' . $visit->building->name . ' on ' . $visit->visit_date,
-            'info',
-            '/dashboard/site-visits/' . $visit->id,
-        );
 
         return $this->success('Site visit created', ['site_visit' => $visit->load(['building', 'user'])], [], 201);
     }

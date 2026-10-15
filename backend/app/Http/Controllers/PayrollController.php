@@ -6,6 +6,7 @@ use App\Models\Payroll;
 use App\Models\Employee;
 use App\Models\PayrollPeriod;
 use App\Services\PayrollCalculationService;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -159,15 +160,31 @@ class PayrollController extends Controller
             return response()->json(['message' => 'Payroll generation failed', 'error' => $e->getMessage()], 500);
         }
 
+        // Payroll rows are one per employee, so a run over 500 people must
+        // produce ONE notification for the payroll team, not 500.
+        $periodLabel = $this->periodLabel($period);
+
+        NotificationService::notify('payroll.generated', [
+            'id' => $period->id,
+            'period' => $periodLabel,
+            'count' => $generatedCount,
+        ], $request->user()->id);
+
+        if ($warnings !== []) {
+            NotificationService::notify('payroll.completed_with_warnings', [
+                'id' => $period->id,
+                'period' => $periodLabel,
+                'count' => count($warnings),
+            ], $request->user()->id);
+        }
+
         return response()->json([
             'message' => "Payroll generated for {$generatedCount} employees.",
             'generated_count' => $generatedCount,
             'errors' => $errors,
             'warnings' => $warnings,
         ]);
-    }
-
-    public function regenerate(Request $request)
+    }    public function regenerate(Request $request)
     {
         $this->authorize('payroll.manage');
 
@@ -233,6 +250,41 @@ class PayrollController extends Controller
      * installs: without it every insert fails with
      * "Column 'month_year' cannot be null".
      */
+    /**
+     * A human label for a payroll period, tolerating whichever columns the
+     * install actually has.
+     */
+    protected function periodLabel(PayrollPeriod $period): string
+    {
+        if (! empty($period->name)) {
+            return (string) $period->name;
+        }
+
+        $parts = array_filter([
+            $period->month ?? null,
+            $period->year ?? null,
+            $period->period_start ?? $period->start_date ?? null,
+            $period->period_end ?? $period->end_date ?? null,
+        ]);
+
+        if ($parts === []) {
+            return 'the current period';
+        }
+
+        if (isset($period->month, $period->year)) {
+            try {
+                return \Illuminate\Support\Carbon::createFromDate($period->year, $period->month, 1)->format('M Y');
+            } catch (\Throwable $e) {
+                return "{$period->month}/{$period->year}";
+            }
+        }
+
+        return implode(' to ', array_map(
+            fn ($d) => \Illuminate\Support\Carbon::parse($d)->format('d M Y'),
+            array_slice($parts, -2)
+        ));
+    }
+
     protected function payrollAttributes(array $result, PayrollPeriod $period, string $status): array
     {
         $result['status'] = $status;
@@ -259,6 +311,17 @@ class PayrollController extends Controller
             $payroll->approved_at = now();
         }
         $payroll->save();
+
+        // Approval happens one row at a time but really means "this period is
+        // signed off", so the dedupe key collapses a full-period sweep into a
+        // single alert instead of one per employee.
+        $periodId = $payroll->payroll_period_id;
+        $period = $periodId ? PayrollPeriod::find($periodId) : null;
+
+        NotificationService::notify('payroll.approved', [
+            'id' => $periodId,
+            'period' => $period ? $this->periodLabel($period) : 'the current period',
+        ], auth()->id(), null, '/dashboard/payroll', "payroll.approved:{$periodId}");
 
         return response()->json($payroll);
     }

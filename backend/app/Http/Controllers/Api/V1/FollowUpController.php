@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\FollowUp;
-use App\Services\NotificationService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -76,14 +75,6 @@ class FollowUpController extends Controller
         $validated['status'] = 'Pending';
 
         $followUp = FollowUp::create($validated);
-
-        NotificationService::create(
-            $request->user()->id,
-            'Follow-up scheduled',
-            ucfirst($followUp->type) . ' follow-up on ' . $followUp->reminder_date,
-            'info',
-            '/dashboard/follow-ups',
-        );
 
         return $this->success('Follow-up created', ['follow_up' => $followUp->load(['building', 'opportunity', 'user'])], [], 201);
     }

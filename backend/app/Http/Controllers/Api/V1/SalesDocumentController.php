@@ -15,7 +15,7 @@ class SalesDocumentController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $this->authorize('buildings.view');
+        $this->authorizeAny(['sales-documents.view', 'buildings.view']);
 
         $query = SalesDocument::with(['building', 'uploader']);
 
@@ -48,7 +48,10 @@ class SalesDocumentController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $this->authorize('buildings.update');
+        // Uploading is normally gated by sales-documents.create; the legacy
+        // buildings.update grant still works so nobody who could upload
+        // yesterday is locked out by this change.
+        $this->authorizeAny(['sales-documents.create', 'buildings.update']);
 
         $validated = $request->validate([
             'file' => ['required', 'file', 'max:20480'],
@@ -85,14 +88,14 @@ class SalesDocumentController extends Controller
 
     public function show(SalesDocument $salesDocument): JsonResponse
     {
-        $this->authorize('buildings.view');
+        $this->authorizeAny(['sales-documents.view', 'buildings.view']);
         $salesDocument->load(['building', 'siteVisit', 'opportunity', 'uploader', 'versions', 'parentDocument']);
         return $this->success('Document retrieved', ['document' => $salesDocument]);
     }
 
     public function download(SalesDocument $salesDocument): \Symfony\Component\HttpFoundation\StreamedResponse
     {
-        $this->authorize('buildings.view');
+        $this->authorizeAny(['sales-documents.download', 'sales-documents.view', 'buildings.view']);
 
         return Storage::disk('public')->download(
             $salesDocument->file_path,
@@ -102,11 +105,34 @@ class SalesDocumentController extends Controller
 
     public function destroy(SalesDocument $salesDocument): JsonResponse
     {
-        $this->authorize('buildings.delete');
+        $this->authorizeAny(['sales-documents.delete', 'buildings.delete']);
 
         Storage::disk('public')->delete($salesDocument->file_path);
         $salesDocument->delete();
 
         return $this->success('Document deleted');
+    }
+
+    /**
+     * Allow the request when the user holds any one of the given abilities.
+     *
+     * Document access used to be checked purely through `buildings.*`. The
+     * `sales-documents` module in config/access.php now exists so an admin can
+     * grant document access independently of the right to edit a building, but
+     * both routes to access are accepted so existing grants keep working.
+     *
+     * @param  list<string>  $abilities
+     */
+    private function authorizeAny(array $abilities): void
+    {
+        $user = auth()->user();
+
+        foreach ($abilities as $ability) {
+            if ($user && $user->can($ability)) {
+                return;
+            }
+        }
+
+        abort(403, 'You do not have access to sales documents.');
     }
 }

@@ -6,6 +6,7 @@ let echoChannel = null;
 
 export const useNotificationStore = create((set, get) => ({
   notifications: [],
+  modules: [],
   unreadCount: 0,
   loading: false,
   error: null,
@@ -18,6 +19,15 @@ export const useNotificationStore = create((set, get) => ({
       set({ notifications, loading: false });
     } catch (error) {
       set({ error, loading: false });
+    }
+  },
+
+  fetchModules: async () => {
+    try {
+      const modules = await notificationService.modules();
+      set({ modules });
+    } catch {
+      // Modules are only used for the filter chips; fail silently.
     }
   },
 

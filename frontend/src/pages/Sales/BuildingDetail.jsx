@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit2, Save, X, Plus, Trash2, MapPin, Building2, Flame, Users, Calendar, FileText, Download, ExternalLink, Bell, Target, ChevronDown as ChevronDownIcon, ChevronUp, Package } from 'lucide-react';
+import { ArrowLeft, Edit2, Save, X, Plus, Trash2, MapPin, Building2, Flame, Users, Calendar, FileText, Download, ExternalLink, Bell, Target, ChevronDown as ChevronDownIcon, ChevronUp, Package, Loader2 } from 'lucide-react';
 import { useBuildingStore } from '../../store/buildingStore';
 import { buildingDetailService } from '../../services/buildingDetailService';
 import { salesDocumentService } from '../../services/salesDocumentService';
 import api from '../../services/api';
 import Money from '../../components/Shared/Money';
 import { format } from 'date-fns';
+import { formatBytes, uploadErrorMessage, MAX_UPLOAD_BYTES } from '../../utils/fileUpload';
 
 const TABS = ['Overview', 'Wings', 'Site Visits', 'Follow-ups', 'Opportunities', 'Invoices', 'Fire Systems', 'Contacts', 'AMCs', 'Documents'];
 const FIRE_SYSTEM_TYPES = ['Fire Fighting', 'Fire Alarm', 'Fire Sprinkler', 'Fire Hydrant', 'Fire Extinguisher', 'Emergency Lighting', 'Smoke Detector', 'Others'];
@@ -1012,33 +1013,59 @@ function InvoicesTab({ invoices }) {
 
 function DocumentsTab({ documents, buildingId, reload }) {
   const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [error, setError] = useState(null);
 
   const handleUpload = async (e) => {
     const file = e.target.files[0];
+    e.target.value = '';
     if (!file) return;
+
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setError(`"${file.name}" is ${formatBytes(file.size)} — the limit is ${formatBytes(MAX_UPLOAD_BYTES)} per file.`);
+      return;
+    }
+
+    setError(null);
     setUploading(true);
+    setProgress(0);
     const formData = new FormData();
     formData.append('file', file);
     formData.append('building_id', buildingId);
     formData.append('category', 'Other');
     formData.append('name', file.name);
     try {
-      await salesDocumentService.upload(formData);
+      await salesDocumentService.upload(formData, { onProgress: setProgress });
       reload();
-    } catch (err) { console.error(err); }
-    setUploading(false);
-    e.target.value = '';
+    } catch (err) {
+      setError(uploadErrorMessage(err));
+    } finally {
+      setUploading(false);
+      setProgress(0);
+    }
   };
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-semibold text-gray-900">Documents ({documents.length})</h2>
-        <label className="flex items-center gap-2 px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm cursor-pointer hover:bg-red-700">
-          <Plus className="w-3 h-3" /> {uploading ? 'Uploading...' : 'Upload'}
-          <input type="file" className="hidden" onChange={handleUpload} />
+        <label className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm ${uploading ? 'bg-red-400 cursor-wait text-white' : 'bg-red-600 text-white cursor-pointer hover:bg-red-700'}`}>
+          {uploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
+          {uploading ? `Uploading ${progress}%` : 'Upload'}
+          <input type="file" className="hidden" onChange={handleUpload} disabled={uploading} />
         </label>
       </div>
+
+      {uploading && (
+        <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+          <div className="h-full bg-red-600 transition-all duration-200" style={{ width: `${progress}%` }} />
+        </div>
+      )}
+
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+      )}
+
       {(documents || []).length === 0 ? (
         <div className="text-center py-12 text-gray-500 bg-white border rounded-lg">
           <FileText className="w-12 h-12 mx-auto text-gray-300 mb-3" />
@@ -1063,7 +1090,7 @@ function DocumentsTab({ documents, buildingId, reload }) {
                   <td className="px-4 py-2 text-sm text-gray-500">{doc.created_at ? format(new Date(doc.created_at), 'dd MMM yyyy') : '-'}</td>
                   <td className="px-4 py-2 text-right">
                     <a href={salesDocumentService.downloadUrl(doc.id)} className="text-blue-600 hover:text-blue-800 text-xs mr-2"><Download className="w-3 h-3 inline" /> Download</a>
-                    <button onClick={async () => { if (confirm('Delete this document?')) { await salesDocumentService.remove(doc.id); reload(); } }} className="text-red-600 hover:text-red-800 text-xs"><Trash2 className="w-3 h-3 inline" /> Delete</button>
+                    <button onClick={async () => { if (confirm('Delete this document?')) { try { await salesDocumentService.remove(doc.id); reload(); } catch (err) { setError(uploadErrorMessage(err)); } } }} className="text-red-600 hover:text-red-800 text-xs"><Trash2 className="w-3 h-3 inline" /> Delete</button>
                   </td>
                 </tr>
               ))}

@@ -226,13 +226,47 @@ class ChatController extends Controller
         broadcast(new MessageSent($message));
 
         $channel->load('members');
-        foreach ($channel->members as $member) {
-            if ($member->id !== $request->user()->id) {
-                NotificationService::create(
-                    $member->id,
-                    $request->user()->name . ' sent a message in ' . $channel->name,
-                    $message->message ? Str::limit($message->message, 100) : 'Sent a file',
-                    'info',
+
+        /*
+         * Chat used to notify every member of the channel on every single
+         * message, which turned the bell into a scrolling chat log. Channels
+         * here are only "site" and "topic" - there are no DMs - so the only
+         * messages worth a notification are the ones that need a response:
+         * an @mention, or a reply to your own message.
+         */
+        $actorId = (int) $request->user()->id;
+        $preview = Str::limit($message->message ?? '', 100);
+        $mentionIds = $this->mentionedMemberIds($channel, $message->message, $actorId);
+
+        if ($mentionIds !== []) {
+            NotificationService::notify(
+                'chat.mention',
+                [
+                    'actor' => $request->user()->name,
+                    'channel' => $channel->name,
+                    'preview' => $preview,
+                ],
+                $actorId,
+                $mentionIds,
+                '/dashboard/chat',
+            );
+        }
+
+        if (!empty($validated['reply_to_id'])) {
+            $parent = ChatMessage::find($validated['reply_to_id']);
+
+            if ($parent
+                && (int) $parent->user_id !== $actorId
+                && ! in_array((int) $parent->user_id, $mentionIds, true)) {
+                NotificationService::notify(
+                    'chat.replied',
+                    [
+                        'actor' => $request->user()->name,
+                        'channel' => $channel->name,
+                        'preview' => $preview,
+                    ],
+                    $actorId,
+                    [(int) $parent->user_id],
                     '/dashboard/chat',
                 );
             }
@@ -281,6 +315,36 @@ class ChatController extends Controller
     {
         $members = $channel->members()->select('users.id', 'users.name')->get();
         return $this->success('Members retrieved', ['members' => $members]);
+    }
+
+    /**
+     * User IDs of channel members named with an @mention in the message body.
+     *
+     * Matching is against full display names (longest first, so "@John Smith"
+     * is not swallowed by "@John"), and the sender is always excluded.
+     *
+     * @return array<int, int>
+     */
+    private function mentionedMemberIds(ChatChannel $channel, ?string $text, int $actorId): array
+    {
+        if ($text === null || trim($text) === '') {
+            return [];
+        }
+
+        return collect($channel->members)
+            ->filter(function ($member) use ($text) {
+                if (blank($member->name)) {
+                    return false;
+                }
+
+                return (bool) preg_match('/@' . preg_quote($member->name, '/') . '\b/iu', $text);
+            })
+            ->reject(fn ($member) => (int) $member->id === $actorId)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
     }
 
     private function formatMessage(ChatMessage $msg, $user): array

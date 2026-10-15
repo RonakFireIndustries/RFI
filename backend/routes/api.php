@@ -324,6 +324,7 @@ Route::prefix('v1')->group(function () {
 
     // Notifications
     Route::get('/notifications/unread-count', [\App\Http\Controllers\Api\V1\NotificationController::class, 'unreadCount']);
+    Route::get('/notifications/modules', [\App\Http\Controllers\Api\V1\NotificationController::class, 'modules']);
     Route::put('/notifications/read-all', [\App\Http\Controllers\Api\V1\NotificationController::class, 'markAllRead']);
     Route::get('/notifications', [\App\Http\Controllers\Api\V1\NotificationController::class, 'index']);
     Route::post('/notifications/send', [\App\Http\Controllers\Api\V1\NotificationController::class, 'send'])->middleware('throttle:notifications');

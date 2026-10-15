@@ -11,6 +11,11 @@ export const notificationService = {
     return res.data?.count ?? res.data ?? 0;
   },
 
+  modules: async () => {
+    const res = await api.get('/notifications/modules');
+    return res.data?.modules ?? [];
+  },
+
   markRead: async (id) => {
     await api.put(`/notifications/${id}/read`);
   },

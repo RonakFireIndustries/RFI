@@ -23,3 +23,11 @@ Artisan::command('inspire', function () {
 Schedule::command('attendance:auto-close-forgotten')
     ->everyFifteenMinutes()
     ->withoutOverlapping();
+
+// Proactive notifications: due and overdue follow-ups, overdue invoices, stock
+// below reorder level, expiring AMCs and documents, low leave balances and
+// missing attendance. Alerts are de-duplicated by the catalogue's dedupe flag,
+// so re-running does not stack copies on top of an unread one.
+Schedule::command('notifications:scan')
+    ->dailyAt(config('notifications.schedule.scan_at', '09:00'))
+    ->withoutOverlapping();

@@ -7,6 +7,7 @@ import { salesDocumentService } from '../../services/salesDocumentService';
 import MapPicker from '../../components/MapPicker';
 import PermissionGate from '../../components/Guards/PermissionGate';
 import { useSubmitGuard } from '../../hooks/useSubmitGuard';
+import { formatBytes, uploadErrorMessage, findOversizeFile, MAX_UPLOAD_BYTES } from '../../utils/fileUpload';
 import {
   Plus, Edit, Trash2, Search, MapPin, Building2, Info, X, Compass, Copy,
   Shield, Flame, Hammer, User, Phone, FileText, ChevronDown, ChevronUp, Eye,
@@ -94,6 +95,8 @@ export default function Buildings() {
   const [convertingId, setConvertingId] = useState(null);
   const [pmcDocs, setPmcDocs] = useState([]);
   const [newPmcFiles, setNewPmcFiles] = useState([]);
+  // PMC document upload progress: { active, percent, label }.
+  const [pmcUpload, setPmcUpload] = useState({ active: false, percent: 0, label: '' });
   const { submitting, guard } = useSubmitGuard();
 
   useEffect(() => {
@@ -304,6 +307,7 @@ export default function Buildings() {
     setFloorsData({});
     setPmcDocs([]);
     setNewPmcFiles([]);
+    setPmcUpload({ active: false, percent: 0, label: '' });
     setIsModalOpen(true);
   };
 
@@ -347,6 +351,7 @@ export default function Buildings() {
     });
     setFormErrors({});
     setNewPmcFiles([]);
+    setPmcUpload({ active: false, percent: 0, label: '' });
     try {
       const wings = await buildingDetailService.getWings(b.id);
       const floors = await buildingDetailService.getFloors(b.id);
@@ -446,16 +451,44 @@ export default function Buildings() {
         const created = await createBuilding(payload);
         buildingId = created?.id ?? created?.building?.id;
       }
+
+      // Upload the attached PMC files one at a time so the progress bar can
+      // advance per file. A failed upload does not discard the saved building;
+      // it is reported and the offending files stay queued for a retry.
+      const failedFiles = [];
+      const uploadFailures = [];
       if (buildingId && newPmcFiles.length > 0) {
-        await Promise.all(newPmcFiles.map((file) => {
+        for (let i = 0; i < newPmcFiles.length; i += 1) {
+          const file = newPmcFiles[i];
+          setPmcUpload({ active: true, percent: 0, label: `Uploading ${file.name}` });
           const fd = new FormData();
           fd.append('file', file);
           fd.append('building_id', buildingId);
           fd.append('category', 'PMC Document');
           fd.append('name', file.name);
-          return salesDocumentService.upload(fd);
-        }));
+          try {
+            await salesDocumentService.upload(fd, {
+              onProgress: (percent) => {
+                const overall = Math.round(((i + percent / 100) / newPmcFiles.length) * 100);
+                setPmcUpload({ active: true, percent: overall, label: `Uploading ${file.name}` });
+              },
+            });
+          } catch (uploadErr) {
+            failedFiles.push(file);
+            uploadFailures.push(`${file.name} — ${uploadErrorMessage(uploadErr)}`);
+          }
+        }
       }
+
+      if (uploadFailures.length > 0) {
+        setNewPmcFiles(failedFiles);
+        setFormErrors({
+          general: `Building saved, but ${uploadFailures.length} document(s) could not be uploaded: ${uploadFailures.join('; ')}`,
+        });
+        fetchBuildings({ search, status: statusFilter, page: currentPage, per_page: 1000 });
+        return;
+      }
+
       setIsModalOpen(false);
       setNewPmcFiles([]);
       fetchBuildings({ search, status: statusFilter, page: currentPage, per_page: 1000 });
@@ -463,6 +496,8 @@ export default function Buildings() {
       const serverMessage = err.response?.data?.message || '';
       if (err.response?.data?.errors) setFormErrors(err.response.data.errors);
       else setFormErrors({ general: serverMessage || err.message || 'An error occurred.' });
+    } finally {
+      setPmcUpload({ active: false, percent: 0, label: '' });
     }
     });
   };
@@ -482,7 +517,7 @@ export default function Buildings() {
       await salesDocumentService.remove(docId);
       setPmcDocs((prev) => prev.filter((doc) => doc.id !== docId));
     } catch (err) {
-      alert(err.message || 'Failed to remove the PMC document.');
+      alert(uploadErrorMessage(err));
     }
   };
 
@@ -1153,14 +1188,23 @@ export default function Buildings() {
                     <input
                       type="file"
                       multiple
+                      disabled={pmcUpload.active}
                       onChange={(e) => {
                         const files = Array.from(e.target.files || []);
-                        if (files.length) setNewPmcFiles((prev) => [...prev, ...files]);
                         e.target.value = '';
+                        if (!files.length) return;
+                        const oversize = findOversizeFile(files);
+                        if (oversize) {
+                          setFormErrors((prev) => ({ ...prev, pmc: `"${oversize.name}" is ${formatBytes(oversize.size)} — the limit is ${formatBytes(MAX_UPLOAD_BYTES)} per file.` }));
+                          return;
+                        }
+                        setFormErrors((prev) => { const { pmc, ...rest } = prev; return rest; });
+                        setNewPmcFiles((prev) => [...prev, ...files]);
                       }}
-                      className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm file:mr-3 file:px-3 file:py-1 file:rounded-md file:border-0 file:bg-blue-50 file:text-blue-700 file:text-xs file:font-semibold hover:file:bg-blue-100"
+                      className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm file:mr-3 file:px-3 file:py-1 file:rounded-md file:border-0 file:bg-blue-50 file:text-blue-700 file:text-xs file:font-semibold hover:file:bg-blue-100 disabled:opacity-60"
                     />
                     <p className="text-[11px] text-gray-400 mt-1">Attach multiple PMC files (PDF, image or document, up to 20MB each).</p>
+                    {formErrors.pmc && <p className="text-[11px] text-red-600 mt-1">{formErrors.pmc}</p>}
                   </div>
 
                   {newPmcFiles.length > 0 && (
@@ -1168,11 +1212,24 @@ export default function Buildings() {
                       {newPmcFiles.map((file, i) => (
                         <span key={`${file.name}-${i}`} className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-1 rounded-md text-xs">
                           <FileText className="w-3 h-3" /> {file.name}
-                          <button type="button" onClick={() => setNewPmcFiles((prev) => prev.filter((_, idx) => idx !== i))} className="hover:text-blue-900" title="Remove">
+                          <span className="text-blue-400">({formatBytes(file.size)})</span>
+                          <button type="button" disabled={pmcUpload.active} onClick={() => setNewPmcFiles((prev) => prev.filter((_, idx) => idx !== i))} className="hover:text-blue-900 disabled:opacity-40" title="Remove">
                             <X className="w-3 h-3" />
                           </button>
                         </span>
                       ))}
+                    </div>
+                  )}
+
+                  {pmcUpload.active && (
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between text-[11px] text-gray-500">
+                        <span className="truncate pr-2">{pmcUpload.label}</span>
+                        <span className="font-semibold tabular-nums">{pmcUpload.percent}%</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-blue-600 transition-all duration-200" style={{ width: `${pmcUpload.percent}%` }} />
+                      </div>
                     </div>
                   )}
 
@@ -1213,7 +1270,7 @@ export default function Buildings() {
               <div className="flex justify-end gap-3 pt-4 border-t border-gray-150">
                 <button type="button" onClick={() => setIsModalOpen(false)} disabled={submitting} className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">Cancel</button>
                 <button type="submit" disabled={submitting} className="px-5 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary/90 transition-colors font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed">
-                  {submitting ? 'Saving...' : (editingBuilding ? 'Save Changes' : 'Create Building')}
+                  {pmcUpload.active ? `Uploading ${pmcUpload.percent}%` : submitting ? 'Saving...' : (editingBuilding ? 'Save Changes' : 'Create Building')}
                 </button>
               </div>
             </form>

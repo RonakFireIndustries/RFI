@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Building;
 use App\Models\Opportunity;
 use App\Models\OpportunityWorkType;
-use App\Services\NotificationService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -84,14 +83,6 @@ class OpportunityController extends Controller
 
         $this->logActivity($opportunity, 'created', 'Opportunity created');
 
-        NotificationService::create(
-            $request->user()->id,
-            'New opportunity created',
-            $opportunity->name . ' for ' . ($opportunity->building->name ?? 'unknown building'),
-            'success',
-            '/dashboard/opportunities/' . $opportunity->id,
-        );
-
         return $this->success('Opportunity created', ['opportunity' => $opportunity->load(['building', 'user', 'workTypes'])], [], 201);
     }
 
@@ -133,20 +124,9 @@ class OpportunityController extends Controller
             $validated['status'] = 'Inactive';
         }
 
-        $oldStage = $opportunity->stage;
         $opportunity->update($validated);
 
         $this->logActivity($opportunity, 'updated', 'Opportunity updated');
-
-        if (isset($validated['stage']) && $validated['stage'] !== $oldStage) {
-            NotificationService::create(
-                $opportunity->user_id,
-                'Opportunity stage changed',
-                $opportunity->name . ' moved to ' . $validated['stage'],
-                'info',
-                '/dashboard/opportunities/' . $opportunity->id,
-            );
-        }
 
         return $this->success('Opportunity updated', ['opportunity' => $opportunity->fresh()->load(['building', 'user', 'workTypes'])]);
     }
