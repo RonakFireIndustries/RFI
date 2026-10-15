@@ -26,6 +26,7 @@ use App\Http\Controllers\ReportsModuleController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserAccessController;
 use App\Http\Controllers\SalaryStructureController;
+use App\Http\Controllers\CashVoucherController;
 use App\Http\Controllers\PayrollPeriodController;
 use App\Http\Controllers\PayslipController;
 use App\Http\Controllers\InventoryLocationController;
@@ -274,6 +275,12 @@ Route::prefix('v1')->group(function () {
     Route::get('/payslips/{payslip}', [PayslipController::class, 'show']);
     Route::post('/payrolls/{payroll}/payslips/generate', [PayslipController::class, 'generate']);
     Route::get('/payslips/{payslip}/download', [PayslipController::class, 'download']);
+
+    // Finance - petty cash vouchers
+    Route::apiResource('cash-vouchers', CashVoucherController::class);
+    Route::post('/cash-vouchers/{cash_voucher}/approve', [CashVoucherController::class, 'approve']);
+    Route::post('/cash-vouchers/{cash_voucher}/reject', [CashVoucherController::class, 'reject']);
+    Route::post('/cash-vouchers/{cash_voucher}/mark-paid', [CashVoucherController::class, 'markPaid']);
 
     // Reports
     Route::get('/reports/sales', [ReportsController::class, 'salesReport']);

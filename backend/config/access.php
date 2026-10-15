@@ -115,6 +115,13 @@ return [
             ],
         ],
 
+        'Finance' => [
+            'cash-vouchers' => [
+                'label' => 'Cash Vouchers',
+                'actions' => ['view', 'create', 'update', 'delete', 'approve', 'reject'],
+            ],
+        ],
+
         'Organization' => [
             'departments' => [
                 'label' => 'Departments',

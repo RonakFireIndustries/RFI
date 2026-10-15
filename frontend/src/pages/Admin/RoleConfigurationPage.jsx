@@ -206,7 +206,7 @@ export default function RoleConfigurationPage() {
     }
   };
 
-  const moduleOrder = ['general', 'view', 'employee', 'department', 'designation', 'site', 'attendance', 'shift', 'daily_report', 'leave', 'leave_type', 'document', 'product', 'category', 'customer', 'supplier', 'inventory', 'sales', 'purchase', 'invoice', 'payment', 'payroll', 'salary', 'report'];
+  const moduleOrder = ['general', 'view', 'employee', 'department', 'designation', 'site', 'attendance', 'shift', 'daily_report', 'leave', 'leave_type', 'document', 'product', 'category', 'customer', 'supplier', 'inventory', 'sales', 'purchase', 'invoice', 'payment', 'payroll', 'salary', 'cash-vouchers', 'report'];
 
   const moduleLabels2 = {
     employee: 'Employees', department: 'Departments', designation: 'Designations',
@@ -216,6 +216,7 @@ export default function RoleConfigurationPage() {
     customer: 'Customers', supplier: 'Suppliers', inventory: 'Inventory',
     sales: 'Sales', purchase: 'Purchases', invoice: 'Invoices',
     payment: 'Payments', payroll: 'Payroll', salary: 'Salary',
+    'cash-vouchers': 'Cash Vouchers',
     report: 'Reports', general: 'General', view: 'View',
   };
 

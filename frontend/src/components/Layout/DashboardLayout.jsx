@@ -56,6 +56,7 @@ import PayrollGenerationPage from '../../pages/Payroll/PayrollGenerationPage';
 import PayrollDashboardPage from '../../pages/Payroll/PayrollDashboardPage';
 import EmployeePayrollPage from '../../pages/Payroll/EmployeePayrollPage';
 import PayslipPage from '../../pages/Payroll/PayslipPage';
+import CashVouchersPage from '../../pages/Finance/CashVouchersPage';
 import Sites from '@/pages/Sites/Sites';
 import SiteDetail from '@/pages/Sites/SiteDetail';
 import Buildings from '@/pages/Buildings/Buildings';
@@ -476,6 +477,7 @@ export default function DashboardLayout() {
               <Route path="period-payroll" element={<PayrollPeriodsPage />} />
               <Route path="process-payroll" element={<PayrollGenerationPage />} />
               <Route path="my-payroll" element={<EmployeePayrollPage />} />
+              <Route path="cash-vouchers" element={<CashVouchersPage />} />
               <Route path="payslip/:id" element={<PayslipPage />} />
               {/* Same report, rendered straight from the payroll row so an
                   employee can view their own pay even before a payslip is

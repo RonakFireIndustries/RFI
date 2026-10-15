@@ -39,6 +39,17 @@ class EmployeeResource extends JsonResource
             'pan_path' => $this->pan_path,
             'offer_letter_path' => $this->offer_letter_path,
 
+            // HR profile: blood group, bank and statutory details.
+            'blood_group' => $this->blood_group,
+            'account_holder_name' => $this->account_holder_name,
+            'bank_name' => $this->bank_name,
+            'bank_branch' => $this->bank_branch,
+            'bank_ifsc' => $this->bank_ifsc,
+            'bank_account_number' => $this->bank_account_number,
+            'pf_number' => $this->pf_number,
+            'uan' => $this->uan,
+            'esic_number' => $this->esic_number,
+
             // Relations
             'department' => new DepartmentResource($this->whenLoaded('department')),
             'designation' => new DesignationResource($this->whenLoaded('designation')),

@@ -9,6 +9,7 @@ use App\Models\Leave;
 use App\Models\LeaveType;
 use App\Models\PayrollPeriod;
 use App\Models\SalaryStructure;
+use App\Support\StatutoryDeductions;
 use Carbon\Carbon;
 
 /**
@@ -94,10 +95,21 @@ class PayrollCalculationService
             + $specialAllowance + $siteAllowance + $travelAllowance
             + $foodAllowance + $otherEarnings + $overtimePay + $bonuses;
 
-        // 2. Deductions (statutory amounts are taken in full, as configured on
-        //    the salary structure; attendance already reduced the earnings).
-        $pf = (float) $salaryStructure->pf_deduction;
-        $esic = (float) $salaryStructure->esic_deduction;
+        // 2. Deductions.
+        //    PF and ESIC are either derived from the statutory rule (12% of
+        //    Basic capped at the EPF wage ceiling, 0.75% of gross while the
+        //    employee stays under the ESIC ceiling) or taken from the manually
+        //    configured amounts when auto-calc is switched off for this
+        //    structure. Either way they are charged in full - attendance has
+        //    already reduced the earnings above.
+        if ($salaryStructure->auto_statutory) {
+            $statutory = StatutoryDeductions::forStructure($salaryStructure);
+            $pf = $statutory['pf'];
+            $esic = $statutory['esic'];
+        } else {
+            $pf = (float) $salaryStructure->pf_deduction;
+            $esic = (float) $salaryStructure->esic_deduction;
+        }
         $pt = (float) $salaryStructure->professional_tax;
         $tds = (float) $salaryStructure->tds;
         $otherDeductions = (float) $salaryStructure->other_deductions;

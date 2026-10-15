@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SalaryStructure;
+use App\Support\StatutoryDeductions;
 use Illuminate\Http\Request;
 
 class SalaryStructureController extends Controller
@@ -32,13 +33,16 @@ class SalaryStructureController extends Controller
             'professional_tax' => 'nullable|numeric|min:0',
             'tds' => 'nullable|numeric|min:0',
             'other_deductions' => 'nullable|numeric|min:0',
+            'auto_statutory' => 'nullable|boolean',
             'effective_from' => 'required|date',
             'effective_to' => 'nullable|date|after_or_equal:effective_from',
             'status' => 'nullable|string',
         ]);
 
         $structure = SalaryStructure::create($validated);
-        return response()->json($structure->load('employee'), 201);
+        $this->syncStatutory($structure);
+
+        return response()->json($structure->fresh()->load('employee'), 201);
     }
 
     public function show(SalaryStructure $salaryStructure)
@@ -65,13 +69,36 @@ class SalaryStructureController extends Controller
             'professional_tax' => 'nullable|numeric|min:0',
             'tds' => 'nullable|numeric|min:0',
             'other_deductions' => 'nullable|numeric|min:0',
+            'auto_statutory' => 'nullable|boolean',
             'effective_from' => 'sometimes|date',
             'effective_to' => 'nullable|date|after_or_equal:effective_from',
             'status' => 'nullable|string',
         ]);
 
         $salaryStructure->update($validated);
-        return response()->json($salaryStructure->load('employee'));
+        $this->syncStatutory($salaryStructure);
+
+        return response()->json($salaryStructure->fresh()->load('employee'));
+    }
+
+    /**
+     * When a structure uses automatic statutory deductions, keep the stored PF
+     * and ESIC columns in step with the rule so lists, reports and the payslip
+     * show the same numbers the pay run will charge. Manual structures are left
+     * exactly as entered.
+     */
+    protected function syncStatutory(SalaryStructure $structure): void
+    {
+        if (!$structure->auto_statutory) {
+            return;
+        }
+
+        $statutory = StatutoryDeductions::forStructure($structure);
+
+        $structure->forceFill([
+            'pf_deduction' => $statutory['pf'],
+            'esic_deduction' => $statutory['esic'],
+        ])->save();
     }
 
     public function destroy(SalaryStructure $salaryStructure)

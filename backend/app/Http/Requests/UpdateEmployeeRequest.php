@@ -42,6 +42,18 @@ class UpdateEmployeeRequest extends FormRequest
             'create_user_account' => 'nullable|boolean',
             'role' => 'nullable|string|exists:roles,name',
 
+            'blood_group' => 'nullable|in:A+,A-,B+,B-,O+,O-,AB+,AB-',
+
+            'account_holder_name' => 'nullable|string|max:255',
+            'bank_name' => 'nullable|string|max:255',
+            'bank_branch' => 'nullable|string|max:255',
+            'bank_ifsc' => 'nullable|string|max:20',
+            'bank_account_number' => 'nullable|string|max:30',
+
+            'pf_number' => 'nullable|string|max:255',
+            'uan' => 'nullable|string|max:255',
+            'esic_number' => 'nullable|string|max:255',
+
             'photo' => 'nullable|file|mimes:jpeg,png,jpg|max:5120',
             'resume' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
             'aadhaar' => 'nullable|file|mimes:pdf,jpeg,png,jpg|max:5120',

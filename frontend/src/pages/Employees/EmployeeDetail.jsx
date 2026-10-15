@@ -142,6 +142,7 @@ export default function EmployeeDetail() {
         { label: 'Date of Birth', path: 'dob' },
         { label: 'Gender', path: 'gender' },
         { label: 'Marital Status', path: 'marital_status' },
+        { label: 'Blood Group', path: 'blood_group' },
         { label: 'Contact Number', path: 'contact_number' },
         { label: 'Alternative Number', path: 'personal_number' },
         { label: 'Emergency Contact', path: 'emergency_contact' },
@@ -168,6 +169,24 @@ export default function EmployeeDetail() {
         { label: 'Employment Bond?', render: (e) => e.employment_bond_status ? 'Yes' : 'No' },
         { label: 'Previously Terminated?', render: (e) => e.previous_termination_status ? 'Yes' : 'No' },
         { label: 'Legal Proceedings?', render: (e) => e.legal_proceedings_status ? 'Yes' : 'No' },
+      ]
+    },
+    {
+      title: 'Bank Details (Salary Credit)',
+      fields: [
+        { label: 'Account Holder Name', path: 'account_holder_name' },
+        { label: 'Bank Name', path: 'bank_name' },
+        { label: 'Branch', path: 'bank_branch' },
+        { label: 'IFSC Code', path: 'bank_ifsc' },
+        { label: 'Account Number', path: 'bank_account_number' },
+      ]
+    },
+    {
+      title: 'PF & ESIC Details',
+      fields: [
+        { label: 'PF Account Number', path: 'pf_number' },
+        { label: 'UAN', path: 'uan' },
+        { label: 'ESIC Number', path: 'esic_number' },
       ]
     },
     {

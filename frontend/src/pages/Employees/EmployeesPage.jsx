@@ -43,6 +43,7 @@ export default function EmployeesPage() {
         { name: 'dob', label: 'Date of Birth', type: 'date' },
         { name: 'gender', label: 'Gender', type: 'select', emptyAsNull: true, options: [{ value: 'Male', label: 'Male' }, { value: 'Female', label: 'Female' }, { value: 'Other', label: 'Other' }] },
         { name: 'marital_status', label: 'Marital Status', type: 'select', emptyAsNull: true, options: [{ value: 'Single', label: 'Single' }, { value: 'Married', label: 'Married' }, { value: 'Divorced', label: 'Divorced' }, { value: 'Widowed', label: 'Widowed' }] },
+        { name: 'blood_group', label: 'Blood Group', type: 'select', emptyAsNull: true, options: [{ value: 'A+', label: 'A+' }, { value: 'A-', label: 'A-' }, { value: 'B+', label: 'B+' }, { value: 'B-', label: 'B-' }, { value: 'O+', label: 'O+' }, { value: 'O-', label: 'O-' }, { value: 'AB+', label: 'AB+' }, { value: 'AB-', label: 'AB-' }] },
         { name: 'contact_number', label: 'Contact Number' },
         { name: 'personal_number', label: 'Alternative Number' },
         { name: 'emergency_contact', label: 'Emergency Contact' },
@@ -64,6 +65,18 @@ export default function EmployeesPage() {
         { name: 'previous_termination_status', label: 'Previously Terminated?', type: 'select', emptyAsNull: true, options: [{ value: 1, label: 'Yes' }, { value: 0, label: 'No' }] },
         { name: 'legal_proceedings_status', label: 'Legal Proceedings?', type: 'select', emptyAsNull: true, options: [{ value: 1, label: 'Yes' }, { value: 0, label: 'No' }] },
         { name: 'create_user_account', label: 'Create User Account?', type: 'select', defaultValue: 1, options: [{ value: 1, label: 'Yes' }, { value: 0, label: 'No' }] },
+
+        { type: 'heading', label: 'Bank Details (Salary Credit)', fullWidth: true },
+        { name: 'account_holder_name', label: 'Account Holder Name' },
+        { name: 'bank_name', label: 'Bank Name' },
+        { name: 'bank_branch', label: 'Branch' },
+        { name: 'bank_ifsc', label: 'IFSC Code' },
+        { name: 'bank_account_number', label: 'Account Number' },
+
+        { type: 'heading', label: 'PF & ESIC Details', fullWidth: true },
+        { name: 'pf_number', label: 'PF Account Number' },
+        { name: 'uan', label: 'UAN (Universal Account No.)' },
+        { name: 'esic_number', label: 'ESIC Number' },
 
         { type: 'heading', label: 'Documents (Uploads)', fullWidth: true },
         { name: 'photo', label: 'Profile Photo', type: 'file', accept: 'image/*' },

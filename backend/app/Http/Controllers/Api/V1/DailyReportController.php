@@ -12,6 +12,7 @@ use App\Support\Access;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 use Exception;
 
 class DailyReportController extends Controller
@@ -103,7 +104,19 @@ class DailyReportController extends Controller
                 'report' => new DailyReportResource($report)
             ], 201);
         } catch (Exception $e) {
+            // Business rule (no site assigned, duplicate report, ...) - the
+            // caller can act on it, so it stays a 422.
             return $this->error($e->getMessage(), [], 422);
+        } catch (\Throwable $e) {
+            // Anything else is a fault, not a validation problem. Swallowing
+            // it as a 422 hides "Unknown column ..." style schema bugs behind
+            // a response that looks like the payload was merely invalid.
+            Log::error('Daily report creation failed', [
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
+            ]);
+
+            return $this->error('Unable to create the daily report. Please try again or contact support.', [], 500);
         }
     }
 
@@ -140,6 +153,13 @@ class DailyReportController extends Controller
             ]);
         } catch (Exception $e) {
             return $this->error($e->getMessage(), [], 422);
+        } catch (\Throwable $e) {
+            Log::error('Daily report update failed', [
+                'daily_report_id' => $dailyReport->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return $this->error('Unable to update the daily report. Please try again or contact support.', [], 500);
         }
     }
 
@@ -153,6 +173,13 @@ class DailyReportController extends Controller
             return $this->success('Daily report deleted successfully');
         } catch (Exception $e) {
             return $this->error($e->getMessage(), [], 422);
+        } catch (\Throwable $e) {
+            Log::error('Daily report deletion failed', [
+                'daily_report_id' => $dailyReport->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return $this->error('Unable to delete the daily report. Please try again or contact support.', [], 500);
         }
     }
 

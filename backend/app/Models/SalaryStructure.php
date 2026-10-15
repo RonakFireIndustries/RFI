@@ -26,6 +26,7 @@ class SalaryStructure extends Model
         'professional_tax',
         'tds',
         'other_deductions',
+        'auto_statutory',
         'effective_from',
         'effective_to',
         'status',
@@ -34,6 +35,7 @@ class SalaryStructure extends Model
     protected $casts = [
         'effective_from' => 'date',
         'effective_to' => 'date',
+        'auto_statutory' => 'boolean',
     ];
 
     public function employee()

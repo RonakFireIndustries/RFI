@@ -2,7 +2,7 @@ import {
   LayoutDashboard, Users, Calendar, ClipboardList, MapPin, Clock, FileText, Briefcase,
   DollarSign, Layers, Package, Boxes, Warehouse, ShoppingCart, Shield, Settings,
   Ruler, GitCompare, Move3D, FileSpreadsheet, FileClock, FileInput, Building2,
-  TrendingUp, Target, Bell, BarChart3, PenTool, Flame, LifeBuoy,
+  TrendingUp, Target, Bell, BarChart3, PenTool, Flame, LifeBuoy, Wallet,
 } from 'lucide-react';
 
 /*
@@ -55,6 +55,12 @@ export const menuCategories = [
       { name: 'Payroll Periods', path: '/dashboard/period-payroll', icon: Calendar, permissions: ['payroll.manage'] },
       { name: 'Process Payroll', path: '/dashboard/process-payroll', icon: ClipboardList, permissions: ['payroll.manage'] },
       { name: 'My Payroll', path: '/dashboard/my-payroll', icon: FileText, permissions: ['*'] },
+    ],
+  },
+  {
+    title: 'Finance',
+    items: [
+      { name: 'Cash Vouchers', path: '/dashboard/cash-vouchers', icon: Wallet, permissions: ['cash-vouchers.view'] },
     ],
   },
   {

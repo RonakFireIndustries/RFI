@@ -20,7 +20,10 @@ class Employee extends Model
         'contact_number', 'personal_number', 'emergency_contact',
         'qualification', 'employment_bond_status', 'previous_termination_status',
         'legal_proceedings_status', 'resume_path', 'aadhaar_path',
-        'pan_path', 'offer_letter_path'
+        'pan_path', 'offer_letter_path',
+        'blood_group',
+        'account_holder_name', 'bank_name', 'bank_branch', 'bank_ifsc', 'bank_account_number',
+        'pf_number', 'uan', 'esic_number',
     ];
 
     public function user(): BelongsTo

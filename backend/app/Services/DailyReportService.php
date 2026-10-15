@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\DailyReport;
 use App\Models\DailyReportHistory;
-use App\Models\Attendance;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Exception;
@@ -42,7 +41,8 @@ class DailyReportService
 
     public function createReport(array $data): DailyReport
     {
-        $this->validateAttendance($data['employee_id'], $data['date']);
+        // Filing a report is independent of attendance: a worker who forgot to
+        // check in must still be able to document the day's work.
         $this->validateDuplicate($data['employee_id'], $data['date']);
 
         if (empty($data['status'])) {
@@ -125,18 +125,6 @@ class DailyReportService
         ]);
 
         return $report;
-    }
-
-    protected function validateAttendance($employeeId, $date)
-    {
-        $attendance = Attendance::where('employee_id', $employeeId)
-            ->whereDate('date', $date)
-            ->where('status', 'Present')
-            ->first();
-
-        if (!$attendance) {
-            throw new Exception("Employee was not marked 'Present' on this date.");
-        }
     }
 
     protected function validateDuplicate($employeeId, $date)
