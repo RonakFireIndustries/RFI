@@ -74,7 +74,11 @@ class SalesDocumentController extends Controller
         $validated['uploaded_by'] = $request->user()->id;
         $validated['name'] = $validated['name'] ?? $file->getClientOriginalName();
 
-        if ($validated['parent_document_id']) {
+        // `parent_document_id` is optional, and Laravel only puts keys that were
+        // actually sent into the validated payload - so read it with a guard.
+        // Reading it directly throws "Undefined array key" and turns an
+        // ordinary upload into a 500 whenever no parent is supplied.
+        if (! empty($validated['parent_document_id'])) {
             $parent = SalesDocument::findOrFail($validated['parent_document_id']);
             $validated['version_number'] = $parent->version_number + 1;
         }
@@ -97,9 +101,25 @@ class SalesDocumentController extends Controller
     {
         $this->authorizeAny(['sales-documents.download', 'sales-documents.view', 'buildings.view']);
 
+        // `file_name` is assigned on upload but has neither a column nor a
+        // fillable entry, so it never survives `create()` and this always used
+        // to come back null - the browser then saved the file under its hashed
+        // path name (`aB3xY9.pdf`). `name` is where the original filename is
+        // actually kept, so fall back to it and re-attach the extension if the
+        // display name has none.
+        $name = (string) ($salesDocument->file_name ?: $salesDocument->name);
+
+        if ($name !== '' && pathinfo($name, PATHINFO_EXTENSION) === '') {
+            $extension = pathinfo($salesDocument->file_path, PATHINFO_EXTENSION);
+
+            if ($extension !== '') {
+                $name .= '.' . $extension;
+            }
+        }
+
         return Storage::disk('public')->download(
             $salesDocument->file_path,
-            $salesDocument->file_name
+            $name !== '' ? $name : null
         );
     }
 
