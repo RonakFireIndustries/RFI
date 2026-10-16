@@ -226,4 +226,34 @@
   .hover\:bg-primary-hover:hover { background-color: var(--color-hover-primary); }
   .focus\:ring-primary-theme:focus { --tw-ring-color: var(--color-primary); }
   .focus\:border-primary-theme:focus { border-color: var(--color-primary); }
+
+  /* Responsive table utilities */
+  .responsive-table-container {
+    @apply relative w-full overflow-x-auto max-w-full rounded-lg border border-border bg-card;
+  }
+  .responsive-table {
+    @apply w-full text-sm min-w-max;
+  }
+  .responsive-table th,
+  .responsive-table td {
+    @apply px-2 py-2.5 sm:px-4 sm:py-3 text-xs sm:text-sm;
+  }
+  .responsive-table thead th {
+    @apply bg-muted font-semibold uppercase tracking-wider text-muted-foreground;
+  }
+  .responsive-table tbody {
+    @apply divide-y divide-border;
+  }
+
+  /* Global table responsiveness - catch-all */
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  .table-responsive {
+    @apply overflow-x-auto max-w-full;
+  }
+  .table-responsive table {
+    @apply min-w-max w-full;
+  }
 }

@@ -35,6 +35,7 @@ const DASHBOARD_TYPES = [
   { value: 'production', label: 'Production' },
   { value: 'sales', label: 'Sales' },
   { value: 'it', label: 'IT' },
+  { value: 'design', label: 'Design' },
   { value: 'employee', label: 'Employee — My Dashboard' },
 ];
 

@@ -875,28 +875,28 @@ export default function Sites() {
                   <p className="font-medium">No stock found at this site</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto max-h-80 overflow-y-auto">
+                <div className="overflow-x-auto max-h-80 overflow-y-auto max-w-full">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-gray-200 text-left text-xs font-bold text-gray-500 uppercase">
-                        <th className="pb-3 pr-4 sticky top-0 bg-white">Product</th>
-                        <th className="pb-3 pr-4 sticky top-0 bg-white">Category</th>
-                        <th className="pb-3 pr-4 text-right sticky top-0 bg-white">Quantity</th>
-                        <th className="pb-3 pr-4 text-right sticky top-0 bg-white">Reserved</th>
-                        <th className="pb-3 text-right sticky top-0 bg-white">Available</th>
+                        <th className="pb-3 pr-2 sm:pr-4 sticky top-0 bg-white whitespace-nowrap">Product</th>
+                        <th className="pb-3 pr-2 sm:pr-4 sticky top-0 bg-white whitespace-nowrap">Category</th>
+                        <th className="pb-3 pr-2 sm:pr-4 text-right sticky top-0 bg-white whitespace-nowrap">Quantity</th>
+                        <th className="pb-3 pr-2 sm:pr-4 text-right sticky top-0 bg-white whitespace-nowrap">Reserved</th>
+                        <th className="pb-3 text-right sticky top-0 bg-white whitespace-nowrap">Available</th>
                       </tr>
                     </thead>
                     <tbody>
                       {modalData.map(item => (
                         <tr key={item.id} className="border-b border-gray-50 hover:bg-gray-50/50">
-                          <td className="py-3 pr-4 font-medium text-gray-800">
+                          <td className="py-3 pr-2 sm:pr-4 font-medium text-gray-800">
                             {item.product?.name || `Product #${item.product_id}`}
                           </td>
-                          <td className="py-3 pr-4 text-gray-500">
+                          <td className="py-3 pr-2 sm:pr-4 text-gray-500">
                             {item.product?.category?.name || '-'}
                           </td>
-                          <td className="py-3 pr-4 text-right">{item.quantity}</td>
-                          <td className="py-3 pr-4 text-right text-amber-600">{item.reserved_quantity}</td>
+                          <td className="py-3 pr-2 sm:pr-4 text-right">{item.quantity}</td>
+                          <td className="py-3 pr-2 sm:pr-4 text-right text-amber-600">{item.reserved_quantity}</td>
                           <td className="py-3 text-right text-emerald-600 font-semibold">{item.available_quantity}</td>
                         </tr>
                       ))}
@@ -930,20 +930,20 @@ export default function Sites() {
                   <p className="font-medium">No employees assigned to this site</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto max-h-80 overflow-y-auto">
+                <div className="overflow-x-auto max-h-80 overflow-y-auto max-w-full">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-gray-200 text-left text-xs font-bold text-gray-500 uppercase">
-                        <th className="pb-3 pr-4 sticky top-0 bg-white">Employee</th>
-                        <th className="pb-3 pr-4 sticky top-0 bg-white">Designation</th>
-                        <th className="pb-3 pr-4 sticky top-0 bg-white">Department</th>
-                        <th className="pb-3 sticky top-0 bg-white">Contact</th>
+                        <th className="pb-3 pr-2 sm:pr-4 sticky top-0 bg-white whitespace-nowrap">Employee</th>
+                        <th className="pb-3 pr-2 sm:pr-4 sticky top-0 bg-white whitespace-nowrap">Designation</th>
+                        <th className="pb-3 pr-2 sm:pr-4 sticky top-0 bg-white whitespace-nowrap">Department</th>
+                        <th className="pb-3 sticky top-0 bg-white whitespace-nowrap">Contact</th>
                       </tr>
                     </thead>
                     <tbody>
                       {modalData.map(emp => (
                         <tr key={emp.id} className="border-b border-gray-50 hover:bg-gray-50/50">
-                          <td className="py-3 pr-4">
+                          <td className="py-3 pr-2 sm:pr-4">
                             <div className="flex items-center gap-2">
                               <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center text-xs font-bold">
                                 {(emp.full_name || emp.name || '?').substring(0, 2).toUpperCase()}
@@ -951,8 +951,8 @@ export default function Sites() {
                               <span className="font-medium text-gray-800">{emp.full_name || emp.name}</span>
                             </div>
                           </td>
-                          <td className="py-3 pr-4 text-gray-500">{emp.designation?.name || emp.designation || '-'}</td>
-                          <td className="py-3 pr-4 text-gray-500">{emp.department?.name || emp.department || '-'}</td>
+                          <td className="py-3 pr-2 sm:pr-4 text-gray-500">{emp.designation?.name || emp.designation || '-'}</td>
+                          <td className="py-3 pr-2 sm:pr-4 text-gray-500">{emp.department?.name || emp.department || '-'}</td>
                           <td className="py-3 text-gray-500">{emp.contact_number || emp.phone || '-'}</td>
                         </tr>
                       ))}

@@ -283,8 +283,8 @@ export default function InvoicePreviewPage() {
                 </div>
               </div>
 
-              <div className="overflow-x-auto mb-8">
-                <table className="w-full text-left">
+              <div className="overflow-x-auto max-w-full mb-8">
+              <table className="w-full text-left text-xs sm:text-sm">
                   <thead>
                     <tr className="bg-gray-50 border-y border-gray-200">
                       <th className="py-3 px-3 text-xs font-bold text-gray-500 uppercase tracking-wider w-8">#</th>

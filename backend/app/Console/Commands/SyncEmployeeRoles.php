@@ -22,8 +22,10 @@ class SyncEmployeeRoles extends Command
         $retiredValid = Permission::whereIn('name', $retired)->pluck('name')->all();
         $designerPerms = config('access.designer_permissions', []);
         $designerValid = Permission::whereIn('name', $designerPerms)->pluck('name')->all();
+        $itPerms = config('access.it_permissions', []);
+        $itValid = Permission::whereIn('name', $itPerms)->pluck('name')->all();
 
-        $users = User::with(['employee.designation', 'roles'])->whereHas('employee')->get();
+        $users = User::with(['employee.designation', 'employee.department', 'roles'])->whereHas('employee')->get();
         $updated = 0;
 
         foreach ($users as $user) {
@@ -33,8 +35,25 @@ class SyncEmployeeRoles extends Command
 
             // Designation-based Designer grant (role-free).
             $isDesigner = str_contains(strtolower($user->employee?->designation?->name ?? ''), 'designer');
-            $extra = $isDesigner ? $designerValid : [];
+
+            // IT grant. Matched on exact designation / department names
+            // rather than a substring, because "Fitter" contains "it".
+            $designation = strtolower(trim($user->employee?->designation?->name ?? ''));
+            $department = strtolower(trim($user->employee?->department?->name ?? ''));
+            $isIt = in_array($designation, ['it', 'it manager', 'developer'], true)
+                || $department === 'it';
+
+            $extra = array_merge(
+                $isDesigner ? $designerValid : [],
+                $isIt ? $itValid : [],
+            );
             $grants = array_values(array_unique(array_merge($baselineValid, $extra)));
+
+            $extras = array_values(array_filter([
+                $isDesigner ? 'designer' : null,
+                $isIt ? 'it' : null,
+            ]));
+            $grantLabel = ($extras ? implode('+', $extras) . '+' : '') . 'baseline';
 
             $hadRoles = $user->roles->isNotEmpty();
             $hadGrants = $user->hasAllPermissions($grants);
@@ -58,7 +77,7 @@ class SyncEmployeeRoles extends Command
                     "User #%d %s: %s ensured, retired baseline revoked, roles detached.",
                     $user->id,
                     $user->email,
-                    $isDesigner ? 'designer+baseline' : 'baseline'
+                    $grantLabel
                 ));
                 $updated++;
             }

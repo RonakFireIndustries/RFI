@@ -25,6 +25,17 @@ const DASHBOARD_TITLES = {
   employee: { title: 'My Dashboard', subtitle: 'Your personal attendance, leave, and payslips.' },
 };
 
+/*
+ * Titles used on the role-scoped route (/dashboard). A user with no role
+ * dashboard resolves to the 'employee' type there as well, but that page is
+ * the "Dashboard" entry point, not the personal one - labelling it "My
+ * Dashboard" made pressing Dashboard look like a redirect to My Dashboard.
+ */
+const ROLE_TITLES = {
+  ...DASHBOARD_TITLES,
+  employee: { title: 'Dashboard', subtitle: 'Your personal attendance, leave, and payslips.' },
+};
+
 export default function DashboardRenderer({ scope = 'role' }) {
   const navigate = useNavigate();
   const { canModule } = usePermission();
@@ -72,7 +83,8 @@ export default function DashboardRenderer({ scope = 'role' }) {
   if (!data) return <DashboardEmptyState dashboardType="employee" />;
 
   const dashboardType = data.dashboard_type || 'employee';
-  const dashboardInfo = DASHBOARD_TITLES[dashboardType] || DASHBOARD_TITLES.employee;
+  const titleMap = isPersonal ? DASHBOARD_TITLES : ROLE_TITLES;
+  const dashboardInfo = titleMap[dashboardType] || titleMap.employee;
   const { cards, charts, quick_actions, alerts, widgets } = data;
   const hasContent = cards?.length || charts?.length || quick_actions?.length || alerts?.length || widgets?.length;
   const isEmployee = dashboardType === 'employee';

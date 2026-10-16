@@ -611,8 +611,8 @@ function FireSystemsTab({ systems, buildingId, reload, editing }) {
           </div>
         </div>
       )}
-      <div className="bg-white rounded-lg border overflow-x-auto">
-        <table className="w-full">
+      <div className="bg-white rounded-lg border overflow-x-auto max-w-full">
+        <table className="w-full text-xs sm:text-sm">
           <thead className="bg-gray-50 border-b"><tr>
             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Type</th>
             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Sub Type</th>
@@ -806,8 +806,8 @@ function AmcsTab({ amcs, buildingId, reload, editing }) {
           </div>
         </div>
       )}
-      <div className="bg-white rounded-lg border overflow-x-auto">
-        <table className="w-full">
+      <div className="bg-white rounded-lg border overflow-x-auto max-w-full">
+        <table className="w-full text-xs sm:text-sm">
           <thead className="bg-gray-50 border-b"><tr>
             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Vendor</th>
             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Contract #</th>

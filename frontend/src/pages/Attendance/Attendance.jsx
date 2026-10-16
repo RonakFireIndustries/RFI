@@ -430,8 +430,8 @@ export default function Attendance() {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+        <div className="overflow-x-auto max-w-full">
+          <table className="w-full text-left border-collapse min-w-max text-xs sm:text-sm">
             <thead>
               <tr className="bg-muted/50 border-b border-border text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                 <th className="p-4 pl-6 w-10"></th>
@@ -532,8 +532,8 @@ export default function Attendance() {
                                 ({expandedEmployeeData.records.length} records)
                               </span>
                             </div>
-                            <div className="overflow-x-auto">
-                              <table className="w-full text-left border-collapse">
+                            <div className="overflow-x-auto max-w-full">
+                              <table className="w-full text-left border-collapse min-w-max text-[10px] sm:text-xs">
                                 <thead>
                                   <tr className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest border-b border-gray-300">
                                     <th className="p-2 pl-0">Date</th>

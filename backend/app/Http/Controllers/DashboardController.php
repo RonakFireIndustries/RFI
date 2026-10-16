@@ -14,18 +14,18 @@ class DashboardController extends Controller
         try {
             $service = $dashboardService->forUser($request->user());
 
-            if (!$service->canViewDashboard()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'You do not have access to this dashboard.',
-                    'data' => [
-                        'dashboard_type' => $service->getDashboardType(),
-                        'redirect' => '/dashboard/my-dashboard',
-                    ],
-                ], 403);
-            }
+            // A dashboard type derived from role / designation / department is
+            // only an identity guess; without the matching Access Control
+            // grant the user must not read another team's cards and alerts.
+            // Rendering the personal dashboard in place (instead of 403-ing
+            // and bouncing the browser to /dashboard/my-dashboard) keeps the
+            // gate intact while stopping every ungranted user from seeing
+            // "Dashboard" behave like a broken redirect. getMyDashboard() is
+            // entirely self-scoped, so nothing another team owns can leak.
+            $data = $service->canViewDashboard()
+                ? $service->getDashboard()
+                : $service->getMyDashboard();
 
-            $data = $service->getDashboard();
             return new DashboardResource($data);
         } catch (\Exception $e) {
             Log::error('Dashboard failed: ' . $e->getMessage());

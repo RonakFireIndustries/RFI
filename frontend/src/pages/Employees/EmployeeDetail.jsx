@@ -484,15 +484,15 @@ export default function EmployeeDetail() {
                   No active site assignments for this employee.
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
+                <div className="overflow-x-auto max-w-full">
+                  <table className="w-full text-left border-collapse min-w-max text-xs sm:text-sm">
                     <thead>
-                      <tr className="border-b border-gray-150 text-xs font-bold text-gray-500 uppercase tracking-wider bg-gray-50/50">
-                        <th className="py-3 px-4">Site Name</th>
-                        <th className="py-3 px-4">Code</th>
-                        <th className="py-3 px-4">Role</th>
-                        <th className="py-3 px-4">Assigned At</th>
-                        <th className="py-3 px-4 text-right">Actions</th>
+                      <tr className="border-b border-gray-150 text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider bg-gray-50/50">
+                        <th className="py-2 px-2 sm:py-3 sm:px-4 whitespace-nowrap">Site Name</th>
+                        <th className="py-2 px-2 sm:py-3 sm:px-4 whitespace-nowrap">Code</th>
+                        <th className="py-2 px-2 sm:py-3 sm:px-4 whitespace-nowrap">Role</th>
+                        <th className="py-2 px-2 sm:py-3 sm:px-4 whitespace-nowrap">Assigned At</th>
+                        <th className="py-2 px-2 sm:py-3 sm:px-4 text-right whitespace-nowrap">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 text-sm">
@@ -645,52 +645,52 @@ export default function EmployeeDetail() {
                   No active shift assignment for this employee.
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
+                <div className="overflow-x-auto max-w-full">
+                  <table className="w-full text-left border-collapse min-w-max text-xs sm:text-sm">
                     <thead>
-                      <tr className="border-b border-gray-150 text-xs font-bold text-gray-500 uppercase tracking-wider bg-gray-50/50">
-                        <th className="py-3 px-4">Shift Name</th>
-                        <th className="py-3 px-4">Start Time</th>
-                        <th className="py-3 px-4">End Time</th>
-                        <th className="py-3 px-4">Grace Period</th>
-                        <th className="py-3 px-4">Status</th>
-                        <th className="py-3 px-4">Assigned At</th>
-                        <th className="py-3 px-4 text-right">Actions</th>
+                      <tr className="border-b border-gray-150 text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider bg-gray-50/50">
+                        <th className="py-2 px-2 sm:py-3 sm:px-4 whitespace-nowrap">Shift Name</th>
+                        <th className="py-2 px-2 sm:py-3 sm:px-4 whitespace-nowrap">Start Time</th>
+                        <th className="py-2 px-2 sm:py-3 sm:px-4 whitespace-nowrap">End Time</th>
+                        <th className="py-2 px-2 sm:py-3 sm:px-4 whitespace-nowrap">Grace Period</th>
+                        <th className="py-2 px-2 sm:py-3 sm:px-4 whitespace-nowrap">Status</th>
+                        <th className="py-2 px-2 sm:py-3 sm:px-4 whitespace-nowrap">Assigned At</th>
+                        <th className="py-2 px-2 sm:py-3 sm:px-4 text-right whitespace-nowrap">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100 text-sm">
+                    <tbody className="divide-y divide-gray-100 text-xs sm:text-sm">
                       <tr className="hover:bg-gray-50/50">
-                        <td className="py-3.5 px-4 font-semibold text-gray-800">
+                        <td className="py-2.5 px-2 sm:py-3.5 sm:px-4 font-semibold text-gray-800">
                           {shiftAssignment.shift?.name || 'Unknown Shift'}
                         </td>
-                        <td className="py-3.5 px-4 font-medium text-gray-600">
+                        <td className="py-2.5 px-2 sm:py-3.5 sm:px-4 font-medium text-gray-600 whitespace-nowrap">
                           {shiftAssignment.shift?.start_time || '-'}
                         </td>
-                        <td className="py-3.5 px-4 font-medium text-gray-600">
+                        <td className="py-2.5 px-2 sm:py-3.5 sm:px-4 font-medium text-gray-600 whitespace-nowrap">
                           {shiftAssignment.shift?.end_time || '-'}
                         </td>
-                        <td className="py-3.5 px-4 font-medium text-gray-600">
+                        <td className="py-2.5 px-2 sm:py-3.5 sm:px-4 font-medium text-gray-600 whitespace-nowrap">
                           {shiftAssignment.shift?.grace_period !== undefined ? `${shiftAssignment.shift.grace_period} mins` : '-'}
                         </td>
-                        <td className="py-3.5 px-4 font-medium text-gray-600">
+                        <td className="py-2.5 px-2 sm:py-3.5 sm:px-4 font-medium text-gray-600 whitespace-nowrap">
                           {shiftAssignment.shift?.status || '-'}
                         </td>
-                        <td className="py-3.5 px-4 text-gray-500">
+                        <td className="py-2.5 px-2 sm:py-3.5 sm:px-4 text-gray-500 whitespace-nowrap">
                           {shiftAssignment.assigned_at ? new Date(shiftAssignment.assigned_at).toLocaleDateString() : 'N/A'}
                         </td>
-                        <td className="py-3.5 px-4 text-right flex justify-end gap-2">
+                        <td className="py-2.5 px-2 sm:py-3.5 sm:px-4 text-right flex justify-end gap-1 sm:gap-2">
                           <button
                             onClick={() => openChangeShiftModal(shiftAssignment.shift_id)}
-                            className="flex items-center text-xs font-semibold text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-300 px-2.5 py-1 rounded bg-blue-50/30"
+                            className="flex items-center text-[10px] sm:text-xs font-semibold text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-300 px-1.5 py-0.5 sm:px-2.5 sm:py-1 rounded bg-blue-50/30 whitespace-nowrap"
                           >
-                            <ArrowLeftRight className="w-3.5 h-3.5 mr-1" />
+                            <ArrowLeftRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-0.5 sm:mr-1" />
                             Change
                           </button>
                           <button
                             onClick={() => openRemoveShiftModal(shiftAssignment.shift_id)}
-                            className="flex items-center text-xs font-semibold text-red-600 hover:text-red-800 border border-red-200 hover:border-red-300 px-2.5 py-1 rounded bg-red-50/30"
+                            className="flex items-center text-[10px] sm:text-xs font-semibold text-red-600 hover:text-red-800 border border-red-200 hover:border-red-300 px-1.5 py-0.5 sm:px-2.5 sm:py-1 rounded bg-red-50/30 whitespace-nowrap"
                           >
-                            <Trash2 className="w-3.5 h-3.5 mr-1" />
+                            <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-0.5 sm:mr-1" />
                             Remove
                           </button>
                         </td>

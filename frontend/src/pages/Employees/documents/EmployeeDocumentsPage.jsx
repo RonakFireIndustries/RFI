@@ -41,64 +41,66 @@ export default function EmployeeDocumentsPage({ employeeId }) {
       {error && <div className="p-4 bg-red-50 text-red-700 rounded-lg text-sm">{error}</div>}
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-        <table className="w-full text-left text-sm text-gray-600">
-          <thead className="bg-gray-50 text-xs uppercase text-gray-700 border-b">
-            <tr>
-              <th className="px-6 py-3">Document</th>
-              <th className="px-6 py-3">Type</th>
-              <th className="px-6 py-3">Uploaded By</th>
-              <th className="px-6 py-3">Expiry Date</th>
-              <th className="px-6 py-3 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {documents.length === 0 ? (
-              <tr><td colSpan="5" className="px-6 py-8 text-center text-gray-500">No documents uploaded yet.</td></tr>
-            ) : (
-              documents.map(doc => (
-                <tr key={doc.id} className="border-b last:border-0 hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded bg-blue-50 text-blue-600 flex items-center justify-center">
-                        <FileText className="w-4 h-4" />
+        <div className="overflow-x-auto max-w-full">
+          <table className="w-full text-left text-sm text-gray-600 min-w-max">
+            <thead className="bg-gray-50 text-xs uppercase text-gray-700 border-b">
+              <tr>
+                <th className="px-2 py-2 sm:px-6 sm:py-3 whitespace-nowrap">Document</th>
+                <th className="px-2 py-2 sm:px-6 sm:py-3 whitespace-nowrap">Type</th>
+                <th className="px-2 py-2 sm:px-6 sm:py-3 whitespace-nowrap">Uploaded By</th>
+                <th className="px-2 py-2 sm:px-6 sm:py-3 whitespace-nowrap">Expiry Date</th>
+                <th className="px-2 py-2 sm:px-6 sm:py-3 text-right whitespace-nowrap">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {documents.length === 0 ? (
+                <tr><td colSpan="5" className="px-2 py-6 sm:px-6 sm:py-8 text-center text-gray-500 text-xs sm:text-sm">No documents uploaded yet.</td></tr>
+              ) : (
+                documents.map(doc => (
+                  <tr key={doc.id} className="border-b last:border-0 hover:bg-gray-50">
+                    <td className="px-2 py-2 sm:px-6 sm:py-4">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div className="w-6 h-6 sm:w-8 sm:h-8 rounded bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
+                          <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-medium text-gray-900 truncate text-xs sm:text-sm max-w-[120px] sm:max-w-none">{doc.original_file_name}</p>
+                          <p className="text-[10px] sm:text-xs text-gray-500">{(doc.file_size / 1024).toFixed(1)} KB • {doc.mime_type}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium text-gray-900">{doc.original_file_name}</p>
-                        <p className="text-xs text-gray-500">{(doc.file_size / 1024).toFixed(1)} KB • {doc.mime_type}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">{doc.document_type}</td>
-                  <td className="px-6 py-4">
-                    <p className="text-gray-900">{doc.uploaded_by?.name || 'System'}</p>
-                    <p className="text-xs text-gray-500">{new Date(doc.created_at).toLocaleDateString()}</p>
-                  </td>
-                  <td className="px-6 py-4">
-                    {doc.expiry_date ? (
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${new Date(doc.expiry_date) < new Date() ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'}`}>
-                        {new Date(doc.expiry_date).toLocaleDateString()}
-                      </span>
-                    ) : '-'}
-                  </td>
-                  <td className="px-6 py-4 text-right space-x-2">
-                      <button onClick={() => setPreviewDoc(doc)} className="text-blue-600 hover:text-blue-800 p-1" title="Preview">
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button onClick={() => useDocumentStore.getState().downloadDocument(doc.id)} className="text-green-600 hover:text-green-800 p-1" title="Download">
-                        <Download className="w-4 h-4" />
-                      </button>
-                      <button onClick={() => setEditingDoc(doc)} className="text-gray-600 hover:text-gray-800 p-1" title="Edit/Replace">
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button onClick={() => handleDelete(doc.id, doc.original_file_name)} className="text-red-600 hover:text-red-800 p-1" title="Delete">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+                    </td>
+                    <td className="px-2 py-2 sm:px-6 sm:py-4 text-xs sm:text-sm">{doc.document_type}</td>
+                    <td className="px-2 py-2 sm:px-6 sm:py-4">
+                      <p className="text-gray-900 text-xs sm:text-sm">{doc.uploaded_by?.name || 'System'}</p>
+                      <p className="text-[10px] sm:text-xs text-gray-500">{new Date(doc.created_at).toLocaleDateString()}</p>
+                    </td>
+                    <td className="px-2 py-2 sm:px-6 sm:py-4">
+                      {doc.expiry_date ? (
+                        <span className={`px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-[10px] sm:text-xs font-medium ${new Date(doc.expiry_date) < new Date() ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'}`}>
+                          {new Date(doc.expiry_date).toLocaleDateString()}
+                        </span>
+                      ) : '-'}
+                    </td>
+                    <td className="px-2 py-2 sm:px-6 sm:py-4 text-right space-x-1 sm:space-x-2">
+                        <button onClick={() => setPreviewDoc(doc)} className="text-blue-600 hover:text-blue-800 p-0.5 sm:p-1" title="Preview">
+                          <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        </button>
+                        <button onClick={() => useDocumentStore.getState().downloadDocument(doc.id)} className="text-green-600 hover:text-green-800 p-0.5 sm:p-1" title="Download">
+                          <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        </button>
+                        <button onClick={() => setEditingDoc(doc)} className="text-gray-600 hover:text-gray-800 p-0.5 sm:p-1" title="Edit/Replace">
+                          <Edit2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        </button>
+                        <button onClick={() => handleDelete(doc.id, doc.original_file_name)} className="text-red-600 hover:text-red-800 p-0.5 sm:p-1" title="Delete">
+                          <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {(uploadModalOpen || editingDoc) && (

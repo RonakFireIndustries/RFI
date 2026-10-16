@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { Bell, CheckCheck, X, Loader2, Clock } from 'lucide-react';
 import { useNotificationStore } from '../../store/notificationStore';
@@ -13,7 +14,15 @@ const TYPE_STYLES = {
 
 export default function NotificationBell() {
   const [open, setOpen] = useState(false);
+
+  // The panel is portalled to <body> and pinned to the bell with
+  // `position: fixed`. The header is `sticky z-10`, and any sticky or fixed
+  // element forms a stacking context, so a `z-50` panel inside it still
+  // paints at z=10 relative to the page and ended up underneath page content
+  // that sets its own z-index. Portalling puts it outside that context.
+  const [panelStyle, setPanelStyle] = useState({ top: 0, right: 0 });
   const dropdownRef = useRef(null);
+  const buttonRef = useRef(null);
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
 
@@ -49,11 +58,34 @@ export default function NotificationBell() {
     }
   }, [open, fetchNotifications]);
 
+  // Keep the panel's top-right corner pinned to the bell. The header does not
+  // move while the page scrolls - <main> is its own scroll container - so a
+  // resize is the only thing that needs re-measuring.
+  useEffect(() => {
+    if (!open) {
+      return undefined;
+    }
+    const place = () => {
+      const rect = buttonRef.current?.getBoundingClientRect();
+      if (!rect) {
+        return;
+      }
+      setPanelStyle({ top: rect.bottom + 8, right: window.innerWidth - rect.right });
+    };
+    place();
+    window.addEventListener('resize', place);
+    return () => window.removeEventListener('resize', place);
+  }, [open]);
+
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setOpen(false);
+      // The panel is portalled, so the bell button is no longer an ancestor of
+      // it. Without the second check, pressing the bell would close the
+      // dropdown on mousedown and immediately reopen it on click.
+      if (dropdownRef.current?.contains(e.target) || buttonRef.current?.contains(e.target)) {
+        return;
       }
+      setOpen(false);
     };
     if (open) {
       document.addEventListener('mousedown', handleClickOutside);
@@ -83,8 +115,9 @@ export default function NotificationBell() {
   };
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative">
       <button
+        ref={buttonRef}
         onClick={() => setOpen(!open)}
         className="relative text-muted-foreground hover:text-foreground transition-colors"
       >
@@ -97,8 +130,13 @@ export default function NotificationBell() {
         )}
       </button>
 
-      {open && (
-        <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-card rounded-xl shadow-2xl border border-border overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+      {open &&
+        createPortal(
+          <div
+            ref={dropdownRef}
+            style={{ position: 'fixed', top: panelStyle.top, right: panelStyle.right }}
+            className="w-80 sm:w-96 bg-card rounded-xl shadow-2xl border border-border overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-150"
+          >
           <div className="px-4 py-3 border-b border-border flex items-center justify-between">
             <h3 className="font-semibold text-foreground text-sm">Notifications</h3>
             <div className="flex items-center gap-1">
@@ -188,8 +226,9 @@ export default function NotificationBell() {
           >
             View all notifications
           </Link>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

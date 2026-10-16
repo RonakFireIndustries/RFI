@@ -149,7 +149,8 @@ export default function InvoicePreview() {
 
           {/* Table */}
           <div className="mb-10">
-            <table className="w-full text-left">
+            <div className="overflow-x-auto max-w-full">
+            <table className="w-full text-left text-xs sm:text-sm">
               <thead>
                 <tr className="bg-gray-50 border-y border-gray-200">
                   <th className="py-3 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Item Description</th>
@@ -174,6 +175,7 @@ export default function InvoicePreview() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
 
           {/* Totals */}

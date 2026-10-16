@@ -46,13 +46,13 @@ class DashboardService
      */
     public const TYPES = [
         'admin', 'executive', 'hr', 'finance', 'inventory',
-        'production', 'sales', 'it', 'employee',
+        'production', 'sales', 'it', 'design', 'employee',
     ];
 
     private const ROLE_MAP = [
         'Admin'                => 'admin',
         'System Admin'         => 'admin',
-        'Manager'              => 'admin',
+        'Manager'              => 'executive',
         'General Manager'      => 'executive',
         'HR'                   => 'hr',
         'HR Manager'           => 'hr',
@@ -63,8 +63,8 @@ class DashboardService
         'Production Manager'   => 'production',
         'Workshop Supervisor'  => 'production',
         'Sales'                => 'sales',
-        'Design Manager'       => 'employee',
-        'Designer'             => 'employee',
+        'Design Manager'       => 'design',
+        'Designer'             => 'design',
         'Employee'             => 'employee',
         'Fitter'               => 'employee',
         'Welder'               => 'employee',
@@ -120,6 +120,12 @@ class DashboardService
             'charts' => ['attendance_trend'],
             'quick_actions' => ['manage_users', 'manage_roles', 'view_logs', 'manage_access', 'manage_permissions', 'system_settings'],
             'alerts' => ['server_alert'],
+        ],
+        'design' => [
+            'cards' => ['design_buildings', 'design_quotations', 'design_site_visits', 'active_sites', 'present_today', 'dpr_summary'],
+            'charts' => ['attendance_trend', 'dpr_trend'],
+            'quick_actions' => ['new_quotation', 'add_building', 'new_site_visit', 'submit_dpr', 'apply_leave', 'check_attendance'],
+            'alerts' => ['attendance_reminder', 'dpr_reminder', 'site_delays_alert'],
         ],
         'employee' => [
             'cards' => ['attendance_today', 'current_site', 'leave_balance', 'pending_leave_requests_mine', 'today_attendance'],
@@ -201,6 +207,14 @@ class DashboardService
         'pending_work_reports'     => '/dashboard/daily-reports',
         'dpr_summary'              => '/dashboard/daily-reports',
         'dpr_reminder'             => '/dashboard/daily-reports',
+
+        // Design / survey
+        'design_buildings'         => '/dashboard/buildings',
+        'design_quotations'        => '/dashboard/quotations',
+        'design_site_visits'       => '/dashboard/site-visits',
+        'new_quotation'            => '/dashboard/quotations',
+        'add_building'             => '/dashboard/buildings',
+        'new_site_visit'           => '/dashboard/site-visits',
 
         // System / misc
         'company_overview'         => '/dashboard',
@@ -290,8 +304,8 @@ private const DESIGNATION_MAP = [
         'Production Manager'   => 'production',
         'Workshop Supervisor'  => 'production',
         'Sales'                => 'sales',
-        'Design Manager'       => 'employee',
-        'Designer'             => 'employee',
+        'Design Manager'       => 'design',
+        'Designer'             => 'design',
         'Employee'             => 'employee',
         'Fitter'               => 'employee',
         'Welder'               => 'employee',
@@ -316,8 +330,8 @@ private const DESIGNATION_MAP = [
         'IT'                   => 'it',
         'Sales'                => 'sales',
         'Production'           => 'production',
-        'Designer'             => 'employee',
-        'Design'               => 'employee',
+        'Designer'             => 'design',
+        'Design'               => 'design',
         'Other'                => 'employee',
     ];
 
@@ -339,7 +353,8 @@ private const DESIGNATION_MAP = [
         'production' => ['Workshop Supervisor', 'Production Manager', 'Production'],
         'sales'      => ['Sales'],
         'it'         => ['IT Manager', 'Developer', 'IT'],
-        'employee'   => ['Employee', 'Designer', 'Design Manager', 'Fitter', 'Welder', 'Electrician', 'Helper', 'Other', 'Design'],
+        'design'     => ['Designer', 'Design Manager', 'Design'],
+        'employee'   => ['Employee', 'Fitter', 'Welder', 'Electrician', 'Helper', 'Other'],
     ];
 
     /**
@@ -1148,6 +1163,33 @@ private const DESIGNATION_MAP = [
 
     // ─── CHART COMPUTATIONS ──────────────────────────────────────
 
+    /**
+     * Design dashboard cards. Designers own the building survey register, the
+     * quotation/BOQ pipeline and the site-visit record, so those three are the
+     * core of their dashboard; the rest are shared team widgets.
+     */
+    protected function widgetDesignBuildings(): array
+    {
+        $total = \App\Models\Building::count();
+        $active = \App\Models\Building::where('status', 'Active')->count();
+        return ['value' => $total, 'subtitle' => "{$active} active"];
+    }
+
+    protected function widgetDesignQuotations(): array
+    {
+        $open = \App\Models\Quotation::whereIn('status', ['draft', 'sent'])->count();
+        $accepted = \App\Models\Quotation::where('status', 'accepted')->count();
+        return ['value' => $open, 'subtitle' => "Open quotes · {$accepted} accepted"];
+    }
+
+    protected function widgetDesignSiteVisits(): array
+    {
+        $total = \App\Models\SiteVisit::count();
+        $thisMonth = \App\Models\SiteVisit::whereMonth('created_at', Carbon::now()->month)
+            ->whereYear('created_at', Carbon::now()->year)->count();
+        return ['value' => $total, 'subtitle' => "{$thisMonth} this month"];
+    }
+
     protected function widgetEmployeeSummary(): array
     {
         $active = Employee::where('status', 'active')->count();
@@ -1681,6 +1723,21 @@ private const DESIGNATION_MAP = [
     protected function widgetViewLogs(): array
     {
         return ['label' => 'View Logs', 'link' => '/dashboard'];
+    }
+
+    protected function widgetNewQuotation(): array
+    {
+        return ['label' => 'New Quotation / BOQ', 'link' => '/dashboard/quotations'];
+    }
+
+    protected function widgetAddBuilding(): array
+    {
+        return ['label' => 'Add Building Survey', 'link' => '/dashboard/buildings'];
+    }
+
+    protected function widgetNewSiteVisit(): array
+    {
+        return ['label' => 'Record Site Visit', 'link' => '/dashboard/site-visits'];
     }
 
     // ─── ALERTS ───────────────────────────────────────────────────

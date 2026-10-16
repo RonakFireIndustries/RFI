@@ -52,6 +52,7 @@ return [
         'production' => 'Production Dashboard',
         'sales'      => 'Sales Dashboard',
         'it'         => 'IT Dashboard',
+        'design'     => 'Design Dashboard',
         'employee'   => 'My Dashboard',
     ],
 
@@ -61,7 +62,7 @@ return [
         'Overview' => [
             'dashboard' => [
                 'label' => 'Dashboard',
-                'actions' => ['view', 'admin', 'executive', 'hr', 'finance', 'inventory', 'production', 'sales', 'it', 'employee'],
+                'actions' => ['view', 'admin', 'executive', 'hr', 'finance', 'inventory', 'production', 'sales', 'it', 'design', 'employee'],
             ],
         ],
 
@@ -505,6 +506,25 @@ return [
         'quotations.create',
         'quotations.update',
         'quotations.delete',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | IT permissions
+    |--------------------------------------------------------------------------
+    |
+    | Auto-granted to employees identified as IT (designation "IT Manager" /
+    | "Developer" / "IT", or department "IT"). Bug reports are triaged by the
+    | IT department, so they need issue-reports.update - without it the
+    | "Issue Reports" sidebar entry stays hidden even though filing a report
+    | is a baseline permission. Applied by the same command that enforces
+    | baseline direct grants (employees:sync-roles).
+    |
+    */
+    'it_permissions' => [
+        'issue-reports.view',
+        'issue-reports.create',
+        'issue-reports.update',
     ],
 
     /*

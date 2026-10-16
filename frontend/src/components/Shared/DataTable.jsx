@@ -6,6 +6,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { ArrowDownUp } from 'lucide-react';
+import ResponsiveTable from './ResponsiveTable';
 
 export default function DataTable({ columns, data, globalFilter, onGlobalFilterChange, emptyText = 'No records found.', onRowClick }) {
   const table = useReactTable({
@@ -37,13 +38,13 @@ export default function DataTable({ columns, data, globalFilter, onGlobalFilterC
 
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-card">
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm">
+      <ResponsiveTable>
+        <table className="w-full text-left text-sm min-w-max">
           <thead className="bg-muted text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <th key={header.id} className="px-4 py-3">
+                  <th key={header.id} className="px-2 py-3 sm:px-4">
                     {header.isPlaceholder ? null : (
                       <button
                         type="button"
@@ -62,7 +63,7 @@ export default function DataTable({ columns, data, globalFilter, onGlobalFilterC
           <tbody className="divide-y divide-border">
             {table.getRowModel().rows.length === 0 ? (
               <tr>
-                <td className="px-4 py-8 text-center text-muted-foreground" colSpan={columns.length}>
+                <td className="px-2 py-8 text-center text-muted-foreground sm:px-4" colSpan={columns.length}>
                   {emptyText}
                 </td>
               </tr>
@@ -76,7 +77,7 @@ export default function DataTable({ columns, data, globalFilter, onGlobalFilterC
                   className={`transition-colors ${onRowClick ? 'cursor-pointer' : ''} hover:bg-muted/50`}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-4 py-3 align-top text-foreground/80">
+                    <td key={cell.id} className="px-2 py-2.5 align-top text-xs sm:px-4 sm:py-3 sm:text-sm text-foreground/80 whitespace-normal">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </td>
                   ))}
@@ -85,7 +86,7 @@ export default function DataTable({ columns, data, globalFilter, onGlobalFilterC
             )}
           </tbody>
         </table>
-      </div>
+      </ResponsiveTable>
     </div>
   );
 }

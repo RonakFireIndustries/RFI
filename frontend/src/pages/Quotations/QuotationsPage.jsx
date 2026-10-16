@@ -380,8 +380,8 @@ export default function QuotationsPage() {
           {(detail.sections || []).length > 0 && (
             <div className="border-t border-gray-100 px-6 py-5">
               <p className="text-xs font-bold text-gray-400 uppercase mb-2">Section Summary</p>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+              <div className="overflow-x-auto max-w-full">
+                <table className="w-full text-sm text-xs sm:text-sm">
                   <thead>
                     <tr className="border-b border-gray-100 text-left text-xs font-bold text-gray-500 uppercase bg-gray-50">
                       <th className="py-2.5 px-4">Section</th>
@@ -430,8 +430,8 @@ export default function QuotationsPage() {
                   <span className="text-sm font-semibold text-gray-800">{money(section.subtotal)}</span>
                 </div>
                 {!isCollapsed && (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
+                  <div className="overflow-x-auto max-w-full">
+                    <table className="w-full text-sm text-xs sm:text-sm">
                       <thead>
                         <tr className="border-b border-gray-100 text-left text-xs font-bold text-gray-500 uppercase bg-gray-50">
                           <th className="py-3 px-6">#</th>
@@ -863,8 +863,8 @@ export default function QuotationsPage() {
         </div>
       ) : (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto max-w-full">
+            <table className="w-full text-sm text-xs sm:text-sm">
               <thead>
                 <tr className="border-b border-gray-100 text-left text-xs font-bold text-gray-500 uppercase bg-gray-50">
                   <th className="py-3 px-4">Quotation No</th>
