@@ -80,10 +80,15 @@ class SyncEmployeeRoles extends Command
 
             DB::transaction(function () use ($user, $grants, $retiredValid) {
                 $user->givePermissionTo($grants);
-                // Revoke permissions that have been retired from the baseline;
-                // they are only kept when re-granted explicitly via Access Control.
-                if ($retiredValid) {
-                    $user->revokePermissionTo($retiredValid);
+                // Revoke permissions that have been retired from the baseline.
+                // An identity grant in $grants WINS over the retire, otherwise
+                // listing a permission in both places (attendance.view for HR,
+                // payroll.view for Accounts) would have the grant handed out on
+                // the line above and stripped again on this one - the order of
+                // these two calls is the whole point.
+                $revoke = array_values(array_diff($retiredValid, $grants));
+                if ($revoke) {
+                    $user->revokePermissionTo($revoke);
                 }
                 $user->roles()->detach();
 

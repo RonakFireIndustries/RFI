@@ -15,6 +15,8 @@ import {
   Lock, Globe, BellRing, Database, Smartphone, ShieldCheck, Mail, WifiOff, Download
 } from 'lucide-react';
 import { menuCategories, ROLE_DASHBOARD_TYPES } from '../../config/sidebarMenu';
+import PermissionGuard from '../Guards/PermissionGuard';
+import AccessDenied from '../Guards/AccessDenied';
 
 // Import all pages
 import DashboardRenderer from '../Dashboard/DashboardRenderer';
@@ -483,7 +485,20 @@ export default function DashboardLayout() {
               <Route path="my-leaves/new" element={<MyLeaveRequestForm />} />
               <Route path="my-leaves/:id" element={<MyLeaveDetailPage />} />
 
-              <Route path="payroll" element={<PayrollDashboardPage />} />
+              {/* Management payroll overview. `payroll.view` is retired from the
+                  baseline (see access.php) so a plain employee cannot open it or
+                  list other people's pay; their own pay is at /my-payroll. */}
+              <Route
+                path="payroll"
+                element={
+                  <PermissionGuard
+                    permission="payroll.view"
+                    fallback={<AccessDenied title="Payroll Dashboard" permission="payroll.view" />}
+                  >
+                    <PayrollDashboardPage />
+                  </PermissionGuard>
+                }
+              />
               <Route path="salary-structures" element={<SalaryStructuresPage />} />
               <Route path="period-payroll" element={<PayrollPeriodsPage />} />
               <Route path="process-payroll" element={<PayrollGenerationPage />} />
@@ -524,7 +539,20 @@ export default function DashboardLayout() {
               <Route path="quotations" element={<QuotationsPage />} />
               <Route path="buildings/new" element={<Navigate to="/dashboard/buildings" replace />} />
               <Route path="buildings/:id" element={<BuildingSurveyDetail />} />
-              <Route path="sales-dashboard" element={<SalesDashboard />} />
+              {/* Gated on buildings.view because that is exactly what the page's
+                  own data endpoint authorises (BuildingDetailController::
+                  dashboardStats), so the entry, the URL and the API all agree. */}
+              <Route
+                path="sales-dashboard"
+                element={
+                  <PermissionGuard
+                    permission="buildings.view"
+                    fallback={<AccessDenied title="Sales Dashboard" permission="buildings.view" />}
+                  >
+                    <SalesDashboard />
+                  </PermissionGuard>
+                }
+              />
               <Route path="buildings-map" element={<BuildingsMap />} />
               <Route path="site-visits" element={<SiteVisits />} />
               <Route path="site-visits/new" element={<NewSiteVisit />} />

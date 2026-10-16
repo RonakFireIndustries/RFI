@@ -485,9 +485,29 @@ return [
     | "My Attendance" page instead. Show the tab only once attendance.view is
     | explicitly assigned.
     |
+    | `payroll.view` is retired for the same reason, but its leak was worse.
+    | It is the MANAGEMENT permission: PayrollController::index() and
+    | PayslipController::index() use it to list every employee's salary with no
+    | self-scope. The `Employee` and `Designer` roles were seeded with the
+    | legacy name `view_payroll` (intent: "see my own pay"), and
+    | CanonicalPermissionsSeeder copies legacy grants onto canonical rows -
+    | so every plain  account ended up able to read everyone's pay AND open the
+    | Payroll Dashboard sidebar entry.
+    |
+    | Self-service is untouched, because none of these bypass the permission:
+    |   GET /my-payroll            - not gated
+    |   GET /payroll/{id}          - owner passes without payroll.view
+    |   GET /payslips/{id}         - owner passes without payroll.view
+    |   GET /payslips/{id}/download - owner passes without payroll.view
+    |
+    | HR / Accounts / Administration / Executive keep payroll.view through
+    | `identity_grants`, which is what the ordering fix in
+    | SyncEmployeeRoles guarantees (an identity grant outranks a retire).
+    |
     */
     'retired_baseline' => [
         'attendance.view',
+        'payroll.view',
     ],
 
     /*

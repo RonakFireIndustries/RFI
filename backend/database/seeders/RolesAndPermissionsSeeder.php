@@ -185,7 +185,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'attendance.checkin', 'attendance.checkout', 'attendance.view',
             'daily-report.create', 'daily-report.view', 'daily-report.submit',
             'leave.view', 'leave.create', 'leave.cancel', 'leave.balance.view',
-            'view_payroll',
+            // See the Employee role below: `view_payroll` is a management
+            // permission once aliased, not a self-service one.
         ]);
 
         // HR: unchanged
@@ -217,7 +218,11 @@ class RolesAndPermissionsSeeder extends Seeder
             'attendance.view',
             'daily-report.create', 'daily-report.view', 'daily-report.submit',
             'leave.view', 'leave.create', 'leave.cancel', 'leave.balance.view',
-            'view_payroll',
+            // NOT `view_payroll`: that legacy name maps (via legacy_aliases) to
+            // the canonical `payroll.view`, which authorises listing EVERY
+            // employee's salary. Self-service pay is already covered by
+            // GET /my-payroll and the owner bypass on /payroll/{id} and
+            // /payslips/{id}, neither of which needs a permission.
         ]);
 
         // Worker roles: field workers with attendance + DPR
