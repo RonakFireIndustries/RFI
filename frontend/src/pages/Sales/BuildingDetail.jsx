@@ -859,8 +859,8 @@ function SiteVisitsTab({ siteVisits, buildingId }) {
           <p>No site visits recorded</p>
         </div>
       ) : (
-        <div className="bg-white rounded-lg border overflow-hidden">
-          <table className="w-full">
+        <div className="bg-white rounded-lg border overflow-x-auto max-w-full">
+          <table className="w-full min-w-max text-xs sm:text-sm">
             <thead className="bg-gray-50 border-b"><tr>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Date</th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Purpose</th>
@@ -906,8 +906,8 @@ function FollowUpsTab({ followUps, buildingId }) {
           <p>No follow-ups scheduled</p>
         </div>
       ) : (
-        <div className="bg-white rounded-lg border overflow-hidden">
-          <table className="w-full">
+        <div className="bg-white rounded-lg border overflow-x-auto max-w-full">
+          <table className="w-full min-w-max text-xs sm:text-sm">
             <thead className="bg-gray-50 border-b"><tr>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Reminder Date</th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Type</th>
@@ -980,8 +980,8 @@ function InvoicesTab({ invoices }) {
           <p>No invoices linked to this building</p>
         </div>
       ) : (
-        <div className="bg-white rounded-lg border overflow-hidden">
-          <table className="w-full">
+        <div className="bg-white rounded-lg border overflow-x-auto max-w-full">
+          <table className="w-full min-w-max text-xs sm:text-sm">
             <thead className="bg-gray-50 border-b"><tr>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Invoice #</th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Customer</th>
@@ -1072,25 +1072,25 @@ function DocumentsTab({ documents, buildingId, reload }) {
           <p>No documents uploaded</p>
         </div>
       ) : (
-        <div className="bg-white rounded-lg border overflow-hidden">
-          <table className="w-full">
+        <div className="bg-white rounded-lg border overflow-x-auto max-w-full">
+          <table className="w-full min-w-max text-xs sm:text-sm">
             <thead className="bg-gray-50 border-b"><tr>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Name</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Category</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Size</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Uploaded</th>
-              <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Actions</th>
+              <th className="px-2 py-2 sm:px-4 text-left text-[10px] sm:text-xs font-medium text-gray-500 whitespace-nowrap">Name</th>
+              <th className="px-2 py-2 sm:px-4 text-left text-[10px] sm:text-xs font-medium text-gray-500 whitespace-nowrap">Category</th>
+              <th className="px-2 py-2 sm:px-4 text-left text-[10px] sm:text-xs font-medium text-gray-500 whitespace-nowrap">Size</th>
+              <th className="px-2 py-2 sm:px-4 text-left text-[10px] sm:text-xs font-medium text-gray-500 whitespace-nowrap">Uploaded</th>
+              <th className="px-2 py-2 sm:px-4 text-right text-[10px] sm:text-xs font-medium text-gray-500 whitespace-nowrap">Actions</th>
             </tr></thead>
             <tbody className="divide-y divide-gray-100">
               {(documents || []).map(doc => (
                 <tr key={doc.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-2 text-sm font-medium">{doc.name}</td>
-                  <td className="px-4 py-2 text-sm">{doc.category}</td>
-                  <td className="px-4 py-2 text-sm">{doc.file_size ? `${(doc.file_size / 1024).toFixed(0)} KB` : '-'}</td>
-                  <td className="px-4 py-2 text-sm text-gray-500">{doc.created_at ? format(new Date(doc.created_at), 'dd MMM yyyy') : '-'}</td>
-                  <td className="px-4 py-2 text-right">
-                    <a href={salesDocumentService.downloadUrl(doc.id)} className="text-blue-600 hover:text-blue-800 text-xs mr-2"><Download className="w-3 h-3 inline" /> Download</a>
-                    <button onClick={async () => { if (confirm('Delete this document?')) { try { await salesDocumentService.remove(doc.id); reload(); } catch (err) { setError(uploadErrorMessage(err)); } } }} className="text-red-600 hover:text-red-800 text-xs"><Trash2 className="w-3 h-3 inline" /> Delete</button>
+                  <td className="px-2 py-2 sm:px-4 text-xs sm:text-sm font-medium">{doc.name}</td>
+                  <td className="px-2 py-2 sm:px-4 text-xs sm:text-sm">{doc.category}</td>
+                  <td className="px-2 py-2 sm:px-4 text-xs sm:text-sm whitespace-nowrap">{doc.file_size ? `${(doc.file_size / 1024).toFixed(0)} KB` : '-'}</td>
+                  <td className="px-2 py-2 sm:px-4 text-xs sm:text-sm text-gray-500 whitespace-nowrap">{doc.created_at ? format(new Date(doc.created_at), 'dd MMM yyyy') : '-'}</td>
+                  <td className="px-2 py-2 sm:px-4 text-right whitespace-nowrap">
+                    <a href={salesDocumentService.downloadUrl(doc.id)} className="text-blue-600 hover:text-blue-800 text-[10px] sm:text-xs mr-2"><Download className="w-3 h-3 inline" /> Download</a>
+                    <button onClick={async () => { if (confirm('Delete this document?')) { try { await salesDocumentService.remove(doc.id); reload(); } catch (err) { setError(uploadErrorMessage(err)); } } }} className="text-red-600 hover:text-red-800 text-[10px] sm:text-xs"><Trash2 className="w-3 h-3 inline" /> Delete</button>
                   </td>
                 </tr>
               ))}
@@ -1229,7 +1229,8 @@ function ProductsTab({ flats, products, buildingId, reload }) {
                 )}
 
                 {flatProducts.length > 0 && (
-                  <table className="w-full">
+                  <div className="overflow-x-auto max-w-full">
+                  <table className="w-full min-w-max text-xs">
                     <thead className="border-b"><tr>
                       <th className="px-4 py-1.5 text-left text-[10px] font-medium text-gray-500 uppercase">Product</th>
                       <th className="px-4 py-1.5 text-left text-[10px] font-medium text-gray-500 uppercase">Brand</th>
@@ -1254,6 +1255,7 @@ function ProductsTab({ flats, products, buildingId, reload }) {
                       ))}
                     </tbody>
                   </table>
+                  </div>
                 )}
                 {flatProducts.length === 0 && !isActive && (
                   <p className="px-4 py-3 text-xs text-gray-400">No products recorded for this room</p>

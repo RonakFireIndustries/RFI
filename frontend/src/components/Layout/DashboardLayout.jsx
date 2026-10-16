@@ -14,7 +14,7 @@ import {
   HelpCircle, MoreVertical, Sliders, User, 
   Lock, Globe, BellRing, Database, Smartphone, ShieldCheck, Mail, WifiOff, Download
 } from 'lucide-react';
-import { menuCategories } from '../../config/sidebarMenu';
+import { menuCategories, ROLE_DASHBOARD_TYPES } from '../../config/sidebarMenu';
 
 // Import all pages
 import DashboardRenderer from '../Dashboard/DashboardRenderer';
@@ -210,6 +210,15 @@ export default function DashboardLayout() {
   // role-name strings by the auth store. See hideForAdmin in sidebarMenu.js.
   const isAdmin = isSuperAdmin || (roles || []).includes('Admin');
 
+  // True when the user holds at least one role-dashboard grant. Those grants
+  // come from Access Control (see identity_grants in config/access.php).
+  // Without one, /dashboard resolves to the personal dashboard too - so for
+  // such a user "My Dashboard" is a second door to the same room. See
+  // hideForPersonal in sidebarMenu.js.
+  const hasRoleDashboard = ROLE_DASHBOARD_TYPES.some((type) =>
+    (permissions || []).includes(`dashboard.${type}`)
+  );
+
     return (
     <div className="min-h-screen bg-background flex font-sans text-foreground">
       {/* Mobile backdrop */}
@@ -256,6 +265,7 @@ export default function DashboardLayout() {
             {menuCategories.map((category, index) => {
               const visibleItems = category.items.filter((item) => {
                 if (item.hideForAdmin && isAdmin) return false;
+                if (item.hideForPersonal && !hasRoleDashboard) return false;
                 return canAccess(item.permissions);
               });
 

@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 class SyncEmployeeRoles extends Command
 {
     protected $signature = 'employees:sync-roles';
-    protected $description = '[Deprecated] Role-based access was removed. Ensures baseline + Designer quotation grants as direct permissions and detaches any lingering roles (Access Control panel is the single source of truth).';
+    protected $description = '[Deprecated] Role-based access was removed. Ensures the baseline plus the config/access.php identity grants as direct permissions and detaches any lingering roles (Access Control panel is the single source of truth).';
 
     public function handle(): int
     {
@@ -20,10 +20,17 @@ class SyncEmployeeRoles extends Command
         $baselineValid = Permission::whereIn('name', $baseline)->pluck('name')->all();
         $retired = config('access.retired_baseline', []);
         $retiredValid = Permission::whereIn('name', $retired)->pluck('name')->all();
-        $designerPerms = config('access.designer_permissions', []);
-        $designerValid = Permission::whereIn('name', $designerPerms)->pluck('name')->all();
-        $itPerms = config('access.it_permissions', []);
-        $itValid = Permission::whereIn('name', $itPerms)->pluck('name')->all();
+
+        // "Which department / designation gets what" lives in
+        // config/access.php -> identity_grants. Flattened once here, then
+        // filtered per group against the rows that actually exist.
+        $groups = config('access.identity_grants', []);
+        $groupPermissionNames = collect($groups)
+            ->flatMap(fn(array $group) => $group['permissions'] ?? [])
+            ->unique()
+            ->values()
+            ->all();
+        $groupValid = Permission::whereIn('name', $groupPermissionNames)->pluck('name')->all();
 
         $users = User::with(['employee.designation', 'employee.department', 'roles'])->whereHas('employee')->get();
         $updated = 0;
@@ -33,27 +40,40 @@ class SyncEmployeeRoles extends Command
                 continue;
             }
 
-            // Designation-based Designer grant (role-free).
-            $isDesigner = str_contains(strtolower($user->employee?->designation?->name ?? ''), 'designer');
-
-            // IT grant. Matched on exact designation / department names
-            // rather than a substring, because "Fitter" contains "it".
+            // Which identity groups this employee belongs to. Matching is
+            // case-insensitive and EXACT on both designation and department -
+            // "Fitter" contains the letters "it", so substring matching would
+            // silently promote every Fitter into the IT group.
             $designation = strtolower(trim($user->employee?->designation?->name ?? ''));
             $department = strtolower(trim($user->employee?->department?->name ?? ''));
-            $isIt = in_array($designation, ['it', 'it manager', 'developer'], true)
-                || $department === 'it';
 
-            $extra = array_merge(
-                $isDesigner ? $designerValid : [],
-                $isIt ? $itValid : [],
-            );
+            $matchedGroups = [];
+            $extra = [];
+            foreach ($groups as $label => $group) {
+                $designations = array_map(
+                    fn($name) => strtolower(trim((string) $name)),
+                    $group['designations'] ?? []
+                );
+                $departments = array_map(
+                    fn($name) => strtolower(trim((string) $name)),
+                    $group['departments'] ?? []
+                );
+
+                if (
+                    in_array($designation, $designations, true)
+                    || in_array($department, $departments, true)
+                ) {
+                    $matchedGroups[] = $label;
+                    $extra = array_merge($extra, $group['permissions'] ?? []);
+                }
+            }
+
+            // Only grant permission names whose rows exist, otherwise
+            // givePermissionTo() throws on a typo'd or unseeded name.
+            $extra = array_values(array_intersect(array_unique($extra), $groupValid));
             $grants = array_values(array_unique(array_merge($baselineValid, $extra)));
 
-            $extras = array_values(array_filter([
-                $isDesigner ? 'designer' : null,
-                $isIt ? 'it' : null,
-            ]));
-            $grantLabel = ($extras ? implode('+', $extras) . '+' : '') . 'baseline';
+            $grantLabel = ($matchedGroups ? implode('+', $matchedGroups) . '+' : '') . 'baseline';
 
             $hadRoles = $user->roles->isNotEmpty();
             $hadGrants = $user->hasAllPermissions($grants);

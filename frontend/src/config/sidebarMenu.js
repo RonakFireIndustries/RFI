@@ -25,6 +25,13 @@ import {
  *                          already covers everything, so the self-scoped
  *                          "My Dashboard" is redundant.
  *
+ *   - hideForPersonal: true hidden for anyone whose "Dashboard" entry already
+ *                          IS the personal dashboard (i.e. they hold no
+ *                          dashboard.<type> grant). Without it a basic
+ *                          employee sees two entries pointing at identical
+ *                          content, and pressing "Dashboard" looks like a
+ *                          redirect to "My Dashboard".
+ *
  * Permission names here MUST match config/access.php in the backend.
  */
 export const menuCategories = [
@@ -32,7 +39,7 @@ export const menuCategories = [
     title: 'Overview',
     items: [
       { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, permissions: ['*'] },
-      { name: 'My Dashboard', path: '/dashboard/my-dashboard', icon: LayoutDashboard, permissions: ['*'], hideForAdmin: true },
+      { name: 'My Dashboard', path: '/dashboard/my-dashboard', icon: LayoutDashboard, permissions: ['*'], hideForAdmin: true, hideForPersonal: true },
     ],
   },
   {
@@ -117,4 +124,24 @@ export const menuCategories = [
       { name: 'Access Control', path: '/dashboard/access-control', icon: Shield, permissions: ['access-control.manage', '__super_admin__'] },
     ],
   },
+];
+
+/**
+ * Every role dashboard type, i.e. everything except the personal one.
+ * `dashboard.employee` is deliberately absent: it is baseline for every
+ * account, so it can never tell us whether the user has a distinct role
+ * dashboard.
+ *
+ * Mirrors DashboardService::TYPES in the backend minus 'employee'.
+ */
+export const ROLE_DASHBOARD_TYPES = [
+  'admin',
+  'executive',
+  'hr',
+  'finance',
+  'inventory',
+  'production',
+  'sales',
+  'it',
+  'design',
 ];

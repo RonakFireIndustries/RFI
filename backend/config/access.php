@@ -466,9 +466,8 @@ return [
         'leaves.view',
         'leaves.create',
         'leaves.update',
-        'payroll.view',
         'issue-reports.view',
-        'issue-reports.create',
+        'issue-reports.create',                
     ],
 
     /*
@@ -493,38 +492,416 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Designer permissions
+    | Identity grants — which department / designation gets what
     |--------------------------------------------------------------------------
     |
-    | Auto-granted to employees whose designation is "Designer" (so they can
-    | prepare BOQ quotes). Applied by the same command that enforces baseline
-    | direct grants (employees:sync-roles).
+    | The "who gets extra access by default" file. Edit this section only; the
+    | employees:sync-roles command reads it and grants the listed permissions
+    | to every matching employee as a DIRECT grant (Access Control stays the
+    | source of truth and can always override or revoke).
+    |
+    | Matching is case-insensitive and ignores surrounding spaces. An employee
+    | matches a group when EITHER their designation OR their department is
+    | listed - so listing "IT" under departments covers everyone in the IT
+    | department regardless of job title.
+    |
+    | Names must match EXACTLY (no partial/substring matching): "Fitter"
+    | contains the letters "it", so substring matching would silently promote
+    | every Fitter to IT.
+    |
+    | Granting here is additive - it never removes anything. To actively strip
+    | a permission from everyone on every run, put it in `retired_baseline`.
+    |
+    | Run after editing:
+    |     php artisan db:seed --class=CanonicalPermissionsSeeder   (new permission names)
+    |     php artisan employees:sync-roles                        (apply the grants)
     |
     */
-    'designer_permissions' => [
-        'quotations.view',
-        'quotations.create',
-        'quotations.update',
-        'quotations.delete',
-    ],
+    'identity_grants' => [
 
-    /*
-    |--------------------------------------------------------------------------
-    | IT permissions
-    |--------------------------------------------------------------------------
-    |
-    | Auto-granted to employees identified as IT (designation "IT Manager" /
-    | "Developer" / "IT", or department "IT"). Bug reports are triaged by the
-    | IT department, so they need issue-reports.update - without it the
-    | "Issue Reports" sidebar entry stays hidden even though filing a report
-    | is a baseline permission. Applied by the same command that enforces
-    | baseline direct grants (employees:sync-roles).
-    |
-    */
-    'it_permissions' => [
-        'issue-reports.view',
-        'issue-reports.create',
-        'issue-reports.update',
+        /*
+        | ------------------------------------------------------------------
+        | Principles
+        | ------------------------------------------------------------------
+        |  - `baseline` above is already granted to everyone; groups below
+        |    only ADD department-specific operational access on top of it.
+        |  - Matching is OR across designations and departments, so listing a
+        |    department covers everyone in it regardless of job title.
+        |  - Least privilege. Destructive or system-wide powers are left out
+        |    on purpose and must be granted per-user through Access Control:
+        |      access-control.manage, role-config.manage,
+        |      employees.delete, attendance.delete, leave-types.delete
+        |  - Each group also carries its `dashboard.<type>` permission, so the
+        |    matching role dashboard actually opens instead of falling back
+        |    to the personal one.
+        |
+        */
+
+        // ── Administration & executive ─────────────────────────────────
+        'Administration' => [
+            'designations' => ['Admin', 'System Admin', 'Manager'],
+            'departments'  => ['Administration'],
+            'permissions'  => [
+                'dashboard.admin',
+
+                // Organisation-wide read.
+                'employees.view',
+                'attendance.view',
+                'departments.view',
+                'designations.view',
+                'sites.view',
+                'daily-reports.view',
+                'leaves.view',
+                'payroll.view',
+                'reports.view',
+                'reports.export',
+                'issue-reports.view',
+
+                // Approvals that sit above a single department.
+                'leaves.approve',
+                'leaves.reject',
+                'daily-reports.approve',
+                'daily-reports.reject',
+                'sites.assign',
+                'sites.transfer',
+            ],
+        ],
+
+        'Executive' => [
+            'designations' => ['General Manager'],
+            'departments'  => [],
+            'permissions'  => [
+                'dashboard.executive',
+
+                // Read-only oversight; no writes at all.
+                'employees.view',
+                'attendance.view',
+                'sites.view',
+                'departments.view',
+                'designations.view',
+                'daily-reports.view',
+                'leaves.view',
+                'payroll.view',
+                'reports.view',
+                'reports.export',
+            ],
+        ],
+
+        // ── Human resources ────────────────────────────────────────────
+        'Human Resources' => [
+            'designations' => ['HR', 'HR Manager'],
+            'departments'  => ['HR', 'Human Resources'],
+            'permissions'  => [
+                'dashboard.hr',
+
+                // People records. Delete is deliberately withheld.
+                'employees.view',
+                'employees.create',
+                'employees.update',
+                'departments.view',
+                'designations.view',
+                'designations.update',
+
+                // HR owns attendance and shift marking.
+                'attendance.view',
+                'attendance.create',
+                'attendance.update',
+                'attendance.delete',
+                'shifts.view',
+                'shifts.create',
+                'shifts.update',
+                'shifts.delete',
+                'shifts.assign',
+                'shifts.transfer',
+
+                // Leave administration.
+                'leaves.view',
+                'leaves.create',
+                'leaves.update',
+                'leaves.approve',
+                'leaves.reject',
+                'leave-types.view',
+                'leave-types.create',
+                'leave-types.update',
+
+                // DPR review.
+                'daily-reports.view',
+                'daily-reports.approve',
+                'daily-reports.reject',
+
+                // Payroll administration.
+                'payroll.view',
+                'payroll.manage',
+                'payroll.update',
+                'salary-structures.view',
+                'salary-structures.manage',
+                'payslips.view',
+                'payslips.manage',
+                'payroll-period.view',
+                'payroll-period.create',
+                'process-payroll.view',
+                'process-payroll.create',
+
+                'sites.view',
+                'reports.view',
+                'reports.create',
+                'reports.update',
+                'reports.export',
+                'issue-reports.view',
+            ],
+        ],
+
+        // ── Accounts & finance ─────────────────────────────────────────
+        'Accounts' => [ 
+            'designations' => ['Accountant'],
+            'departments'  => ['Accounts', 'Finance'],
+            'permissions'  => [
+                'dashboard.finance',
+
+                // Payroll disbursement.
+                'payroll.view',
+                'payroll.manage',
+                'payslips.view',
+                'payslips.manage',
+                'payroll-period.view',
+                'payroll-period.create',
+                'process-payroll.view',
+                'process-payroll.create',
+
+                // Procurement.
+                'purchase-orders.view',
+                'purchase-orders.create',
+                'purchase-orders.update',
+                'purchase-orders.approve',
+                'purchase-quotations.view',
+                'purchase-quotations.create',
+                'purchase-quotations.update',
+                'purchase-quotations.convert',
+                'purchase-returns.view',
+                'purchase-returns.create',
+                'goods-receipt-notes.view',
+                'goods-receipt-notes.create',
+                'suppliers.view',
+                'suppliers.create',
+                'suppliers.update',
+
+                // Billing and collections.
+                'sales-orders.view',
+                'sales-orders.create',
+                'sales-orders.update',
+                'sales-quotations.view',
+                'sales-quotations.create',
+                'sales-quotations.update',
+                'sales-returns.view',
+                'sales-returns.create',
+                'invoices.view',
+                'invoices.create',
+                'invoices.update',
+                'invoices.email',
+                'invoices.download',
+                'payments.view',
+                'payments.create',
+                'payments.update',
+                'delivery-notes.view',
+                'customers.view',
+                'customers.create',
+                'customers.update',
+
+                // Petty cash.
+                'cash-vouchers.view',
+                'cash-vouchers.create',
+                'cash-vouchers.update',
+                'cash-vouchers.approve',
+                'cash-vouchers.reject',
+
+                'employees.view',
+                'attendance.view',
+                'reports.view',
+                'reports.create',
+                'reports.export',
+                'issue-reports.view',
+            ],
+        ],
+
+        // ── Inventory & warehouse ──────────────────────────────────────
+        'Inventory & Warehouse' => [
+            'designations' => ['Store Manager'],
+            'departments'  => ['Inventory & Warehouse', 'Warehouse'],
+            'permissions'  => [
+                'dashboard.inventory',
+
+                'inventory.view',
+                'inventory.manage',
+                'products.view',
+                'products.create',
+                'products.update',
+                'products.delete',
+                'categories.view',
+                'categories.create',
+                'categories.update',
+                'inventory-locations.view',
+                'inventory-locations.create',
+                'inventory-locations.update',
+                'units.view',
+                'units.create',
+                'units.update',
+                'unit-conversions.view',
+                'unit-conversions.create',
+                'unit-conversions.update',
+
+                // Stock on hand and its movements.
+                'stock.view',
+                'stock.create',
+                'stock.update',
+                'stock-transactions.view',
+                'stock-transactions.create',
+                'stock-requests.view',
+                'stock-requests.create',
+                'stock-requests.approve',
+                'stock-requests.issue',
+                'stock-requests.receive',
+                'stock-transfers.view',
+                'stock-transfers.create',
+                'stock-transfers.approve',
+
+                // Goods in / out.
+                'goods-receipt-notes.view',
+                'goods-receipt-notes.create',
+                'delivery-notes.view',
+                'delivery-notes.create',
+                'purchase-orders.view',
+                'sales-orders.view',
+                'suppliers.view',
+                'customers.view',
+
+                'sites.view',
+                'attendance.view',
+                'reports.view',
+                'issue-reports.view',
+            ],
+        ],
+
+        // ── Sales & survey ─────────────────────────────────────────────
+        'Sales' => [
+            'designations' => ['Sales'],
+            'departments'  => ['Sales'],
+            'permissions'  => [
+                'dashboard.sales',
+
+                // The survey / pipeline the Sales sidebar is built around.
+                'buildings.view',
+                'buildings.create',
+                'buildings.update',
+                'site-visits.view',
+                'site-visits.create',
+                'site-visits.update',
+                'opportunities.view',
+                'opportunities.create',
+                'opportunities.update',
+                'follow-ups.view',
+                'follow-ups.create',
+                'follow-ups.update',
+                'quotations.view',
+                'quotations.create',
+                'quotations.update',
+                'extinguishers.view',
+                'sales-documents.view',
+                'sales-documents.create',
+                'sales-documents.download',
+
+
+                'sites.view',
+                'reports.view',
+                'issue-reports.view',
+            ],
+        ],
+
+        // ── Design ─────────────────────────────────────────────────────
+        'Design' => [
+            'designations' => ['Designer', 'Design Manager'],
+            'departments'  => ['Design', 'Designer'],
+            'permissions'  => [
+                'dashboard.design',
+
+                'buildings.view',
+                'buildings.create',
+                'buildings.update',
+                'site-visits.view',
+                'site-visits.create',
+                'site-visits.update',
+                'quotations.view',
+                'quotations.create',
+                'quotations.update',
+                'quotations.delete',
+                'extinguishers.view',
+                'sales-documents.view',
+                'sales-documents.create',
+                'sales-documents.delete',
+                'sales-documents.download',
+                'sites.view',
+                'reports.view',
+                'issue-reports.view',
+            ],
+        ],
+
+        // ── Production ─────────────────────────────────────────────────
+        'Production (supervisors)' => [
+            'designations' => ['Production Manager', 'Workshop Supervisor'],
+            'departments'  => [],
+            'permissions'  => [
+                'dashboard.production',
+
+                'employees.view',
+                'attendance.view',
+                'attendance.create',
+                'attendance.update',
+                'daily-reports.view',
+                'daily-reports.approve',
+                'daily-reports.reject',
+                'sites.view',
+                'stock.view',
+                'stock-requests.view',
+                'stock-requests.create',
+                'stock-requests.approve',
+                'reports.view',
+                'issue-reports.view',
+            ],
+        ],
+
+        'Production (field staff)' => [
+            'designations' => ['Fitter', 'Welder', 'Electrician', 'Helper'],
+            'departments'  => [],
+            'permissions'  => [
+                // Self-service (attendance, DPRs, leaves, payslips) is already
+                // in `baseline`; this only adds what the field needs.
+                // 'sites.view',
+                // 'stock.view',
+                // 'stock-requests.view',
+                // 'stock-requests.create',
+                // 'extinguishers.view',
+                // 'reports.view',
+            ],
+        ],
+
+        // ── IT ─────────────────────────────────────────────────────────
+        'IT' => [
+            'designations' => ['IT Manager', 'Developer', 'IT'],
+            'departments'  => ['IT'],
+            'permissions'  => [
+                'dashboard.it',
+
+                // Bug reports are triaged by IT, so they own the whole module.
+                // Filing a report is baseline; update/delete is what unhide's
+                // the "Issue Reports" sidebar entry.
+                'issue-reports.view',
+                'issue-reports.create',
+                'issue-reports.update',
+                'issue-reports.delete',
+
+                // Read-only context for reproducing what a user reported.
+                'reports.view',
+            ],
+        ],
     ],
 
     /*
