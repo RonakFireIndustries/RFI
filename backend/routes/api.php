@@ -40,6 +40,7 @@ use App\Http\Controllers\Api\V1\AccessControlController;
 use App\Http\Controllers\Accounting\AccountGroupController;
 use App\Http\Controllers\Accounting\LedgerAccountController;
 use App\Http\Controllers\Accounting\FinancialYearController;
+use App\Http\Controllers\Accounting\VoucherController;
 
 
 Route::prefix('v1')->group(function () {
@@ -292,6 +293,12 @@ Route::prefix('v1')->group(function () {
     Route::apiResource('financial-years', FinancialYearController::class);
     Route::apiResource('account-groups', AccountGroupController::class);
     Route::apiResource('ledgers', LedgerAccountController::class);
+
+    // Finance - Tally-style vouchers (Contra, Payment, Receipt, Journal).
+    // party-outstanding carries an extra segment so it never shadows
+    // /vouchers/{voucher}; it is declared first for clarity anyway.
+    Route::get('/vouchers/party-outstanding/{ledger}', [VoucherController::class, 'partyOutstanding']);
+    Route::apiResource('vouchers', VoucherController::class);
 
     // Reports
     Route::get('/reports/sales', [ReportsController::class, 'salesReport']);

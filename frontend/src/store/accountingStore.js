@@ -3,6 +3,7 @@ import {
   accountGroupService,
   ledgerService,
   financialYearService,
+  voucherService,
 } from '../services/accountingService';
 
 /*
@@ -14,3 +15,4 @@ import {
 export const useAccountGroupStore = createResourceStore(accountGroupService);
 export const useLedgerStore = createResourceStore(ledgerService);
 export const useFinancialYearStore = createResourceStore(financialYearService);
+export const useVoucherStore = createResourceStore(voucherService);

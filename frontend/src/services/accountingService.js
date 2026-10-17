@@ -33,3 +33,17 @@ export const financialYearService = {
   activate: async (id) => unwrapItem((await api.post(`/financial-years/${id}/activate`)).data),
   remove: async (id) => api.delete(`/financial-years/${id}`),
 };
+
+/**
+ * Tally-style vouchers (slice 2): Contra, Payment, Receipt and Journal.
+ * `partyOutstanding` feeds the bill-wise panel of party vouchers.
+ */
+export const voucherService = {
+  list: async (params) => unwrapList((await api.get(`/vouchers${normalizeQuery(params)}`)).data),
+  get: async (id) => unwrapItem((await api.get(`/vouchers/${id}`)).data),
+  create: async (payload) => unwrapItem((await api.post('/vouchers', payload)).data),
+  update: async (id, payload) => unwrapItem((await api.put(`/vouchers/${id}`, payload)).data),
+  remove: async (id) => api.delete(`/vouchers/${id}`),
+  partyOutstanding: async (ledgerId) =>
+    unwrapItem((await api.get(`/vouchers/party-outstanding/${ledgerId}`)).data),
+};

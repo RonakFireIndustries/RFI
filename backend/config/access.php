@@ -134,6 +134,23 @@ return [
                 'label' => 'Financial Years',
                 'actions' => ['view', 'create', 'update', 'delete'],
             ],
+            // Tally-style vouchers (slice 2).
+            'contra' => [
+                'label' => 'Contra Vouchers',
+                'actions' => ['view', 'create', 'update', 'delete'],
+            ],
+            'payment-vouchers' => [
+                'label' => 'Payment Vouchers',
+                'actions' => ['view', 'create', 'update', 'delete'],
+            ],
+            'receipt-vouchers' => [
+                'label' => 'Receipt Vouchers',
+                'actions' => ['view', 'create', 'update', 'delete'],
+            ],
+            'journal' => [
+                'label' => 'Journal Vouchers',
+                'actions' => ['view', 'create', 'update', 'delete'],
+            ],
         ],
 
         'Organization' => [
@@ -779,6 +796,24 @@ return [
                 'financial-years.create',
                 'financial-years.update',
                 'financial-years.delete',
+
+                // Tally-style vouchers (slice 2).
+                'contra.view',
+                'contra.create',
+                'contra.update',
+                'contra.delete',
+                'payment-vouchers.view',
+                'payment-vouchers.create',
+                'payment-vouchers.update',
+                'payment-vouchers.delete',
+                'receipt-vouchers.view',
+                'receipt-vouchers.create',
+                'receipt-vouchers.update',
+                'receipt-vouchers.delete',
+                'journal.view',
+                'journal.create',
+                'journal.update',
+                'journal.delete',
 
                 'employees.view',
                 'attendance.view',

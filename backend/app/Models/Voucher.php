@@ -1,0 +1,92 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+/**
+ * A double-entry voucher — the Tally-style unit of posting.
+ *
+ * The header stores the type key (config/accounting.php), its number and date,
+ * and the totals + party pointer. The Dr/Cr lines live in `voucher_entries`;
+ * any bill-wise details in `voucher_bill_allocations`.
+ */
+class Voucher extends Model
+{
+    protected $fillable = [
+        'voucher_type',
+        'voucher_no',
+        'voucher_date',
+        'financial_year_id',
+        'reference_no',
+        'narration',
+        'status',
+        'party_ledger_id',
+        'amount',
+        'created_by',
+        'updated_by',
+        'posted_at',
+    ];
+
+    protected $casts = [
+        'voucher_date' => 'date',
+        'amount' => 'decimal:2',
+        'posted_at' => 'datetime',
+    ];
+
+    public function entries()
+    {
+        return $this->hasMany(VoucherEntry::class)->orderBy('line_no')->orderBy('id');
+    }
+
+    public function billAllocations()
+    {
+        return $this->hasMany(VoucherBillAllocation::class);
+    }
+
+    public function party()
+    {
+        return $this->belongsTo(LedgerAccount::class, 'party_ledger_id');
+    }
+
+    public function financialYear()
+    {
+        return $this->belongsTo(FinancialYear::class);
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updater()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    /** Debit total of the voucher (equals the credit total when balanced). */
+    public function getDebitTotalAttribute(): float
+    {
+        return round((float) $this->entries->where('entry_type', 'Dr')->sum('amount'), 2);
+    }
+
+    public function getCreditTotalAttribute(): float
+    {
+        return round((float) $this->entries->where('entry_type', 'Cr')->sum('amount'), 2);
+    }
+
+    public function isBalanced(): bool
+    {
+        return abs($this->debit_total - $this->credit_total) < 0.01;
+    }
+
+    public function scopePosted($query)
+    {
+        return $query->where('status', 'posted');
+    }
+
+    public function scopeOfType($query, string $type)
+    {
+        return $query->where('voucher_type', $type);
+    }
+}

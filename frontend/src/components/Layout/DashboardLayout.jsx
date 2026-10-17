@@ -61,6 +61,8 @@ import PayslipPage from '../../pages/Payroll/PayslipPage';
 import CashVouchersPage from '../../pages/Finance/CashVouchersPage';
 import ChartOfAccountsPage from '../../pages/Finance/ChartOfAccountsPage';
 import FinancialYearsPage from '../../pages/Finance/FinancialYearsPage';
+import VoucherRegisterPage from '../../pages/Finance/VoucherRegisterPage';
+import VoucherFormPage from '../../pages/Finance/VoucherFormPage';
 import Sites from '@/pages/Sites/Sites';
 import SiteDetail from '@/pages/Sites/SiteDetail';
 import Buildings from '@/pages/Buildings/Buildings';
@@ -510,6 +512,13 @@ export default function DashboardLayout() {
               <Route path="accounting/chart-of-accounts" element={<ChartOfAccountsPage />} />
               <Route path="accounting/ledgers" element={<ChartOfAccountsPage defaultTab="ledgers" />} />
               <Route path="accounting/financial-years" element={<FinancialYearsPage />} />
+              {/* Tally-style vouchers (slice 2). */}
+              <Route path="accounting/contra" element={<VoucherRegisterPage voucherType="contra" />} />
+              <Route path="accounting/payment" element={<VoucherRegisterPage voucherType="payment" />} />
+              <Route path="accounting/receipt" element={<VoucherRegisterPage voucherType="receipt" />} />
+              <Route path="accounting/journal" element={<VoucherRegisterPage voucherType="journal" />} />
+              <Route path="accounting/vouchers/new/:type" element={<VoucherFormPage />} />
+              <Route path="accounting/vouchers/:id/edit" element={<VoucherFormPage />} />
               <Route path="payslip/:id" element={<PayslipPage />} />
               {/* Same report, rendered straight from the payroll row so an
                   employee can view their own pay even before a payslip is
