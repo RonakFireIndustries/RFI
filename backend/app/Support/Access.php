@@ -140,12 +140,38 @@ class Access
                 }
             }
 
-            if (array_intersect($triggers, $held) && Permission::where('name', $grantName)->exists()) {
+            if (array_intersect($triggers, $held) && static::ensurePermission($grantName)) {
                 $user->givePermissionTo($grantName);
                 $newlyGranted[] = $grantName;
             }
         }
 
         return $newlyGranted;
+    }
+
+    /**
+     * Make sure a canonical permission row exists so it can be granted.
+     *
+     * config/access.php is the source of truth for the canonical names, so a
+     * module added there (e.g. `boq-products.view`) must be grantable even
+     * before CanonicalPermissionsSeeder has been re-run on this environment.
+     * Non-canonical names are left alone — a stale name must not create rows.
+     *
+     * @return bool true when the permission exists (and is therefore grantable)
+     */
+    public static function ensurePermission(string $name): bool
+    {
+        if (Permission::where('name', $name)->exists()) {
+            return true;
+        }
+
+        if (!in_array($name, static::allPermissionNames(), true)) {
+            return false;
+        }
+
+        Permission::findOrCreate($name, 'web');
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
+        return true;
     }
 }

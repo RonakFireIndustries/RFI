@@ -959,6 +959,14 @@ return [
     |
     */
     'implied_permissions' => [
+        // The BOQ builder is unusable without the product master, because every
+        // BOQ line is picked from it. Granting any part of the Quotations / BOQ
+        // module therefore also unlocks the read-only product grant. This does
+        // NOT reveal the Inventory › Products sidebar entry, which needs the
+        // full `products.view` grant. (config/access.php `boq-products`.)
+        'boq-products.view' => [
+            'quotations',
+        ],
         // Product section / procurement-selling workflows need to pick suppliers.
         'suppliers.view' => [
             'products',
