@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
             InventorySeeder::class,
             BuildingStatusSeeder::class,
             LeaveTypeSeeder::class,
+            ChartOfAccountsSeeder::class,
         ]);
     }
 }

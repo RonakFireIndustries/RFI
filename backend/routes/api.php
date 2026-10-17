@@ -37,6 +37,9 @@ use App\Http\Controllers\TransactionLedgerController;
 use App\Http\Controllers\StockRequestController;
 use App\Http\Controllers\InventoryDashboardController;
 use App\Http\Controllers\Api\V1\AccessControlController;
+use App\Http\Controllers\Accounting\AccountGroupController;
+use App\Http\Controllers\Accounting\LedgerAccountController;
+use App\Http\Controllers\Accounting\FinancialYearController;
 
 
 Route::prefix('v1')->group(function () {
@@ -281,6 +284,14 @@ Route::prefix('v1')->group(function () {
     Route::post('/cash-vouchers/{cash_voucher}/approve', [CashVoucherController::class, 'approve']);
     Route::post('/cash-vouchers/{cash_voucher}/reject', [CashVoucherController::class, 'reject']);
     Route::post('/cash-vouchers/{cash_voucher}/mark-paid', [CashVoucherController::class, 'markPaid']);
+
+    // Finance - Tally-style double-entry accounting
+    // /financial-years/current must precede the {financialYear} wildcard.
+    Route::get('/financial-years/current', [FinancialYearController::class, 'current']);
+    Route::post('/financial-years/{financialYear}/activate', [FinancialYearController::class, 'activate']);
+    Route::apiResource('financial-years', FinancialYearController::class);
+    Route::apiResource('account-groups', AccountGroupController::class);
+    Route::apiResource('ledgers', LedgerAccountController::class);
 
     // Reports
     Route::get('/reports/sales', [ReportsController::class, 'salesReport']);

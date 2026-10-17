@@ -3,6 +3,7 @@ import {
   DollarSign, Layers, Package, Boxes, Warehouse, ShoppingCart, Shield, Settings,
   Ruler, GitCompare, Move3D, FileSpreadsheet, FileClock, FileInput, Building2,
   TrendingUp, Target, Bell, BarChart3, PenTool, Flame, LifeBuoy, Wallet,
+  BookOpen, ListTree, CalendarRange,
 } from 'lucide-react';
 
 /*
@@ -68,6 +69,9 @@ export const menuCategories = [
     title: 'Finance',
     items: [
       { name: 'Cash Vouchers', path: '/dashboard/cash-vouchers', icon: Wallet, permissions: ['cash-vouchers.view'] },
+      { name: 'Chart of Accounts', path: '/dashboard/accounting/chart-of-accounts', icon: BookOpen, permissions: ['account-groups.view'] },
+      { name: 'Ledgers', path: '/dashboard/accounting/ledgers', icon: ListTree, permissions: ['ledgers.view'] },
+      { name: 'Financial Years', path: '/dashboard/accounting/financial-years', icon: CalendarRange, permissions: ['financial-years.view'] },
     ],
   },
   {

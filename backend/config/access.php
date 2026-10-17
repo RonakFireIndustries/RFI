@@ -121,6 +121,19 @@ return [
                 'label' => 'Cash Vouchers',
                 'actions' => ['view', 'create', 'update', 'delete', 'approve', 'reject'],
             ],
+            // Tally-style double-entry accounting.
+            'account-groups' => [
+                'label' => 'Account Groups',
+                'actions' => ['view', 'create', 'update', 'delete'],
+            ],
+            'ledgers' => [
+                'label' => 'Ledgers',
+                'actions' => ['view', 'create', 'update', 'delete'],
+            ],
+            'financial-years' => [
+                'label' => 'Financial Years',
+                'actions' => ['view', 'create', 'update', 'delete'],
+            ],
         ],
 
         'Organization' => [
@@ -752,6 +765,20 @@ return [
                 'cash-vouchers.update',
                 'cash-vouchers.approve',
                 'cash-vouchers.reject',
+
+                // Tally-style double-entry accounting.
+                'account-groups.view',
+                'account-groups.create',
+                'account-groups.update',
+                'account-groups.delete',
+                'ledgers.view',
+                'ledgers.create',
+                'ledgers.update',
+                'ledgers.delete',
+                'financial-years.view',
+                'financial-years.create',
+                'financial-years.update',
+                'financial-years.delete',
 
                 'employees.view',
                 'attendance.view',

@@ -59,6 +59,8 @@ import PayrollDashboardPage from '../../pages/Payroll/PayrollDashboardPage';
 import EmployeePayrollPage from '../../pages/Payroll/EmployeePayrollPage';
 import PayslipPage from '../../pages/Payroll/PayslipPage';
 import CashVouchersPage from '../../pages/Finance/CashVouchersPage';
+import ChartOfAccountsPage from '../../pages/Finance/ChartOfAccountsPage';
+import FinancialYearsPage from '../../pages/Finance/FinancialYearsPage';
 import Sites from '@/pages/Sites/Sites';
 import SiteDetail from '@/pages/Sites/SiteDetail';
 import Buildings from '@/pages/Buildings/Buildings';
@@ -504,6 +506,10 @@ export default function DashboardLayout() {
               <Route path="process-payroll" element={<PayrollGenerationPage />} />
               <Route path="my-payroll" element={<EmployeePayrollPage />} />
               <Route path="cash-vouchers" element={<CashVouchersPage />} />
+              {/* Tally-style double-entry accounting (slice 1: foundation). */}
+              <Route path="accounting/chart-of-accounts" element={<ChartOfAccountsPage />} />
+              <Route path="accounting/ledgers" element={<ChartOfAccountsPage defaultTab="ledgers" />} />
+              <Route path="accounting/financial-years" element={<FinancialYearsPage />} />
               <Route path="payslip/:id" element={<PayslipPage />} />
               {/* Same report, rendered straight from the payroll row so an
                   employee can view their own pay even before a payslip is
