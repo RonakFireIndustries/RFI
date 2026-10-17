@@ -23,7 +23,7 @@ const getCSSVar = (varName) => {
 const axisStyle = { fontSize: 10, fill: '#94a3b8' };
 const tooltipStyle = { borderRadius: '8px', border: '1px solid var(--color-border)', background: 'var(--color-surface)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' };
 
-const renderShape = (chartType, data) => {
+const renderShape = (chartType, data, onElementClick) => {
   const primaryColor = getCSSVar('--color-primary');
   const gridColor = 'var(--color-divider)';
 
@@ -54,14 +54,14 @@ const renderShape = (chartType, data) => {
           <YAxis axisLine={false} tickLine={false} tick={axisStyle} />
           <Tooltip contentStyle={tooltipStyle} />
           {keys.length === 1 ? (
-            <Bar dataKey={keys[0]} radius={[4, 4, 0, 0]}>
+            <Bar dataKey={keys[0]} radius={[4, 4, 0, 0]} onClick={onElementClick}>
               {data.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
               ))}
             </Bar>
           ) : (
             keys.map((key, idx) => (
-              <Bar key={key} dataKey={key} radius={[4, 4, 0, 0]} fill={CHART_COLORS[idx % CHART_COLORS.length]} />
+              <Bar key={key} dataKey={key} radius={[4, 4, 0, 0]} fill={CHART_COLORS[idx % CHART_COLORS.length]} onClick={onElementClick} />
             ))
           )}
         </BarChart>
@@ -82,7 +82,7 @@ const renderShape = (chartType, data) => {
     case 'pie':
       return (
         <PieChart>
-          <Pie data={data} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={4} dataKey="value">
+          <Pie data={data} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={4} dataKey="value" onClick={onElementClick}>
             {data.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
             ))}
@@ -105,7 +105,13 @@ const renderShape = (chartType, data) => {
   }
 };
 
-export default function DashboardChart({ chart }) {
+/**
+ * `onElementClick` is optional: when provided, bar/pie slices become clickable
+ * and receive recharts' `(data, index, event)` callback where the original
+ * datum lives on `data.payload`. `action` renders an optional node in the
+ * header (e.g. a "View all" link).
+ */
+export default function DashboardChart({ chart, onElementClick, action }) {
   if (!chart.data || chart.data.length === 0) return null;
 
   return (
@@ -114,10 +120,11 @@ export default function DashboardChart({ chart }) {
         <div>
           <h2 className="text-lg font-bold text-foreground">{chart.name}</h2>
         </div>
+        {action}
       </div>
-      <div className="h-72 min-w-0">
+      <div className={`h-72 min-w-0 ${onElementClick ? 'cursor-pointer' : ''}`}>
         <ResponsiveContainer width="99%" height="100%">
-          {renderShape(chart.chart_type, chart.data)}
+          {renderShape(chart.chart_type, chart.data, onElementClick)}
         </ResponsiveContainer>
       </div>
     </div>

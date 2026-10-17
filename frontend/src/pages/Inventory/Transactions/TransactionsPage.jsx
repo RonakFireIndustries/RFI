@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useTransactionLedgerStore } from '../../../store/transactionLedgerStore';
 import DataTable from '../../../components/Shared/DataTable';
-import { Search, Filter } from 'lucide-react';
+import { Search, X } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 
 const typeColors = {
   opening_stock: 'bg-blue-50 text-blue-700',
@@ -19,14 +20,41 @@ const typeColors = {
 
 export default function TransactionsPage() {
   const { items, loading, fetchItems } = useTransactionLedgerStore();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
+
+  // The URL is the source of truth for server-side filters so pages like the
+  // inventory dashboard can deep-link here with a filter already applied.
+  const typeFilter = searchParams.get('transaction_type') || '';
+  const productId = searchParams.get('product_id');
 
   useEffect(() => {
     const params = {};
     if (typeFilter) params.transaction_type = typeFilter;
+    if (productId) params.product_id = productId;
     fetchItems(params);
-  }, [fetchItems, typeFilter]);
+  }, [fetchItems, typeFilter, productId]);
+
+  const updateFilter = (key, value) => {
+    const next = new URLSearchParams(searchParams);
+    if (value) next.set(key, value);
+    else next.delete(key);
+    setSearchParams(next, { replace: true });
+  };
+
+  const filters = [
+    typeFilter && { key: 'transaction_type', label: `Type: ${typeFilter.replace(/_/g, ' ')}` },
+    productId && {
+      key: 'product_id',
+      label: items[0]?.product?.name ? `Product: ${items[0].product.name}` : 'Filtered by product',
+    },
+  ].filter(Boolean);
+
+  const clearFilters = () => {
+    const next = new URLSearchParams(searchParams);
+    ['transaction_type', 'product_id'].forEach((key) => next.delete(key));
+    setSearchParams(next, { replace: true });
+  };
 
   const columns = [
     { accessorFn: (row) => row.transaction_number, id: 'number', header: 'Txn #' },
@@ -65,7 +93,7 @@ export default function TransactionsPage() {
         <div className="flex gap-2">
           <select
             value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
+            onChange={(e) => updateFilter('transaction_type', e.target.value)}
             className="rounded-md border border-gray-300 px-3 py-2 text-sm"
           >
             <option value="">All Types</option>
@@ -75,6 +103,32 @@ export default function TransactionsPage() {
           </select>
         </div>
       </div>
+
+      {filters.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-medium text-muted-foreground">Filtered by:</span>
+          {filters.map((filter) => (
+            <button
+              key={filter.key}
+              type="button"
+              onClick={() => updateFilter(filter.key, '')}
+              className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary hover:bg-primary/20 transition-colors"
+            >
+              {filter.label}
+              <X className="h-3 w-3" />
+            </button>
+          ))}
+          {filters.length > 1 && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="text-xs font-medium text-muted-foreground hover:text-foreground"
+            >
+              Clear all
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="relative max-w-md">
         <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
