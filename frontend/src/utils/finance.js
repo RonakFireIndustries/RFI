@@ -1,3 +1,5 @@
+import { isSuperAdmin } from './permissions';
+
 /**
  * Price visibility rules.
  *
@@ -39,6 +41,47 @@ export const canSeePrices = (ctx) => {
   const list = ctx?.permissions || [];
   if (ctx?.user?.is_super_admin || list.includes('__super_admin__')) return true;
   return PRICE_VISIBILITY_PERMISSIONS.some((permission) => list.includes(permission));
+};
+
+/*
+ * BOQ / Quotation amounts use a DIFFERENT rule from the rest of the app: they
+ * are shown to the Design team and to admins only, regardless of purchase or
+ * sales order access. Everyone else (e.g. Sales) sees them masked.
+ *
+ * This is presentation only, exactly like `canSeePrices` above - the API and
+ * the server-rendered PDF still contain the amounts.
+ */
+export const BOQ_PRICE_ROLES = ['Designer', 'Design Manager'];
+export const BOQ_PRICE_ADMIN_ROLES = ['Admin', 'Super Admin'];
+
+/*
+ * Safety net for the role check above. `employees:sync-roles` detaches roles
+ * from users, so the Designer/Design Manager role names may not survive in a
+ * given environment. The Design identity group (config/access.php) grants the
+ * `dashboard.design` permission to the same people, so accept it too.
+ */
+export const BOQ_PRICE_PERMISSIONS = ['dashboard.design'];
+
+export const BOQ_REASON = 'Hidden. BOQ prices are visible to Design and Admin only.';
+
+/**
+ * BOQ price visibility. `ctx` is `{ user, permissions, roles }`.
+ *
+ * Super admins (the is_super_admin column or the __super_admin__ marker) and
+ * admins always pass; otherwise the user must be on the Design team, matched by
+ * role name or by the Design dashboard permission.
+ */
+export const canSeeBoqPrices = (ctx) => {
+  const list = ctx?.permissions || [];
+
+  if (isSuperAdmin(ctx?.user, list)) return true;
+
+  const roles = ctx?.roles || [];
+  if (roles.some((role) => BOQ_PRICE_ROLES.includes(role) || BOQ_PRICE_ADMIN_ROLES.includes(role))) {
+    return true;
+  }
+
+  return BOQ_PRICE_PERMISSIONS.some((permission) => list.includes(permission));
 };
 
 const formatterCache = new Map();

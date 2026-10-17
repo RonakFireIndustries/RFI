@@ -3,7 +3,9 @@ import { useAuthStore } from '../store/authStore';
 import {
   MASKED_VALUE,
   REASON,
+  BOQ_REASON,
   canSeePrices as canSeePricesWithContext,
+  canSeeBoqPrices,
   formatMoney,
 } from '../utils/finance';
 
@@ -18,17 +20,26 @@ import {
  * `money` is the form to use for string props (StatCard value={...}) and inline
  * template literals. For markup use the <Money> component in
  * components/Shared/Money.jsx.
+ *
+ * Pass scope 'boq' on BOQ / Quotation screens to apply the Design-and-Admin-only
+ * rule instead of the app-wide purchase/sales-order rule.
  */
-export const usePriceVisibility = () => {
+export const usePriceVisibility = (scope = 'default') => {
   const user = useAuthStore((state) => state.user);
   const permissions = useAuthStore((state) => state.permissions);
+  const roles = useAuthStore((state) => state.roles);
 
   const list = permissions || [];
-  const context = useMemo(() => ({ user, permissions: list }), [user, list]);
+  const context = useMemo(
+    () => ({ user, permissions: list, roles: roles || [] }),
+    [user, list, roles]
+  );
+
+  const isBoq = scope === 'boq';
 
   const canSeePrices = useMemo(
-    () => canSeePricesWithContext(context),
-    [context]
+    () => (isBoq ? canSeeBoqPrices(context) : canSeePricesWithContext(context)),
+    [isBoq, context]
   );
 
   const money = useCallback(
@@ -39,5 +50,10 @@ export const usePriceVisibility = () => {
     [canSeePrices]
   );
 
-  return { canSeePrices, money, maskedValue: MASKED_VALUE, reason: REASON };
+  return {
+    canSeePrices,
+    money,
+    maskedValue: MASKED_VALUE,
+    reason: isBoq ? BOQ_REASON : REASON,
+  };
 };

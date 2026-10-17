@@ -29,7 +29,7 @@ let uid = 0;
 const nextKey = () => `s${Date.now()}_${uid++}`;
 
 export default function QuotationsPage() {
-  const { canSeePrices, maskedValue } = usePriceVisibility();
+  const { canSeePrices, maskedValue } = usePriceVisibility('boq');
   const money = (n) => (canSeePrices ? fm(n) : maskedValue);
   const [mode, setMode] = useState('list'); // list | form | detail
   const [quotations, setQuotations] = useState([]);

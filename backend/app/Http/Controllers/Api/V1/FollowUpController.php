@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\FollowUp;
+use App\Support\Access;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,7 +21,10 @@ class FollowUpController extends Controller
 
         if ($request->filled('user_id')) {
             $query->where('user_id', $request->user_id);
-        } else {
+        } elseif (! Access::isSuperAdmin($request->user())) {
+            // Follow-ups are personal: staff only ever see the ones they were
+            // assigned. Admins see the whole team's, so the page is useful for
+            // oversight (and it matches the global Sales dashboard widget).
             $query->where('user_id', $request->user()->id);
         }
 

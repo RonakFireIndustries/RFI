@@ -3,13 +3,20 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Calendar, CheckCircle, Clock, AlertTriangle, Building2, User, X } from 'lucide-react';
 import { useFollowUpStore } from '../../store/followUpStore';
 import { followUpService } from '../../services/followUpService';
+import { useAuthStore } from '../../store/authStore';
+import { isSuperAdmin as isSuperAdminUser } from '../../utils/permissions';
 import { format, isPast, isToday, isTomorrow, differenceInDays } from 'date-fns';
 
 export default function FollowUps() {
   const navigate = useNavigate();
   const { items: followUps, loading, fetchItems } = useFollowUpStore();
+  const { user, roles, permissions } = useAuthStore();
   const [statusFilter, setStatusFilter] = useState('Pending');
   const [typeFilter, setTypeFilter] = useState('');
+
+  // Admins get the whole team's follow-ups back (see FollowUpController::index),
+  // so label each row with its owner. Mirrors the layout's isAdmin expression.
+  const isAdmin = isSuperAdminUser(user, permissions) || (roles || []).includes('Admin');
 
   useEffect(() => {
     fetchItems({ status: statusFilter, type: typeFilter });
@@ -94,6 +101,7 @@ export default function FollowUps() {
                   <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
                     {fu.building && <span className="flex items-center gap-1"><Building2 className="w-3 h-3" />{fu.building.name}</span>}
                     {fu.opportunity && <span className="text-blue-600">{fu.opportunity.name}</span>}
+                    {isAdmin && fu.user && <span className="flex items-center gap-1"><User className="w-3 h-3" />{fu.user.name}</span>}
                   </div>
                   {fu.notes && <p className="text-xs text-gray-500 mt-1 truncate">{fu.notes}</p>}
                 </div>
