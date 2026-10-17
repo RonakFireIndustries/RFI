@@ -95,6 +95,9 @@ export const menuCategories = [
     title: 'Inventory',
     items: [
       { name: 'Dashboard', path: '/dashboard/inventory', icon: LayoutDashboard, permissions: ['inventory.view'] },
+      // Gated on `products.view` only. The BOQ section also hands out a
+      // read-only `boq-products.view` grant (see config/access.php) so BOQ
+      // users can pick products without this entry appearing.
       { name: 'Products', path: '/dashboard/products', icon: Boxes, permissions: ['products.view'] },
       { name: 'Categories', path: '/dashboard/categories', icon: Layers, permissions: ['categories.view'] },
       { name: 'Locations', path: '/dashboard/inventory/locations', icon: MapPin, permissions: ['inventory-locations.view'] },

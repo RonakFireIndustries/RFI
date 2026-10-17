@@ -245,6 +245,25 @@ return [
                 'label' => 'Quotations / BOQ',
                 'actions' => ['view', 'create', 'update', 'delete'],
             ],
+            // The product master that every BOQ line is picked from. Granted
+            // from the BOQ section so a BOQ-only user can fill the product
+            // picker, but deliberately a SEPARATE, read-only permission: the
+            // sidebar's Inventory › Products entry stays gated on
+            // `products.view`, so this grant never reveals that page.
+            // ProductController accepts either permission for reads.
+            'boq-products' => [
+                'label' => 'Products',
+                'actions' => ['view'],
+            ],
+            // The same grant as Organization › Sites, also listed in the BOQ
+            // section so a BOQ user can be given the site list from here. Keep
+            // the action list IDENTICAL to the Organization entry: Access
+            // flattens modules by key, so the two definitions overwrite one
+            // another (and mismatch would silently drop actions).
+            'sites' => [
+                'label' => 'Sites',
+                'actions' => ['view', 'create', 'update', 'delete', 'assign', 'transfer'],
+            ],
             'site-visits' => [
                 'label' => 'Site Visits',
                 'actions' => ['view', 'create', 'update', 'delete'],

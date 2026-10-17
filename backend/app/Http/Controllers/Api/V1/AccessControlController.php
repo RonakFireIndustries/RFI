@@ -125,6 +125,20 @@ class AccessControlController extends Controller
 
         $names = $request->input('permissions', []);
 
+        // config/access.php is the source of truth for canonical permission
+        // names, so a module added there (e.g. `boq-products.view`) can be
+        // granted straight away even before CanonicalPermissionsSeeder has been
+        // re-run on this environment. Create any missing canonical rows, then
+        // ignore anything else unknown so a stale name can't throw a
+        // PermissionDoesNotExist 500.
+        $canonical = array_flip(Access::allPermissionNames());
+        foreach ($names as $name) {
+            if (isset($canonical[$name]) && !Permission::where('name', $name)->exists()) {
+                Permission::create(['name' => $name, 'guard_name' => 'web']);
+                app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+            }
+        }
+
         // Only sync permissions that actually exist, so a stale/missing name
         // (e.g. config drift between the UI build and the server) doesn't throw
         // a PermissionDoesNotExist 500. Unknown names are silently ignored.

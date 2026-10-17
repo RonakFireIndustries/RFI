@@ -15,7 +15,7 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $this->authorize('products.view');
+        $this->authorizeProductRead($request);
 
         $query = Product::with(['category', 'supplier', 'unit', 'stock.locationable']);
 
@@ -72,9 +72,33 @@ class ProductController extends Controller
 
     public function show(Product $product)
     {
-        $this->authorize('products.view');
+        $this->authorizeProductRead(request());
 
         return new ProductResource($product->load(['category', 'supplier', 'unit', 'stock.locationable']));
+    }
+
+    /**
+     * Reading the product master is allowed with either grant:
+     *
+     *   - products.view      — the Inventory › Products module, which also
+     *                          reveals its sidebar entry.
+     *   - boq-products.view  — the read-only grant surfaced in the BOQ
+     *                          (Quotations) section of Access Control, so a
+     *                          BOQ user can pick products for BOQ lines.
+     *                          Because the sidebar's Products entry is gated on
+     *                          `products.view`, this grant never reveals it.
+     *
+     * Writes still require products.create / products.update / products.delete.
+     */
+    protected function authorizeProductRead(Request $request): void
+    {
+        $user = $request->user();
+
+        if ($user && ($user->can('products.view') || $user->can('boq-products.view'))) {
+            return;
+        }
+
+        abort(403, 'This action is unauthorized.');
     }
 
     public function update(UpdateProductRequest $request, Product $product)
