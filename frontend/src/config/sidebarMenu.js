@@ -125,13 +125,15 @@ export const menuCategories = [
     ],
   },
   {
-    title: 'Sales & Purchases',
+    // Party masters only. The legacy Purchases / Sales / Invoices pages that
+    // used to sit here were retired when Tally-style vouchers took over: sales
+    // and purchases are now recorded under Finance > Purchase / Sales, and the
+    // old documents were re-keyed as vouchers by `accounting:migrate-legacy`.
+    // Their routes still resolve so existing records stay readable by URL.
+    title: 'Masters',
     items: [
       { name: 'Customers', path: '/dashboard/customers', icon: Users, permissions: ['customers.view'] },
       { name: 'Suppliers', path: '/dashboard/suppliers', icon: ShoppingCart, permissions: ['suppliers.view'] },
-      { name: 'Purchases', path: '/dashboard/purchases', icon: ClipboardList, permissions: ['purchase-orders.view'] },
-      { name: 'Sales', path: '/dashboard/sales', icon: ClipboardList, permissions: ['sales-orders.view'] },
-      { name: 'Invoices', path: '/dashboard/invoices', icon: FileText, permissions: ['invoices.view'] },
     ],
   },
   {

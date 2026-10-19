@@ -15,6 +15,9 @@ use Illuminate\Support\Facades\Schema;
  *   2. Legacy documents still in the database — invoices for customers,
  *      purchase orders for suppliers. Their own `paid_amount` / payments are
  *      treated as already-settled so the old and new worlds don't double count.
+ *      A document that has been migrated into a voucher carries
+ *      `accounting_voucher_id` and is skipped here: it is a bill through its
+ *      voucher now (source 3), never both.
  *   3. Bill-wise allocations recorded by posted vouchers (payments, receipts,
  *      journals, and later the sales / purchase notes).
  *
@@ -133,6 +136,10 @@ class PartyOutstandingService
         $invoices = \Illuminate\Support\Facades\DB::table('invoices')
             ->where('customer_id', $ledger->party_id)
             ->whereNotIn('status', ['Cancelled', 'cancelled'])
+            ->when(
+                Schema::hasColumn('invoices', 'accounting_voucher_id'),
+                fn ($query) => $query->whereNull('accounting_voucher_id')
+            )
             ->orderBy('id')
             ->get($columns);
 
@@ -175,6 +182,10 @@ class PartyOutstandingService
         $orders = \Illuminate\Support\Facades\DB::table('purchase_orders')
             ->where('supplier_id', $ledger->party_id)
             ->whereNotIn('status', ['Cancelled', 'cancelled'])
+            ->when(
+                Schema::hasColumn('purchase_orders', 'accounting_voucher_id'),
+                fn ($query) => $query->whereNull('accounting_voucher_id')
+            )
             ->orderBy('id')
             ->get($columns);
 
