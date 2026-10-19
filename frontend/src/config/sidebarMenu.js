@@ -4,7 +4,7 @@ import {
   Ruler, GitCompare, Move3D, FileSpreadsheet, FileClock, FileInput, Building2,
   TrendingUp, Target, Bell, BarChart3, PenTool, Flame, LifeBuoy, Wallet,
   BookOpen, ListTree, CalendarRange, ArrowLeftRight, Banknote, Receipt, ScrollText,
-  Landmark, Calculator, ListOrdered,
+  Landmark, Calculator,
 } from 'lucide-react';
 import { VOUCHER_SHORTCUTS } from './voucherShortcuts';
 
@@ -88,16 +88,6 @@ export const menuCategories = [
       { name: 'Bank Reconciliation', path: '/dashboard/accounting/bank-reconciliation', icon: Landmark, permissions: ['bank-reconciliation.view'] },
       { name: 'Financial Reports', path: '/dashboard/accounting/reports', icon: Calculator, permissions: ['finance-reports.view'] },
       { name: 'Financial Years', path: '/dashboard/accounting/financial-years', icon: CalendarRange, permissions: ['financial-years.view'] },
-    ],
-  },
-  {
-    // Order tracking is operational only — status, fulfilment and the link to
-    // the invoice/voucher it became. The books stay under Finance, which is
-    // why this sits apart from both Finance and Sales & Survey.
-    title: 'Orders',
-    items: [
-      { name: 'Orders', path: '/dashboard/orders', icon: ListOrdered, permissions: ['orders.view'] },
-      { name: 'New Order', path: '/dashboard/orders/new', icon: ListOrdered, permissions: ['orders.create'] },
     ],
   },
   {
