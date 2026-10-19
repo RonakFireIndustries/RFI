@@ -43,7 +43,7 @@ const ItemVoucherFormPage = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
-  const [form, setForm] = useState({ voucher_date: today(), reference_no: '', narration: '' });
+  const [form, setForm] = useState({ voucher_date: today(), due_date: '', reference_no: '', narration: '' });
   const [partyLedgerId, setPartyLedgerId] = useState('');
   const [gstType, setGstType] = useState('intra');
   const [roundOff, setRoundOff] = useState('0');
@@ -72,6 +72,7 @@ const ItemVoucherFormPage = () => {
         if (!active) return;
         setForm({
           voucher_date: (voucher.voucher_date || '').slice(0, 10),
+          due_date: (voucher.due_date || '').slice(0, 10),
           reference_no: voucher.reference_no || '',
           narration: voucher.narration || '',
         });
@@ -177,6 +178,7 @@ const ItemVoucherFormPage = () => {
     const payload = {
       voucher_type: type,
       voucher_date: form.voucher_date,
+      due_date: nullable(form.due_date),
       reference_no: nullable(form.reference_no),
       narration: nullable(form.narration),
       party_ledger_id: Number(partyLedgerId),
@@ -224,10 +226,15 @@ const ItemVoucherFormPage = () => {
       {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
       <form onSubmit={submit} className="space-y-6">
         <div className="bg-white rounded-lg shadow p-5 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div>
               <label className={labelClass}>Voucher date *</label>
               <input type="date" required value={form.voucher_date} onChange={(e) => setForm({ ...form, voucher_date: e.target.value })} className={inputClass} />
+            </div>
+            <div>
+              <label className={labelClass}>Due date</label>
+              <input type="date" value={form.due_date} onChange={(e) => setForm({ ...form, due_date: e.target.value })} className={inputClass} />
+              <p className="mt-1 text-xs text-gray-400">Blank = party credit days</p>
             </div>
             <div>
               <label className={labelClass}>Reference no.</label>

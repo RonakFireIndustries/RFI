@@ -67,6 +67,9 @@ import FinancialYearsPage from '../../pages/Finance/FinancialYearsPage';
 import VoucherRegisterPage from '../../pages/Finance/VoucherRegisterPage';
 import VoucherFormPage from '../../pages/Finance/VoucherFormPage';
 import VoucherFormSwitch from '../../pages/Finance/VoucherFormSwitch';
+import OrdersListPage from '../../pages/Orders/OrdersListPage';
+import OrderDetail from '../../pages/Orders/OrderDetail';
+import OrderForm from '../../pages/Orders/OrderForm';
 import BankReconciliationPage from '../../pages/Finance/BankReconciliationPage';
 import FinanceReportsPage from '../../pages/Finance/FinanceReportsPage';
 import Sites from '@/pages/Sites/Sites';
@@ -587,6 +590,40 @@ export default function DashboardLayout() {
               <Route path="purchases/:id" element={<PurchaseOrderDetail />} />
               <Route path="sales" element={<SalesOrdersPage />} />
               <Route path="sales/:id" element={<SalesOrderDetail />} />
+              {/* Order tracking (operational) — `orders/new` precedes `orders/:id`
+                  so "new" is never read as an id. */}
+              <Route
+                path="orders"
+                element={(
+                  <PermissionGuard permission="orders.view" fallback={<AccessDenied title="Orders" permission="orders.view" />}>
+                    <OrdersListPage />
+                  </PermissionGuard>
+                )}
+              />
+              <Route
+                path="orders/new"
+                element={(
+                  <PermissionGuard permission="orders.create" fallback={<AccessDenied title="New Order" permission="orders.create" />}>
+                    <OrderForm />
+                  </PermissionGuard>
+                )}
+              />
+              <Route
+                path="orders/:id"
+                element={(
+                  <PermissionGuard permission="orders.view" fallback={<AccessDenied title="Order" permission="orders.view" />}>
+                    <OrderDetail />
+                  </PermissionGuard>
+                )}
+              />
+              <Route
+                path="orders/:id/edit"
+                element={(
+                  <PermissionGuard permission="orders.update" fallback={<AccessDenied title="Edit Order" permission="orders.update" />}>
+                    <OrderForm />
+                  </PermissionGuard>
+                )}
+              />
               <Route path="invoices" element={<InvoiceList />} />
               <Route path="invoices/create" element={<InvoiceBuilder />} />
               <Route path="invoices/:id" element={<InvoicePreviewPage />} />
