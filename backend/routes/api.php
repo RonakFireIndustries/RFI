@@ -261,6 +261,16 @@ Route::prefix('v1')->group(function () {
 
     Route::apiResource('suppliers', SupplierController::class);
     Route::apiResource('customers', CustomerController::class);
+
+    /*
+     * Order tracking (operational): status, fulfilment and the link to the
+     * invoice / voucher an order became. Deliberately its own top-level
+     * resource — `sales/orders` and `purchases/orders` above are closed for
+     * writes (slice 8), and an order never reaches the ledger.
+     */
+    Route::apiResource('orders', \App\Http\Controllers\OrderController::class)->except(['destroy']);
+    Route::post('/orders/{order}/advance', [\App\Http\Controllers\OrderController::class, 'advance']);
+    Route::post('/orders/{order}/cancel', [\App\Http\Controllers\OrderController::class, 'cancel']);
     /*
      * Retired (slice 8) — invoices are sales vouchers now, so their write
      * endpoints are closed. `index` / `show` stay open, and so do the pdf /

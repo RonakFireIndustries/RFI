@@ -36,6 +36,8 @@ return [
         'convert' => 'Convert',
         'issue'   => 'Issue',
         'receive' => 'Receive',
+        'fulfil'  => 'Fulfil',
+        'cancel'  => 'Cancel',
         'export'  => 'Export',
         'schedule' => 'Schedule',
         'email'   => 'Email',
@@ -174,6 +176,17 @@ return [
             'finance-reports' => [
                 'label' => 'Finance Reports',
                 'actions' => ['view'],
+            ],
+        ],
+
+        // Operational order tracking: status, fulfilment and the link to the
+        // document an order became. Orders never touch the ledger — the books
+        // move when a purchase / sales voucher is posted — which is why this
+        // sits apart from both Finance and Sales & Purchases.
+        'Orders' => [
+            'orders' => [
+                'label' => 'Orders',
+                'actions' => ['view', 'create', 'update', 'fulfil', 'cancel'],
             ],
         ],
 
@@ -782,6 +795,14 @@ return [
                 'sales-orders.view',
                 'sales-orders.create',
                 'sales-orders.update',
+                // Order tracking spans both sides from confirm to settlement;
+                // it books nothing itself, so the voucher grants stay where
+                // they are.
+                'orders.view',
+                'orders.create',
+                'orders.update',
+                'orders.fulfil',
+                'orders.cancel',
                 'sales-quotations.view',
                 'sales-quotations.create',
                 'sales-quotations.update',
@@ -915,6 +936,8 @@ return [
                 'delivery-notes.create',
                 'purchase-orders.view',
                 'sales-orders.view',
+                // Sees where orders stand, without advancing or editing them.
+                'orders.view',
                 'suppliers.view',
                 'customers.view',
 
@@ -1088,6 +1111,7 @@ return [
             'goods-receipt-notes',
             'purchase-vouchers',
             'debit-notes',
+            'orders',
         ],
         // Purchase & sales workflows need the customer list too.
         'customers.view' => [
@@ -1103,6 +1127,7 @@ return [
             'goods-receipt-notes',
             'sales-vouchers',
             'credit-notes',
+            'orders',
         ],
     ],
 ];
