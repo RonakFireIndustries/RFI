@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useVoucherStore } from '../../store/accountingStore';
 import PermissionGate from '../../components/Guards/PermissionGate';
+import VoucherShortcutLegend from '../../components/Accounting/VoucherShortcutLegend';
 import { VOUCHER_TYPES } from '../../config/vouchers';
 import { formatMoney } from '../../utils/finance';
 import { formatDate } from '../../utils/date';
@@ -101,6 +102,8 @@ const VoucherRegisterPage = ({ voucherType }) => {
           </button>
         </PermissionGate>
       </div>
+
+      <VoucherShortcutLegend />
 
       <div className="flex flex-wrap gap-3 mb-4">
         <div className="relative flex-1 min-w-[220px]">

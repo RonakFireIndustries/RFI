@@ -6,6 +6,11 @@ import {
   BookOpen, ListTree, CalendarRange, ArrowLeftRight, Banknote, Receipt, ScrollText,
   Landmark, Calculator,
 } from 'lucide-react';
+import { VOUCHER_SHORTCUTS } from './voucherShortcuts';
+
+/* Tally's voucher keys, resolved by voucher type (config/voucherShortcuts.js)
+ * so the sidebar hints and the shortcut handler can never drift apart. */
+const VOUCHER_KEYS = Object.fromEntries(VOUCHER_SHORTCUTS.map((s) => [s.type, s.combo]));
 
 /*
  * Sidebar menu is now permission-first.
@@ -72,14 +77,14 @@ export const menuCategories = [
       { name: 'Cash Vouchers', path: '/dashboard/cash-vouchers', icon: Wallet, permissions: ['cash-vouchers.view'] },
       { name: 'Chart of Accounts', path: '/dashboard/accounting/chart-of-accounts', icon: BookOpen, permissions: ['account-groups.view'] },
       { name: 'Ledgers', path: '/dashboard/accounting/ledgers', icon: ListTree, permissions: ['ledgers.view'] },
-      { name: 'Contra', path: '/dashboard/accounting/contra', icon: ArrowLeftRight, permissions: ['contra.view'] },
-      { name: 'Payment', path: '/dashboard/accounting/payment', icon: Banknote, permissions: ['payment-vouchers.view'] },
-      { name: 'Receipt', path: '/dashboard/accounting/receipt', icon: Receipt, permissions: ['receipt-vouchers.view'] },
-      { name: 'Journal', path: '/dashboard/accounting/journal', icon: ScrollText, permissions: ['journal.view'] },
-      { name: 'Purchase', path: '/dashboard/accounting/purchase', icon: ShoppingCart, permissions: ['purchase-vouchers.view'] },
-      { name: 'Sales', path: '/dashboard/accounting/sales', icon: TrendingUp, permissions: ['sales-vouchers.view'] },
-      { name: 'Credit Note', path: '/dashboard/accounting/credit-note', icon: FileInput, permissions: ['credit-notes.view'] },
-      { name: 'Debit Note', path: '/dashboard/accounting/debit-note', icon: FileSpreadsheet, permissions: ['debit-notes.view'] },
+      { name: 'Contra', path: '/dashboard/accounting/contra', icon: ArrowLeftRight, permissions: ['contra.view'], keyHint: VOUCHER_KEYS.contra },
+      { name: 'Payment', path: '/dashboard/accounting/payment', icon: Banknote, permissions: ['payment-vouchers.view'], keyHint: VOUCHER_KEYS.payment },
+      { name: 'Receipt', path: '/dashboard/accounting/receipt', icon: Receipt, permissions: ['receipt-vouchers.view'], keyHint: VOUCHER_KEYS.receipt },
+      { name: 'Journal', path: '/dashboard/accounting/journal', icon: ScrollText, permissions: ['journal.view'], keyHint: VOUCHER_KEYS.journal },
+      { name: 'Purchase', path: '/dashboard/accounting/purchase', icon: ShoppingCart, permissions: ['purchase-vouchers.view'], keyHint: VOUCHER_KEYS.purchase },
+      { name: 'Sales', path: '/dashboard/accounting/sales', icon: TrendingUp, permissions: ['sales-vouchers.view'], keyHint: VOUCHER_KEYS.sales },
+      { name: 'Credit Note', path: '/dashboard/accounting/credit-note', icon: FileInput, permissions: ['credit-notes.view'], keyHint: VOUCHER_KEYS['credit-note'] },
+      { name: 'Debit Note', path: '/dashboard/accounting/debit-note', icon: FileSpreadsheet, permissions: ['debit-notes.view'], keyHint: VOUCHER_KEYS['debit-note'] },
       { name: 'Bank Reconciliation', path: '/dashboard/accounting/bank-reconciliation', icon: Landmark, permissions: ['bank-reconciliation.view'] },
       { name: 'Financial Reports', path: '/dashboard/accounting/reports', icon: Calculator, permissions: ['finance-reports.view'] },
       { name: 'Financial Years', path: '/dashboard/accounting/financial-years', icon: CalendarRange, permissions: ['financial-years.view'] },

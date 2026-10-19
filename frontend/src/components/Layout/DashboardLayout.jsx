@@ -17,6 +17,9 @@ import {
 import { menuCategories, ROLE_DASHBOARD_TYPES } from '../../config/sidebarMenu';
 import PermissionGuard from '../Guards/PermissionGuard';
 import AccessDenied from '../Guards/AccessDenied';
+import ShortcutKey from '../Accounting/ShortcutKey';
+import { useVoucherShortcuts } from '../../hooks/useVoucherShortcuts';
+import { shortcutsLiveFor } from '../../config/voucherShortcuts';
 
 // Import all pages
 import DashboardRenderer from '../Dashboard/DashboardRenderer';
@@ -121,6 +124,11 @@ import UserSettingsPage from '../../pages/Settings/UserSettingsPage';
 export default function DashboardLayout() {
   const { user, roles, permissions, logout } = useAuthStore();
   const location = useLocation();
+  // Tally-style voucher keys (F4…F9, Alt+F8/F9). `shortcutsLiveFor` is the
+  // same predicate the handler uses, so the sidebar hints can only advertise
+  // what pressing the key will actually do.
+  const inFinance = shortcutsLiveFor(location.pathname);
+  useVoucherShortcuts();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
@@ -301,7 +309,16 @@ export default function DashboardLayout() {
                               }`}
                           >
                             <item.icon className={`w-5 h-5 flex-shrink-0 ${!isSidebarOpen ? '' : 'mr-3'} ${isActive ? 'text-sidebar-active-foreground' : 'text-sidebar-muted'}`} />
-                            {isSidebarOpen && <span>{item.name}</span>}
+                            {isSidebarOpen && (
+                              <span className="flex items-center gap-2 flex-1 min-w-0">
+                                <span className="truncate">{item.name}</span>
+                                {item.keyHint && inFinance && (
+                                  <ShortcutKey className="ml-auto shrink-0 border-current/40 text-current opacity-70">
+                                    {item.keyHint}
+                                  </ShortcutKey>
+                                )}
+                              </span>
+                            )}
                           </Link>
                         </li>
                       );
