@@ -221,18 +221,28 @@ Route::prefix('v1')->group(function () {
     Route::name('purchases.')->group(function () {
         Route::apiResource('purchases/quotations', \App\Http\Controllers\PurchaseQuotationController::class);
         Route::post('purchases/quotations/{id}/convert', [\App\Http\Controllers\PurchaseQuotationController::class, 'convertToPo'])->name('quotations.convert');
-        
-        Route::apiResource('purchases/orders', \App\Http\Controllers\PurchaseOrderController::class);
-        Route::post('purchases/orders/{id}/approve', [\App\Http\Controllers\PurchaseOrderController::class, 'approve'])->name('orders.approve');
-        Route::post('purchases/orders/{id}/reject', [\App\Http\Controllers\PurchaseOrderController::class, 'reject'])->name('orders.reject');
-        Route::post('purchases/orders/{id}/confirm-receipt', [\App\Http\Controllers\PurchaseOrderController::class, 'confirmReceipt'])->name('orders.confirm-receipt');
-        
+
+        /*
+         * Retired (slice 8). Purchase orders were re-keyed as purchase vouchers,
+         * so every write is closed while `index` / `show` stay available for the
+         * historic records still reachable by URL.
+         */
+        Route::middleware(\App\Http\Middleware\BlockLegacyDocumentWrites::class)->group(function () {
+            Route::apiResource('purchases/orders', \App\Http\Controllers\PurchaseOrderController::class);
+            Route::post('purchases/orders/{id}/approve', [\App\Http\Controllers\PurchaseOrderController::class, 'approve'])->name('orders.approve');
+            Route::post('purchases/orders/{id}/reject', [\App\Http\Controllers\PurchaseOrderController::class, 'reject'])->name('orders.reject');
+            Route::post('purchases/orders/{id}/confirm-receipt', [\App\Http\Controllers\PurchaseOrderController::class, 'confirmReceipt'])->name('orders.confirm-receipt');
+        });
+
         Route::apiResource('purchases/grns', \App\Http\Controllers\GoodsReceiptNoteController::class);
         Route::apiResource('purchases/returns', \App\Http\Controllers\PurchaseReturnController::class);
     });
 
-    // Payments
-    Route::apiResource('payments', \App\Http\Controllers\PaymentController::class);
+    // Payments — the payments recorded against legacy purchase / sales orders.
+    // Retired with the documents they settle (slice 8); reads stay open.
+    Route::middleware(\App\Http\Middleware\BlockLegacyDocumentWrites::class)->group(function () {
+        Route::apiResource('payments', \App\Http\Controllers\PaymentController::class);
+    });
 
     // Notes and Documents
     Route::apiResource('notes', \App\Http\Controllers\NoteController::class)->only(['store', 'destroy']);
@@ -243,10 +253,13 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('sales/quotations', \App\Http\Controllers\SalesQuotationController::class);
         Route::post('sales/quotations/{id}/convert', [\App\Http\Controllers\SalesQuotationController::class, 'convertToSo'])->name('quotations.convert');
 
-        Route::apiResource('sales/orders', \App\Http\Controllers\SalesOrderController::class);
-        Route::post('sales/orders/{id}/approve', [\App\Http\Controllers\SalesOrderController::class, 'approve'])->name('orders.approve');
-        Route::post('sales/orders/{id}/reject', [\App\Http\Controllers\SalesOrderController::class, 'reject'])->name('orders.reject');
-        Route::post('sales/orders/{id}/confirm-delivery', [\App\Http\Controllers\SalesOrderController::class, 'confirmDelivery'])->name('orders.confirm-delivery');
+        /* Retired (slice 8) — sales orders are sales vouchers now. */
+        Route::middleware(\App\Http\Middleware\BlockLegacyDocumentWrites::class)->group(function () {
+            Route::apiResource('sales/orders', \App\Http\Controllers\SalesOrderController::class);
+            Route::post('sales/orders/{id}/approve', [\App\Http\Controllers\SalesOrderController::class, 'approve'])->name('orders.approve');
+            Route::post('sales/orders/{id}/reject', [\App\Http\Controllers\SalesOrderController::class, 'reject'])->name('orders.reject');
+            Route::post('sales/orders/{id}/confirm-delivery', [\App\Http\Controllers\SalesOrderController::class, 'confirmDelivery'])->name('orders.confirm-delivery');
+        });
 
         Route::apiResource('sales/deliveries', \App\Http\Controllers\DeliveryNoteController::class);
         Route::apiResource('sales/returns', \App\Http\Controllers\SalesReturnController::class);
@@ -254,7 +267,15 @@ Route::prefix('v1')->group(function () {
 
     Route::apiResource('suppliers', SupplierController::class);
     Route::apiResource('customers', CustomerController::class);
-    Route::apiResource('invoices', \App\Http\Controllers\Api\InvoiceController::class);
+    /*
+     * Retired (slice 8) — invoices are sales vouchers now, so their write
+     * endpoints are closed. `index` / `show` stay open, and so do the pdf /
+     * preview / validate / email routes below: sending an existing invoice
+     * changes nothing in the books.
+     */
+    Route::middleware(\App\Http\Middleware\BlockLegacyDocumentWrites::class)->group(function () {
+        Route::apiResource('invoices', \App\Http\Controllers\Api\InvoiceController::class);
+    });
     Route::get('/invoices/{invoice}/pdf', [\App\Http\Controllers\Api\InvoiceController::class, 'generatePDF']);
     Route::get('/invoices/{invoice}/preview', [\App\Http\Controllers\Api\InvoicePreviewController::class, 'preview']);
     Route::get('/invoices/{invoice}/validate', [\App\Http\Controllers\Api\InvoicePreviewController::class, 'validateInvoice']);

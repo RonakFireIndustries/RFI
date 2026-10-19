@@ -8,8 +8,9 @@
  * new sales, purchases and notes are entered as vouchers under Finance.
  *
  * The pages read this flag to decide whether to offer their create/mutate
- * controls. Hiding them is a UX guard only; the matching API routes are still
- * writable, so keep this `true` outside of a deliberate, temporary re-open
- * (e.g. while verifying the migration) and flip it straight back.
+ * controls. The matching API routes are closed server-side too (see
+ * App\Http\Middleware\BlockLegacyDocumentWrites), so re-opening the old flow
+ * means flipping this constant *and* dropping that middleware from the route
+ * groups in routes/api.php.
  */
 export const LEGACY_DOCUMENTS_READONLY = true;
