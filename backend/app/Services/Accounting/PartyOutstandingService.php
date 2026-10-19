@@ -216,12 +216,22 @@ class PartyOutstandingService
         if (! Schema::hasTable('vouchers')) {
             return;
         }
+
+        // `due_date` is a later column; probe it the way appendInvoiceBills
+        // probes the legacy invoice columns. Selecting an absent column does
+        // not even fail on SQLite — the quoted name resolves to a string
+        // literal — so the guard is what keeps the value honest.
+        $columns = ['id', 'voucher_no', 'voucher_date', 'amount'];
+        if (Schema::hasColumn('vouchers', 'due_date')) {
+            $columns[] = 'due_date';
+        }
+
         if ($ledger->party_type === 'customer') {
             $vouchers = \App\Models\Voucher::where('voucher_type', 'sales')
                 ->where('party_ledger_id', $ledger->id)
                 ->where('status', 'posted')
                 ->orderBy('voucher_date')->orderBy('id')
-                ->get(['id', 'voucher_no', 'voucher_date', 'amount']);
+                ->get($columns);
             foreach ($vouchers as $v) {
                 $settled = $allocations['sales-voucher:' . $v->id] ?? 0.0;
                 $bills[] = [
@@ -229,7 +239,7 @@ class PartyOutstandingService
                     'bill_id' => $v->id,
                     'bill_name' => $v->voucher_no,
                     'date' => $v->voucher_date,
-                    'due_date' => null,
+                    'due_date' => $v->due_date ?? null,
                     'total' => round((float) $v->amount, 2),
                     'settled' => round($settled, 2),
                     'balance' => round((float) $v->amount - $settled, 2),
@@ -242,7 +252,7 @@ class PartyOutstandingService
                 ->where('party_ledger_id', $ledger->id)
                 ->where('status', 'posted')
                 ->orderBy('voucher_date')->orderBy('id')
-                ->get(['id', 'voucher_no', 'voucher_date', 'amount']);
+                ->get($columns);
             foreach ($vouchers as $v) {
                 $settled = $allocations['purchase-voucher:' . $v->id] ?? 0.0;
                 $bills[] = [
@@ -250,7 +260,7 @@ class PartyOutstandingService
                     'bill_id' => $v->id,
                     'bill_name' => $v->voucher_no,
                     'date' => $v->voucher_date,
-                    'due_date' => null,
+                    'due_date' => $v->due_date ?? null,
                     'total' => round((float) $v->amount, 2),
                     'settled' => round($settled, 2),
                     'balance' => round((float) $v->amount - $settled, 2),

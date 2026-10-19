@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 class Supplier extends Model
 {
-    protected $fillable = ['name', 'email', 'phone', 'gst_number', 'address', 'is_system'];
+    protected $fillable = ['name', 'email', 'phone', 'gst_number', 'address', 'credit_days', 'is_system'];
 
     public function products()
     {

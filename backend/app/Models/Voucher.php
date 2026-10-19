@@ -17,6 +17,7 @@ class Voucher extends Model
         'voucher_type',
         'voucher_no',
         'voucher_date',
+        'due_date',
         'financial_year_id',
         'reference_no',
         'narration',
@@ -35,6 +36,7 @@ class Voucher extends Model
 
     protected $casts = [
         'voucher_date' => 'date',
+        'due_date' => 'date',
         'amount' => 'decimal:2',
         'taxable_total' => 'decimal:2',
         'discount_total' => 'decimal:2',

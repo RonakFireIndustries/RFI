@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 class Customer extends Model
 {
-    protected $fillable = ['name', 'email', 'phone', 'gst_number', 'address'];
+    protected $fillable = ['name', 'email', 'phone', 'gst_number', 'address', 'credit_days'];
 
     public function salesOrders()
     {

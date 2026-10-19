@@ -2,9 +2,13 @@
 
 namespace App\Services\Accounting;
 
+use App\Models\Customer;
 use App\Models\LedgerAccount;
+use App\Models\Supplier;
 use App\Models\Voucher;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 
 class ItemVoucherService
@@ -29,6 +33,9 @@ class ItemVoucherService
                 'tax_total' => $built['totals']['tax_total'],
                 'round_off' => $built['totals']['round_off'],
                 'gst_type' => $built['totals']['gst_type'],
+                // Terms belong to the document rather than the double entry:
+                // only item vouchers (which are bills) carry a due date.
+                'due_date' => $built['due_date'],
             ]);
             return $voucher->fresh()->load($this->relations());
         });
@@ -49,6 +56,7 @@ class ItemVoucherService
                 'tax_total' => $built['totals']['tax_total'],
                 'round_off' => $built['totals']['round_off'],
                 'gst_type' => $built['totals']['gst_type'],
+                'due_date' => $built['due_date'],
             ]);
             return $voucher->fresh()->load($this->relations());
         });
@@ -113,6 +121,10 @@ class ItemVoucherService
         $ledgers = $this->resolveLedgers($type, $data, $posting, $totals);
         $entries = $this->buildEntries($type, $totals, $party, $ledgers, $posting);
 
+        // What the caller typed wins; otherwise the party's credit terms set
+        // the due date (no due date at all when the party has no terms).
+        $dueDate = $data['due_date'] ?? $this->defaultDueDate($party, $data['voucher_date']);
+
         $header = [
             'voucher_type' => $type,
             'voucher_date' => $data['voucher_date'],
@@ -128,6 +140,7 @@ class ItemVoucherService
 
         return [
             'header' => $header,
+            'due_date' => $dueDate,
             'items' => $items,
             'totals' => [
                 'taxable_total' => $totals['taxable_total'],
@@ -138,6 +151,32 @@ class ItemVoucherService
                 'gst_type' => $gstType,
             ],
         ];
+    }
+
+    /**
+     * Default due date for a bill: the party's `credit_days` after the voucher
+     * date.
+     *
+     * A party with no terms (or a master row predating the column) returns
+     * null, so nothing becomes overdue by accident — the bill then ages from
+     * its document date, exactly as it did before credit days existed.
+     */
+    protected function defaultDueDate(LedgerAccount $party, string $date): ?string
+    {
+        $table = ['customer' => 'customers', 'supplier' => 'suppliers'][$party->party_type] ?? null;
+        if ($table === null || $party->party_id === null || ! Schema::hasTable($table)) {
+            return null;
+        }
+
+        $record = $party->party_type === 'customer'
+            ? Customer::find($party->party_id)
+            : Supplier::find($party->party_id);
+
+        $days = (int) ($record?->credit_days ?? 0);
+
+        return $days > 0
+            ? Carbon::parse($date)->addDays($days)->toDateString()
+            : null;
     }
 
     protected function normaliseItems(string $gstType, array $items): array

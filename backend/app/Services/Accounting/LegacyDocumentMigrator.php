@@ -269,6 +269,9 @@ class LegacyDocumentMigrator
             'payload' => [
                 'voucher_type' => 'sales',
                 'voucher_date' => $date,
+                // Keep the legacy invoice's terms, so a bill that was due on
+                // 31 May before the migration is still due on 31 May after it.
+                'due_date' => $invoice->due_date ?? null,
                 'reference_no' => $reference,
                 'narration' => 'Migrated from invoice ' . $reference . '.',
                 'party_ledger_id' => $ledger?->id ?? 0,

@@ -242,6 +242,8 @@ class VoucherController extends Controller
             'narration' => 'nullable|string|max:2000',
             'status' => ['nullable', Rule::in(config('accounting.statuses'))],
             'party_ledger_id' => 'required|integer|exists:ledger_accounts,id',
+            // Defaults to party credit days + voucher date when omitted.
+            'due_date' => 'nullable|date',
             'gst_type' => ['nullable', Rule::in(['intra', 'inter'])],
             'round_off' => 'nullable|numeric',
             'base_ledger_id' => 'nullable|integer|exists:ledger_accounts,id',
