@@ -8,6 +8,8 @@ import Money from '../../components/Shared/Money';
 import PermissionGate from '../../components/Guards/PermissionGate';
 import { usePriceVisibility } from '../../hooks/usePriceVisibility';
 import ProductSelect from '../../components/Shared/ProductSelect';
+import LegacyDocumentsNotice from '../../components/LegacyDocumentsNotice';
+import { LEGACY_DOCUMENTS_READONLY } from '../../config/legacyDocuments';
 
 export default function SalesOrdersPage() {
   const navigate = useNavigate();
@@ -258,17 +260,27 @@ export default function SalesOrdersPage() {
             <Download className="w-4 h-4 mr-2" />
             Export
           </button>
-          <PermissionGate module="sales-orders" action="create" subject="sales orders">
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="inline-flex items-center px-4 py-2 bg-primary hover:bg-primary/90 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              New Sales Order
-            </button>
-          </PermissionGate>
+          {!LEGACY_DOCUMENTS_READONLY && (
+            <PermissionGate module="sales-orders" action="create" subject="sales orders">
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="inline-flex items-center px-4 py-2 bg-primary hover:bg-primary/90 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                New Sales Order
+              </button>
+            </PermissionGate>
+          )}
         </div>
       </div>
+
+      {LEGACY_DOCUMENTS_READONLY && (
+        <LegacyDocumentsNotice
+          title="Sales orders are read-only"
+          creationHref="/dashboard/accounting/sales"
+          creationLabel="Finance / Sales"
+        />
+      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -416,7 +428,7 @@ export default function SalesOrdersPage() {
                       >
                         <Eye className="w-5 h-5" />
                       </button>
-                      {order.status === 'Pending Approval' && (
+                      {!LEGACY_DOCUMENTS_READONLY && order.status === 'Pending Approval' && (
                         <>
                           <button 
                             onClick={() => approveOrder(order.id)}
@@ -434,14 +446,16 @@ export default function SalesOrdersPage() {
                           </button>
                         </>
                       )}
-                      <button 
-                        onClick={() => deleteOrder(order.id)}
-                        disabled={saving}
-                        className="text-red-400 hover:text-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="Delete Order"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
+                      {!LEGACY_DOCUMENTS_READONLY && (
+                        <button 
+                          onClick={() => deleteOrder(order.id)}
+                          disabled={saving}
+                          className="text-red-400 hover:text-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Delete Order"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 )})
@@ -491,7 +505,7 @@ export default function SalesOrdersPage() {
       {/* Main Table Area Ends */}
 
       {/* Massive Modal for Create SO */}
-      {isModalOpen && (
+      {!LEGACY_DOCUMENTS_READONLY && isModalOpen && (
         <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6">
           <div className="bg-gray-50 rounded-xl shadow-2xl w-full max-w-[90rem] h-[95vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             {/* Modal Header */}

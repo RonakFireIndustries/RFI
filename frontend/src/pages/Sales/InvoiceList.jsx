@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom';
 import api from '../../services/api';
 import Money from '../../components/Shared/Money';
 import { usePriceVisibility } from '../../hooks/usePriceVisibility';
+import LegacyDocumentsNotice from '../../components/LegacyDocumentsNotice';
+import { LEGACY_DOCUMENTS_READONLY } from '../../config/legacyDocuments';
 
 export default function InvoiceList() {
   const [invoices, setInvoices] = useState([]);
@@ -75,16 +77,26 @@ export default function InvoiceList() {
           <h1 className="text-2xl font-bold text-gray-900">Invoices</h1>
           <p className="text-sm text-gray-500 mt-1">Manage billing, track payments, and generate GST compliant invoices.</p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Link
-            to="/dashboard/invoices/create"
-            className="inline-flex items-center px-4 py-2 bg-primary hover:bg-primary/90 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Create Invoice
-          </Link>
-        </div>
+        {!LEGACY_DOCUMENTS_READONLY && (
+          <div className="flex flex-wrap gap-2">
+            <Link
+              to="/dashboard/invoices/create"
+              className="inline-flex items-center px-4 py-2 bg-primary hover:bg-primary/90 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create Invoice
+            </Link>
+          </div>
+        )}
       </div>
+
+      {LEGACY_DOCUMENTS_READONLY && (
+        <LegacyDocumentsNotice
+          title="Invoices are read-only"
+          creationHref="/dashboard/accounting/sales"
+          creationLabel="Finance / Sales"
+        />
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex items-start">

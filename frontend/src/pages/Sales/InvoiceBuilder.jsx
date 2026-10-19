@@ -1,10 +1,37 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, Save, FileText, ArrowLeft, Loader2, Info } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import Money from '../../components/Shared/Money';
+import LegacyDocumentsNotice from '../../components/LegacyDocumentsNotice';
+import { LEGACY_DOCUMENTS_READONLY } from '../../config/legacyDocuments';
 
+/*
+ * Invoice creation is retired: invoices were migrated to Tally-style sales
+ * vouchers. The builder stays in the tree behind `LEGACY_DOCUMENTS_READONLY`
+ * so it can be re-opened temporarily, but it must not mount otherwise. Hence
+ * the split component: the guard runs before any hook in the form body.
+ */
 export default function InvoiceBuilder() {
+  if (LEGACY_DOCUMENTS_READONLY) {
+    return (
+      <div className="max-w-3xl mx-auto space-y-4 pb-10">
+        <LegacyDocumentsNotice
+          title="Invoice creation has moved"
+          creationHref="/dashboard/accounting/sales"
+          creationLabel="Finance / Sales"
+        />
+        <Link to="/dashboard/invoices" className="inline-block text-sm font-medium text-primary hover:underline">
+          &larr; Back to invoices
+        </Link>
+      </div>
+    );
+  }
+
+  return <InvoiceBuilderForm />;
+}
+
+function InvoiceBuilderForm() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [customers, setCustomers] = useState([]);

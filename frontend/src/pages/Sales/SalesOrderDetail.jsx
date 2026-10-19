@@ -4,6 +4,8 @@ import { ArrowLeft, Eye, Loader2, FileText, Printer, CheckCircle, XCircle, Truck
 import api from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
 import { usePriceVisibility } from '../../hooks/usePriceVisibility';
+import LegacyDocumentsNotice from '../../components/LegacyDocumentsNotice';
+import { LEGACY_DOCUMENTS_READONLY } from '../../config/legacyDocuments';
 
 export default function SalesOrderDetail() {
   const { id } = useParams();
@@ -193,6 +195,15 @@ export default function SalesOrderDetail() {
 
   return (
     <div className="max-w-5xl mx-auto pb-10">
+      {LEGACY_DOCUMENTS_READONLY && (
+        <div className="mb-6">
+          <LegacyDocumentsNotice
+            title="Sales orders are read-only"
+            creationHref="/dashboard/accounting/sales"
+            creationLabel="Finance / Sales"
+          />
+        </div>
+      )}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <button onClick={() => navigate('/dashboard/sales')} className="p-2 hover:bg-gray-200 rounded-lg text-gray-500 hover:text-gray-700">
@@ -207,7 +218,7 @@ export default function SalesOrderDetail() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {(order.status === 'Pending Approval' || order.status === 'Pending') && (
+          {!LEGACY_DOCUMENTS_READONLY && (order.status === 'Pending Approval' || order.status === 'Pending') && (
             <>
               <button onClick={handleApprove} disabled={acting} className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50">
                 <CheckCircle className="w-4 h-4 mr-1.5" /> {acting ? 'Working...' : 'Approve'}
@@ -217,12 +228,12 @@ export default function SalesOrderDetail() {
               </button>
             </>
           )}
-          {['Approved', 'Partially Delivered'].includes(order.status) && (
+          {!LEGACY_DOCUMENTS_READONLY && ['Approved', 'Partially Delivered'].includes(order.status) && (
             <button onClick={openDeliverModal} className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">
               <Truck className="w-4 h-4 mr-1.5" /> Deliver Order
             </button>
           )}
-          {canPay && (
+          {!LEGACY_DOCUMENTS_READONLY && canPay && (
             <button onClick={openPayModal} className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700">
               <Banknote className="w-4 h-4 mr-1.5" /> Record Payment
             </button>
@@ -371,7 +382,7 @@ export default function SalesOrderDetail() {
         </div>
       </div>
 
-      {deliverOpen && (
+      {!LEGACY_DOCUMENTS_READONLY && deliverOpen && (
         <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
@@ -434,7 +445,7 @@ export default function SalesOrderDetail() {
         </div>
       )}
 
-      {payOpen && (
+      {!LEGACY_DOCUMENTS_READONLY && payOpen && (
         <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">

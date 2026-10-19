@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { usePriceVisibility } from '../../hooks/usePriceVisibility';
 import api from '../../services/api';
+import LegacyDocumentsNotice from '../../components/LegacyDocumentsNotice';
+import { LEGACY_DOCUMENTS_READONLY } from '../../config/legacyDocuments';
 import {
   ArrowLeft, Download, Printer, Mail, CheckCircle, AlertTriangle, XCircle,
   Settings, FileText, Banknote, Signature, ChevronDown, ChevronUp,
@@ -234,6 +236,16 @@ export default function InvoicePreviewPage() {
         </div>
       </div>
 
+      {LEGACY_DOCUMENTS_READONLY && (
+        <div className="mb-6">
+          <LegacyDocumentsNotice
+            title="Invoices are read-only"
+            creationHref="/dashboard/accounting/sales"
+            creationLabel="Finance / Sales"
+          />
+        </div>
+      )}
+
       <div className="flex flex-col lg:flex-row gap-6">
         <div className="flex-1 min-w-0">
           <div ref={printRef} className="bg-white shadow-sm border border-gray-200 rounded-xl overflow-hidden print:shadow-none print:border-0" style={{ maxWidth: '816px' }}>
@@ -445,10 +457,12 @@ export default function InvoicePreviewPage() {
                 className="w-full inline-flex items-center justify-center px-4 py-2.5 bg-white border border-gray-300 hover:bg-gray-50 disabled:opacity-50 text-gray-700 text-sm font-medium rounded-lg transition-colors">
                 <Mail className="w-4 h-4 mr-2" /> Email Invoice
               </button>
-              <button onClick={handleDelete} disabled={deleting}
-                className="w-full inline-flex items-center justify-center px-4 py-2.5 bg-white border border-red-300 hover:bg-red-50 disabled:opacity-50 text-red-600 text-sm font-medium rounded-lg transition-colors">
-                <Trash2 className="w-4 h-4 mr-2" /> {deleting ? 'Deleting...' : 'Delete Invoice'}
-              </button>
+              {!LEGACY_DOCUMENTS_READONLY && (
+                <button onClick={handleDelete} disabled={deleting}
+                  className="w-full inline-flex items-center justify-center px-4 py-2.5 bg-white border border-red-300 hover:bg-red-50 disabled:opacity-50 text-red-600 text-sm font-medium rounded-lg transition-colors">
+                  <Trash2 className="w-4 h-4 mr-2" /> {deleting ? 'Deleting...' : 'Delete Invoice'}
+                </button>
+              )}
             </div>
           </div>
 
