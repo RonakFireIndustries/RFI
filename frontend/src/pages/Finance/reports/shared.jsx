@@ -24,19 +24,10 @@ export const firstError = (err) => {
 };
 
 /**
- * Format a bare `YYYY-MM-DD` as `DD/MM/YYYY`.
- *
- * Deliberately NOT `new Date(value).toLocaleDateString()`: that parses the
- * string as UTC midnight, so anywhere west of Greenwich the report would show
- * the day before the transaction date. Splitting the parts keeps the books'
- * own dates intact.
+ * Re-exported so the report bodies keep importing from one place; the
+ * implementation (and the timezone note) lives in utils/date.
  */
-export const formatDate = (value) => {
-  if (!value) return '—';
-  const [year, month, day] = String(value).slice(0, 10).split('-');
-  if (!year || !month || !day) return String(value);
-  return `${day}/${month}/${year}`;
-};
+export { formatDate } from '../../../utils/date';
 
 /* --------------------------------- hooks --------------------------------- */
 

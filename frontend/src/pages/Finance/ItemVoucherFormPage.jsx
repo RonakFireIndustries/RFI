@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Plus, Trash2, Save, Info } from 'lucide-react';
 import { useLedgerStore } from '../../store/accountingStore';
 import { voucherService } from '../../services/accountingService';
-import { productsService } from '../../services/productsService';
 import { VOUCHER_TYPES, partyTypeForVoucher } from '../../config/vouchers';
 import { formatMoney } from '../../utils/finance';
 
@@ -59,7 +58,7 @@ const ItemVoucherFormPage = () => {
   useEffect(() => {
     ledgersStore.fetchItems({ status: 'active' }).catch(() => {});
     voucherService.meta().then(setMeta).catch(() => setMeta({}));
-    productsService.list({}).then(setProducts).catch(() => setProducts([]));
+    voucherService.products(type).then(setProducts).catch(() => setProducts([]));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

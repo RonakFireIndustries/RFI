@@ -47,6 +47,12 @@ export const voucherService = {
   partyOutstanding: async (ledgerId) =>
     unwrapItem((await api.get(`/vouchers/party-outstanding/${ledgerId}`)).data),
   meta: async () => unwrapItem((await api.get('/vouchers/meta')).data),
+  /**
+   * Products a line can pick. Scoped to the voucher's own module (and its
+   * voucher type), so accounting-only users need no products permission.
+   */
+  products: async (voucherType) =>
+    unwrapList((await api.get(`/vouchers/products${normalizeQuery({ voucher_type: voucherType })}`)).data),
 };
 
 /**

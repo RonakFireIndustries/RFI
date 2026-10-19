@@ -3,8 +3,9 @@ import { Plus, X, Edit2, Trash2, CheckCircle2, CalendarRange, RefreshCw } from '
 import { useFinancialYearStore } from '../../store/accountingStore';
 import { financialYearService } from '../../services/accountingService';
 import PermissionGate from '../../components/Guards/PermissionGate';
+import { formatDate } from '../../utils/date';
 
-const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('en-GB') : '--');
+const fmtDate = (d) => formatDate(d, '--');
 
 const inputClass = 'w-full border border-gray-300 rounded-lg shadow-sm px-3 py-2 text-sm focus:ring-orange-500 focus:border-orange-500';
 const labelClass = 'block text-xs font-medium text-gray-600 mb-1';

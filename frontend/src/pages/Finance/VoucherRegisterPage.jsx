@@ -7,10 +7,11 @@ import { useVoucherStore } from '../../store/accountingStore';
 import PermissionGate from '../../components/Guards/PermissionGate';
 import { VOUCHER_TYPES } from '../../config/vouchers';
 import { formatMoney } from '../../utils/finance';
+import { formatDate } from '../../utils/date';
 
 const STATUSES = ['draft', 'posted', 'cancelled'];
 
-const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('en-GB') : '--');
+const fmtDate = (d) => formatDate(d, '--');
 
 const today = () => new Date().toISOString().split('T')[0];
 

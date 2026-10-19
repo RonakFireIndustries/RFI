@@ -6,12 +6,13 @@ import {
 import { bankReconciliationService } from '../../services/accountingService';
 import { formatMoney } from '../../utils/finance';
 import PermissionGate from '../../components/Guards/PermissionGate';
+import { formatDate } from '../../utils/date';
 
 const inputClass = 'border border-gray-300 rounded-lg shadow-sm px-3 py-2 text-sm focus:ring-orange-500 focus:border-orange-500';
 const labelClass = 'block text-xs font-medium text-gray-600 mb-1';
 
 const today = () => new Date().toISOString().split('T')[0];
-const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('en-GB') : '—');
+const fmtDate = (d) => formatDate(d, '—');
 
 const firstError = (err) => {
   const errors = err?.response?.data?.data?.errors || err?.response?.data?.errors;

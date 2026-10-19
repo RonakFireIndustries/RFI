@@ -219,9 +219,6 @@ Route::prefix('v1')->group(function () {
     // CRM & Sales
     // Purchases Management
     Route::name('purchases.')->group(function () {
-        Route::apiResource('purchases/quotations', \App\Http\Controllers\PurchaseQuotationController::class);
-        Route::post('purchases/quotations/{id}/convert', [\App\Http\Controllers\PurchaseQuotationController::class, 'convertToPo'])->name('quotations.convert');
-
         /*
          * Retired (slice 8). Purchase orders were re-keyed as purchase vouchers,
          * so every write is closed while `index` / `show` stay available for the
@@ -250,9 +247,6 @@ Route::prefix('v1')->group(function () {
 
     // Sales Management
     Route::name('sales.')->group(function () {
-        Route::apiResource('sales/quotations', \App\Http\Controllers\SalesQuotationController::class);
-        Route::post('sales/quotations/{id}/convert', [\App\Http\Controllers\SalesQuotationController::class, 'convertToSo'])->name('quotations.convert');
-
         /* Retired (slice 8) — sales orders are sales vouchers now. */
         Route::middleware(\App\Http\Middleware\BlockLegacyDocumentWrites::class)->group(function () {
             Route::apiResource('sales/orders', \App\Http\Controllers\SalesOrderController::class);
@@ -321,6 +315,7 @@ Route::prefix('v1')->group(function () {
     // party-outstanding carries an extra segment so it never shadows
     // /vouchers/{voucher}; it is declared first for clarity anyway.
     Route::get('/vouchers/meta', [VoucherController::class, 'meta']);
+    Route::get('/vouchers/products', [VoucherController::class, 'products']);
     Route::get('/vouchers/party-outstanding/{ledger}', [VoucherController::class, 'partyOutstanding']);
     Route::apiResource('vouchers', VoucherController::class);
 

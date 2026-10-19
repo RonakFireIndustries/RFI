@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Accounting;
 
 use App\Http\Controllers\Controller;
 use App\Models\LedgerAccount;
+use App\Models\Product;
 use App\Models\Voucher;
 use App\Services\Accounting\ItemVoucherService;
 use App\Services\Accounting\PartyOutstandingService;
@@ -133,6 +134,27 @@ class VoucherController extends Controller
             'gst_rates' => config('accounting.gst_rates', [0, 5, 12, 18, 28]),
             'bill_types' => config('accounting.bill_types', []),
         ]);
+    }
+
+    /**
+     * The products a voucher line can pick, keyed by `voucher_type`.
+     *
+     * Authorised through the voucher's own module so an accountant who can key
+     * purchase / sales vouchers does not also need the products module.
+     */
+    public function products(Request $request)
+    {
+        $type = $this->assertKnownType($request);
+
+        if (!$this->isItemType($type)) {
+            abort(422, 'This voucher type does not carry line items.');
+        }
+
+        $this->authorize($this->moduleFor($type) . '.view');
+
+        return response()->json(
+            Product::query()->orderBy('name')->get(['id', 'name', 'hsn_code'])
+        );
     }
 
     protected function viewableTypes(Request $request): array

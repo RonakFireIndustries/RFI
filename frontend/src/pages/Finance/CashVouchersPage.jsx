@@ -7,6 +7,7 @@ import { useAuthStore } from '../../store/authStore';
 import PermissionGate from '../../components/Guards/PermissionGate';
 import { usePermission } from '../../hooks/usePermission';
 import { STORAGE_URL } from '../../services/api';
+import { formatDate } from '../../utils/date';
 
 const STATUSES = ['Draft', 'Approved', 'Rejected', 'Paid'];
 const PAYMENT_MODES = ['Cash', 'Bank Transfer', 'UPI', 'Cheque'];
@@ -15,7 +16,7 @@ const CATEGORIES = [
   'Repairs', 'Utilities', 'Miscellaneous',
 ];
 
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-GB') : '--';
+const fmtDate = (d) => formatDate(d, '--');
 const toDateInput = (d) => d ? new Date(d).toISOString().split('T')[0] : '';
 
 const money = (value) => {
