@@ -135,18 +135,10 @@ const OrderForm = () => {
   }), [lines]);
 
   const totals = useMemo(() => {
-    // Mirrors OrderService::totals — `subtotal` is the taxable value after
-    // discount, so the gross shown is subtotal + discount_total.
+    const subtotal = round2(computedLines.reduce((s, x) => s + x.gross, 0));
     const discount_total = round2(computedLines.reduce((s, x) => s + x.disc, 0));
-    const subtotal = round2(computedLines.reduce((s, x) => s + x.taxable, 0));
     const tax_total = round2(computedLines.reduce((s, x) => s + x.tax, 0));
-    return {
-      gross: round2(subtotal + discount_total),
-      discount_total,
-      subtotal,
-      tax_total,
-      total_amount: round2(subtotal + tax_total),
-    };
+    return { subtotal, discount_total, tax_total, total_amount: round2(subtotal - discount_total + tax_total) };
   }, [computedLines]);
 
   const handleLineChange = (lineId, field, value) => {
@@ -354,11 +346,10 @@ const OrderForm = () => {
             Saving records the order and its status timeline; it posts nothing to the ledger.
           </p>
           <div className="w-64 bg-gray-50 rounded-xl border border-gray-100 p-5 space-y-2.5 text-sm">
-            <div className="flex justify-between text-gray-500"><span>Gross</span><span className="font-medium text-gray-900">{formatMoney(totals.gross)}</span></div>
+            <div className="flex justify-between text-gray-500"><span>Subtotal</span><span className="font-medium text-gray-900">{formatMoney(totals.subtotal)}</span></div>
             {totals.discount_total !== 0 && (
               <div className="flex justify-between text-gray-500"><span>Discount</span><span className="font-medium text-gray-900">− {formatMoney(totals.discount_total)}</span></div>
             )}
-            <div className="flex justify-between text-gray-500"><span>Taxable</span><span className="font-medium text-gray-900">{formatMoney(totals.subtotal)}</span></div>
             {totals.tax_total !== 0 && (
               <div className="flex justify-between text-gray-500"><span>Tax</span><span className="font-medium text-gray-900">{formatMoney(totals.tax_total)}</span></div>
             )}

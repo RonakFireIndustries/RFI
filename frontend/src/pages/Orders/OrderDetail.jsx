@@ -332,13 +332,10 @@ const OrderDetail = () => {
 
             <div className="flex justify-end mt-5">
               <div className="w-64 bg-gray-50 rounded-xl border border-gray-100 p-5 space-y-2.5 text-sm">
-                {/* order.subtotal is the taxable value after discount — the
-                    same definition the voucher engine stores. */}
-                <div className="flex justify-between text-gray-500"><span>Gross</span><span className="font-medium text-gray-900">{formatMoney(Number(order.subtotal) + Number(order.discount_total))}</span></div>
+                <div className="flex justify-between text-gray-500"><span>Subtotal</span><span className="font-medium text-gray-900">{formatMoney(order.subtotal)}</span></div>
                 {Number(order.discount_total) > 0 && (
-                  <div className="flex justify-between text-gray-500"><span>Discount</span><span className="font-medium text-gray-900">− {formatMoney(order.discount_total)}</span></div>
+                  <div className="flex justify-between text-gray-500"><span>Discount</span><span className="font-medium text-gray-900">{formatMoney(order.discount_total)}</span></div>
                 )}
-                <div className="flex justify-between text-gray-500"><span>Taxable</span><span className="font-medium text-gray-900">{formatMoney(order.subtotal)}</span></div>
                 {Number(order.tax_total) > 0 && (
                   <div className="flex justify-between text-gray-500"><span>Tax</span><span className="font-medium text-gray-900">{formatMoney(order.tax_total)}</span></div>
                 )}
