@@ -2,8 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useSalaryStructureStore } from '../../store/salaryStructureStore';
 import { useEmployeesStore } from '../../store/employeesStore';
 import { Plus, Edit2, Trash2, X } from 'lucide-react';
+import { formatDate } from '../../utils/date';
 
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-GB') : '--';
+const fmtDate = (d) => formatDate(d, '--');
 const toDateInput = (d) => d ? new Date(d).toISOString().split('T')[0] : '';
 
 // Statutory rule, mirrored from App\Support\StatutoryDeductions on the backend.

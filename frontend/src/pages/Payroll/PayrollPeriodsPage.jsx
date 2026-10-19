@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { usePayrollPeriodStore } from '../../store/payrollPeriodStore';
 import { Plus, Edit2, Trash2, X } from 'lucide-react';
+import { formatDate } from '../../utils/date';
 
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-GB') : '--';
+const fmtDate = (d) => formatDate(d, '--');
 const toDateInput = (d) => d ? new Date(d).toISOString().split('T')[0] : '';
 
 const PayrollPeriodsPage = () => {

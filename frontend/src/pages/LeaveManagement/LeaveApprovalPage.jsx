@@ -5,8 +5,9 @@ import {
   Clock, Paperclip, ChevronRight, ShieldCheck, ShieldX, History,
 } from 'lucide-react';
 import { useLeaveRequestStore } from '../../store/leaveRequestStore';
+import { formatDate } from '../../utils/date';
 
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-GB') : '--';
+const fmtDate = (d) => formatDate(d, '--');
 const fmtDateTime = (d) => d ? new Date(d).toLocaleString('en-GB') : '--';
 
 const statusBadgeClass = (status) => {

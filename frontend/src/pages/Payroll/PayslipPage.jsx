@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import api from '../../services/api';
 import { Printer, ArrowLeft, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { formatDate } from '../../utils/date';
 
 const numberToWords = (num) => {
   const a = ['', 'One ', 'Two ', 'Three ', 'Four ', 'Five ', 'Six ', 'Seven ', 'Eight ', 'Nine ', 'Ten ', 'Eleven ', 'Twelve ', 'Thirteen ', 'Fourteen ', 'Fifteen ', 'Sixteen ', 'Seventeen ', 'Eighteen ', 'Nineteen '];
@@ -195,9 +196,9 @@ const PayslipPage = () => {
                 <td className="w-1/2 p-1 align-top">
                   <div className="grid grid-cols-[100px_1fr] gap-x-2 leading-snug">
                     <span>Location</span><span>: FIELD STAFF</span>
-                    <span>DOJ / PAN</span><span>: {employee.joining_date ? new Date(employee.joining_date).toLocaleDateString('en-GB') : '-'} / {employee.pan_number || '-'}</span>
+                    <span>DOJ / PAN</span><span>: {formatDate(employee.joining_date, '-')} / {employee.pan_number || '-'}</span>
                     <span>AADHAR No.</span><span>: {employee.aadhaar_number || '-'}</span>
-                    <span>Dt.of Birth</span><span>: {employee.dob ? new Date(employee.dob).toLocaleDateString('en-GB') : '-'}</span>
+                    <span>Dt.of Birth</span><span>: {formatDate(employee.dob, '-')}</span>
                     <span>S.B. A/c No</span><span>: {employee.bank_account_number || '-'}</span>
                   </div>
                 </td>

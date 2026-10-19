@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { usePayrollStore } from '../../store/payrollStore';
 import { usePayrollPeriodStore } from '../../store/payrollPeriodStore';
 import { DollarSign, Users, CheckCircle, Clock, Lock, CreditCard, ArrowRight } from 'lucide-react';
+import { formatDate } from '../../utils/date';
 
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-GB') : '--';
+const fmtDate = (d) => formatDate(d, '--');
 
 const StatCard = ({ icon: Icon, label, value, color }) => (
   <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 flex items-center gap-4">
