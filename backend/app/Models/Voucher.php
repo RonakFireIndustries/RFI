@@ -23,6 +23,11 @@ class Voucher extends Model
         'status',
         'party_ledger_id',
         'amount',
+        'taxable_total',
+        'discount_total',
+        'tax_total',
+        'round_off',
+        'gst_type',
         'created_by',
         'updated_by',
         'posted_at',
@@ -31,12 +36,21 @@ class Voucher extends Model
     protected $casts = [
         'voucher_date' => 'date',
         'amount' => 'decimal:2',
+        'taxable_total' => 'decimal:2',
+        'discount_total' => 'decimal:2',
+        'tax_total' => 'decimal:2',
+        'round_off' => 'decimal:2',
         'posted_at' => 'datetime',
     ];
 
     public function entries()
     {
         return $this->hasMany(VoucherEntry::class)->orderBy('line_no')->orderBy('id');
+    }
+
+    public function items()
+    {
+        return $this->hasMany(VoucherItem::class)->orderBy('line_no')->orderBy('id');
     }
 
     public function billAllocations()

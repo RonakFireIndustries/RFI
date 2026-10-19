@@ -151,6 +151,22 @@ return [
                 'label' => 'Journal Vouchers',
                 'actions' => ['view', 'create', 'update', 'delete'],
             ],
+            'purchase-vouchers' => [
+                'label' => 'Purchase Vouchers',
+                'actions' => ['view', 'create', 'update', 'delete'],
+            ],
+            'sales-vouchers' => [
+                'label' => 'Sales Vouchers',
+                'actions' => ['view', 'create', 'update', 'delete'],
+            ],
+            'credit-notes' => [
+                'label' => 'Credit Notes',
+                'actions' => ['view', 'create', 'update', 'delete'],
+            ],
+            'debit-notes' => [
+                'label' => 'Debit Notes',
+                'actions' => ['view', 'create', 'update', 'delete'],
+            ],
         ],
 
         'Organization' => [
@@ -814,7 +830,23 @@ return [
                 'journal.create',
                 'journal.update',
                 'journal.delete',
-
+                'purchase-vouchers.view',
+                'purchase-vouchers.create',
+                'purchase-vouchers.update',
+                'purchase-vouchers.delete',
+                'sales-vouchers.view',
+                'sales-vouchers.create',
+                'sales-vouchers.update',
+                'sales-vouchers.delete',
+                'credit-notes.view',
+                'credit-notes.create',
+                'credit-notes.update',
+                'credit-notes.delete',
+                'debit-notes.view',
+                'debit-notes.create',
+                'debit-notes.update',
+                'debit-notes.delete',
+ 
                 'employees.view',
                 'attendance.view',
                 'reports.view',
@@ -1043,6 +1075,8 @@ return [
             'invoices',
             'payments',
             'goods-receipt-notes',
+            'purchase-vouchers',
+            'debit-notes',
         ],
         // Purchase & sales workflows need the customer list too.
         'customers.view' => [
@@ -1056,6 +1090,8 @@ return [
             'invoices',
             'payments',
             'goods-receipt-notes',
+            'sales-vouchers',
+            'credit-notes',
         ],
     ],
 ];

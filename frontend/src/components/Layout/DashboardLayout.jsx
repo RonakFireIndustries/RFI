@@ -63,6 +63,7 @@ import ChartOfAccountsPage from '../../pages/Finance/ChartOfAccountsPage';
 import FinancialYearsPage from '../../pages/Finance/FinancialYearsPage';
 import VoucherRegisterPage from '../../pages/Finance/VoucherRegisterPage';
 import VoucherFormPage from '../../pages/Finance/VoucherFormPage';
+import VoucherFormSwitch from '../../pages/Finance/VoucherFormSwitch';
 import Sites from '@/pages/Sites/Sites';
 import SiteDetail from '@/pages/Sites/SiteDetail';
 import Buildings from '@/pages/Buildings/Buildings';
@@ -517,7 +518,13 @@ export default function DashboardLayout() {
               <Route path="accounting/payment" element={<VoucherRegisterPage voucherType="payment" />} />
               <Route path="accounting/receipt" element={<VoucherRegisterPage voucherType="receipt" />} />
               <Route path="accounting/journal" element={<VoucherRegisterPage voucherType="journal" />} />
-              <Route path="accounting/vouchers/new/:type" element={<VoucherFormPage />} />
+              {/* Item-based vouchers (slice 3): purchase / sales / notes. */}
+              <Route path="accounting/purchase" element={<VoucherRegisterPage voucherType="purchase" />} />
+              <Route path="accounting/sales" element={<VoucherRegisterPage voucherType="sales" />} />
+              <Route path="accounting/credit-note" element={<VoucherRegisterPage voucherType="credit-note" />} />
+              <Route path="accounting/debit-note" element={<VoucherRegisterPage voucherType="debit-note" />} />
+              <Route path="accounting/vouchers/new/:type" element={<VoucherFormSwitch />} />
+              <Route path="accounting/vouchers/:id/edit/:type" element={<VoucherFormSwitch />} />
               <Route path="accounting/vouchers/:id/edit" element={<VoucherFormPage />} />
               <Route path="payslip/:id" element={<PayslipPage />} />
               {/* Same report, rendered straight from the payroll row so an

@@ -83,7 +83,7 @@ const VoucherRegisterPage = ({ voucherType }) => {
   };
 
   const openNew = () => navigate(`/dashboard/accounting/vouchers/new/${voucherType}`);
-  const openEdit = (voucher) => navigate(`/dashboard/accounting/vouchers/${voucher.id}/edit`);
+  const openEdit = (voucher) => navigate(`/dashboard/accounting/vouchers/${voucher.id}/edit/${voucher.voucher_type}`);
 
   return (
     <div className="p-6 max-w-7xl mx-auto">

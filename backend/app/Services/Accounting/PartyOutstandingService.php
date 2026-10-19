@@ -42,6 +42,7 @@ class PartyOutstandingService
         $this->appendOpeningBill($ledger, $allocations, $bills);
         $this->appendInvoiceBills($ledger, $allocations, $bills);
         $this->appendPurchaseOrderBills($ledger, $allocations, $bills);
+        $this->appendVoucherBills($ledger, $allocations, $bills);
 
         $bills = array_values(array_filter($bills, static fn (array $bill): bool => abs($bill['balance']) >= 0.005));
 
@@ -196,6 +197,55 @@ class PartyOutstandingService
                 'side' => 'Cr',
                 'status' => $order->status,
             ];
+        }
+    }
+
+    protected function appendVoucherBills(LedgerAccount $ledger, array $allocations, array &$bills): void
+    {
+        if (! Schema::hasTable('vouchers')) {
+            return;
+        }
+        if ($ledger->party_type === 'customer') {
+            $vouchers = \App\Models\Voucher::where('voucher_type', 'sales')
+                ->where('party_ledger_id', $ledger->id)
+                ->where('status', 'posted')
+                ->orderBy('voucher_date')->orderBy('id')
+                ->get(['id', 'voucher_no', 'voucher_date', 'amount']);
+            foreach ($vouchers as $v) {
+                $settled = $allocations['sales-voucher:' . $v->id] ?? 0.0;
+                $bills[] = [
+                    'bill_type' => 'sales-voucher',
+                    'bill_id' => $v->id,
+                    'bill_name' => $v->voucher_no,
+                    'date' => $v->voucher_date,
+                    'due_date' => null,
+                    'total' => round((float) $v->amount, 2),
+                    'settled' => round($settled, 2),
+                    'balance' => round((float) $v->amount - $settled, 2),
+                    'side' => 'Dr',
+                ];
+            }
+        }
+        if ($ledger->party_type === 'supplier') {
+            $vouchers = \App\Models\Voucher::where('voucher_type', 'purchase')
+                ->where('party_ledger_id', $ledger->id)
+                ->where('status', 'posted')
+                ->orderBy('voucher_date')->orderBy('id')
+                ->get(['id', 'voucher_no', 'voucher_date', 'amount']);
+            foreach ($vouchers as $v) {
+                $settled = $allocations['purchase-voucher:' . $v->id] ?? 0.0;
+                $bills[] = [
+                    'bill_type' => 'purchase-voucher',
+                    'bill_id' => $v->id,
+                    'bill_name' => $v->voucher_no,
+                    'date' => $v->voucher_date,
+                    'due_date' => null,
+                    'total' => round((float) $v->amount, 2),
+                    'settled' => round($settled, 2),
+                    'balance' => round((float) $v->amount - $settled, 2),
+                    'side' => 'Cr',
+                ];
+            }
         }
     }
 

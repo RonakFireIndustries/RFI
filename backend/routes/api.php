@@ -297,6 +297,7 @@ Route::prefix('v1')->group(function () {
     // Finance - Tally-style vouchers (Contra, Payment, Receipt, Journal).
     // party-outstanding carries an extra segment so it never shadows
     // /vouchers/{voucher}; it is declared first for clarity anyway.
+    Route::get('/vouchers/meta', [VoucherController::class, 'meta']);
     Route::get('/vouchers/party-outstanding/{ledger}', [VoucherController::class, 'partyOutstanding']);
     Route::apiResource('vouchers', VoucherController::class);
 

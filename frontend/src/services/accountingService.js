@@ -46,4 +46,5 @@ export const voucherService = {
   remove: async (id) => api.delete(`/vouchers/${id}`),
   partyOutstanding: async (ledgerId) =>
     unwrapItem((await api.get(`/vouchers/party-outstanding/${ledgerId}`)).data),
+  meta: async () => unwrapItem((await api.get('/vouchers/meta')).data),
 };

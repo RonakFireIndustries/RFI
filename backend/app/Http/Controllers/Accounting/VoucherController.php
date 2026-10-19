@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Accounting;
 use App\Http\Controllers\Controller;
 use App\Models\LedgerAccount;
 use App\Models\Voucher;
+use App\Services\Accounting\ItemVoucherService;
 use App\Services\Accounting\PartyOutstandingService;
 use App\Services\Accounting\VoucherService;
 use Illuminate\Http\Request;
@@ -20,7 +21,8 @@ use Illuminate\Validation\Rule;
 class VoucherController extends Controller
 {
     public function __construct(
-        protected VoucherService $service,
+        protected VoucherService $vouchers,
+        protected ItemVoucherService $items,
         protected PartyOutstandingService $outstanding,
     ) {
     }
@@ -32,7 +34,7 @@ class VoucherController extends Controller
             abort(403, 'You do not have access to any voucher type.');
         }
 
-        $query = Voucher::with($this->service->relations());
+        $query = Voucher::with($this->vouchers->relations());
 
         $requested = $request->input('voucher_type');
         if ($requested) {
@@ -71,74 +73,75 @@ class VoucherController extends Controller
             $query->whereDate('voucher_date', '<=', $request->input('to'));
         }
 
-        return response()->json(
-            $query->orderByDesc('voucher_date')->orderByDesc('id')->get()
-        );
+        $vouchers = $query->orderByDesc('voucher_date')->orderByDesc('id')->get();
+        return response()->json($vouchers);
     }
 
     public function store(Request $request)
     {
         $type = $this->assertKnownType($request);
         $this->authorize($this->moduleFor($type) . '.create');
-
-        $voucher = $this->service->create($this->validated($request), $request->user()->id);
-
+        if ($this->isItemType($type)) {
+            $voucher = $this->items->create($this->validatedItem($request), $request->user()->id);
+        } else {
+            $voucher = $this->vouchers->create($this->validated($request), $request->user()->id);
+        }
         return response()->json($voucher, 201);
     }
 
     public function show(Voucher $voucher)
     {
         $this->authorize($this->moduleFor($voucher->voucher_type) . '.view');
-
-        return response()->json($voucher->load($this->service->relations()));
+        return response()->json($voucher->load($this->serviceFor($voucher->voucher_type)->relations()));
     }
 
     public function update(Request $request, Voucher $voucher)
     {
         $this->authorize($this->moduleFor($voucher->voucher_type) . '.update');
-
         $type = $this->assertKnownType($request, $voucher->voucher_type);
         $this->authorize($this->moduleFor($type) . '.update');
-
-        $voucher = $this->service->update($voucher, $this->validated($request), $request->user()->id);
-
+        if ($this->isItemType($type)) {
+            $voucher = $this->items->update($voucher, $this->validatedItem($request), $request->user()->id);
+        } else {
+            $voucher = $this->vouchers->update($voucher, $this->validated($request), $request->user()->id);
+        }
         return response()->json($voucher);
     }
 
     public function destroy(Voucher $voucher)
     {
         $this->authorize($this->moduleFor($voucher->voucher_type) . '.delete');
-
-        $this->service->delete($voucher);
-
+        $this->serviceFor($voucher->voucher_type)->delete($voucher);
         return response()->noContent();
     }
 
-    /**
-     * Outstanding bills for a party ledger, used to fill the bill-wise panel of
-     * a Payment / Receipt / Journal voucher.
-     */
     public function partyOutstanding(Request $request, LedgerAccount $ledger)
     {
-        if (! $this->canViewBillWise($request)) {
+        if (!$this->canViewBillWise($request)) {
             abort(403, 'You do not have access to bill-wise details.');
         }
-
         return response()->json($this->outstanding->forLedger($ledger));
     }
 
-    /* ------------------------------ internals ----------------------------- */
+    public function meta(Request $request)
+    {
+        if (empty($this->viewableTypes($request))) {
+            abort(403, 'You do not have access to any voucher type.');
+        }
+        return response()->json([
+            'defaults' => $this->items->defaultLedgers(),
+            'gst_rates' => config('accounting.gst_rates', [0, 5, 12, 18, 28]),
+            'bill_types' => config('accounting.bill_types', []),
+        ]);
+    }
 
-    /** Voucher types the signed-in user may at least view. */
     protected function viewableTypes(Request $request): array
     {
         $user = $request->user();
-
         return array_values(array_filter(
             array_keys(config('accounting.voucher_types')),
             function (string $type) use ($user) {
                 $module = $this->moduleFor($type);
-
                 return $module !== null && $user->can("{$module}.view");
             }
         ));
@@ -155,37 +158,37 @@ class VoucherController extends Controller
                 return true;
             }
         }
-
         return false;
     }
 
-    /** Access-control module for a voucher type, or null when not yet exposed. */
     protected function moduleFor(string $type): ?string
     {
         $module = config("accounting.voucher_types.{$type}.module");
-
         return $module ?: null;
     }
 
-    /** Validate the type and make sure it is exposed to the API. */
     protected function assertKnownType(Request $request, ?string $default = null): string
     {
         $type = $request->input('voucher_type', $default);
-
-        if (! $type || ! isset(config('accounting.voucher_types')[$type])) {
+        if (!$type || !isset(config('accounting.voucher_types')[$type])) {
             abort(422, 'Unknown voucher type.');
         }
-
-        if (! $this->moduleFor($type)) {
+        if (!$this->moduleFor($type)) {
             abort(422, 'This voucher type is not available yet.');
         }
-
         return $type;
     }
 
-    /**
-     * @return array<string, mixed>
-     */
+    protected function isItemType(string $type): bool
+    {
+        return (bool) config("accounting.voucher_types.{$type}.items");
+    }
+
+    protected function serviceFor(string $type)
+    {
+        return $this->isItemType($type) ? $this->items : $this->vouchers;
+    }
+
     protected function validated(Request $request): array
     {
         return $request->validate([
@@ -195,13 +198,44 @@ class VoucherController extends Controller
             'narration' => 'nullable|string|max:2000',
             'status' => ['nullable', Rule::in(config('accounting.statuses'))],
             'party_ledger_id' => 'nullable|integer|exists:ledger_accounts,id',
-
             'entries' => 'required|array|min:2',
             'entries.*.ledger_id' => 'required|integer|exists:ledger_accounts,id',
             'entries.*.entry_type' => ['required', Rule::in(['Dr', 'Cr'])],
             'entries.*.amount' => 'required|numeric|gt:0',
             'entries.*.narration' => 'nullable|string|max:255',
+            'bill_allocations' => 'nullable|array',
+            'bill_allocations.*.bill_type' => ['required', Rule::in(config('accounting.bill_types'))],
+            'bill_allocations.*.bill_id' => 'nullable|integer',
+            'bill_allocations.*.bill_name' => 'nullable|string|max:255',
+            'bill_allocations.*.amount' => 'required|numeric|gt:0',
+        ]);
+    }
 
+    protected function validatedItem(Request $request): array
+    {
+        return $request->validate([
+            'voucher_type' => ['required', Rule::in(array_keys(config('accounting.voucher_types')))],
+            'voucher_date' => 'required|date',
+            'reference_no' => 'nullable|string|max:255',
+            'narration' => 'nullable|string|max:2000',
+            'status' => ['nullable', Rule::in(config('accounting.statuses'))],
+            'party_ledger_id' => 'required|integer|exists:ledger_accounts,id',
+            'gst_type' => ['nullable', Rule::in(['intra', 'inter'])],
+            'round_off' => 'nullable|numeric',
+            'base_ledger_id' => 'nullable|integer|exists:ledger_accounts,id',
+            'cgst_ledger_id' => 'nullable|integer|exists:ledger_accounts,id',
+            'sgst_ledger_id' => 'nullable|integer|exists:ledger_accounts,id',
+            'igst_ledger_id' => 'nullable|integer|exists:ledger_accounts,id',
+            'round_off_ledger_id' => 'nullable|integer|exists:ledger_accounts,id',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'nullable|integer',
+            'items.*.item_description' => 'required|string|max:255',
+            'items.*.hsn_code' => 'nullable|string|max:32',
+            'items.*.unit' => 'nullable|string|max:16',
+            'items.*.quantity' => 'required|numeric|gt:0',
+            'items.*.rate' => 'required|numeric|min:0',
+            'items.*.discount_percent' => 'nullable|numeric|min:0|max:100',
+            'items.*.tax_rate' => 'nullable|numeric|min:0|max:100',
             'bill_allocations' => 'nullable|array',
             'bill_allocations.*.bill_type' => ['required', Rule::in(config('accounting.bill_types'))],
             'bill_allocations.*.bill_id' => 'nullable|integer',

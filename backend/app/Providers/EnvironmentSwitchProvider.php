@@ -8,6 +8,14 @@ class EnvironmentSwitchProvider extends ServiceProvider
 {
     public function register(): void
     {
+        // The test suite configures itself through phpunit.xml (sqlite in
+        // memory, array cache). Applying the runtime environment switch would
+        // clobber those — notably it would move the cache to `file`, which
+        // shares the API rate-limiter counters between tests.
+        if ($this->app->runningUnitTests()) {
+            return;
+        }
+
         $env = config('environment.environments.'.config('environment.active'), []);
 
         if (! $env) {

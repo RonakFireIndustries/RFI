@@ -453,7 +453,7 @@ class VoucherTest extends TestCase
         $b = $this->ledger('Cash', 'Assets');
 
         $this->postJson('/api/v1/vouchers', [
-            'voucher_type' => 'purchase',
+            'voucher_type' => 'not-a-real-type',
             'voucher_date' => '2026-05-10',
             'entries' => [
                 ['ledger_id' => $a->id, 'entry_type' => 'Dr', 'amount' => 100],

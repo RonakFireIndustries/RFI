@@ -58,27 +58,69 @@ return [
             'label' => 'Purchase',
             'prefix' => 'PUR',
             'bills' => true,
-            'module' => null,
+            'module' => 'purchase-vouchers',
+            'items' => true,
+            'party_type' => 'supplier',
+            'posting' => [
+                'party' => 'Cr',
+                'base' => 'Dr',
+                'base_ledger' => 'purchase_ledger',
+            ],
         ],
         'sales' => [
             'label' => 'Sales',
             'prefix' => 'SAL',
             'bills' => true,
-            'module' => null,
+            'module' => 'sales-vouchers',
+            'items' => true,
+            'party_type' => 'customer',
+            'posting' => [
+                'party' => 'Dr',
+                'base' => 'Cr',
+                'base_ledger' => 'sales_ledger',
+            ],
         ],
         'credit-note' => [
             'label' => 'Credit Note',
             'prefix' => 'CRN',
             'bills' => true,
-            'module' => null,
+            'module' => 'credit-notes',
+            'items' => true,
+            'party_type' => 'customer',
+            'posting' => [
+                'party' => 'Cr',
+                'base' => 'Dr',
+                'base_ledger' => 'sales_ledger',
+            ],
         ],
         'debit-note' => [
             'label' => 'Debit Note',
             'prefix' => 'DBN',
             'bills' => true,
-            'module' => null,
+            'module' => 'debit-notes',
+            'items' => true,
+            'party_type' => 'supplier',
+            'posting' => [
+                'party' => 'Dr',
+                'base' => 'Cr',
+                'base_ledger' => 'purchase_ledger',
+            ],
         ],
     ],
+
+    /*
+    | Default ledger names used to derive Dr/Cr lines for item-based vouchers.
+    */
+    'defaults' => [
+        'purchase_ledger' => 'Purchase',
+        'sales_ledger' => 'Sales',
+        'cgst_ledger' => 'CGST',
+        'sgst_ledger' => 'SGST',
+        'igst_ledger' => 'IGST',
+        'round_off_ledger' => 'Round Off',
+    ],
+
+    'gst_rates' => [0, 5, 12, 18, 28],
 
     /*
     | Bill reference kinds a voucher can allocate against. `opening` is the
@@ -91,6 +133,8 @@ return [
         'purchase-order',
         'sales-voucher',
         'purchase-voucher',
+        'credit-note',
+        'debit-note',
         'new-ref',
         'advance',
         'on-account',
@@ -106,6 +150,8 @@ return [
         'purchase-order',
         'sales-voucher',
         'purchase-voucher',
+        'credit-note',
+        'debit-note',
     ],
 
     /* Voucher statuses. Only `posted` vouchers affect the books. */

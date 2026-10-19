@@ -70,4 +70,14 @@ class LedgerAccount extends Model
     {
         return $query->where('status', 'active');
     }
+
+    /** First ledger whose name matches (case-insensitive), used for defaults. */
+    public static function findByName(?string $name): ?self
+    {
+        if (! $name) {
+            return null;
+        }
+
+        return static::whereRaw('LOWER(name) = ?', [mb_strtolower($name)])->first();
+    }
 }
