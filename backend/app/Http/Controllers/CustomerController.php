@@ -62,7 +62,7 @@ class CustomerController extends Controller
     {
         $this->authorize('customers.view');
 
-        $customer = Customer::with(['salesOrders.products', 'payments', 'notes.creator', 'documents.uploader'])->findOrFail($id);
+        $customer = Customer::with(['salesOrders.products', 'payments', 'notes.creator', 'documents.uploader', 'ledger.group'])->findOrFail($id);
         
         $soSum = $customer->salesOrders->sum('total_amount');
         $paymentSum = $customer->payments->where('type', 'Receivable')->sum('amount');

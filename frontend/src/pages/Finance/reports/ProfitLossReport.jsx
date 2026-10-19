@@ -3,7 +3,7 @@ import { financeReportService } from '../../../services/accountingService';
 import { formatMoney } from '../../../utils/finance';
 import {
   INPUT, Panel, Field, ErrorBanner, Empty, RunButton, RefreshButton,
-  Amount, SummaryTiles, TableHead, GroupedAccounts, useReport,
+  Amount, SummaryTiles, TableHead, GroupedAccounts, useReport, formatDate,
 } from './shared';
 
 const ProfitLossSection = ({ title, groups, total, tone }) => (
@@ -49,7 +49,7 @@ const ProfitLossReport = () => {
         title="Profit & Loss"
         subtitle={
           data
-            ? `${data.period.from || 'Start of books'} → ${data.period.to}`
+            ? `${data.period.from ? formatDate(data.period.from) : 'Start of books'} → ${formatDate(data.period.to)}`
             : 'Income and expenses for the selected period.'
         }
         right={

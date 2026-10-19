@@ -13,6 +13,12 @@ import CashBankBookReport from './reports/CashBankBookReport';
  * tab bar; each tab is deep-linkable (`/accounting/reports/balance-sheet`) so
  * a report can be bookmarked or shared. The tab content is keyed so switching
  * resets a report's own filters rather than carrying stale dates across.
+ *
+ * Amount visibility: utils/finance.js masks prices behind purchase/sales order
+ * access on the operational screens. Deliberately not applied here — these are
+ * the accounts themselves, so `finance-reports.view` (Accounts only) is the
+ * whole control. Gating the reports on order permissions as well would mask
+ * rows in a P&L and make it meaningless.
  */
 const TABS = [
   { key: 'day-book', label: 'Day Book', component: DayBookReport },

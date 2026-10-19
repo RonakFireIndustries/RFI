@@ -62,7 +62,7 @@ class SupplierController extends Controller
     {
         $this->authorize('suppliers.view');
 
-        $supplier = Supplier::with(['products.category', 'purchaseOrders', 'payments', 'notes.creator', 'documents.uploader'])->findOrFail($id);
+        $supplier = Supplier::with(['products.category', 'purchaseOrders', 'payments', 'notes.creator', 'documents.uploader', 'ledger.group'])->findOrFail($id);
         
         $poSum = $supplier->purchaseOrders->sum('total_amount');
         $paymentSum = $supplier->payments->where('type', 'Payable')->sum('amount');

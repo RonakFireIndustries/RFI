@@ -31,4 +31,10 @@ class Supplier extends Model
     {
         return $this->morphMany(Document::class, 'documentable');
     }
+
+    /** The accounting ledger this master drives, created by PartyLedgerService. */
+    public function ledger()
+    {
+        return $this->hasOne(LedgerAccount::class, 'party_id')->where('party_type', 'supplier');
+    }
 }

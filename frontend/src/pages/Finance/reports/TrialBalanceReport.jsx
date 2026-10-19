@@ -3,7 +3,7 @@ import { financeReportService } from '../../../services/accountingService';
 import { formatMoney } from '../../../utils/finance';
 import {
   INPUT, Panel, Field, ErrorBanner, Empty, RunButton, RefreshButton,
-  Amount, SummaryTiles, TableHead, useReport,
+  Amount, SummaryTiles, TableHead, useReport, formatDate,
 } from './shared';
 
 /** Trial Balance: every closing balance on its natural side, must tie. */
@@ -23,7 +23,7 @@ const TrialBalanceReport = () => {
 
       <Panel
         title="Trial Balance"
-        subtitle={data ? `Closing balances as at ${data.as_of} · ${data.account_count} accounts` : 'Closing balances as at a date.'}
+        subtitle={data ? `Closing balances as at ${formatDate(data.as_of)} · ${data.account_count} accounts` : 'Closing balances as at a date.'}
         right={
           <div className="flex flex-wrap items-end gap-3">
             <Field label="As at">

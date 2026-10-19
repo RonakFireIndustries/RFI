@@ -30,6 +30,10 @@ class NotificationServiceProvider extends ServiceProvider
         \App\Models\CashVoucher::class => \App\Observers\CashVoucherObserver::class,
         \App\Models\Payment::class => \App\Observers\PaymentObserver::class,
 
+        // Party masters — each customer/supplier gets a ledger to post against
+        \App\Models\Customer::class => \App\Observers\PartyLedgerObserver::class,
+        \App\Models\Supplier::class => \App\Observers\PartyLedgerObserver::class,
+
         // Sales & survey
         \App\Models\Opportunity::class => \App\Observers\OpportunityObserver::class,
         \App\Models\SiteVisit::class => \App\Observers\SiteVisitObserver::class,

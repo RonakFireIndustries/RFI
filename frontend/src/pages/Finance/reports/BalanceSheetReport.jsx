@@ -3,7 +3,7 @@ import { financeReportService } from '../../../services/accountingService';
 import { formatMoney } from '../../../utils/finance';
 import {
   INPUT, Panel, Field, ErrorBanner, Empty, RunButton, RefreshButton,
-  Amount, SummaryTiles, TableHead, GroupedAccounts, useReport,
+  Amount, SummaryTiles, TableHead, GroupedAccounts, useReport, formatDate,
 } from './shared';
 
 /** Balance Sheet as at a date: assets vs liabilities, with profit carried in. */
@@ -23,7 +23,7 @@ const BalanceSheetReport = () => {
 
       <Panel
         title="Balance Sheet"
-        subtitle={data ? `As at ${data.as_of}` : 'Assets and liabilities as at a date.'}
+        subtitle={data ? `As at ${formatDate(data.as_of)}` : 'Assets and liabilities as at a date.'}
         right={
           <div className="flex flex-wrap items-end gap-3">
             <Field label="As at">

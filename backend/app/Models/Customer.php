@@ -31,4 +31,10 @@ class Customer extends Model
     {
         return $this->hasMany(Invoice::class);
     }
+
+    /** The accounting ledger this master drives, created by PartyLedgerService. */
+    public function ledger()
+    {
+        return $this->hasOne(LedgerAccount::class, 'party_id')->where('party_type', 'customer');
+    }
 }

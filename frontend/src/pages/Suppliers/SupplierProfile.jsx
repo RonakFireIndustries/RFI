@@ -32,6 +32,15 @@ export default function SupplierProfile() {
         { label: 'Email', path: 'email' },
         { label: 'Phone', path: 'phone' },
         { label: 'GST Number', path: 'gst_number' },
+        {
+          // The accounting ledger this supplier posts against. Created
+          // automatically on save; "Not linked" only before the backfill ran.
+          label: 'Ledger',
+          render: (supplier) =>
+            supplier.ledger
+              ? `${supplier.ledger.name} · ${supplier.ledger.group || '—'}`
+              : 'Not linked to accounts yet',
+        },
         { label: 'Products', render: (supplier) => supplier.products_count ?? supplier.products?.length ?? 0 },
         { label: 'Balance', render: (supplier) => <Money value={supplier.balance} /> },
       ]}

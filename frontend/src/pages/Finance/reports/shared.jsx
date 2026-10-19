@@ -23,6 +23,21 @@ export const firstError = (err) => {
   return err?.response?.data?.data?.message || err?.response?.data?.message || 'Something went wrong.';
 };
 
+/**
+ * Format a bare `YYYY-MM-DD` as `DD/MM/YYYY`.
+ *
+ * Deliberately NOT `new Date(value).toLocaleDateString()`: that parses the
+ * string as UTC midnight, so anywhere west of Greenwich the report would show
+ * the day before the transaction date. Splitting the parts keeps the books'
+ * own dates intact.
+ */
+export const formatDate = (value) => {
+  if (!value) return '—';
+  const [year, month, day] = String(value).slice(0, 10).split('-');
+  if (!year || !month || !day) return String(value);
+  return `${day}/${month}/${year}`;
+};
+
 /* --------------------------------- hooks --------------------------------- */
 
 /**
@@ -137,7 +152,18 @@ export const GroupedAccounts = ({ groups = [] }) => {
       {groups.map((group) => (
         <React.Fragment key={group.group}>
           <tr className="bg-gray-50">
-            <Cell className="font-medium text-gray-700">{group.group}</Cell>
+            <Cell className="font-medium text-gray-700">
+              {group.group}
+              {/* P&L only: marks the groups that make up gross profit. Balance
+                  Sheet groups carry no `direct` key, so nothing renders there. */}
+              {group.direct !== undefined && (
+                <span className={`ml-2 text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded ${
+                  group.direct ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'
+                }`}>
+                  {group.direct ? 'Direct' : 'Indirect'}
+                </span>
+              )}
+            </Cell>
             <Amount value={group.total} bold />
           </tr>
           {group.accounts.map((account) => (

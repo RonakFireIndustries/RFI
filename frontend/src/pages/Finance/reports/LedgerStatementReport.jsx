@@ -3,7 +3,7 @@ import { financeReportService, ledgerService } from '../../../services/accountin
 import { formatMoney } from '../../../utils/finance';
 import {
   INPUT, Panel, Field, ErrorBanner, Empty, RunButton, RefreshButton,
-  Amount, SummaryTiles, TableHead, useReport,
+  Amount, SummaryTiles, TableHead, useReport, formatDate,
 } from './shared';
 
 const Balance = ({ value, side }) => (
@@ -102,7 +102,7 @@ const LedgerStatementReport = () => {
                   {data.entries.map((entry) => (
                     <tr key={entry.id}>
                       <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
-                        {entry.voucher_date ? new Date(entry.voucher_date).toLocaleDateString('en-GB') : '—'}
+                        {formatDate(entry.voucher_date)}
                       </td>
                       <td className="px-3 py-2">
                         <div className="font-medium text-gray-800">{entry.voucher_no}</div>

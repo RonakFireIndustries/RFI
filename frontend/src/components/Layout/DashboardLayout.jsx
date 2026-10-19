@@ -531,8 +531,31 @@ export default function DashboardLayout() {
               {/* Bank reconciliation (slice 4). */}
               <Route path="accounting/bank-reconciliation" element={<BankReconciliationPage />} />
               <Route path="accounting/bank-reconciliation/:ledgerId" element={<BankReconciliationPage />} />
-              <Route path="accounting/reports" element={<FinanceReportsPage />} />
-              <Route path="accounting/reports/:tab" element={<FinanceReportsPage />} />
+              {/* Financial report pack. Deep links land here directly, so the
+                  guard renders a proper AccessDenied screen instead of the raw
+                  403 banner the API would otherwise surface. */}
+              <Route
+                path="accounting/reports"
+                element={
+                  <PermissionGuard
+                    permission="finance-reports.view"
+                    fallback={<AccessDenied title="Financial Reports" permission="finance-reports.view" />}
+                  >
+                    <FinanceReportsPage />
+                  </PermissionGuard>
+                }
+              />
+              <Route
+                path="accounting/reports/:tab"
+                element={
+                  <PermissionGuard
+                    permission="finance-reports.view"
+                    fallback={<AccessDenied title="Financial Reports" permission="finance-reports.view" />}
+                  >
+                    <FinanceReportsPage />
+                  </PermissionGuard>
+                }
+              />
               <Route path="payslip/:id" element={<PayslipPage />} />
               {/* Same report, rendered straight from the payroll row so an
                   employee can view their own pay even before a payslip is

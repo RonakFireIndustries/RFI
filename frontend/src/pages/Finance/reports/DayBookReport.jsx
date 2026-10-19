@@ -4,10 +4,8 @@ import { VOUCHER_TYPES } from '../../../config/vouchers';
 import { formatMoney } from '../../../utils/finance';
 import {
   INPUT, Panel, Field, ErrorBanner, Empty, RunButton, RefreshButton,
-  Amount, SummaryTiles, TableHead, useReport,
+  Amount, SummaryTiles, TableHead, useReport, formatDate,
 } from './shared';
-
-const formatDate = (value) => (value ? new Date(value).toLocaleDateString('en-GB') : '—');
 
 /**
  * Day Book — every posted line in a period, grouped visually by voucher.

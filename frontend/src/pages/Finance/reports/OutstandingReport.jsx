@@ -3,7 +3,7 @@ import { financeReportService } from '../../../services/accountingService';
 import { formatMoney } from '../../../utils/finance';
 import {
   INPUT, BTN_SECONDARY, Panel, Field, ErrorBanner, Empty, RunButton, RefreshButton,
-  Amount, SummaryTiles, TableHead, useReport,
+  Amount, SummaryTiles, TableHead, useReport, formatDate,
 } from './shared';
 
 const SIDES = [
@@ -19,8 +19,6 @@ const AGE_TONES = {
   '61-90 days': 'bg-orange-100 text-orange-800',
   'Over 90 days': 'bg-red-100 text-red-800',
 };
-
-const formatDate = (value) => (value ? new Date(value).toLocaleDateString('en-GB') : '—');
 
 /** Bill-wise outstanding with aging, for receivables, payables or both. */
 const OutstandingReport = () => {
