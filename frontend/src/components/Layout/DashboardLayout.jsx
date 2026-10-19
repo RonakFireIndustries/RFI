@@ -64,6 +64,7 @@ import FinancialYearsPage from '../../pages/Finance/FinancialYearsPage';
 import VoucherRegisterPage from '../../pages/Finance/VoucherRegisterPage';
 import VoucherFormPage from '../../pages/Finance/VoucherFormPage';
 import VoucherFormSwitch from '../../pages/Finance/VoucherFormSwitch';
+import BankReconciliationPage from '../../pages/Finance/BankReconciliationPage';
 import Sites from '@/pages/Sites/Sites';
 import SiteDetail from '@/pages/Sites/SiteDetail';
 import Buildings from '@/pages/Buildings/Buildings';
@@ -526,6 +527,9 @@ export default function DashboardLayout() {
               <Route path="accounting/vouchers/new/:type" element={<VoucherFormSwitch />} />
               <Route path="accounting/vouchers/:id/edit/:type" element={<VoucherFormSwitch />} />
               <Route path="accounting/vouchers/:id/edit" element={<VoucherFormPage />} />
+              {/* Bank reconciliation (slice 4). */}
+              <Route path="accounting/bank-reconciliation" element={<BankReconciliationPage />} />
+              <Route path="accounting/bank-reconciliation/:ledgerId" element={<BankReconciliationPage />} />
               <Route path="payslip/:id" element={<PayslipPage />} />
               {/* Same report, rendered straight from the payroll row so an
                   employee can view their own pay even before a payslip is

@@ -4,6 +4,7 @@ import {
   Ruler, GitCompare, Move3D, FileSpreadsheet, FileClock, FileInput, Building2,
   TrendingUp, Target, Bell, BarChart3, PenTool, Flame, LifeBuoy, Wallet,
   BookOpen, ListTree, CalendarRange, ArrowLeftRight, Banknote, Receipt, ScrollText,
+  Landmark,
 } from 'lucide-react';
 
 /*
@@ -79,6 +80,7 @@ export const menuCategories = [
       { name: 'Sales', path: '/dashboard/accounting/sales', icon: TrendingUp, permissions: ['sales-vouchers.view'] },
       { name: 'Credit Note', path: '/dashboard/accounting/credit-note', icon: FileInput, permissions: ['credit-notes.view'] },
       { name: 'Debit Note', path: '/dashboard/accounting/debit-note', icon: FileSpreadsheet, permissions: ['debit-notes.view'] },
+      { name: 'Bank Reconciliation', path: '/dashboard/accounting/bank-reconciliation', icon: Landmark, permissions: ['bank-reconciliation.view'] },
       { name: 'Financial Years', path: '/dashboard/accounting/financial-years', icon: CalendarRange, permissions: ['financial-years.view'] },
     ],
   },

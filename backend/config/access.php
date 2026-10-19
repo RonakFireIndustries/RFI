@@ -167,6 +167,10 @@ return [
                 'label' => 'Debit Notes',
                 'actions' => ['view', 'create', 'update', 'delete'],
             ],
+            'bank-reconciliation' => [
+                'label' => 'Bank Reconciliation',
+                'actions' => ['view', 'update'],
+            ],
         ],
 
         'Organization' => [
@@ -846,6 +850,8 @@ return [
                 'debit-notes.create',
                 'debit-notes.update',
                 'debit-notes.delete',
+                'bank-reconciliation.view',
+                'bank-reconciliation.update',
  
                 'employees.view',
                 'attendance.view',

@@ -41,6 +41,7 @@ use App\Http\Controllers\Accounting\AccountGroupController;
 use App\Http\Controllers\Accounting\LedgerAccountController;
 use App\Http\Controllers\Accounting\FinancialYearController;
 use App\Http\Controllers\Accounting\VoucherController;
+use App\Http\Controllers\Accounting\BankReconciliationController;
 
 
 Route::prefix('v1')->group(function () {
@@ -300,6 +301,12 @@ Route::prefix('v1')->group(function () {
     Route::get('/vouchers/meta', [VoucherController::class, 'meta']);
     Route::get('/vouchers/party-outstanding/{ledger}', [VoucherController::class, 'partyOutstanding']);
     Route::apiResource('vouchers', VoucherController::class);
+
+    // Finance - Bank reconciliation (slice 4). The ledger is bound by id.
+    Route::get('/bank-reconciliation', [BankReconciliationController::class, 'index']);
+    Route::get('/bank-reconciliation/{ledger}', [BankReconciliationController::class, 'show']);
+    Route::post('/bank-reconciliation/{ledger}/reconcile', [BankReconciliationController::class, 'reconcile']);
+    Route::post('/bank-reconciliation/{ledger}/unreconcile', [BankReconciliationController::class, 'unreconcile']);
 
     // Reports
     Route::get('/reports/sales', [ReportsController::class, 'salesReport']);

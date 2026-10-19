@@ -48,3 +48,19 @@ export const voucherService = {
     unwrapItem((await api.get(`/vouchers/party-outstanding/${ledgerId}`)).data),
   meta: async () => unwrapItem((await api.get('/vouchers/meta')).data),
 };
+
+/**
+ * Bank reconciliation (slice 4).
+ * `ledgers` lists the bank accounts with their book balances; `statement`
+ * renders one account's reconciliation, and reconcile/unreconcile stamp or
+ * clear the cleared date on the voucher lines.
+ */
+export const bankReconciliationService = {
+  ledgers: async () => unwrapList((await api.get('/bank-reconciliation')).data),
+  statement: async (ledgerId, params) =>
+    unwrapItem((await api.get(`/bank-reconciliation/${ledgerId}${normalizeQuery(params)}`)).data),
+  reconcile: async (ledgerId, payload) =>
+    unwrapItem((await api.post(`/bank-reconciliation/${ledgerId}/reconcile`, payload)).data),
+  unreconcile: async (ledgerId, payload) =>
+    unwrapItem((await api.post(`/bank-reconciliation/${ledgerId}/unreconcile`, payload)).data),
+};
