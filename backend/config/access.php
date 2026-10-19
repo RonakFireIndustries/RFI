@@ -171,6 +171,10 @@ return [
                 'label' => 'Bank Reconciliation',
                 'actions' => ['view', 'update'],
             ],
+            'finance-reports' => [
+                'label' => 'Finance Reports',
+                'actions' => ['view'],
+            ],
         ],
 
         'Organization' => [
@@ -852,6 +856,7 @@ return [
                 'debit-notes.delete',
                 'bank-reconciliation.view',
                 'bank-reconciliation.update',
+                'finance-reports.view',
  
                 'employees.view',
                 'attendance.view',

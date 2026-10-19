@@ -42,6 +42,7 @@ use App\Http\Controllers\Accounting\LedgerAccountController;
 use App\Http\Controllers\Accounting\FinancialYearController;
 use App\Http\Controllers\Accounting\VoucherController;
 use App\Http\Controllers\Accounting\BankReconciliationController;
+use App\Http\Controllers\Accounting\AccountingReportController;
 
 
 Route::prefix('v1')->group(function () {
@@ -307,6 +308,16 @@ Route::prefix('v1')->group(function () {
     Route::get('/bank-reconciliation/{ledger}', [BankReconciliationController::class, 'show']);
     Route::post('/bank-reconciliation/{ledger}/reconcile', [BankReconciliationController::class, 'reconcile']);
     Route::post('/bank-reconciliation/{ledger}/unreconcile', [BankReconciliationController::class, 'unreconcile']);
+
+    // Finance - financial report pack (slice 5). The ledger sub-path carries a
+    // concrete segment so it can never shadow the static reports below.
+    Route::get('/accounting-reports/ledger/{ledger}', [AccountingReportController::class, 'ledgerStatement']);
+    Route::get('/accounting-reports/day-book', [AccountingReportController::class, 'dayBook']);
+    Route::get('/accounting-reports/outstanding', [AccountingReportController::class, 'outstanding']);
+    Route::get('/accounting-reports/profit-loss', [AccountingReportController::class, 'profitAndLoss']);
+    Route::get('/accounting-reports/balance-sheet', [AccountingReportController::class, 'balanceSheet']);
+    Route::get('/accounting-reports/cash-bank-book', [AccountingReportController::class, 'cashBankBook']);
+    Route::get('/accounting-reports/trial-balance', [AccountingReportController::class, 'trialBalance']);
 
     // Reports
     Route::get('/reports/sales', [ReportsController::class, 'salesReport']);

@@ -64,3 +64,28 @@ export const bankReconciliationService = {
   unreconcile: async (ledgerId, payload) =>
     unwrapItem((await api.post(`/bank-reconciliation/${ledgerId}/unreconcile`, payload)).data),
 };
+
+/*
+ * Financial report pack (slice 5).
+ *
+ * Reports are paginated-by-nothing, so the `per_page` default that
+ * normalizeQuery injects for list resources is suppressed here.
+ */
+const reportQuery = (params = {}) => normalizeQuery({ per_page: undefined, ...params });
+
+export const financeReportService = {
+  ledgerStatement: async (ledgerId, params) =>
+    unwrapItem((await api.get(`/accounting-reports/ledger/${ledgerId}${reportQuery(params)}`)).data),
+  dayBook: async (params) =>
+    unwrapItem((await api.get(`/accounting-reports/day-book${reportQuery(params)}`)).data),
+  outstanding: async (params) =>
+    unwrapItem((await api.get(`/accounting-reports/outstanding${reportQuery(params)}`)).data),
+  profitLoss: async (params) =>
+    unwrapItem((await api.get(`/accounting-reports/profit-loss${reportQuery(params)}`)).data),
+  balanceSheet: async (params) =>
+    unwrapItem((await api.get(`/accounting-reports/balance-sheet${reportQuery(params)}`)).data),
+  cashBankBook: async (params) =>
+    unwrapItem((await api.get(`/accounting-reports/cash-bank-book${reportQuery(params)}`)).data),
+  trialBalance: async (params) =>
+    unwrapItem((await api.get(`/accounting-reports/trial-balance${reportQuery(params)}`)).data),
+};
