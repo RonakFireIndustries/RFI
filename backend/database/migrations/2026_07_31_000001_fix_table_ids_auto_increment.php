@@ -30,12 +30,28 @@ return new class extends Migration
     public function up(): void
     {
         foreach ($this->tables as $table) {
+            if (! \Illuminate\Support\Facades\Schema::hasTable($table)) {
+                continue;
+            }
+
             $duplicates = DB::select("SELECT id FROM `$table` GROUP BY id HAVING COUNT(*) > 1 LIMIT 1");
 
             if (!empty($duplicates)) {
                 DB::statement("ALTER TABLE `$table` ADD COLUMN __row bigint unsigned NOT NULL AUTO_INCREMENT UNIQUE");
                 DB::statement("DELETE c FROM `$table` c JOIN `$table` c2 ON c.id = c2.id AND c.__row > c2.__row");
                 DB::statement("ALTER TABLE `$table` DROP COLUMN __row");
+            }
+
+            // A drifted table can have lost its key entirely, and MySQL
+            // refuses AUTO_INCREMENT on a column that is not a key — put the
+            // primary key back before flipping the flag.
+            $hasPk = DB::selectOne(
+                "SELECT COUNT(*) AS c FROM information_schema.KEY_COLUMN_USAGE
+                  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = 'id' AND CONSTRAINT_NAME = 'PRIMARY'",
+                [$table]
+            );
+            if ((int) $hasPk->c === 0) {
+                DB::statement("ALTER TABLE `$table` ADD PRIMARY KEY (id)");
             }
 
             DB::statement("ALTER TABLE `$table` MODIFY id bigint(20) unsigned NOT NULL AUTO_INCREMENT");
