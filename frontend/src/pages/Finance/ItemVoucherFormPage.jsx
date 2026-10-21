@@ -1,14 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, Save, Info, PackageCheck, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Save, Info, PackageCheck, AlertTriangle, RefreshCw } from 'lucide-react';
 import { useLedgerStore } from '../../store/accountingStore';
 import { voucherService } from '../../services/accountingService';
 import { useStockReceiptStore } from '../../store/stockReceiptStore';
 import PermissionGate from '../../components/Guards/PermissionGate';
 import StockReceiptPanel from '../../components/Accounting/StockReceiptPanel';
 import StockReceiptModal from '../../components/Accounting/StockReceiptModal';
-import { VOUCHER_TYPES, partyTypeForVoucher, tracksStock } from '../../config/vouchers';
+import { VOUCHER_TYPES, partyTypeForVoucher, tracksStock, movesStockOnSave, billSidesForVoucher, BILL_TYPES_FOR_SIDE } from '../../config/vouchers';
 import { formatMoney } from '../../utils/finance';
 
 const inputClass = 'w-full border border-gray-300 rounded-lg shadow-sm px-3 py-2 text-sm focus:ring-orange-500 focus:border-orange-500';
@@ -217,12 +217,22 @@ const ItemVoucherFormPage = () => {
   const [availability, setAvailability] = useState(null);
   const [receiptModalOpen, setReceiptModalOpen] = useState(false);
 
+  // Bill-wise allocation: which of the party's outstanding bills this document
+  // settles, and by how much.
+  const [allocations, setAllocations] = useState({});
+  const [loadingBills, setLoadingBills] = useState(false);
+
   const receipts = useStockReceiptStore();
 
   const config = VOUCHER_TYPES[type] || { label: type };
   const partyOptionType = partyTypeForVoucher(type);
   const outbound = config.stock === 'out';
   const tracks = tracksStock(type);
+  // A note moves its stock whole at save, so it shows no receipt / delivery
+  // button — there is nothing to receive in instalments.
+  const onSaveStock = movesStockOnSave(type);
+  const billSide = billSidesForVoucher(type);
+  const billsEnabled = Boolean(config.bills);
 
   /** On-hand per product, so a sale shows when the warehouse is short. */
   const loadAvailability = () => {
@@ -273,6 +283,21 @@ const ItemVoucherFormPage = () => {
         setDiscountType(voucher.discount_type === 'amount' ? 'amount' : 'percent');
         setDiscountValue(String(voucher.discount_value ?? '0'));
 
+        // Seed any bill-wise allocation already on the document.
+        const seeded = {};
+        (voucher.bill_allocations || []).forEach((a) => {
+          const key = `${a.bill_type}:${a.bill_id ?? ''}`;
+          seeded[key] = {
+            key,
+            bill_type: a.bill_type,
+            bill_id: a.bill_id ?? null,
+            bill_name: a.bill_name || a.bill_type,
+            balance: null,
+            amount: String(a.amount ?? ''),
+          };
+        });
+        setAllocations(seeded);
+
         setLines(
           (voucher.items || []).map((it) => ({
             id: it.id || Date.now(),
@@ -311,6 +336,83 @@ const ItemVoucherFormPage = () => {
     await receipts.createReceipt(id, payload);
     setReceiptModalOpen(false);
     loadAvailability();
+  };
+
+  /* --------------------------- bill-wise allocation --------------------- */
+
+  const billTypes = useMemo(
+    () => BILL_TYPES_FOR_SIDE[billSide || 'all'] || null,
+    [billSide]
+  );
+
+  // Pull the party's outstanding bills so they can be allocated against. Kept
+  // to the side the document settles: a credit note against sales documents, a
+  // debit note against purchase ones. Purchase / sales see both.
+  useEffect(() => {
+    if (!billsEnabled || !partyLedgerId) return undefined;
+    let active = true;
+
+    (async () => {
+      setLoadingBills(true);
+      try {
+        const data = await voucherService.partyOutstanding(partyLedgerId);
+        if (!active) return;
+        const bills = (data.bills || []).filter(
+          (b) => !billTypes || billTypes.includes(b.bill_type)
+        );
+        setAllocations((prev) => {
+          const rows = {};
+          bills.forEach((b) => {
+            const key = `${b.bill_type}:${b.bill_id ?? ''}`;
+            rows[key] = {
+              key,
+              bill_type: b.bill_type,
+              bill_id: b.bill_id ?? null,
+              bill_name: b.bill_name,
+              balance: b.balance,
+              amount: prev[key]?.amount ?? '',
+            };
+          });
+          // Keep allocations no longer outstanding (already settled) so an edit
+          // never silently drops them.
+          Object.values(prev).forEach((row) => {
+            if (!rows[row.key] && (!billTypes || billTypes.includes(row.bill_type))) {
+              rows[row.key] = row;
+            }
+          });
+          if (!rows['advance:']) {
+            rows['advance:'] = {
+              key: 'advance:',
+              bill_type: 'advance',
+              bill_id: null,
+              bill_name: 'On Account / Advance',
+              balance: null,
+              amount: '',
+            };
+          }
+          return rows;
+        });
+      } catch {
+        // Leave whatever was seeded; a missing outstanding list must not block
+        // keying the document.
+        if (active) setAllocations((prev) => prev);
+      } finally {
+        if (active) setLoadingBills(false);
+      }
+    })();
+
+    return () => { active = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [billsEnabled, partyLedgerId, billSide]);
+
+  const updateAllocation = (key, value) => {
+    setAllocations((prev) => ({ ...prev, [key]: { ...prev[key], amount: value } }));
+  };
+
+  /** Changing party invalidates the allocations made against the old one. */
+  const changeParty = (value) => {
+    setPartyLedgerId(value);
+    setAllocations({});
   };
 
   /**
@@ -391,6 +493,12 @@ const ItemVoucherFormPage = () => {
     return { ...t, round_off: ro, grand };
   }, [computedLines, roundOff]);
 
+  const allocatedTotal = useMemo(
+    () => round2(Object.values(allocations).reduce((s, row) => s + (Number(row.amount) || 0), 0)),
+    [allocations]
+  );
+  const allocationRemainder = round2(totals.grand - allocatedTotal);
+
   /**
    * Picking a product overwrites the line's description, HSN and unit.
    *
@@ -426,6 +534,7 @@ const ItemVoucherFormPage = () => {
     if (lines.some((l) => Number(l.rate) < 0)) return 'Rate cannot be negative.';
     if (Number(discountValue) < 0) return 'The discount cannot be negative.';
     if (discountType === 'percent' && Number(discountValue) > 100) return 'A percentage discount cannot exceed 100%.';
+    if (billsEnabled && allocationRemainder < -0.005) return 'Bill-wise allocations cannot exceed the voucher total.';
     if (totals.grand <= 0) return 'The voucher total must be greater than zero.';
     return null;
   };
@@ -458,6 +567,19 @@ const ItemVoucherFormPage = () => {
         rate: round2(l.rate),
       })),
     };
+
+    // Bill-wise allocation, only for the types that carry it.
+    if (billsEnabled) {
+      const rows = Object.values(allocations)
+        .map((row) => ({
+          bill_type: row.bill_type,
+          bill_id: row.bill_id ?? null,
+          bill_name: row.bill_name || null,
+          amount: round2(row.amount),
+        }))
+        .filter((row) => row.amount > 0);
+      if (rows.length) payload.bill_allocations = rows;
+    }
     try {
       if (isEdit) await voucherService.update(id, payload);
       else await voucherService.create(payload);
@@ -485,7 +607,7 @@ const ItemVoucherFormPage = () => {
             <p className="text-sm text-gray-500">Item-based voucher with GST</p>
           </div>
         </div>
-        {isEdit && tracks && (
+        {isEdit && tracks && !onSaveStock && (
           <PermissionGate module="stock-receipts" action="create" subject={`goods for this ${config.label.toLowerCase()}`}>
             <button
               type="button"
@@ -499,9 +621,15 @@ const ItemVoucherFormPage = () => {
             </button>
           </PermissionGate>
         )}
+        {onSaveStock && (
+          <span className="inline-flex items-center rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600">
+            <PackageCheck className="mr-2 h-4 w-4" />
+            Stock {outbound ? 'leaves' : 'returns to'} the warehouse when this note is saved
+          </span>
+        )}
       </div>
       {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
-      {isEdit && tracks && (
+      {isEdit && tracks && !onSaveStock && (
         <div className="mb-6">
           <StockReceiptPanel
             summary={receipts.summary}
@@ -535,7 +663,7 @@ const ItemVoucherFormPage = () => {
             </div>
             <div>
               <label className={labelClass}>Party ledger *</label>
-              <select required value={partyLedgerId} onChange={(e) => setPartyLedgerId(e.target.value)} className={inputClass}>
+              <select required value={partyLedgerId} onChange={(e) => changeParty(e.target.value)} className={inputClass}>
                 <option value="">— Select {partyOptionType} —</option>
                 {partyLedgers.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
               </select>
@@ -648,6 +776,59 @@ const ItemVoucherFormPage = () => {
             <Plus className="w-4 h-4 mr-1" /> Add line
           </button>
         </div>
+
+        {billsEnabled && (
+          <div className="bg-white rounded-lg shadow p-5">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-sm font-semibold text-gray-800">Bill-wise details</h4>
+              {loadingBills && (
+                <span className="inline-flex items-center text-xs text-gray-400">
+                  <RefreshCw className="mr-1 h-3 w-3 animate-spin" /> Loading bills…
+                </span>
+              )}
+            </div>
+            <p className="mb-3 text-xs text-gray-500">
+              {billSide === 'sales'
+                ? 'Which sales bills this note settles. Leave blank to post on account.'
+                : billSide === 'purchase'
+                  ? 'Which purchase bills this note settles. Leave blank to post on account.'
+                  : 'Which bills this document settles. Leave blank to post on account.'}
+            </p>
+            <div className="space-y-2">
+              {Object.values(allocations).length === 0 && (
+                <div className="rounded-lg border border-dashed border-gray-200 px-3 py-4 text-center text-xs text-gray-400">
+                  {partyLedgerId ? 'No outstanding bills for this party.' : 'Choose a party to see its outstanding bills.'}
+                </div>
+              )}
+              {Object.values(allocations).map((row) => (
+                <div key={row.key} className="flex items-center gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="truncate text-sm text-gray-800">{row.bill_name}</div>
+                    {row.balance !== null && row.balance !== undefined && (
+                      <div className="text-xs text-gray-400">Balance {formatMoney(row.balance)}</div>
+                    )}
+                  </div>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={row.amount}
+                    onChange={(e) => updateAllocation(row.key, e.target.value)}
+                    placeholder="0.00"
+                    className="w-32 border border-gray-300 rounded-lg px-2 py-1 text-sm text-right"
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 space-y-1 border-t border-gray-100 pt-3 text-sm">
+              <div className="flex justify-between text-gray-600"><span>Allocated</span><span>{formatMoney(allocatedTotal)}</span></div>
+              <div className="flex justify-between font-medium text-gray-900">
+                <span>{allocationRemainder < -0.005 ? 'Over-allocated' : 'Remaining'}</span>
+                <span className={allocationRemainder < -0.005 ? 'text-red-600' : ''}>{formatMoney(allocationRemainder)}</span>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="bg-white rounded-lg shadow p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>

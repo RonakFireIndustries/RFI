@@ -95,6 +95,9 @@ return [
             'module' => 'credit-notes',
             'items' => true,
             'party_type' => 'customer',
+            // A credit note to a customer returns goods to the warehouse, so
+            // the note is the receipt: stock flows in.
+            'stock' => 'in',
             'posting' => [
                 'party' => 'Cr',
                 'base' => 'Dr',
@@ -108,6 +111,8 @@ return [
             'module' => 'debit-notes',
             'items' => true,
             'party_type' => 'supplier',
+            // A debit note to a supplier sends goods back, so stock flows out.
+            'stock' => 'out',
             'posting' => [
                 'party' => 'Dr',
                 'base' => 'Cr',

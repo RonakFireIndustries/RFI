@@ -1545,7 +1545,7 @@ private const DESIGNATION_MAP = [
         $data = [];
         for ($i = 5; $i >= 0; $i--) {
             $date = Carbon::now()->subMonths($i);
-            $in = TransactionLedger::whereIn('transaction_type', ['purchase', 'purchase_return', 'transfer_in', 'opening_stock', 'sales_return'])
+            $in = TransactionLedger::whereIn('transaction_type', ['purchase', 'transfer_in', 'opening_stock', 'sales_return'])
                 ->whereMonth('created_at', $date->month)->whereYear('created_at', $date->year)
                 ->sum('quantity');
             $out = TransactionLedger::whereIn('transaction_type', ['sales', 'transfer_out', 'damage', 'adjustment', 'purchase_return'])

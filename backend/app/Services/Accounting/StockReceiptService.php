@@ -63,6 +63,14 @@ class StockReceiptService
      */
     public function create(Voucher $voucher, array $data, int $userId): StockReceipt
     {
+        // Notes move their stock whole, at save. Letting a partial receipt be
+        // keyed against one would double-count the return.
+        if (NoteStockService::handles($voucher->voucher_type)) {
+            throw new StockQuantityException(
+                'A credit or debit note moves its stock when it is saved; there is nothing to receive.'
+            );
+        }
+
         $direction = $voucher->stockDirection();
         if ($direction === null) {
             throw new StockQuantityException('This voucher type does not move stock, so nothing can be received against it.');

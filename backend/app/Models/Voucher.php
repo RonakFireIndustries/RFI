@@ -81,7 +81,9 @@ class Voucher extends Model
 
     /**
      * Whether this type moves warehouse stock at all, and in which direction.
-     * Null for purely financial documents (credit notes, journals, …).
+     * Null for purely financial documents (journals, payments, receipts, …).
+     * Purchase and sales move stock through the receipt modal; credit and
+     * debit notes move it whole, at save.
      */
     public function stockDirection(): ?string
     {

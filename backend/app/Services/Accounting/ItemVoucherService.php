@@ -13,8 +13,10 @@ use Illuminate\Validation\ValidationException;
 
 class ItemVoucherService
 {
-    public function __construct(protected VoucherService $vouchers)
-    {
+    public function __construct(
+        protected VoucherService $vouchers,
+        protected NoteStockService $noteStock,
+    ) {
     }
 
     public function create(array $data, int $userId): Voucher
@@ -40,6 +42,14 @@ class ItemVoucherService
                 // only item vouchers (which are bills) carry a due date.
                 'due_date' => $built['due_date'],
             ]);
+
+            // A return is already in (or out of) the warehouse when it is
+            // keyed, so a note moves stock right here rather than through the
+            // partial-receipt modal purchase / sales use.
+            if (NoteStockService::handles($type)) {
+                $this->noteStock->apply($voucher, $userId, $data['location_type'] ?? null, $data['location_id'] ?? null);
+            }
+
             return $voucher->fresh()->load($this->relations());
         });
     }
@@ -48,6 +58,13 @@ class ItemVoucherService
     {
         return DB::transaction(function () use ($voucher, $data, $userId) {
             $type = $this->assertItemType($data['voucher_type'] ?? $voucher->voucher_type);
+
+            // Give back the stock the old lines moved *before* they are
+            // replaced, so `undo` can still read them.
+            if (NoteStockService::handles($voucher->voucher_type)) {
+                $this->noteStock->undo($voucher, $userId);
+            }
+
             $built = $this->build($type, $data);
             $voucher = $this->vouchers->update($voucher, $built['header'], $userId);
             $voucher->items()->delete();
@@ -64,6 +81,11 @@ class ItemVoucherService
                 'gst_type' => $built['totals']['gst_type'],
                 'due_date' => $built['due_date'],
             ]);
+
+            if (NoteStockService::handles($type)) {
+                $this->noteStock->apply($voucher, $userId, $data['location_type'] ?? null, $data['location_id'] ?? null);
+            }
+
             return $voucher->fresh()->load($this->relations());
         });
     }
@@ -71,6 +93,9 @@ class ItemVoucherService
     public function delete(Voucher $voucher): void
     {
         DB::transaction(function () use ($voucher) {
+            if (NoteStockService::handles($voucher->voucher_type)) {
+                $this->noteStock->undo($voucher, (int) ($voucher->updated_by ?? $voucher->created_by ?? 0));
+            }
             $voucher->items()->delete();
             $this->vouchers->delete($voucher);
         });

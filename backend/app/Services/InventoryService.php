@@ -89,12 +89,12 @@ class InventoryService
             $absQty = abs($quantity);
 
             $isInflow = in_array($transactionType, [
-                'opening_stock', 'purchase', 'purchase_return',
+                'opening_stock', 'purchase',
                 'transfer_in', 'sales_return'
             ]);
             $isOutflow = in_array($transactionType, [
                 'issue', 'consumption', 'transfer_out',
-                'adjustment', 'damage', 'sales'
+                'adjustment', 'damage', 'sales', 'purchase_return'
             ]);
             $isTransfer = $transactionType === 'transfer_out';
 

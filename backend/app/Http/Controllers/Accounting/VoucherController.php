@@ -365,6 +365,10 @@ class VoucherController extends Controller
             'sgst_ledger_id' => 'nullable|integer|exists:ledger_accounts,id',
             'igst_ledger_id' => 'nullable|integer|exists:ledger_accounts,id',
             'round_off_ledger_id' => 'nullable|integer|exists:ledger_accounts,id',
+            // Notes move stock on save; the caller may say from where. Blank
+            // falls back to the first site.
+            'location_type' => 'nullable|string|max:255',
+            'location_id' => 'nullable|integer',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'nullable|integer',
             'items.*.item_description' => 'required|string|max:255',
