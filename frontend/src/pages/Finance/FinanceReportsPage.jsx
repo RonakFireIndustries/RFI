@@ -7,6 +7,7 @@ import ProfitLossReport from './reports/ProfitLossReport';
 import BalanceSheetReport from './reports/BalanceSheetReport';
 import TrialBalanceReport from './reports/TrialBalanceReport';
 import CashBankBookReport from './reports/CashBankBookReport';
+import ReceiptBreakdownReport from './reports/ReceiptBreakdownReport';
 
 /*
  * Financial report pack (slice 5). One route hosts all seven reports behind a
@@ -28,6 +29,7 @@ const TABS = [
   { key: 'balance-sheet', label: 'Balance Sheet', component: BalanceSheetReport },
   { key: 'trial-balance', label: 'Trial Balance', component: TrialBalanceReport },
   { key: 'cash-bank-book', label: 'Cash / Bank Book', component: CashBankBookReport },
+  { key: 'receipt-breakdown', label: 'Receipt Breakdown', component: ReceiptBreakdownReport },
 ];
 
 const DEFAULT_TAB = 'day-book';

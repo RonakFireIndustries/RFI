@@ -94,4 +94,8 @@ export const financeReportService = {
     unwrapItem((await api.get(`/accounting-reports/cash-bank-book${reportQuery(params)}`)).data),
   trialBalance: async (params) =>
     unwrapItem((await api.get(`/accounting-reports/trial-balance${reportQuery(params)}`)).data),
+
+  /** Goods receipt / delivery breakdown (warehouse side, `stock-receipts.view`). */
+  receiptBreakdown: async (params) =>
+    unwrapItem((await api.get(`/accounting-reports/receipt-breakdown${reportQuery(params)}`)).data),
 };

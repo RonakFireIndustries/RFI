@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Accounting;
 use App\Http\Controllers\Controller;
 use App\Models\LedgerAccount;
 use App\Services\Accounting\AccountingReportService;
+use App\Services\Accounting\StockReceiptService;
 use Illuminate\Http\Request;
 
 /**
@@ -86,6 +87,26 @@ class AccountingReportController extends Controller
         $filters = $this->filters($request, ['as_of' => 'nullable|date']);
 
         return response()->json($this->reports->trialBalance($filters));
+    }
+
+    /**
+     * Goods receipt / delivery breakdown for a period.
+     *
+     * Gated on `stock-receipts.view` rather than `finance-reports.view`: this is
+     * warehouse data, so the storekeeper who books the receipts can read it
+     * without being given the accounts pack.
+     */
+    public function receiptBreakdown(Request $request, StockReceiptService $receipts)
+    {
+        $this->authorize('stock-receipts.view');
+
+        $filters = $this->filters($request, [
+            'voucher_type' => 'nullable|string|max:40',
+            'party_ledger_id' => 'nullable|integer',
+            'location_id' => 'nullable|integer',
+        ]);
+
+        return response()->json($receipts->breakdown($filters));
     }
 
     /**

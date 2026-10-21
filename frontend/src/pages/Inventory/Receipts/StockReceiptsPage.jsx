@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeftRight, PackageCheck, Search, Truck, Undo2, X } from 'lucide-react';
+import { ArrowLeftRight, BarChart3, PackageCheck, Search, Truck, Undo2, X } from 'lucide-react';
 import { stockReceiptService } from '../../../services/stockReceiptService';
 import PermissionGate from '../../../components/Guards/PermissionGate';
 
@@ -113,6 +113,12 @@ const StockReceiptsPage = () => {
           <span className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 font-medium text-gray-600">
             {qty(totals.quantity)} units moved
           </span>
+          <Link
+            to="/dashboard/accounting/reports/receipt-breakdown"
+            className="inline-flex items-center rounded-lg border border-gray-300 px-3 py-1.5 font-medium text-gray-700 hover:bg-gray-50"
+          >
+            <BarChart3 className="mr-1.5 h-3.5 w-3.5" /> Breakdown report
+          </Link>
         </div>
       </div>
 

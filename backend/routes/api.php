@@ -351,6 +351,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/accounting-reports/balance-sheet', [AccountingReportController::class, 'balanceSheet']);
     Route::get('/accounting-reports/cash-bank-book', [AccountingReportController::class, 'cashBankBook']);
     Route::get('/accounting-reports/trial-balance', [AccountingReportController::class, 'trialBalance']);
+    Route::get('/accounting-reports/receipt-breakdown', [AccountingReportController::class, 'receiptBreakdown']);
 
     // Reports
     Route::get('/reports/sales', [ReportsController::class, 'salesReport']);

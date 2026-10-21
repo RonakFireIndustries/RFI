@@ -345,6 +345,273 @@ class StockReceiptService
     }
 
     /**
+     * Receipt breakdown: what actually moved, per product, for a period.
+     *
+     * The receipt register answers "what was booked, when"; this report answers
+     * the question the storekeeper and the accountant both ask — *how much of
+     * each product came in and went out, at what value, and how much of the
+     * period's billing is still outstanding*.
+     *
+     * Figures come from the active receipt lines only: a reversed receipt is
+     * excluded from every total, because its stock movement was undone. The
+     * period is by `receipt_date` (when the goods moved), not by the voucher
+     * date — a March bill received in April belongs to April's movement.
+     *
+     * @param  array<string, mixed>  $filters  from, to, voucher_type, location_id, party_ledger_id
+     * @return array<string, mixed>
+     */
+    public function breakdown(array $filters): array
+    {
+        [$from, $to] = $this->resolveReportPeriod($filters);
+
+        $query = StockReceipt::query()
+            ->where('status', 'active')
+            ->with(['items.product:id,name,sku', 'items.voucherItem:id,rate', 'voucher:id,voucher_no,voucher_type', 'party:id,name', 'locationable:id,name']);
+
+        if (! empty($filters['voucher_type'])) {
+            $query->where('voucher_type', $filters['voucher_type']);
+        }
+        if (! empty($filters['party_ledger_id'])) {
+            $query->where('party_ledger_id', $filters['party_ledger_id']);
+        }
+        if (! empty($filters['location_id'])) {
+            $query->where('location_id', $filters['location_id']);
+        }
+        if ($from) {
+            $query->whereDate('receipt_date', '>=', $from);
+        }
+        if ($to) {
+            $query->whereDate('receipt_date', '<=', $to);
+        }
+
+        $receipts = $query->orderBy('receipt_date')->orderBy('id')->get();
+
+        // One bucket per product, split by direction so a product that is both
+        // bought and sold never mixes its in and out figures.
+        $products = [];
+        $parties = [];
+        $receiptRows = [];
+        $totals = [
+            'receipts' => 0, 'inbound_quantity' => 0.0, 'outbound_quantity' => 0.0,
+            'inbound_value' => 0.0, 'outbound_value' => 0.0,
+        ];
+
+        foreach ($receipts as $receipt) {
+            $outbound = $receipt->voucher_type === 'sales';
+            $totals['receipts']++;
+            $totals[$outbound ? 'outbound_quantity' : 'inbound_quantity'] += (float) $receipt->items->sum('quantity');
+
+            $lineSummary = [];
+
+            foreach ($receipt->items as $line) {
+                $quantity = (float) $line->quantity;
+                $value = round($quantity * (float) ($line->voucherItem?->rate ?? 0), 2);
+                $productId = $line->product_id ?? 0;
+                $name = $line->product?->name ?? 'Unknown product';
+
+                $bucket = $products[$productId] ?? [
+                    'product_id' => $line->product_id,
+                    'product_name' => $name,
+                    'sku' => $line->product?->sku,
+                    'inbound_quantity' => 0.0, 'outbound_quantity' => 0.0,
+                    'inbound_value' => 0.0, 'outbound_value' => 0.0,
+                    'receipt_count' => 0,
+                ];
+                $key = $outbound ? 'outbound' : 'inbound';
+                $bucket["{$key}_quantity"] += $quantity;
+                $bucket["{$key}_value"] += $value;
+                $products[$productId] = $bucket;
+
+                $totals[$outbound ? 'outbound_value' : 'inbound_value'] += $value;
+
+                $partyId = $receipt->party_ledger_id ?? 0;
+                if ($partyId) {
+                    $parties[$partyId] ??= [
+                        'party_ledger_id' => $receipt->party_ledger_id,
+                        'party_name' => $receipt->party?->name ?? 'Unknown party',
+                        'inbound_quantity' => 0.0, 'outbound_quantity' => 0.0,
+                        'receipt_count' => 0,
+                    ];
+                    $parties[$partyId]["{$key}_quantity"] += $quantity;
+                    $parties[$partyId]['receipt_count']++;
+                }
+
+                $lineSummary[] = [
+                    'product_id' => $line->product_id,
+                    'product_name' => $name,
+                    'quantity' => $quantity,
+                    'value' => $value,
+                ];
+            }
+
+            $receiptRows[] = [
+                'receipt_id' => $receipt->id,
+                'receipt_no' => $receipt->receipt_no,
+                'receipt_date' => $this->dateOnly($receipt->receipt_date),
+                'direction' => $outbound ? 'out' : 'in',
+                'voucher_id' => $receipt->voucher_id,
+                'voucher_no' => $receipt->voucher?->voucher_no,
+                'voucher_type' => $receipt->voucher_type,
+                'party_name' => $receipt->party?->name,
+                'location_name' => $receipt->locationable?->name,
+                'supplier_bill_no' => $receipt->supplier_bill_no,
+                'quantity_total' => (float) $receipt->items->sum('quantity'),
+                'lines' => $lineSummary,
+            ];
+        }
+
+        // Count the distinct receipts behind each product so the row can say
+        // "1,200 across 4 deliveries".
+        foreach ($receiptRows as $row) {
+            foreach ($row['lines'] as $line) {
+                $pid = $line['product_id'] ?? 0;
+                if (isset($products[$pid])) {
+                    $products[$pid]['receipt_count']++;
+                }
+            }
+        }
+
+        $productRows = array_values($products);
+        usort($productRows, fn ($a, $b) => ($b['inbound_quantity'] + $b['outbound_quantity']) <=> ($a['inbound_quantity'] + $a['outbound_quantity']));
+
+        $partyRows = array_values($parties);
+        usort($partyRows, fn ($a, $b) => ($b['inbound_quantity'] + $b['outbound_quantity']) <=> ($a['inbound_quantity'] + $a['outbound_quantity']));
+
+        foreach ($totals as $key => $value) {
+            $totals[$key] = is_float($value) ? round($value, 3) : $value;
+        }
+        $totals['inbound_value'] = round($totals['inbound_value'], 2);
+        $totals['outbound_value'] = round($totals['outbound_value'], 2);
+        $totals['net_quantity'] = round($totals['inbound_quantity'] - $totals['outbound_quantity'], 3);
+
+        return [
+            'period' => ['from' => $from, 'to' => $to],
+            'totals' => $totals,
+            'products' => $productRows,
+            'parties' => $partyRows,
+            'receipts' => $receiptRows,
+            'outstanding' => $this->outstandingByVoucher($filters, $from, $to),
+        ];
+    }
+
+    /**
+     * Billed-but-not-yet-moved quantity for the period's documents.
+     *
+     * A receipt report that only counted what arrived would quietly hide the
+     * shortfall; this is the "still owed" half of the same question, grouped by
+     * voucher so the reader can chase the right supplier.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return array<int, array<string, mixed>>
+     */
+    protected function outstandingByVoucher(array $filters, ?string $from, ?string $to): array
+    {
+        $query = Voucher::query()
+            ->where('status', 'posted')
+            ->whereHas('items', fn ($q) => $q->whereNotNull('product_id'))
+            ->with(['items', 'party:id,name']);
+
+        if (! empty($filters['voucher_type'])) {
+            $query->where('voucher_type', $filters['voucher_type']);
+        } elseif ($types = $this->stockVoucherTypes()) {
+            $query->whereIn('voucher_type', $types);
+        } else {
+            return [];
+        }
+
+        if (! empty($filters['party_ledger_id'])) {
+            $query->where('party_ledger_id', $filters['party_ledger_id']);
+        }
+        if ($from) {
+            $query->whereDate('voucher_date', '>=', $from);
+        }
+        if ($to) {
+            $query->whereDate('voucher_date', '<=', $to);
+        }
+
+        return $query->orderBy('voucher_date')->orderBy('id')->get()
+            ->map(function (Voucher $voucher) {
+                $ordered = round((float) $voucher->items->whereNotNull('product_id')->sum('quantity'), 3);
+                $moved = round((float) $voucher->items->whereNotNull('product_id')->sum(fn (VoucherItem $item) => $item->moved_quantity), 3);
+                $pending = round(max(0, $ordered - $moved), 3);
+
+                return [
+                    'voucher_id' => $voucher->id,
+                    'voucher_no' => $voucher->voucher_no,
+                    'voucher_type' => $voucher->voucher_type,
+                    'voucher_date' => $this->dateOnly($voucher->voucher_date),
+                    'direction' => $voucher->stockDirection() === 'out' ? 'out' : 'in',
+                    'party_name' => $voucher->party?->name,
+                    'ordered_quantity' => $ordered,
+                    'moved_quantity' => $moved,
+                    'pending_quantity' => $pending,
+                    'status' => match (true) {
+                        $moved <= 0.0005 => 'pending',
+                        $pending <= 0.0005 => 'complete',
+                        default => 'partial',
+                    },
+                ];
+            })
+            ->filter(fn (array $row) => $row['pending_quantity'] > 0.0005)
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Voucher types that move stock, from config/accounting.php.
+     *
+     * @return array<int, string>
+     */
+    protected function stockVoucherTypes(): array
+    {
+        return collect(config('accounting.voucher_types', []))
+            ->filter(fn (array $type) => ! empty($type['stock']))
+            ->keys()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Resolve the report window. `to` defaults to today; `from` to the start of
+     * the active financial year, matching the finance report pack.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return array{0: ?string, 1: ?string}
+     */
+    protected function resolveReportPeriod(array $filters): array
+    {
+        $to = $this->dateOnly($filters['to'] ?? null) ?? now()->toDateString();
+        $from = $this->dateOnly($filters['from'] ?? null);
+
+        if ($from === null) {
+            $from = $this->dateOnly(
+                \App\Models\FinancialYear::where('is_active', true)->orderByDesc('start_date')->value('start_date')
+            );
+        }
+
+        if ($from !== null && $from > $to) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'from' => 'The from date must be on or before the to date.',
+            ]);
+        }
+
+        return [$from, $to];
+    }
+
+    /** Normalise casts, strings and Carbon values to Y-m-d. */
+    protected function dateOnly(mixed $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+        if (is_object($value) && method_exists($value, 'toDateString')) {
+            return $value->toDateString();
+        }
+
+        return substr((string) $value, 0, 10);
+    }
+
+    /**
      * Recompute a voucher's counters from its active receipt lines.
      *
      * The counters are maintained incrementally on the write path; this is the
