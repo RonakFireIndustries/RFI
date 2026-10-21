@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Plus, Trash2, Save, Info, PackageCheck, AlertTriangle } from 'lucide-react';
 import { useLedgerStore } from '../../store/accountingStore';
@@ -31,12 +32,20 @@ const firstError = (err) => {
  * remembered by its code or size rather than its name. Picking one hands the
  * whole product back to the caller, which stamps the line's description (the
  * product name), HSN and unit.
+ *
+ * The menu is portalled to `document.body` and positioned with fixed
+ * coordinates taken from the input. The line-item table scrolls horizontally
+ * (`overflow-x-auto`), which clips any absolutely-positioned child; a portal
+ * sits outside that box so the menu is never cut off or hidden behind the
+ * rows below it.
  */
 const ProductPicker = ({ value, products, onPick }) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [highlight, setHighlight] = useState(0);
+  const [rect, setRect] = useState(null);
   const boxRef = useRef(null);
+  const menuRef = useRef(null);
 
   const selected = products.find((p) => String(p.id) === String(value));
 
@@ -51,11 +60,44 @@ const ProductPicker = ({ value, products, onPick }) => {
       .slice(0, 50);
   }, [products, query]);
 
-  // Close when focus leaves the widget entirely.
+  /** Pin the menu to the input's viewport box, opening upward when short on room. */
+  const measure = () => {
+    const input = boxRef.current?.querySelector('input');
+    if (!input) return;
+    const r = input.getBoundingClientRect();
+    const menuHeight = 260;
+    const below = window.innerHeight - r.bottom;
+    const flip = below < menuHeight && r.top > below;
+    setRect({
+      left: r.left,
+      width: Math.max(r.width, 260),
+      top: flip ? undefined : r.bottom + 4,
+      bottom: flip ? window.innerHeight - r.top + 4 : undefined,
+    });
+  };
+
+  const openMenu = () => { measure(); setOpen(true); };
+
+  // Keep the menu glued to the input while the page scrolls or resizes.
+  useEffect(() => {
+    if (!open) return undefined;
+    const onScrollOrResize = () => measure();
+    window.addEventListener('scroll', onScrollOrResize, true);
+    window.addEventListener('resize', onScrollOrResize);
+    return () => {
+      window.removeEventListener('scroll', onScrollOrResize, true);
+      window.removeEventListener('resize', onScrollOrResize);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  // Close when focus (or a click) leaves both the input and the portalled menu.
   useEffect(() => {
     if (!open) return undefined;
     const onDown = (e) => {
-      if (boxRef.current && !boxRef.current.contains(e.target)) setOpen(false);
+      const inInput = boxRef.current?.contains(e.target);
+      const inMenu = menuRef.current?.contains(e.target);
+      if (!inInput && !inMenu) setOpen(false);
     };
     document.addEventListener('mousedown', onDown);
     return () => document.removeEventListener('mousedown', onDown);
@@ -70,7 +112,7 @@ const ProductPicker = ({ value, products, onPick }) => {
   const onKeyDown = (e) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      if (!open) { setOpen(true); return; }
+      if (!open) { openMenu(); return; }
       setHighlight((h) => Math.min(h + 1, matches.length - 1));
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
@@ -83,13 +125,48 @@ const ProductPicker = ({ value, products, onPick }) => {
     }
   };
 
+  const menu = open && rect ? createPortal(
+    <div
+      ref={menuRef}
+      style={{
+        position: 'fixed',
+        left: rect.left,
+        width: rect.width,
+        top: rect.top,
+        bottom: rect.bottom,
+        zIndex: 1000,
+      }}
+      className="max-h-64 overflow-auto rounded-lg border border-gray-200 bg-white shadow-xl"
+    >
+      {matches.length === 0 && (
+        <div className="px-3 py-2 text-xs text-gray-500">No products match “{query}”.</div>
+      )}
+      {matches.map((p, index) => (
+        <button
+          key={p.id}
+          type="button"
+          onMouseEnter={() => setHighlight(index)}
+          onClick={() => choose(p)}
+          className={`block w-full px-3 py-2 text-left text-sm ${index === highlight ? 'bg-orange-50' : 'bg-white hover:bg-gray-50'}`}
+        >
+          <div className="font-medium text-gray-800">{p.name}</div>
+          <div className="text-[11px] text-gray-500">
+            {[p.sku, p.dimension, p.hsn_code && `HSN ${p.hsn_code}`].filter(Boolean).join(' · ') || '—'}
+          </div>
+        </button>
+      ))}
+    </div>,
+    document.body
+  ) : null;
+
   return (
     <div ref={boxRef} className="relative min-w-[14rem]">
       <input
         value={open ? query : (selected?.name || query)}
         placeholder={selected ? selected.name : 'Search name / SKU / HSN…'}
-        onFocus={() => { setOpen(true); setQuery(''); setHighlight(0); }}
-        onChange={(e) => { setQuery(e.target.value); setOpen(true); setHighlight(0); }}
+        onFocus={openMenu}
+        onClick={openMenu}
+        onChange={(e) => { if (!open) measure(); setQuery(e.target.value); setOpen(true); setHighlight(0); }}
         onKeyDown={onKeyDown}
         className={inputClass}
       />
@@ -98,27 +175,7 @@ const ProductPicker = ({ value, products, onPick }) => {
           {[selected.sku, selected.dimension].filter(Boolean).join(' · ') || 'Product'}
         </div>
       )}
-      {open && (
-        <div className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg">
-          {matches.length === 0 && (
-            <div className="px-3 py-2 text-xs text-gray-500">No products match “{query}”.</div>
-          )}
-          {matches.map((p, index) => (
-            <button
-              key={p.id}
-              type="button"
-              onMouseEnter={() => setHighlight(index)}
-              onClick={() => choose(p)}
-              className={`block w-full px-3 py-2 text-left text-sm ${index === highlight ? 'bg-orange-50' : 'bg-white'}`}
-            >
-              <div className="font-medium text-gray-800">{p.name}</div>
-              <div className="text-[11px] text-gray-500">
-                {[p.sku, p.dimension, p.hsn_code && `HSN ${p.hsn_code}`].filter(Boolean).join(' · ') || '—'}
-              </div>
-            </button>
-          ))}
-        </div>
-      )}
+      {menu}
     </div>
   );
 };
