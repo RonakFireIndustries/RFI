@@ -391,6 +391,8 @@ class StockReceiptService
         $products = [];
         $parties = [];
         $receiptRows = [];
+        $productReceipts = [];   // product id => [receipt id => true]
+        $partyReceipts = [];     // party id   => [receipt id => true]
         $totals = [
             'receipts' => 0, 'inbound_quantity' => 0.0, 'outbound_quantity' => 0.0,
             'inbound_value' => 0.0, 'outbound_value' => 0.0,
@@ -421,6 +423,7 @@ class StockReceiptService
                 $bucket["{$key}_quantity"] += $quantity;
                 $bucket["{$key}_value"] += $value;
                 $products[$productId] = $bucket;
+                $productReceipts[$productId][$receipt->id] = true;
 
                 $totals[$outbound ? 'outbound_value' : 'inbound_value'] += $value;
 
@@ -433,7 +436,7 @@ class StockReceiptService
                         'receipt_count' => 0,
                     ];
                     $parties[$partyId]["{$key}_quantity"] += $quantity;
-                    $parties[$partyId]['receipt_count']++;
+                    $partyReceipts[$partyId][$receipt->id] = true;
                 }
 
                 $lineSummary[] = [
@@ -460,15 +463,13 @@ class StockReceiptService
             ];
         }
 
-        // Count the distinct receipts behind each product so the row can say
-        // "1,200 across 4 deliveries".
-        foreach ($receiptRows as $row) {
-            foreach ($row['lines'] as $line) {
-                $pid = $line['product_id'] ?? 0;
-                if (isset($products[$pid])) {
-                    $products[$pid]['receipt_count']++;
-                }
-            }
+        // "Across N deliveries" — distinct documents, not lines, so a receipt
+        // with two lines of the same product still reads as one delivery.
+        foreach ($products as $pid => $bucket) {
+            $products[$pid]['receipt_count'] = count($productReceipts[$pid] ?? []);
+        }
+        foreach ($parties as $pid => $bucket) {
+            $parties[$pid]['receipt_count'] = count($partyReceipts[$pid] ?? []);
         }
 
         $productRows = array_values($products);
