@@ -532,8 +532,13 @@ class StockReceiptService
 
         return $query->orderBy('voucher_date')->orderBy('id')->get()
             ->map(function (Voucher $voucher) {
-                $ordered = round((float) $voucher->items->whereNotNull('product_id')->sum('quantity'), 3);
-                $moved = round((float) $voucher->items->whereNotNull('product_id')->sum(fn (VoucherItem $item) => $item->moved_quantity), 3);
+                $tracked = $voucher->items->whereNotNull('product_id');
+                $ordered = round((float) $tracked->sum('quantity'), 3);
+                // Read the counter straight off the parent's direction rather
+                // than through VoucherItem::moved_quantity, which would look the
+                // voucher up again for every line.
+                $column = $voucher->stockDirection() === 'out' ? 'delivered_quantity' : 'received_quantity';
+                $moved = round((float) $tracked->sum(fn (VoucherItem $item) => (float) $item->{$column}), 3);
                 $pending = round(max(0, $ordered - $moved), 3);
 
                 return [
