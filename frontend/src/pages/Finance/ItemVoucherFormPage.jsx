@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Plus, Trash2, Save, Info, PackageCheck, AlertTriangle } from 'lucide-react';
 import { useLedgerStore } from '../../store/accountingStore';
@@ -24,16 +24,113 @@ const firstError = (err) => {
   return err?.response?.data?.data?.message || err?.response?.data?.message || 'Could not save the voucher.';
 };
 
+/**
+ * A product picker that searches as you type.
+ *
+ * Matches on name, SKU, HSN and dimension, because the same fitting is often
+ * remembered by its code or size rather than its name. Picking one hands the
+ * whole product back to the caller, which stamps the line's description (the
+ * product name), HSN and unit.
+ */
+const ProductPicker = ({ value, products, onPick }) => {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const [highlight, setHighlight] = useState(0);
+  const boxRef = useRef(null);
+
+  const selected = products.find((p) => String(p.id) === String(value));
+
+  const matches = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    if (!needle) return products.slice(0, 50);
+    return products
+      .filter((p) =>
+        [p.name, p.sku, p.hsn_code, p.dimension]
+          .some((field) => String(field || '').toLowerCase().includes(needle))
+      )
+      .slice(0, 50);
+  }, [products, query]);
+
+  // Close when focus leaves the widget entirely.
+  useEffect(() => {
+    if (!open) return undefined;
+    const onDown = (e) => {
+      if (boxRef.current && !boxRef.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [open]);
+
+  const choose = (product) => {
+    onPick(product);
+    setQuery('');
+    setOpen(false);
+  };
+
+  const onKeyDown = (e) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (!open) { setOpen(true); return; }
+      setHighlight((h) => Math.min(h + 1, matches.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setHighlight((h) => Math.max(h - 1, 0));
+    } else if (e.key === 'Enter' && open && matches[highlight]) {
+      e.preventDefault();
+      choose(matches[highlight]);
+    } else if (e.key === 'Escape') {
+      setOpen(false);
+    }
+  };
+
+  return (
+    <div ref={boxRef} className="relative min-w-[14rem]">
+      <input
+        value={open ? query : (selected?.name || query)}
+        placeholder={selected ? selected.name : 'Search name / SKU / HSN…'}
+        onFocus={() => { setOpen(true); setQuery(''); setHighlight(0); }}
+        onChange={(e) => { setQuery(e.target.value); setOpen(true); setHighlight(0); }}
+        onKeyDown={onKeyDown}
+        className={inputClass}
+      />
+      {selected && !open && (
+        <div className="mt-0.5 truncate text-[11px] text-gray-500">
+          {[selected.sku, selected.dimension].filter(Boolean).join(' · ') || 'Product'}
+        </div>
+      )}
+      {open && (
+        <div className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+          {matches.length === 0 && (
+            <div className="px-3 py-2 text-xs text-gray-500">No products match “{query}”.</div>
+          )}
+          {matches.map((p, index) => (
+            <button
+              key={p.id}
+              type="button"
+              onMouseEnter={() => setHighlight(index)}
+              onClick={() => choose(p)}
+              className={`block w-full px-3 py-2 text-left text-sm ${index === highlight ? 'bg-orange-50' : 'bg-white'}`}
+            >
+              <div className="font-medium text-gray-800">{p.name}</div>
+              <div className="text-[11px] text-gray-500">
+                {[p.sku, p.dimension, p.hsn_code && `HSN ${p.hsn_code}`].filter(Boolean).join(' · ') || '—'}
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const newLine = () => ({
   id: Date.now() + Math.random(),
   product_id: '',
-  item_description: '',
+  product_name: '',
   hsn_code: '',
   unit: '',
   quantity: 1,
   rate: 0,
-  discount_percent: 0,
-  tax_rate: 18,
 });
 
 const ItemVoucherFormPage = () => {
@@ -51,6 +148,11 @@ const ItemVoucherFormPage = () => {
   const [partyLedgerId, setPartyLedgerId] = useState('');
   const [gstType, setGstType] = useState('intra');
   const [roundOff, setRoundOff] = useState('0');
+  // Tax and discount are document-level: one rate on the whole bill, and one
+  // discount entered either as a percentage or a flat amount.
+  const [taxRate, setTaxRate] = useState('18');
+  const [discountType, setDiscountType] = useState('percent');
+  const [discountValue, setDiscountValue] = useState('0');
   const [lines, setLines] = useState([newLine()]);
 
   const [meta, setMeta] = useState(null);
@@ -102,17 +204,27 @@ const ItemVoucherFormPage = () => {
         setPartyLedgerId(String(voucher.party_ledger_id || ''));
         setGstType(voucher.gst_type || 'intra');
         setRoundOff(String(voucher.round_off ?? '0'));
+
+        // Bill-level tax seeded from the header. Vouchers keyed before this
+        // existed carry the rate per line, so fall back to the first line that
+        // has one rather than dropping the tax to zero.
+        const headerRate = Number(voucher.tax_rate || 0);
+        const lineRate = (voucher.items || []).reduce(
+          (found, it) => (found || Number(it.tax_rate || 0)), 0
+        );
+        setTaxRate(String(headerRate || lineRate || 0));
+        setDiscountType(voucher.discount_type === 'amount' ? 'amount' : 'percent');
+        setDiscountValue(String(voucher.discount_value ?? '0'));
+
         setLines(
           (voucher.items || []).map((it) => ({
             id: it.id || Date.now(),
             product_id: String(it.product_id || ''),
-            item_description: it.item_description || '',
+            product_name: it.item_description || it.product?.name || '',
             hsn_code: it.hsn_code || '',
             unit: it.unit || '',
             quantity: String(it.quantity ?? '1'),
             rate: String(it.rate ?? '0'),
-            discount_percent: String(it.discount_percent ?? '0'),
-            tax_rate: String(it.tax_rate ?? '0'),
           }))
         );
       } catch (err) {
@@ -144,59 +256,106 @@ const ItemVoucherFormPage = () => {
     loadAvailability();
   };
 
+  /**
+   * Line and document figures, mirroring ItemVoucherService exactly.
+   *
+   * The discount comes off the taxable value first, tax is charged on what
+   * remains, and each line's share of the discount/tax is apportioned pro-rata
+   * so the line columns add up to the document totals.
+   */
   const computedLines = useMemo(() => {
     const byItemId = Object.fromEntries(
       (availability?.lines || []).map((line) => [String(line.voucher_item_id), line])
     );
-    return lines.map((l) => {
-      const qty = round3(l.quantity);
-      const rate = round2(l.rate);
-      const discPct = round2(l.discount_percent);
-      const taxRate = round2(l.tax_rate);
-      const gross = round2(qty * rate);
-      const disc = round2(gross * discPct / 100);
-      const taxable = round2(gross - disc);
-      const tax = round2(taxable * taxRate / 100);
+
+    const rate = round2(taxRate);
+    const gross = lines.map((l) => round2(round3(l.quantity) * round2(l.rate)));
+    const taxableTotal = round2(gross.reduce((s, g) => s + g, 0));
+
+    const discInput = round2(discountValue);
+    let discountTotal = discountType === 'amount' ? discInput : round2(taxableTotal * discInput / 100);
+    if (discountTotal > taxableTotal) discountTotal = taxableTotal;
+    discountTotal = round2(discountTotal);
+
+    const discountedTaxable = round2(taxableTotal - discountTotal);
+    const taxTotal = round2(discountedTaxable * rate / 100);
+    let cgstTotal = 0, sgstTotal = 0, igstTotal = 0;
+    if (gstType === 'inter') {
+      igstTotal = taxTotal;
+    } else {
+      cgstTotal = round2(taxTotal / 2);
+      sgstTotal = round2(taxTotal - cgstTotal);
+    }
+
+    const rows = lines.map((l, index) => {
+      const lineGross = gross[index];
+      const disc = taxableTotal > 0 ? round2(lineGross / taxableTotal * discountTotal) : 0;
+      const taxable = round2(lineGross - disc);
+      const tax = round2(taxable * rate / 100);
       let cgst = 0, sgst = 0, igst = 0;
       if (gstType === 'inter') {
-        igst = round2(tax);
+        igst = tax;
       } else {
         cgst = round2(tax / 2);
         sgst = round2(tax - cgst);
       }
-      const lineTax = round2(cgst + sgst + igst);
-      const total = round2(taxable + lineTax);
-      return { ...l, qty, rate, gross, disc, taxable, tax, cgst, sgst, igst, lineTax, total, stock: byItemId[String(l.id)] || null };
+      return {
+        ...l,
+        qty: round3(l.quantity),
+        rate: round2(l.rate),
+        gross: lineGross,
+        disc,
+        taxable,
+        tax,
+        cgst,
+        sgst,
+        igst,
+        lineTax: round2(cgst + sgst + igst),
+        total: round2(taxable + cgst + sgst + igst),
+        stock: byItemId[String(l.id)] || null,
+      };
     });
-  }, [lines, gstType, availability]);
+
+    const totals = {
+      taxable_total: taxableTotal,
+      discount_total: discountTotal,
+      cgst_total: cgstTotal,
+      sgst_total: sgstTotal,
+      igst_total: igstTotal,
+      tax_total: taxTotal,
+    };
+    return { rows, totals };
+  }, [lines, gstType, taxRate, discountType, discountValue, availability]);
 
   const totals = useMemo(() => {
-    const taxable_total = round2(computedLines.reduce((s, x) => s + x.taxable, 0));
-    const discount_total = round2(computedLines.reduce((s, x) => s + x.disc, 0));
-    const cgst_total = round2(computedLines.reduce((s, x) => s + x.cgst, 0));
-    const sgst_total = round2(computedLines.reduce((s, x) => s + x.sgst, 0));
-    const igst_total = round2(computedLines.reduce((s, x) => s + x.igst, 0));
-    const tax_total = round2(cgst_total + sgst_total + igst_total);
+    const t = computedLines.totals;
     const ro = round2(roundOff);
-    const grand = round2(taxable_total + tax_total + ro);
-    return { taxable_total, discount_total, cgst_total, sgst_total, igst_total, tax_total, round_off: ro, grand };
+    const grand = round2(t.taxable_total - t.discount_total + t.tax_total + ro);
+    return { ...t, round_off: ro, grand };
   }, [computedLines, roundOff]);
 
-  const handleLineChange = (id, field, value) => {
-    setLines((prev) => prev.map((l) => {
-      if (l.id === id) {
-        const upd = { ...l, [field]: value };
-        if (field === 'product_id' && value) {
-          const p = products.find((pr) => String(pr.id) === String(value));
-          if (p) {
-            upd.item_description = upd.item_description || p.name || '';
-            upd.hsn_code = upd.hsn_code || p.hsn_code || '';
+  /**
+   * Picking a product overwrites the line's description, HSN and unit.
+   *
+   * Overwriting rather than "fill if blank" is deliberate: the line must
+   * describe the product actually chosen, not the one chosen a moment ago.
+   */
+  const pickProduct = (lineId, product) => {
+    setLines((prev) => prev.map((l) => (
+      l.id === lineId
+        ? {
+            ...l,
+            product_id: product ? String(product.id) : '',
+            product_name: product ? (product.name || '') : l.product_name,
+            hsn_code: product ? (product.hsn_code || '') : l.hsn_code,
+            unit: product ? (product.unit || '') : l.unit,
           }
-        }
-        return upd;
-      }
-      return l;
-    }));
+        : l
+    )));
+  };
+
+  const handleLineChange = (id, field, value) => {
+    setLines((prev) => prev.map((l) => (l.id === id ? { ...l, [field]: value } : l)));
   };
 
   const addLine = () => setLines((prev) => [...prev, newLine()]);
@@ -205,9 +364,11 @@ const ItemVoucherFormPage = () => {
   const validate = () => {
     if (!form.voucher_date) return 'Pick a voucher date.';
     if (!partyLedgerId) return 'Choose the party ledger.';
-    if (lines.some((l) => !l.item_description)) return 'Every line needs a description.';
+    if (lines.some((l) => !l.product_name)) return 'Every line needs a product.';
     if (lines.some((l) => !(Number(l.quantity) > 0))) return 'Quantity must be greater than zero.';
     if (lines.some((l) => Number(l.rate) < 0)) return 'Rate cannot be negative.';
+    if (Number(discountValue) < 0) return 'The discount cannot be negative.';
+    if (discountType === 'percent' && Number(discountValue) > 100) return 'A percentage discount cannot exceed 100%.';
     if (totals.grand <= 0) return 'The voucher total must be greater than zero.';
     return null;
   };
@@ -227,15 +388,17 @@ const ItemVoucherFormPage = () => {
       party_ledger_id: Number(partyLedgerId),
       gst_type: gstType,
       round_off: round2(roundOff),
+      // Bill-level tax and discount.
+      tax_rate: round2(taxRate),
+      discount_type: discountType,
+      discount_value: round2(discountValue),
       items: lines.map((l) => ({
         product_id: l.product_id ? Number(l.product_id) : null,
-        item_description: l.item_description,
+        item_description: l.product_name,
         hsn_code: nullable(l.hsn_code),
         unit: nullable(l.unit),
         quantity: round3(l.quantity),
         rate: round2(l.rate),
-        discount_percent: round2(l.discount_percent),
-        tax_rate: round2(l.tax_rate),
       })),
     };
     try {
@@ -332,25 +495,40 @@ const ItemVoucherFormPage = () => {
             <label className={labelClass}>Narration</label>
             <input value={form.narration} onChange={(e) => setForm({ ...form, narration: e.target.value })} className={inputClass} />
           </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 rounded-lg bg-gray-50 p-3">
+            <div>
+              <label className={labelClass}>Tax % (whole bill)</label>
+              <input type="number" step="0.01" min="0" max="100" value={taxRate} onChange={(e) => setTaxRate(e.target.value)} className={inputClass} />
+            </div>
+            <div>
+              <label className={labelClass}>Discount type</label>
+              <select value={discountType} onChange={(e) => setDiscountType(e.target.value)} className={inputClass}>
+                <option value="percent">Percentage (%)</option>
+                <option value="amount">Amount (₹)</option>
+              </select>
+            </div>
+            <div>
+              <label className={labelClass}>{discountType === 'amount' ? 'Discount amount (₹)' : 'Discount percentage (%)'}</label>
+              <input type="number" step="0.01" min="0" value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} className={inputClass} />
+              <p className="mt-1 text-xs text-gray-400">Applied to the taxable value before tax</p>
+            </div>
+          </div>
         </div>
 
         <div className="bg-white rounded-lg shadow p-5">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-semibold text-gray-800">Line Items</h3>
-            <span className="text-xs text-gray-400 inline-flex items-center"><Info className="w-3 h-3 mr-1" />GST at line level</span>
+            <span className="text-xs text-gray-400 inline-flex items-center"><Info className="w-3 h-3 mr-1" />GST &amp; discount on the whole bill</span>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full text-xs md:text-sm">
               <thead>
                 <tr className="text-xs text-gray-500 uppercase tracking-wider">
                   <th className="px-2 py-2 text-left">Product</th>
-                  <th className="px-2 py-2 text-left">Description *</th>
                   <th className="px-2 py-2 text-left w-28">HSN</th>
-                  <th className="px-2 py-2 text-left w-20">Unit</th>
+                  <th className="px-2 py-2 text-left w-24">Unit</th>
                   <th className="px-2 py-2 text-left w-24">Qty *</th>
                   <th className="px-2 py-2 text-left w-28">Rate *</th>
-                  <th className="px-2 py-2 text-left w-24">Disc %</th>
-                  <th className="px-2 py-2 text-left w-24">Tax %</th>
                   {tracks && <th className="px-2 py-2 text-left w-24">On hand</th>}
                   <th className="px-2 py-2 text-right w-28">Taxable</th>
                   <th className="px-2 py-2 text-right w-28">Tax</th>
@@ -359,23 +537,22 @@ const ItemVoucherFormPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {computedLines.map((l) => (
+                {computedLines.rows.map((l) => (
                   <tr key={l.id}>
                     <td className="px-2 py-2 align-top">
-                      <select value={l.product_id} onChange={(e) => handleLineChange(l.id, 'product_id', e.target.value)} className={inputClass}>
-                        <option value="">— Custom —</option>
-                        {products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-                      </select>
-                    </td>
-                    <td className="px-2 py-2 align-top">
-                      <input value={l.item_description} onChange={(e) => handleLineChange(l.id, 'item_description', e.target.value)} className={inputClass} required />
+                      <ProductPicker
+                        value={l.product_id}
+                        products={products}
+                        onPick={(product) => pickProduct(l.id, product)}
+                      />
+                      {l.product_name && (
+                        <div className="mt-1 text-[11px] text-gray-600">{l.product_name}</div>
+                      )}
                     </td>
                     <td className="px-2 py-2 align-top"><input value={l.hsn_code} onChange={(e) => handleLineChange(l.id, 'hsn_code', e.target.value)} className={inputClass} /></td>
                     <td className="px-2 py-2 align-top"><input value={l.unit} onChange={(e) => handleLineChange(l.id, 'unit', e.target.value)} className={inputClass} /></td>
                     <td className="px-2 py-2 align-top"><input type="number" step="0.001" min="0" value={l.quantity} onChange={(e) => handleLineChange(l.id, 'quantity', e.target.value)} className={inputClass} required /></td>
                     <td className="px-2 py-2 align-top"><input type="number" step="0.01" min="0" value={l.rate} onChange={(e) => handleLineChange(l.id, 'rate', e.target.value)} className={inputClass} required /></td>
-                    <td className="px-2 py-2 align-top"><input type="number" step="0.01" min="0" max="100" value={l.discount_percent} onChange={(e) => handleLineChange(l.id, 'discount_percent', e.target.value)} className={inputClass} /></td>
-                    <td className="px-2 py-2 align-top"><input type="number" step="0.01" min="0" max="100" value={l.tax_rate} onChange={(e) => handleLineChange(l.id, 'tax_rate', e.target.value)} className={inputClass} /></td>
                     {tracks && (
                       <td className="px-2 py-2 align-top">
                         {!isEdit ? (
@@ -430,11 +607,24 @@ const ItemVoucherFormPage = () => {
             <h4 className="text-sm font-semibold text-gray-800 mb-3">Totals</h4>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between text-gray-600"><span>Taxable</span><span>{formatMoney(totals.taxable_total)}</span></div>
-              <div className="flex justify-between text-gray-600"><span>Discount</span><span>{formatMoney(totals.discount_total)}</span></div>
-              {gstType === 'intra' && totals.cgst_total !== 0 && <div className="flex justify-between text-gray-600"><span>CGST</span><span>{formatMoney(totals.cgst_total)}</span></div>}
-              {gstType === 'intra' && totals.sgst_total !== 0 && <div className="flex justify-between text-gray-600"><span>SGST</span><span>{formatMoney(totals.sgst_total)}</span></div>}
-              {gstType === 'inter' && totals.igst_total !== 0 && <div className="flex justify-between text-gray-600"><span>IGST</span><span>{formatMoney(totals.igst_total)}</span></div>}
-              <div className="flex justify-between text-gray-600"><span>Tax Total</span><span>{formatMoney(totals.tax_total)}</span></div>
+              <div className="flex justify-between text-gray-600">
+                <span>
+                  Discount
+                  {Number(totals.discount_total) > 0 && (
+                    <span className="ml-1 text-xs text-gray-400">
+                      ({discountType === 'amount' ? 'flat' : `${round2(discountValue)}%`})
+                    </span>
+                  )}
+                </span>
+                <span>{totals.discount_total > 0 ? `− ${formatMoney(totals.discount_total)}` : formatMoney(0)}</span>
+              </div>
+              <div className="flex justify-between text-gray-600">
+                <span>Tax ({round2(taxRate)}%)</span>
+                <span>{formatMoney(totals.tax_total)}</span>
+              </div>
+              {gstType === 'intra' && totals.cgst_total !== 0 && <div className="flex justify-between pl-4 text-gray-500"><span>CGST</span><span>{formatMoney(totals.cgst_total)}</span></div>}
+              {gstType === 'intra' && totals.sgst_total !== 0 && <div className="flex justify-between pl-4 text-gray-500"><span>SGST</span><span>{formatMoney(totals.sgst_total)}</span></div>}
+              {gstType === 'inter' && totals.igst_total !== 0 && <div className="flex justify-between pl-4 text-gray-500"><span>IGST</span><span>{formatMoney(totals.igst_total)}</span></div>}
               <div className="flex justify-between items-center text-gray-600">
                 <span>Round Off</span>
                 <input type="number" step="0.01" value={roundOff} onChange={(e) => setRoundOff(e.target.value)} className="w-24 border border-gray-300 rounded-lg px-2 py-1 text-sm" />

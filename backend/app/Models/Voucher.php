@@ -29,6 +29,9 @@ class Voucher extends Model
         'tax_total',
         'round_off',
         'gst_type',
+        'tax_rate',
+        'discount_type',
+        'discount_value',
         'created_by',
         'updated_by',
         'posted_at',
@@ -42,6 +45,8 @@ class Voucher extends Model
         'discount_total' => 'decimal:2',
         'tax_total' => 'decimal:2',
         'round_off' => 'decimal:2',
+        'tax_rate' => 'decimal:2',
+        'discount_value' => 'decimal:2',
         'posted_at' => 'datetime',
     ];
 

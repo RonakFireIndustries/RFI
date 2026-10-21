@@ -249,7 +249,20 @@ class VoucherController extends Controller
         $this->authorize($this->moduleFor($type) . '.view');
 
         return response()->json(
-            Product::query()->orderBy('name')->get(['id', 'name', 'hsn_code'])
+            Product::query()
+                ->with('unit:id,name')
+                ->where('status', 'active')
+                ->orderBy('name')
+                ->get(['id', 'name', 'sku', 'hsn_code', 'dimension', 'description', 'unit_id'])
+                ->map(fn (Product $p) => [
+                    'id' => $p->id,
+                    'name' => $p->name,
+                    'sku' => $p->sku,
+                    'hsn_code' => $p->hsn_code,
+                    'dimension' => $p->dimension,
+                    'description' => $p->description,
+                    'unit' => $p->unit?->name,
+                ])
         );
     }
 
@@ -342,6 +355,11 @@ class VoucherController extends Controller
             'due_date' => 'nullable|date',
             'gst_type' => ['nullable', Rule::in(['intra', 'inter'])],
             'round_off' => 'nullable|numeric',
+            // Tax and discount are document-level; the line only carries what
+            // the item is (description, HSN, unit) and how much at what rate.
+            'tax_rate' => 'nullable|numeric|min:0|max:100',
+            'discount_type' => ['nullable', Rule::in(['percent', 'amount'])],
+            'discount_value' => 'nullable|numeric|min:0',
             'base_ledger_id' => 'nullable|integer|exists:ledger_accounts,id',
             'cgst_ledger_id' => 'nullable|integer|exists:ledger_accounts,id',
             'sgst_ledger_id' => 'nullable|integer|exists:ledger_accounts,id',
@@ -354,8 +372,6 @@ class VoucherController extends Controller
             'items.*.unit' => 'nullable|string|max:16',
             'items.*.quantity' => 'required|numeric|gt:0',
             'items.*.rate' => 'required|numeric|min:0',
-            'items.*.discount_percent' => 'nullable|numeric|min:0|max:100',
-            'items.*.tax_rate' => 'nullable|numeric|min:0|max:100',
             'bill_allocations' => 'nullable|array',
             'bill_allocations.*.bill_type' => ['required', Rule::in(config('accounting.bill_types'))],
             'bill_allocations.*.bill_id' => 'nullable|integer',

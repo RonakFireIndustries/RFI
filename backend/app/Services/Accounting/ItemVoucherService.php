@@ -30,6 +30,9 @@ class ItemVoucherService
                 'amount' => $built['totals']['grand_total'],
                 'taxable_total' => $built['totals']['taxable_total'],
                 'discount_total' => $built['totals']['discount_total'],
+                'discount_type' => $built['totals']['discount_type'],
+                'discount_value' => $built['totals']['discount_value'],
+                'tax_rate' => $built['totals']['tax_rate'],
                 'tax_total' => $built['totals']['tax_total'],
                 'round_off' => $built['totals']['round_off'],
                 'gst_type' => $built['totals']['gst_type'],
@@ -53,6 +56,9 @@ class ItemVoucherService
                 'amount' => $built['totals']['grand_total'],
                 'taxable_total' => $built['totals']['taxable_total'],
                 'discount_total' => $built['totals']['discount_total'],
+                'discount_type' => $built['totals']['discount_type'],
+                'discount_value' => $built['totals']['discount_value'],
+                'tax_rate' => $built['totals']['tax_rate'],
                 'tax_total' => $built['totals']['tax_total'],
                 'round_off' => $built['totals']['round_off'],
                 'gst_type' => $built['totals']['gst_type'],
@@ -118,6 +124,7 @@ class ItemVoucherService
         }
 
         $totals = $this->computeTotals($items, $data);
+        $items = $this->apportionLines($items, $totals, $gstType);
         $ledgers = $this->resolveLedgers($type, $data, $posting, $totals);
         $entries = $this->buildEntries($type, $totals, $party, $ledgers, $posting);
 
@@ -144,7 +151,10 @@ class ItemVoucherService
             'items' => $items,
             'totals' => [
                 'taxable_total' => $totals['taxable_total'],
+                'discount_type' => $totals['discount_type'],
+                'discount_value' => $totals['discount_value'],
                 'discount_total' => $totals['discount_total'],
+                'tax_rate' => $totals['tax_rate'],
                 'tax_total' => $totals['tax_total'],
                 'round_off' => $totals['round_off'],
                 'grand_total' => $totals['grand_total'],
@@ -181,26 +191,14 @@ class ItemVoucherService
 
     protected function normaliseItems(string $gstType, array $items): array
     {
+        // Tax and discount belong to the bill, not the line. Each line is still
+        // stamped with the bill's rate and a zero discount so the per-line
+        // columns stay meaningful for readers that predate bill-level tax.
         $out = [];
         foreach ($items as $i) {
             $qty = round((float)($i['quantity'] ?? 0), 3);
             $rate = round((float)($i['rate'] ?? 0), 2);
-            $discPct = round((float)($i['discount_percent'] ?? 0), 2);
-            $taxRate = round((float)($i['tax_rate'] ?? 0), 2);
-            $gross = round($qty * $rate, 2);
-            $disc = round($gross * $discPct / 100, 2);
-            $taxable = round($gross - $disc, 2);
-            $tax = round($taxable * $taxRate / 100, 2);
-            if ($gstType === 'inter') {
-                $igst = round($tax, 2);
-                $cgst = 0.0;
-                $sgst = 0.0;
-            } else {
-                $cgst = round($tax / 2, 2);
-                $sgst = round($tax - $cgst, 2);
-                $igst = 0.0;
-            }
-            $lineTax = round($cgst + $sgst + $igst, 2);
+            $taxable = round($qty * $rate, 2);
             $out[] = [
                 'product_id' => $i['product_id'] ?? null,
                 'item_description' => $i['item_description'] ?? '',
@@ -208,46 +206,138 @@ class ItemVoucherService
                 'unit' => $i['unit'] ?? null,
                 'quantity' => $qty,
                 'rate' => $rate,
-                'discount_percent' => $discPct,
-                'discount_amount' => $disc,
+                'discount_percent' => 0.0,
+                'discount_amount' => 0.0,
                 'taxable_amount' => $taxable,
-                'tax_rate' => $taxRate,
-                'cgst_amount' => $cgst,
-                'sgst_amount' => $sgst,
-                'igst_amount' => $igst,
-                'tax_amount' => $lineTax,
-                'total_amount' => round($taxable + $lineTax, 2),
+                'tax_rate' => 0.0,
+                'cgst_amount' => 0.0,
+                'sgst_amount' => 0.0,
+                'igst_amount' => 0.0,
+                'tax_amount' => 0.0,
+                'total_amount' => $taxable,
             ];
         }
         return $out;
     }
 
+    /**
+     * Document totals for a bill-level tax and discount.
+     *
+     * The discount (a percentage of the taxable value, or a flat amount) comes
+     * off the taxable base first, then tax is charged on what remains — so a
+     * discount genuinely reduces the tax, exactly as the per-line code did.
+     * Each line's tax is then apportioned pro-rata on the discounted base so
+     * the line columns still add up to the document totals.
+     */
     protected function computeTotals(array $items, array $data): array
     {
-        $taxable_total = round(array_sum(array_map(fn($x)=>$x['taxable_amount'], $items)), 2);
-        $discount_total = round(array_sum(array_map(fn($x)=>$x['discount_amount'], $items)), 2);
-        $cgst_total = round(array_sum(array_map(fn($x)=>$x['cgst_amount'], $items)), 2);
-        $sgst_total = round(array_sum(array_map(fn($x)=>$x['sgst_amount'], $items)), 2);
-        $igst_total = round(array_sum(array_map(fn($x)=>$x['igst_amount'], $items)), 2);
-        $tax_total = round($cgst_total + $sgst_total + $igst_total, 2);
+        $gstType = ($data['gst_type'] ?? 'intra') === 'inter' ? 'inter' : 'intra';
+        $taxRate = round((float)($data['tax_rate'] ?? 0), 2);
+        if ($taxRate < 0 || $taxRate > 100) {
+            throw ValidationException::withMessages(['tax_rate' => 'The tax rate must be between 0 and 100.']);
+        }
+
+        $taxable_total = round(array_sum(array_map(fn($x) => $x['taxable_amount'], $items)), 2);
+
+        $discountType = ($data['discount_type'] ?? null) === 'amount' ? 'amount' : 'percent';
+        $discountValue = round((float)($data['discount_value'] ?? 0), 2);
+        if ($discountValue < 0) {
+            throw ValidationException::withMessages(['discount_value' => 'The discount cannot be negative.']);
+        }
+        $discount_total = $discountType === 'amount'
+            ? $discountValue
+            : round($taxable_total * $discountValue / 100, 2);
+
+        // A discount can never exceed what is being discounted.
+        if ($discount_total > $taxable_total) {
+            $discount_total = $taxable_total;
+        }
+        $discount_total = round($discount_total, 2);
+        $discounted_taxable = round($taxable_total - $discount_total, 2);
+
+        $tax_total = round($discounted_taxable * $taxRate / 100, 2);
+        if ($gstType === 'inter') {
+            $igst_total = $tax_total;
+            $cgst_total = 0.0;
+            $sgst_total = 0.0;
+        } else {
+            $cgst_total = round($tax_total / 2, 2);
+            $sgst_total = round($tax_total - $cgst_total, 2);
+            $igst_total = 0.0;
+        }
+
         $round_off = round((float)($data['round_off'] ?? 0), 2);
         if (abs($round_off) > 1000) {
             throw ValidationException::withMessages(['round_off' => 'Round off cannot exceed 1000.']);
         }
-        $grand = round($taxable_total + $tax_total + $round_off, 2);
+        $grand = round($discounted_taxable + $tax_total + $round_off, 2);
         if ($grand <= 0) {
             throw ValidationException::withMessages(['items' => 'The voucher total must be greater than zero.']);
         }
+
         return [
             'taxable_total' => $taxable_total,
+            'discount_type' => $discountType,
+            'discount_value' => $discountValue,
             'discount_total' => $discount_total,
+            'discounted_taxable' => $discounted_taxable,
+            'tax_rate' => $taxRate,
             'cgst_total' => $cgst_total,
             'sgst_total' => $sgst_total,
             'igst_total' => $igst_total,
             'tax_total' => $tax_total,
             'round_off' => $round_off,
             'grand_total' => $grand,
+            'gst_type' => $gstType,
         ];
+    }
+
+    /**
+     * Stamp each line with its share of the bill's discount and tax.
+     *
+     * The document figures are already final; this only makes the per-line
+     * columns consistent with them (a line shows the same total the totals
+     * panel attributes to it) without re-deriving anything.
+     */
+    protected function apportionLines(array $items, array $totals, string $gstType): array
+    {
+        $base = (float) $totals['taxable_total'];
+        $out = [];
+
+        foreach ($items as $item) {
+            $gross = (float) $item['taxable_amount'];
+            $discount = $base > 0
+                ? round($gross / $base * $totals['discount_total'], 2)
+                : 0.0;
+            $taxable = round($gross - $discount, 2);
+            $tax = round($taxable * $totals['tax_rate'] / 100, 2);
+
+            if ($gstType === 'inter') {
+                $igst = $tax;
+                $cgst = 0.0;
+                $sgst = 0.0;
+            } else {
+                $cgst = round($tax / 2, 2);
+                $sgst = round($tax - $cgst, 2);
+                $igst = 0.0;
+            }
+
+            $out[] = array_merge($item, [
+                'discount_percent' => $base > 0
+                    ? round($discount / $gross * 100, 2)
+                    : 0.0,
+                'discount_amount' => $discount,
+                'taxable_amount' => $taxable,
+                'tax_rate' => $totals['tax_rate'],
+                'cgst_amount' => $cgst,
+                'sgst_amount' => $sgst,
+                'igst_amount' => $igst,
+                'tax_amount' => round($cgst + $sgst + $igst, 2),
+                'total_amount' => round($taxable + $cgst + $sgst + $igst, 2),
+            ]);
+        }
+
+        return $out;
     }
 
     protected function resolveLedgers(string $type, array $data, array $posting, array $totals): array
@@ -321,7 +411,10 @@ class ItemVoucherService
             $entries[] = [
                 'ledger_id' => $ledgers['base']->id,
                 'entry_type' => $posting['base'] ?? 'Dr',
-                'amount' => round($totals['taxable_total'], 2),
+                // The discount is taken off the taxable value, so the base
+                // ledger is charged the net figure — otherwise the entry would
+                // not balance against the party total.
+                'amount' => round($totals['discounted_taxable'], 2),
             ];
         }
         foreach (['cgst', 'sgst', 'igst'] as $tax) {
