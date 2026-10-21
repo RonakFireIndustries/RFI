@@ -284,6 +284,10 @@ return [
                 'label' => 'Goods Receipt Notes',
                 'actions' => ['view', 'create', 'update', 'delete'],
             ],
+            'stock-receipts' => [
+                'label' => 'Stock Receipts',
+                'actions' => ['view', 'create', 'delete'],
+            ],
         ],
 
         'Sales & Survey' => [
@@ -842,6 +846,11 @@ return [
                 'purchase-vouchers.create',
                 'purchase-vouchers.update',
                 'purchase-vouchers.delete',
+
+                // Goods received against purchase / debit note vouchers.
+                'stock-receipts.view',
+                'stock-receipts.create',
+                'stock-receipts.delete',
                 'sales-vouchers.view',
                 'sales-vouchers.create',
                 'sales-vouchers.update',
@@ -1088,6 +1097,7 @@ return [
             'goods-receipt-notes',
             'purchase-vouchers',
             'debit-notes',
+            'stock-receipts',
         ],
         // Purchase & sales workflows need the customer list too.
         'customers.view' => [

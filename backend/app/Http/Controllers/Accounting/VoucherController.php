@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\Voucher;
 use App\Services\Accounting\ItemVoucherService;
 use App\Services\Accounting\PartyOutstandingService;
+use App\Services\Accounting\StockReceiptService;
 use App\Services\Accounting\VoucherService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -25,6 +26,7 @@ class VoucherController extends Controller
         protected VoucherService $vouchers,
         protected ItemVoucherService $items,
         protected PartyOutstandingService $outstanding,
+        protected StockReceiptService $stockReceipts,
     ) {
     }
 
@@ -36,6 +38,12 @@ class VoucherController extends Controller
         }
 
         $query = Voucher::with($this->vouchers->relations());
+
+        // The stock block on each row is derived from its lines, so load them
+        // up-front: without this the register is an N+1 over `voucher_items`.
+        if (collect($types)->contains(fn ($type) => $this->isItemType($type))) {
+            $query->with('items.product:id,name,sku');
+        }
 
         $requested = $request->input('voucher_type');
         if ($requested) {
@@ -74,7 +82,9 @@ class VoucherController extends Controller
             $query->whereDate('voucher_date', '<=', $request->input('to'));
         }
 
-        $vouchers = $query->orderByDesc('voucher_date')->orderByDesc('id')->get();
+        $vouchers = $query->orderByDesc('voucher_date')->orderByDesc('id')->get()
+            ->map(fn (Voucher $voucher) => $this->withStockSummary($voucher));
+
         return response()->json($vouchers);
     }
 
@@ -87,13 +97,15 @@ class VoucherController extends Controller
         } else {
             $voucher = $this->vouchers->create($this->validated($request), $request->user()->id);
         }
-        return response()->json($voucher, 201);
+        return response()->json($this->withStockSummary($voucher), 201);
     }
 
     public function show(Voucher $voucher)
     {
         $this->authorize($this->moduleFor($voucher->voucher_type) . '.view');
-        return response()->json($voucher->load($this->serviceFor($voucher->voucher_type)->relations()));
+        $voucher->load($this->serviceFor($voucher->voucher_type)->relations());
+
+        return response()->json($this->withStockSummary($voucher));
     }
 
     public function update(Request $request, Voucher $voucher)
@@ -106,7 +118,7 @@ class VoucherController extends Controller
         } else {
             $voucher = $this->vouchers->update($voucher, $this->validated($request), $request->user()->id);
         }
-        return response()->json($voucher);
+        return response()->json($this->withStockSummary($voucher));
     }
 
     public function destroy(Voucher $voucher)
@@ -133,7 +145,91 @@ class VoucherController extends Controller
             'defaults' => $this->items->defaultLedgers(),
             'gst_rates' => config('accounting.gst_rates', [0, 5, 12, 18, 28]),
             'bill_types' => config('accounting.bill_types', []),
+            // Which item types the warehouse receives (or delivers) against,
+            // so the form knows whether to show the stock panel at all.
+            'stock_types' => collect(config('accounting.voucher_types'))
+                ->filter(fn (array $type) => ! empty($type['stock']))
+                ->map(fn (array $type) => $type['stock'])
+                ->all(),
+            'stock_statuses' => config('accounting.stock_tracking.statuses', []),
         ]);
+    }
+
+    /**
+     * Whether a receipt may be keyed against this document.
+     *
+     * `posted_purchases` is the one to watch: a purchase bill may be recorded
+     * before the goods arrive (supplier invoices in advance), so the warehouse
+     * still has work to do. Item types that never move stock are omitted.
+     *
+     * @return array<string, mixed>
+     */
+    protected function stockMetaFor(string $type, $voucher = null): array
+    {
+        $direction = config("accounting.voucher_types.{$type}.stock");
+
+        if ($direction === null) {
+            return ['tracks_stock' => false, 'available' => false, 'mode' => null];
+        }
+
+        $outbound = $direction === 'out';
+        $status = $voucher ? $voucher->status : null;
+
+        return [
+            'tracks_stock' => true,
+            'available' => true,
+            'mode' => $outbound ? 'delivery' : 'receipt',
+            'direction' => $direction,
+            // Only a booked bill is received; a draft has not hit the books yet.
+            'blocked_reason' => ($status !== null && $status !== 'posted')
+                ? 'Post the voucher before recording goods against it.'
+                : null,
+        ];
+    }
+
+    /**
+     * Attach the receipt summary to a voucher payload.
+     *
+     * The register and the detail view both need to answer "has this arrived?"
+     * without a second round trip, so every item voucher carries its own
+     * `stock` block: direction, derived status, ordered / moved / pending
+     * totals, and the receipt history.
+     */
+    protected function withStockSummary(Voucher $voucher): Voucher
+    {
+        if (! $this->isItemType($voucher->voucher_type)) {
+            return $voucher;
+        }
+
+        try {
+            $voucher->setAttribute('stock', array_merge(
+                $this->stockMetaFor($voucher->voucher_type, $voucher),
+                $this->stockReceipts->summary($voucher),
+            ));
+        } catch (\Throwable $e) {
+            // The register must never go down because the warehouse half of it
+            // is unavailable (e.g. the stock_receipts migration has not run on
+            // this database yet). Degrade to "no stock data" and carry on.
+            $voucher->setAttribute('stock', array_merge(
+                $this->stockMetaFor($voucher->voucher_type, $voucher),
+                ['status' => null, 'lines' => [], 'receipts' => [], 'unavailable' => true],
+            ));
+        }
+
+        return $voucher;
+    }
+
+    /**
+     * On-hand stock per line, for the voucher form's availability column.
+     *
+     * Read-only on purpose: an accountant keying a sale should see that the
+     * warehouse is short, but a shortfall must not stop the sale being booked.
+     */
+    public function stockAvailability(Request $request, Voucher $voucher)
+    {
+        $this->authorize($this->moduleFor($voucher->voucher_type) . '.view');
+
+        return response()->json($this->stockReceipts->availability($voucher));
     }
 
     /**

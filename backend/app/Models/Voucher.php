@@ -60,6 +60,34 @@ class Voucher extends Model
         return $this->hasMany(VoucherBillAllocation::class);
     }
 
+    /**
+     * Goods movements against this document: receipts for a purchase, deliveries
+     * for a sale. Reversed rows stay in the history.
+     */
+    public function stockReceipts()
+    {
+        return $this->hasMany(StockReceipt::class)->orderBy('receipt_date')->orderBy('id');
+    }
+
+    public function activeStockReceipts()
+    {
+        return $this->hasMany(StockReceipt::class)->where('status', 'active');
+    }
+
+    /**
+     * Whether this type moves warehouse stock at all, and in which direction.
+     * Null for purely financial documents (credit notes, journals, …).
+     */
+    public function stockDirection(): ?string
+    {
+        return config("accounting.voucher_types.{$this->voucher_type}.stock");
+    }
+
+    public function tracksStock(): bool
+    {
+        return $this->stockDirection() !== null;
+    }
+
     public function party()
     {
         return $this->belongsTo(LedgerAccount::class, 'party_ledger_id');

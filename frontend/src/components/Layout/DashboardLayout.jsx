@@ -117,6 +117,7 @@ import RecordTransactionPage from '../../pages/Inventory/Transactions/RecordTran
 import TransfersPage from '../../pages/Inventory/Transfers/TransfersPage';
 import StockRequestsPage from '../../pages/Inventory/Requests/StockRequestsPage';
 import StockRequestDetail from '../../pages/Inventory/Requests/StockRequestDetail';
+import StockReceiptsPage from '../../pages/Inventory/Receipts/StockReceiptsPage';
 import ReportsPage from '../../pages/Reports/ReportsPage';
 import SettingsPage from '../../pages/Settings/SettingsPage';
 import UserSettingsPage from '../../pages/Settings/UserSettingsPage';
@@ -483,6 +484,7 @@ export default function DashboardLayout() {
               <Route path="inventory/transfers" element={<TransfersPage />} />
               <Route path="inventory/requests" element={<StockRequestsPage />} />
               <Route path="inventory/requests/:id" element={<StockRequestDetail />} />
+              <Route path="inventory/receipts" element={<StockReceiptsPage />} />
               <Route path="products" element={<ProductCatalog />} />
               <Route path="products/:id" element={<ProductDetail />} />
               <Route path="employees" element={<EmployeesPage />} />

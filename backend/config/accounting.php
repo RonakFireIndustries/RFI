@@ -54,6 +54,12 @@ return [
         ],
 
         // Section 2 — purchase / sales vouchers (later slice).
+        //
+        // `stock` names the direction the document moves warehouse stock in:
+        // an `in` document creates the goods receipt the warehouse fulfils, an
+        // `out` document is fulfilled by deliveries. `None` means the type
+        // never touches stock (a credit note is a financial adjustment that
+        // presumes the goods went back through a separate entry).
         'purchase' => [
             'label' => 'Purchase',
             'prefix' => 'PUR',
@@ -61,6 +67,7 @@ return [
             'module' => 'purchase-vouchers',
             'items' => true,
             'party_type' => 'supplier',
+            'stock' => 'in',
             'posting' => [
                 'party' => 'Cr',
                 'base' => 'Dr',
@@ -74,6 +81,7 @@ return [
             'module' => 'sales-vouchers',
             'items' => true,
             'party_type' => 'customer',
+            'stock' => 'out',
             'posting' => [
                 'party' => 'Dr',
                 'base' => 'Cr',
@@ -156,4 +164,23 @@ return [
 
     /* Voucher statuses. Only `posted` vouchers affect the books. */
     'statuses' => ['draft', 'posted', 'cancelled'],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Warehouse stock
+    |--------------------------------------------------------------------------
+    |
+    | Whether a document's goods actually reached (or left) the warehouse is
+    | tracked separately from the books, because a purchase bill arrives with
+    | the first part-delivery and the rest lands weeks later. The status is
+    | derived from the receipt lines rather than stored, so it can never drift:
+    | nothing received is `pending`, some is `partial`, all is `complete`, and
+    | a document whose lines carry no product at all is `not_tracked`.
+    |
+    */
+    'stock_tracking' => [
+        'statuses' => ['not_tracked', 'pending', 'partial', 'complete'],
+        'quantity_tolerance' => 0.001,
+    ],
+
 ];

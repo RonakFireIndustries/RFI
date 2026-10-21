@@ -41,6 +41,7 @@ use App\Http\Controllers\Accounting\AccountGroupController;
 use App\Http\Controllers\Accounting\LedgerAccountController;
 use App\Http\Controllers\Accounting\FinancialYearController;
 use App\Http\Controllers\Accounting\VoucherController;
+use App\Http\Controllers\Accounting\StockReceiptController;
 use App\Http\Controllers\Accounting\BankReconciliationController;
 use App\Http\Controllers\Accounting\AccountingReportController;
 
@@ -316,8 +317,24 @@ Route::prefix('v1')->group(function () {
     // /vouchers/{voucher}; it is declared first for clarity anyway.
     Route::get('/vouchers/meta', [VoucherController::class, 'meta']);
     Route::get('/vouchers/products', [VoucherController::class, 'products']);
+
+    /*
+     * Warehouse receipt / delivery tracking on item vouchers, plus the read-only
+     * stock availability the voucher form shows per line. Declared before the
+     * `vouchers/{voucher}` wildcard so the extra segments never get swallowed.
+     */
+    Route::get('/vouchers/{voucher}/stock-availability', [VoucherController::class, 'stockAvailability']);
+    Route::get('/vouchers/{voucher}/receipts', [StockReceiptController::class, 'forVoucher']);
+    Route::post('/vouchers/{voucher}/receipts', [StockReceiptController::class, 'store']);
+
     Route::get('/vouchers/party-outstanding/{ledger}', [VoucherController::class, 'partyOutstanding']);
     Route::apiResource('vouchers', VoucherController::class);
+
+    // Goods received against purchase / debit note vouchers. A receipt may be
+    // reversed while the books and the warehouse disagree; the rows are kept.
+    Route::get('/stock-receipts', [StockReceiptController::class, 'index']);
+    Route::get('/stock-receipts/{receipt}', [StockReceiptController::class, 'show']);
+    Route::delete('/stock-receipts/{receipt}', [StockReceiptController::class, 'destroy']);
 
     // Finance - Bank reconciliation (slice 4). The ledger is bound by id.
     Route::get('/bank-reconciliation', [BankReconciliationController::class, 'index']);

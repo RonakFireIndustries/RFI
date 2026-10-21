@@ -1,9 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, Save, Info } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Save, Info, PackageCheck, AlertTriangle } from 'lucide-react';
 import { useLedgerStore } from '../../store/accountingStore';
 import { voucherService } from '../../services/accountingService';
-import { VOUCHER_TYPES, partyTypeForVoucher } from '../../config/vouchers';
+import { useStockReceiptStore } from '../../store/stockReceiptStore';
+import PermissionGate from '../../components/Guards/PermissionGate';
+import StockReceiptPanel from '../../components/Accounting/StockReceiptPanel';
+import StockReceiptModal from '../../components/Accounting/StockReceiptModal';
+import { VOUCHER_TYPES, partyTypeForVoucher, tracksStock } from '../../config/vouchers';
 import { formatMoney } from '../../utils/finance';
 
 const inputClass = 'w-full border border-gray-300 rounded-lg shadow-sm px-3 py-2 text-sm focus:ring-orange-500 focus:border-orange-500';
@@ -51,9 +55,21 @@ const ItemVoucherFormPage = () => {
 
   const [meta, setMeta] = useState(null);
   const [products, setProducts] = useState([]);
+  const [availability, setAvailability] = useState(null);
+  const [receiptModalOpen, setReceiptModalOpen] = useState(false);
+
+  const receipts = useStockReceiptStore();
 
   const config = VOUCHER_TYPES[type] || { label: type };
   const partyOptionType = partyTypeForVoucher(type);
+  const outbound = config.stock === 'out';
+  const tracks = tracksStock(type);
+
+  /** On-hand per product, so a sale shows when the warehouse is short. */
+  const loadAvailability = () => {
+    if (!isEdit || !tracks) return;
+    voucherService.stockAvailability(id).then(setAvailability).catch(() => setAvailability(null));
+  };
 
   useEffect(() => {
     ledgersStore.fetchItems({ status: 'active' }).catch(() => {});
@@ -61,6 +77,13 @@ const ItemVoucherFormPage = () => {
     voucherService.products(type).then(setProducts).catch(() => setProducts([]));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!isEdit || !tracks) return;
+    receipts.fetchForVoucher(id).catch(() => {});
+    loadAvailability();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, isEdit, tracks]);
 
   useEffect(() => {
     if (!isEdit || !type) return;
@@ -104,7 +127,27 @@ const ItemVoucherFormPage = () => {
   const ledgers = ledgersStore.items;
   const partyLedgers = useMemo(() => ledgers.filter((l) => l.party_type === partyOptionType), [ledgers, partyOptionType]);
 
+  /** Enough of the document for the receipt modal's header line. */
+  const voucherForModal = useMemo(() => {
+    const party = ledgers.find((l) => String(l.id) === String(partyLedgerId));
+    return {
+      id,
+      voucher_no: form.reference_no || `#${id}`,
+      voucher_type: type,
+      party: party ? { name: party.name } : null,
+    };
+  }, [id, type, form.reference_no, partyLedgerId, ledgers]);
+
+  const submitReceipt = async (payload) => {
+    await receipts.createReceipt(id, payload);
+    setReceiptModalOpen(false);
+    loadAvailability();
+  };
+
   const computedLines = useMemo(() => {
+    const byItemId = Object.fromEntries(
+      (availability?.lines || []).map((line) => [String(line.voucher_item_id), line])
+    );
     return lines.map((l) => {
       const qty = round3(l.quantity);
       const rate = round2(l.rate);
@@ -123,9 +166,9 @@ const ItemVoucherFormPage = () => {
       }
       const lineTax = round2(cgst + sgst + igst);
       const total = round2(taxable + lineTax);
-      return { ...l, qty, rate, gross, disc, taxable, tax, cgst, sgst, igst, lineTax, total };
+      return { ...l, qty, rate, gross, disc, taxable, tax, cgst, sgst, igst, lineTax, total, stock: byItemId[String(l.id)] || null };
     });
-  }, [lines, gstType]);
+  }, [lines, gstType, availability]);
 
   const totals = useMemo(() => {
     const taxable_total = round2(computedLines.reduce((s, x) => s + x.taxable, 0));
@@ -222,8 +265,38 @@ const ItemVoucherFormPage = () => {
             <p className="text-sm text-gray-500">Item-based voucher with GST</p>
           </div>
         </div>
+        {isEdit && tracks && (
+          <PermissionGate module="stock-receipts" action="create" subject={`goods for this ${config.label.toLowerCase()}`}>
+            <button
+              type="button"
+              onClick={() => setReceiptModalOpen(true)}
+              disabled={receipts.summary?.status === 'complete'}
+              title={receipts.summary?.status === 'complete' ? 'Everything has already arrived' : undefined}
+              className="inline-flex items-center rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100 disabled:opacity-50"
+            >
+              <PackageCheck className="mr-2 h-4 w-4" />
+              {outbound ? 'Record Delivery' : 'Receive Stock'}
+            </button>
+          </PermissionGate>
+        )}
       </div>
       {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
+      {isEdit && tracks && (
+        <div className="mb-6">
+          <StockReceiptPanel
+            summary={receipts.summary}
+            loading={receipts.loading}
+            saving={receipts.saving}
+            onReverse={(receipt) => {
+              const reason = window.prompt(`Reverse ${receipt.receipt_no}? The stock movement will be undone.`, '');
+              if (reason === null) return;
+              receipts.reverseReceipt(receipt.id, reason || 'Reversed from the voucher screen')
+                .then(loadAvailability)
+                .catch((err) => setError(firstError(err)));
+            }}
+          />
+        </div>
+      )}
       <form onSubmit={submit} className="space-y-6">
         <div className="bg-white rounded-lg shadow p-5 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -278,6 +351,7 @@ const ItemVoucherFormPage = () => {
                   <th className="px-2 py-2 text-left w-28">Rate *</th>
                   <th className="px-2 py-2 text-left w-24">Disc %</th>
                   <th className="px-2 py-2 text-left w-24">Tax %</th>
+                  {tracks && <th className="px-2 py-2 text-left w-24">On hand</th>}
                   <th className="px-2 py-2 text-right w-28">Taxable</th>
                   <th className="px-2 py-2 text-right w-28">Tax</th>
                   <th className="px-2 py-2 text-right w-28">Total</th>
@@ -302,6 +376,27 @@ const ItemVoucherFormPage = () => {
                     <td className="px-2 py-2 align-top"><input type="number" step="0.01" min="0" value={l.rate} onChange={(e) => handleLineChange(l.id, 'rate', e.target.value)} className={inputClass} required /></td>
                     <td className="px-2 py-2 align-top"><input type="number" step="0.01" min="0" max="100" value={l.discount_percent} onChange={(e) => handleLineChange(l.id, 'discount_percent', e.target.value)} className={inputClass} /></td>
                     <td className="px-2 py-2 align-top"><input type="number" step="0.01" min="0" max="100" value={l.tax_rate} onChange={(e) => handleLineChange(l.id, 'tax_rate', e.target.value)} className={inputClass} /></td>
+                    {tracks && (
+                      <td className="px-2 py-2 align-top">
+                        {!isEdit ? (
+                          <span className="text-xs text-gray-400" title="Available once the voucher is saved">—</span>
+                        ) : !l.stock?.tracked ? (
+                          <span className="text-xs text-gray-400">n/a</span>
+                        ) : (
+                          <div className="text-xs">
+                            <div className={`font-semibold ${Number(l.stock?.shortfall_quantity) > 0 ? 'text-amber-700' : 'text-gray-800'}`}>
+                              {round3(l.stock?.on_hand_quantity)}
+                            </div>
+                            {Number(l.stock?.shortfall_quantity) > 0 && (
+                              <div className="inline-flex items-center text-amber-700" title="Recording this sale will take stock negative">
+                                <AlertTriangle className="mr-0.5 h-3 w-3" />
+                                short {round3(l.stock?.shortfall_quantity)}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                    )}
                     <td className="px-2 py-2 align-top text-right text-gray-700">{formatMoney(l.taxable)}</td>
                     <td className="px-2 py-2 align-top text-right text-gray-700">{formatMoney(l.lineTax)}</td>
                     <td className="px-2 py-2 align-top text-right font-medium text-gray-900">{formatMoney(l.total)}</td>
@@ -356,6 +451,15 @@ const ItemVoucherFormPage = () => {
           </button>
         </div>
       </form>
+
+      <StockReceiptModal
+        open={receiptModalOpen}
+        summary={receipts.summary}
+        voucher={voucherForModal}
+        saving={receipts.saving}
+        onClose={() => setReceiptModalOpen(false)}
+        onSubmit={submitReceipt}
+      />
     </div>
   );
 };

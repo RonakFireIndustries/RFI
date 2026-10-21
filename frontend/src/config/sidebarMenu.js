@@ -4,7 +4,7 @@ import {
   Ruler, GitCompare, Move3D, FileSpreadsheet, FileClock, FileInput, Building2,
   TrendingUp, Target, Bell, BarChart3, PenTool, Flame, LifeBuoy, Wallet,
   BookOpen, ListTree, CalendarRange, ArrowLeftRight, Banknote, Receipt, ScrollText,
-  Landmark, Calculator,
+  Landmark, Calculator, PackageCheck,
 } from 'lucide-react';
 import { VOUCHER_SHORTCUTS } from './voucherShortcuts';
 
@@ -124,6 +124,7 @@ export const menuCategories = [
       { name: 'Units', path: '/dashboard/inventory/units', icon: Ruler, permissions: ['units.view'] },
       { name: 'Conversions', path: '/dashboard/inventory/conversions', icon: GitCompare, permissions: ['unit-conversions.view'] },
       { name: 'Stock', path: '/dashboard/inventory/stock', icon: Package, permissions: ['stock.view'] },
+      { name: 'Goods Receipts', path: '/dashboard/inventory/receipts', icon: PackageCheck, permissions: ['stock-receipts.view'] },
       { name: 'Transfers', path: '/dashboard/inventory/transfers', icon: Move3D, permissions: ['stock-transfers.view'] },
       { name: 'Transactions', path: '/dashboard/inventory/transactions', icon: FileSpreadsheet, permissions: ['stock-transactions.view'] },
       { name: 'Stock Requests', path: '/dashboard/inventory/requests', icon: FileInput, permissions: ['stock-requests.view'] },
