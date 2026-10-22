@@ -40,33 +40,14 @@ class SyncEmployeeRoles extends Command
                 continue;
             }
 
-            // Which identity groups this employee belongs to. Matching is
-            // case-insensitive and EXACT on both designation and department -
-            // "Fitter" contains the letters "it", so substring matching would
-            // silently promote every Fitter into the IT group.
-            $designation = strtolower(trim($user->employee?->designation?->name ?? ''));
-            $department = strtolower(trim($user->employee?->department?->name ?? ''));
-
-            $matchedGroups = [];
-            $extra = [];
-            foreach ($groups as $label => $group) {
-                $designations = array_map(
-                    fn($name) => strtolower(trim((string) $name)),
-                    $group['designations'] ?? []
-                );
-                $departments = array_map(
-                    fn($name) => strtolower(trim((string) $name)),
-                    $group['departments'] ?? []
-                );
-
-                if (
-                    in_array($designation, $designations, true)
-                    || in_array($department, $departments, true)
-                ) {
-                    $matchedGroups[] = $label;
-                    $extra = array_merge($extra, $group['permissions'] ?? []);
-                }
-            }
+            // Which identity groups this employee belongs to, and what those
+            // groups grant. Matching is case-insensitive and EXACT on both
+            // designation and department - "Fitter" contains the letters "it",
+            // so substring matching would silently promote every Fitter into
+            // the IT group.
+            $identity = Access::identityMatches($user);
+            $matchedGroups = $identity['groups'];
+            $extra = $identity['permissions'];
 
             // Only grant permission names whose rows exist, otherwise
             // givePermissionTo() throws on a typo'd or unseeded name.

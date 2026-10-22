@@ -618,7 +618,12 @@ return [
     |
     | Run after editing:
     |     php artisan db:seed --class=CanonicalPermissionsSeeder   (new permission names)
-    |     php artisan employees:sync-roles                        (apply the grants)
+    |     php artisan access:sync-grants                         (apply the grants)
+    |
+    | access:sync-grants is the one to reach for: it only ADDS the grants
+    | listed here. employees:sync-roles does the same but also detaches every
+    | Spatie role and revokes the retired baseline, which is a separate
+    | migration - do not run it just to ship one new module.
     |
     */
     'identity_grants' => [
@@ -657,6 +662,16 @@ return [
                 'daily-reports.view',
                 'leaves.view',
                 'holidays.view',
+
+                // The company holiday calendar is maintained here as well as by
+                // HR: this organisation has no HR designation or department, so
+                // the Human Resources group below matches nobody and the
+                // calendar would otherwise have no one able to maintain it.
+                // Delete stays withheld - retiring a holiday (status ->
+                // Inactive) is the reversible way to take a day off.
+                'holidays.create',
+                'holidays.update',
+
                 'payroll.view',
                 'reports.view',
                 'reports.export',

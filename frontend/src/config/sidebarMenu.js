@@ -59,6 +59,7 @@ export const menuCategories = [
       { name: 'Daily Reports', path: '/dashboard/daily-reports', icon: FileText, permissions: ['*'] },
       { name: 'Leave', path: '/dashboard/leave-management', icon: Briefcase, permissions: ['leaves.approve', 'leaves.reject'] },
       { name: 'My Leaves', path: '/dashboard/my-leaves', icon: FileText, permissions: ['*'] },
+      { name: 'Holidays', path: '/dashboard/holidays', icon: CalendarDays, permissions: ['holidays.view'] },
     ],
   },
   {
@@ -96,7 +97,6 @@ export const menuCategories = [
       { name: 'Departments', path: '/dashboard/departments', icon: Layers, permissions: ['departments.view'] },
       { name: 'Designations', path: '/dashboard/designations', icon: Briefcase, permissions: ['designations.view'] },
       { name: 'Sites', path: '/dashboard/sites', icon: MapPin, permissions: ['sites.view'] },
-      { name: 'Holidays', path: '/dashboard/holidays', icon: CalendarDays, permissions: ['holidays.view'] },
     ],
   },
   {
