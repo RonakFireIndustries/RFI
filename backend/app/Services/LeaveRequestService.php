@@ -182,7 +182,10 @@ class LeaveRequestService
         $end = Carbon::parse($endDate);
         
         $days = 0;
-        $holidays = Holiday::whereBetween('date', [$start->format('Y-m-d'), $end->format('Y-m-d')])->pluck('date')->toArray();
+        $holidays = Holiday::whereBetween('date', [$start->format('Y-m-d'), $end->format('Y-m-d')])
+            ->active()
+            ->pluck('date')
+            ->toArray();
 
         while ($start <= $end) {
             // Skip Sundays (0) and holidays
@@ -200,7 +203,10 @@ class LeaveRequestService
         $start = Carbon::parse($leave->start_date);
         $end = Carbon::parse($leave->end_date);
         
-        $holidays = Holiday::whereBetween('date', [$start->format('Y-m-d'), $end->format('Y-m-d')])->pluck('date')->toArray();
+        $holidays = Holiday::whereBetween('date', [$start->format('Y-m-d'), $end->format('Y-m-d')])
+            ->active()
+            ->pluck('date')
+            ->toArray();
 
         while ($start <= $end) {
             if ($start->dayOfWeek !== Carbon::SUNDAY && !in_array($start->format('Y-m-d'), $holidays)) {

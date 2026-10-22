@@ -84,6 +84,7 @@ import DailyReportsPage from '../../pages/DailyReports/DailyReportsPage';
 import DailyReportDetail from '../../pages/DailyReports/DailyReportDetail';
 import DailyReportForm from '../../pages/DailyReports/DailyReportForm';
 import LeaveDashboardPage from '../../pages/LeaveManagement/LeaveDashboardPage';
+import HolidaysPage from '../../pages/Holidays/HolidaysPage';
 import LeaveTypesPage from '../../pages/LeaveManagement/LeaveTypesPage';
 import LeaveBalancesPage from '../../pages/LeaveManagement/LeaveBalancesPage';
 import LeaveRequestsPage from '../../pages/LeaveManagement/LeaveRequestsPage';
@@ -118,7 +119,8 @@ import TransfersPage from '../../pages/Inventory/Transfers/TransfersPage';
 import StockRequestsPage from '../../pages/Inventory/Requests/StockRequestsPage';
 import StockRequestDetail from '../../pages/Inventory/Requests/StockRequestDetail';
 import StockReceiptsPage from '../../pages/Inventory/Receipts/StockReceiptsPage';
-import ReportsPage from '../../pages/Reports/ReportsPage';
+import ReportsIndexPage from '../../pages/ReportPack/ReportsIndexPage';
+import ReportViewPage from '../../pages/ReportPack/ReportViewPage';
 import SettingsPage from '../../pages/Settings/SettingsPage';
 import UserSettingsPage from '../../pages/Settings/UserSettingsPage';
 
@@ -499,6 +501,7 @@ export default function DashboardLayout() {
               <Route path="daily-reports/new" element={<DailyReportForm />} />
               <Route path="daily-reports/:id" element={<DailyReportDetail />} />
               <Route path="daily-reports/:id/edit" element={<DailyReportForm />} />
+              <Route path="holidays" element={<HolidaysPage />} />
 
               <Route path="leave-management" element={<LeaveDashboardPage />} />
               <Route path="leave-management/types" element={<LeaveTypesPage />} />
@@ -592,7 +595,33 @@ export default function DashboardLayout() {
               <Route path="invoices" element={<InvoiceList />} />
               <Route path="invoices/create" element={<InvoiceBuilder />} />
               <Route path="invoices/:id" element={<InvoicePreviewPage />} />
-              <Route path="reports" element={<ReportsPage />} />
+              {/* The module report pack. One catalogue page and one generic
+                  viewer: every module report is described by the backend, so
+                  there is no page per report. See pages/ReportPack. */}
+              <Route
+                path="reports"
+                element={
+                  <PermissionGuard
+                    permission="reports.view"
+                    fallback={<AccessDenied title="Reports" permission="reports.view" />}
+                  >
+                    <ReportsIndexPage />
+                  </PermissionGuard>
+                }
+              />
+              {/* One page draws every module report; the module and report
+                  keys tell it which one. See pages/ReportPack. */}
+              <Route
+                path="reports/:module/:report"
+                element={
+                  <PermissionGuard
+                    permission="reports.view"
+                    fallback={<AccessDenied title="Reports" permission="reports.view" />}
+                  >
+                    <ReportViewPage />
+                  </PermissionGuard>
+                }
+              />
               <Route path="settings" element={<SettingsPage />} />
               <Route path="user-settings" element={<UserSettingsPage />} />
               <Route path="access-control" element={<AccessControl />} />

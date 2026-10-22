@@ -33,6 +33,7 @@ class ItemVoucherTest extends TestCase
         '2026_10_17_000006_create_voucher_bill_allocations_table.php',
         '2026_10_17_000007_create_voucher_items_table.php',
         '2026_10_17_000008_add_document_totals_to_vouchers_table.php',
+        '2026_10_21_000002_add_bill_level_tax_discount_to_vouchers.php',
         '2026_10_19_000001_add_due_date_to_vouchers.php',
         '2026_10_19_000002_add_credit_days_to_parties.php',
     ];

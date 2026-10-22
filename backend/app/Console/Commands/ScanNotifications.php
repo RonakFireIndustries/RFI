@@ -228,7 +228,7 @@ class ScanNotifications extends Command
         }
 
         try {
-            if (\App\Models\Holiday::query()->whereDate('date', $today)->exists()) {
+            if (\App\Models\Holiday::query()->whereDate('date', $today)->active()->exists()) {
                 return 0;
             }
         } catch (\Throwable $e) {

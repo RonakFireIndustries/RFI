@@ -33,6 +33,7 @@ class VoucherProductPickingTest extends TestCase
         '2026_10_17_000006_create_voucher_bill_allocations_table.php',
         '2026_10_17_000007_create_voucher_items_table.php',
         '2026_10_17_000008_add_document_totals_to_vouchers_table.php',
+        '2026_10_21_000002_add_bill_level_tax_discount_to_vouchers.php',
         '2026_10_19_000001_add_due_date_to_vouchers.php',
         '2026_10_19_000002_add_credit_days_to_parties.php',
     ];
@@ -51,11 +52,15 @@ class VoucherProductPickingTest extends TestCase
             $table->string('name');
             $table->string('sku')->nullable();
             $table->string('hsn_code')->nullable();
+            $table->string('dimension')->nullable();
+            $table->text('description')->nullable();
+            $table->foreignId('unit_id')->nullable();
+            $table->string('status')->default('active');
             $table->timestamps();
         });
 
-        Product::create(['name' => 'Widget', 'hsn_code' => '9988']);
-        Product::create(['name' => 'Bolt', 'hsn_code' => '7788']);
+        Product::create(['name' => 'Widget', 'hsn_code' => '9988', 'status' => 'active']);
+        Product::create(['name' => 'Bolt', 'hsn_code' => '7788', 'status' => 'active']);
     }
 
     private function userWith(array $names): User
@@ -86,7 +91,7 @@ class VoucherProductPickingTest extends TestCase
         $response->assertJsonPath('data.0.hsn_code', '7788');
         $response->assertJsonPath('data.1.name', 'Widget');
         $this->assertSame(
-            ['id', 'name', 'hsn_code'],
+            ['id', 'name', 'sku', 'hsn_code', 'dimension', 'description', 'unit'],
             array_keys($response->json('data.0'))
         );
     }

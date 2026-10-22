@@ -91,6 +91,13 @@ return [
                 'label' => 'Leave Types',
                 'actions' => ['view', 'create', 'update', 'delete'],
             ],
+            // The company holiday calendar. Payroll, attendance and leave all
+            // read these rows, so who may edit them decides the working days
+            // of the whole organisation.
+            'holidays' => [
+                'label' => 'Holidays',
+                'actions' => ['view', 'create', 'update', 'delete'],
+            ],
         ],
 
         'Payroll' => [
@@ -649,6 +656,7 @@ return [
                 'sites.view',
                 'daily-reports.view',
                 'leaves.view',
+                'holidays.view',
                 'payroll.view',
                 'reports.view',
                 'reports.export',
@@ -720,6 +728,14 @@ return [
                 'leave-types.view',
                 'leave-types.create',
                 'leave-types.update',
+
+                // The company holiday calendar. Delete is withheld on
+                // purpose: retiring a holiday (status -> Inactive) is the
+                // reversible way to take a day off the working days, so the
+                // history of what the company declared is never lost.
+                'holidays.view',
+                'holidays.create',
+                'holidays.update',
 
                 // DPR review.
                 'daily-reports.view',

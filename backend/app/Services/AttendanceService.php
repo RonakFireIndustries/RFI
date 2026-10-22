@@ -385,6 +385,7 @@ class AttendanceService
             ->keyBy(fn ($attendance) => Carbon::parse($attendance->date)->toDateString());
 
         $holidays = Holiday::whereBetween('date', [$start->toDateString(), $end->toDateString()])
+            ->active()
             ->pluck('date')
             ->map(fn ($date) => Carbon::parse($date)->toDateString())
             ->toArray();

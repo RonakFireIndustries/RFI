@@ -193,6 +193,7 @@ class PayrollCalculationService
             ->keyBy(fn (Attendance $attendance) => Carbon::parse($attendance->date)->toDateString());
 
         $holidays = Holiday::whereBetween('date', [$startKey, $endKey])
+            ->active()
             ->pluck('date')
             ->mapWithKeys(fn ($date) => [Carbon::parse($date)->toDateString() => true])
             ->all();

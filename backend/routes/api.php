@@ -23,6 +23,7 @@ use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\ReportsModuleController;
+use App\Http\Controllers\ModuleReportController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserAccessController;
 use App\Http\Controllers\SalaryStructureController;
@@ -37,6 +38,7 @@ use App\Http\Controllers\TransactionLedgerController;
 use App\Http\Controllers\StockRequestController;
 use App\Http\Controllers\InventoryDashboardController;
 use App\Http\Controllers\Api\V1\AccessControlController;
+use App\Http\Controllers\Api\V1\HolidayController;
 use App\Http\Controllers\Accounting\AccountGroupController;
 use App\Http\Controllers\Accounting\LedgerAccountController;
 use App\Http\Controllers\Accounting\FinancialYearController;
@@ -377,7 +379,22 @@ Route::prefix('v1')->group(function () {
     Route::delete('/reports-module/schedules/{schedule}', [ReportsModuleController::class, 'destroySchedule']);
     Route::post('/reports-module/schedules/{schedule}/toggle', [ReportsModuleController::class, 'toggleSchedule']);
 
+    // Module report pack (declarative registry - see app/Support/Reports).
+    // One endpoint serves every report in the application: the catalogue
+    // lists what the signed-in user may open, and each report is then run by
+    // its own registry key. Access is decided per report, by the permission
+    // the report declares.
+    Route::get('/module-reports', [ModuleReportController::class, 'catalog']);
+    Route::get('/module-reports/{module}/{report}/export', [ModuleReportController::class, 'export']);
+    Route::get('/module-reports/{module}/{report}', [ModuleReportController::class, 'run']);
+
     // Generic Admin Routes (removed - SuperAdmin no longer supported)
+
+    // Company holiday calendar.
+    // `/holidays/years` is a static segment, so it has to be declared before
+    // the apiResource - whose {holiday} wildcard would otherwise swallow it.
+    Route::get('/holidays/years', [HolidayController::class, 'years']);
+    Route::apiResource('holidays', HolidayController::class);
 
     // Leave Types
     Route::apiResource('leave-types', LeaveTypeController::class);

@@ -4,7 +4,7 @@ import {
   Ruler, GitCompare, Move3D, FileSpreadsheet, FileClock, FileInput, Building2,
   TrendingUp, Target, Bell, BarChart3, PenTool, Flame, LifeBuoy, Wallet,
   BookOpen, ListTree, CalendarRange, ArrowLeftRight, Banknote, Receipt, ScrollText,
-  Landmark, Calculator, PackageCheck,
+  Landmark, Calculator, PackageCheck, CalendarDays,
 } from 'lucide-react';
 import { VOUCHER_SHORTCUTS } from './voucherShortcuts';
 
@@ -96,6 +96,7 @@ export const menuCategories = [
       { name: 'Departments', path: '/dashboard/departments', icon: Layers, permissions: ['departments.view'] },
       { name: 'Designations', path: '/dashboard/designations', icon: Briefcase, permissions: ['designations.view'] },
       { name: 'Sites', path: '/dashboard/sites', icon: MapPin, permissions: ['sites.view'] },
+      { name: 'Holidays', path: '/dashboard/holidays', icon: CalendarDays, permissions: ['holidays.view'] },
     ],
   },
   {
