@@ -289,7 +289,6 @@ class HolidayTest extends TestCase
         $days = app(LeaveRequestService::class)->calculateDays('2026-01-05', '2026-01-09', false);
 
         // The active holiday takes one day out; the retired one does not.
-        $this->assertLessThan(5.0, (float) $days);
         $this->assertSame(4.0, (float) $days);
     }
 

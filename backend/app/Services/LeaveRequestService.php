@@ -182,10 +182,7 @@ class LeaveRequestService
         $end = Carbon::parse($endDate);
         
         $days = 0;
-        $holidays = Holiday::whereBetween('date', [$start->format('Y-m-d'), $end->format('Y-m-d')])
-            ->active()
-            ->pluck('date')
-            ->toArray();
+        $holidays = $this->activeHolidayDates($start, $end);
 
         while ($start <= $end) {
             // Skip Sundays (0) and holidays
@@ -198,15 +195,29 @@ class LeaveRequestService
         return $days;
     }
 
+    /**
+     * The Active holidays inside a range, as plain Y-m-d strings.
+     *
+     * `pluck()` reads the raw column and so skips the model's date cast: the
+     * cast writes "Y-m-d H:i:s", which MySQL's DATE column truncates but a
+     * SQLite DATE column keeps. Normalising here means the comparison against
+     * a calendar day always matches, whatever the driver handed back.
+     */
+    protected function activeHolidayDates(Carbon $start, Carbon $end): array
+    {
+        return Holiday::whereBetween('date', [$start->format('Y-m-d'), $end->format('Y-m-d')])
+            ->active()
+            ->pluck('date')
+            ->map(fn ($date) => Carbon::parse($date)->toDateString())
+            ->toArray();
+    }
+
     protected function syncAttendance(Leave $leave)
     {
         $start = Carbon::parse($leave->start_date);
         $end = Carbon::parse($leave->end_date);
         
-        $holidays = Holiday::whereBetween('date', [$start->format('Y-m-d'), $end->format('Y-m-d')])
-            ->active()
-            ->pluck('date')
-            ->toArray();
+        $holidays = $this->activeHolidayDates($start, $end);
 
         while ($start <= $end) {
             if ($start->dayOfWeek !== Carbon::SUNDAY && !in_array($start->format('Y-m-d'), $holidays)) {

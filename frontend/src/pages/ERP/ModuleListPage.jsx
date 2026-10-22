@@ -110,7 +110,9 @@ export default function ModuleListPage({
         }
       }
       closeModal();
-      fetchItems();
+      // Refetch with the same filters the page was loaded with, so a list
+      // narrowed by (say) a year filter stays narrowed after a save.
+      fetchItems(fetchParams);
     } catch (error) {
       console.error(error);
       const errors = error.response?.data?.errors;
@@ -217,6 +219,10 @@ export default function ModuleListPage({
           canUpdate,
           canDelete,
           denialFor,
+          // The built table columns, so a custom renderer can still show the
+          // standard table (with the Edit / Delete actions) alongside its own
+          // controls.
+          tableColumns,
         })
       ) : (
         <DataTable

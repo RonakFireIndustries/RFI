@@ -1,6 +1,7 @@
 import ModuleListPage from '../ERP/ModuleListPage';
 import { useHolidayStore } from '../../store/holidayStore';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import DataTable from '../../components/Shared/DataTable';
 import { holidayService } from '../../services/holidayService';
 import { formatDate } from '../../utils/date';
 
@@ -18,6 +19,10 @@ const STATUS_OPTIONS = [
 export default function HolidaysPage() {
   const [years, setYears] = useState([]);
   const [year, setYear] = useState(String(new Date().getFullYear()));
+
+  // ModuleListPage refetches whenever this object changes identity, so it has
+  // to be memoised - a fresh literal on every render would refetch in a loop.
+  const fetchParams = useMemo(() => ({ year }), [year]);
 
   useEffect(() => {
     let mounted = true;
@@ -39,6 +44,15 @@ export default function HolidaysPage() {
     };
   }, []);
 
+  // The selected year always stays selectable, even when no holiday has been
+  // declared for it yet - otherwise the year filter would disappear the
+  // moment the calendar for the current year was empty.
+  const yearOptions = useMemo(() => {
+    const options = new Set(years.map(String));
+    options.add(String(year));
+    return Array.from(options).sort((a, b) => Number(b) - Number(a));
+  }, [years, year]);
+
   return (
     <ModuleListPage
       title="Holidays"
@@ -46,7 +60,7 @@ export default function HolidaysPage() {
       store={useHolidayStore}
       module="holidays"
       searchPlaceholder="Search holidays..."
-      fetchParams={{ year }}
+      fetchParams={fetchParams}
       resourceName="holidays"
       columns={[
         { header: 'Name', accessor: 'name' },
@@ -96,22 +110,23 @@ export default function HolidaysPage() {
       ]}
       renderItems={(items, ctx) => (
         <div className="space-y-4">
-          {years.length > 0 && (
-            <div className="flex items-center gap-3">
-              <label className="text-sm font-medium text-gray-700">Year</label>
-              <select
-                value={year}
-                onChange={(event) => setYear(event.target.value)}
-                className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
-              >
-                {years.map((y) => (
-                  <option key={y} value={y}>
-                    {y}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            <label htmlFor="holiday-year" className="text-sm font-medium text-gray-700">
+              Year
+            </label>
+            <select
+              id="holiday-year"
+              value={year}
+              onChange={(event) => setYear(event.target.value)}
+              className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
+            >
+              {yearOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </div>
           <DataTable
             columns={ctx.tableColumns}
             data={items}
