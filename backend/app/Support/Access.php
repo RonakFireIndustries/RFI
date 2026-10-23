@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\Permission;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Permission\Exceptions\PermissionDoesNotExist;
 
 class Access
 {
@@ -69,10 +70,26 @@ class Access
      *
      * Includes an exemption for users who are effectively super admins
      * (Admin role) — they can do everything.
+     *
+     * A permission whose row has not been seeded yet is treated as "nobody
+     * holds it" rather than as an error. Spatie's hasPermissionTo() throws
+     * PermissionDoesNotExist for an unknown name, and a permission check is
+     * the wrong place to fail a request: an install that has not re-run
+     * CanonicalPermissionsSeeder since a config/access.php permission was
+     * added should simply deny that one permission, not 500 every screen that
+     * happens to ask about it (the report catalogue asks about all of them).
      */
     public static function can(User $user, string $permission): bool
     {
-        return static::isSuperAdmin($user) || $user->hasPermissionTo($permission);
+        if (static::isSuperAdmin($user)) {
+            return true;
+        }
+
+        try {
+            return $user->hasPermissionTo($permission);
+        } catch (PermissionDoesNotExist $e) {
+            return false;
+        }
     }
 
     /**

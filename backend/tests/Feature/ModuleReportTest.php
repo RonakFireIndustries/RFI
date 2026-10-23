@@ -369,6 +369,38 @@ class ModuleReportTest extends TestCase
             ->assertStatus(403);
     }
 
+    /**
+     * A permission that has no row yet must not take the catalogue down.
+     *
+     * Spatie's hasPermissionTo() throws PermissionDoesNotExist for an unknown
+     * name, and the catalogue asks about every report's permission in turn.
+     * An install that has not re-run CanonicalPermissionsSeeder since a
+     * permission was added to config/access.php must simply not offer the
+     * reports gated on that permission - not 500 the whole endpoint.
+     */
+    public function test_a_permission_that_has_no_row_yet_does_not_break_the_catalogue(): void
+    {
+        $this->grantEveryReportPermission();
+
+        // A super admin is not a useful witness here - they short-circuit the
+        // check - so use a plain user holding one report's permission.
+        $user = $this->userWithPermissions(['reports.view']);
+
+        // Remove one report permission entirely, as an un-seeded deploy would
+        // not have it.
+        Permission::where('name', 'cash-vouchers.view')->delete();
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $this->assertFalse(\App\Support\Access::can($user, 'cash-vouchers.view'));
+
+        try {
+            $this->actingAs($user)->getJson('/api/v1/module-reports')->assertOk();
+        } finally {
+            Permission::findOrCreate('cash-vouchers.view', 'web');
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
+        }
+    }
+
     /* -------------------------------- engine ----------------------------- */
 
     /**
