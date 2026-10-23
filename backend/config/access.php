@@ -552,6 +552,12 @@ return [
         'leaves.update',
         'issue-reports.view',
         'issue-reports.create',                
+
+        // The report catalogue is open to every employee: running one is
+        // already scoped to the module's own view permission, so this only
+        // decides who may open the Reports area at all. Export stays a
+        // separate, role-held grant (reports.export).
+        'reports.view',
     ],
 
     /*

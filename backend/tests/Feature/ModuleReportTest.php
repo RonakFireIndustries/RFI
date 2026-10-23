@@ -334,6 +334,41 @@ class ModuleReportTest extends TestCase
             ->assertStatus(422);
     }
 
+    /* -------------------------------- access ----------------------------- */
+
+    /**
+     * Opening the report area is baseline: every employee may browse the
+     * catalogue, and the catalogue itself only lists the modules they can
+     * already read. Export is a separate, deliberately non-baseline grant.
+     */
+    public function test_opening_the_report_area_is_baseline_but_export_is_not(): void
+    {
+        $baseline = config('access.baseline', []);
+
+        $this->assertContains('reports.view', $baseline);
+        $this->assertNotContains('reports.export', $baseline);
+
+        // And a baseline-only employee really ends up able to open the
+        // catalogue while still being unable to export it.
+        $this->grantEveryReportPermission();
+
+        $user = User::factory()->create();
+        $user->givePermissionTo(
+            Permission::whereIn('name', $baseline)->pluck('name')->all()
+        );
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $this->assertTrue(\App\Support\Access::can($user, 'reports.view'));
+        $this->assertFalse(\App\Support\Access::can($user, 'reports.export'));
+
+        // The catalogue opens (possibly empty - the point is that it is not
+        // refused), but exporting is.
+        $this->actingAs($user)->getJson('/api/v1/module-reports')->assertOk();
+        $this->actingAs($user)
+            ->getJson('/api/v1/module-reports/cash-vouchers/register/export?format=csv')
+            ->assertStatus(403);
+    }
+
     /* -------------------------------- engine ----------------------------- */
 
     /**
