@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DataTable from '../../../components/Shared/DataTable';
-import ProductSelect from '../../../components/Shared/ProductSelect';
+import ProductSearchField from '../../../components/Shared/ProductSearchField';
 import UnitSelect from '../../../components/Shared/UnitSelect';
 import UnitConversionHint from '../../../components/Shared/UnitConversionHint';
 import { formatQuantity } from '../../../utils/units';
@@ -114,20 +114,17 @@ export default function TransfersPage() {
               {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Product</label>
-                <ProductSelect
+                <ProductSearchField
                   products={products}
                   value={form.product_id}
-                  onChange={(val) => {
-                    const product = products.find((p) => String(p.id) === String(val.product_id));
+                  onSelect={(product) => {
                     setForm({
                       ...form,
-                      product_id: val.product_id || '',
+                      product_id: product ? String(product.id) : '',
                       unit_id: product?.unit_id ? String(product.unit_id) : '',
                     });
                   }}
-                  placeholder="Search product by name, SKU or dimension..."
-                  allowCustom={false}
-                  inputClassName="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
+                  placeholder="Search by name, SKU or dimension..."
                 />
               </div>
               <div>

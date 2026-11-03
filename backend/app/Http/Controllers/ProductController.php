@@ -114,7 +114,7 @@ class ProductController extends Controller
         abort(403, 'This action is unauthorized.');
     }
 
-    public function update(UpdateProductRequest $request, Product $product, UnitConversionService $unitConversion)
+    public function update(UpdateProductRequest $request, Product $product, UnitConversionService $unitConversion, InventoryService $inventoryService)
     {
         $this->authorize('products.update');
 
@@ -123,18 +123,40 @@ class ProductController extends Controller
             unset($data['selling_price']);
         }
 
+        $enteredOpeningStock = null;
+        $openingStockUnitId = null;
         if (array_key_exists('opening_stock', $data)) {
             $openingStockUnitId = ! empty($data['opening_stock_unit_id']) ? (int) $data['opening_stock_unit_id'] : null;
+            $enteredOpeningStock = (float) $data['opening_stock'];
             // Same rule as store(): the column holds the product's own unit.
             $data['opening_stock'] = $unitConversion->convertOrSame(
-                (float) $data['opening_stock'],
+                $enteredOpeningStock,
                 $openingStockUnitId,
                 $product->unit_id
             );
         }
-        unset($data['opening_stock_unit_id']);
+        $siteId = (int) ($data['site_id'] ?? 0);
+        unset($data['opening_stock_unit_id'], $data['site_id']);
 
         $product->update($data);
+
+        // Opening stock normally seeds product_stocks at creation time. If the
+        // product was saved without one (e.g. opening stock entered later via
+        // the edit form), seed it now — but only when the product has no
+        // stock rows at all, so we never double-count after transactions.
+        if ($siteId && $enteredOpeningStock > 0 && ! $product->stock()->exists()) {
+            $inventoryService->addStock(
+                productId: $product->id,
+                locationType: 'App\Models\Site',
+                locationId: $siteId,
+                quantity: $enteredOpeningStock,
+                referenceType: 'opening_stock',
+                referenceId: $product->id,
+                notes: 'Opening stock on product update',
+                unitId: $openingStockUnitId
+            );
+        }
+
         return new ProductResource($product->load(['category', 'supplier', 'unit', 'stock.locationable']));
     }
 

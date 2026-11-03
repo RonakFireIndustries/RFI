@@ -32,6 +32,7 @@ class UpdateProductRequest extends FormRequest
             'description' => 'nullable|string',
             'opening_stock' => 'nullable|numeric|min:0',
             'opening_stock_unit_id' => 'nullable|exists:units,id',
+            'site_id' => ['nullable', 'exists:sites,id'],
             'status' => 'nullable|string|in:active,inactive',
         ];
 

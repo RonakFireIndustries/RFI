@@ -12,6 +12,74 @@ import { usePriceVisibility } from '../../hooks/usePriceVisibility';
 
 const MODULE = 'products';
 
+const stockTotals = (product) => {
+  const rows = Array.isArray(product.stock) ? product.stock : [];
+  const total = Number(product.total_stock ?? rows.reduce((sum, r) => sum + Number(r.quantity || 0), 0));
+  const available = rows.reduce((sum, r) => sum + Number(r.available_quantity ?? r.quantity ?? 0), 0);
+  return { total, available, rows };
+};
+
+const isLowStock = (product) => {
+  const reorder = Number(product.reorder_level || 0);
+  if (reorder <= 0) return false;
+  return stockTotals(product).total <= reorder;
+};
+
+const isOutOfStock = (product) => stockTotals(product).total <= 0;
+
+function ProductStockSection({ product }) {
+  const [expanded, setExpanded] = useState(false);
+  const { total, available, rows } = stockTotals(product);
+  const low = isLowStock(product);
+  const out = total <= 0;
+  const unit = product.unit?.code || product.unit?.name || '';
+
+  return (
+    <div className="rounded-md border border-gray-100 bg-gray-50/60 px-2.5 py-2">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className={`inline-block h-2 w-2 rounded-full ${out ? 'bg-red-500' : low ? 'bg-amber-500' : 'bg-green-500'}`} />
+          <span className="text-xs font-medium text-gray-500">Stock</span>
+        </div>
+        <div className="text-right">
+          <span className={`text-sm font-semibold ${out ? 'text-red-600' : 'text-gray-900'}`}>
+            {total}{unit ? ` ${unit}` : ''}
+          </span>
+          <span className="ml-2 text-xs text-gray-500">avail. {available}</span>
+        </div>
+      </div>
+      {low && !out && (
+        <p className="mt-1 text-[11px] font-medium text-amber-700">Low stock — at/below reorder level ({product.reorder_level})</p>
+      )}
+      {out && (
+        <p className="mt-1 text-[11px] font-medium text-red-600">Out of stock</p>
+      )}
+      {rows.length > 0 && (
+        <>
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline"
+          >
+            {expanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+            {rows.length} location{rows.length === 1 ? '' : 's'}
+          </button>
+          {expanded && (
+            <ul className="mt-1 space-y-0.5 border-t border-gray-200 pt-1">
+              {rows.map((row) => (
+                <li key={row.id} className="flex items-center justify-between gap-2 text-[11px] text-gray-600">
+                  <span className="truncate">{row.locationable?.name || `${row.location_type?.split('\\').pop() || 'Location'} #${row.location_id}`}</span>
+                  <span className="font-medium tabular-nums">{Number(row.quantity)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
 const getPlacement = (product, categoryById) => {
   const sub = product.category;
   if (!sub) return { parentBucket: 'Uncategorized', subName: null };
@@ -58,7 +126,7 @@ export default function ProductCatalog() {
   const [searchParams] = useSearchParams();
   const categoryId = searchParams.get('category_id');
 
-  const [filters, setFilters] = useState({ parent: '', sub: '', supplier: '', status: '' });
+  const [filters, setFilters] = useState({ parent: '', sub: '', supplier: '', status: '', stock: '' });
   const [showFilters, setShowFilters] = useState(false);
   const [collapsedParents, setCollapsedParents] = useState(() => new Set());
   const [collapsedSubs, setCollapsedSubs] = useState(() => new Set());
@@ -126,7 +194,7 @@ export default function ProductCatalog() {
 
   const setFilter = (key, value) => setFilters((current) => ({ ...current, [key]: value }));
 
-  const clearFilters = () => setFilters({ parent: '', sub: '', supplier: '', status: '' });
+  const clearFilters = () => setFilters({ parent: '', sub: '', supplier: '', status: '', stock: '' });
 
   const handleFieldChange = useCallback((fieldName, value) => {
     if (fieldName === 'parent_category_id') {
@@ -276,6 +344,9 @@ export default function ProductCatalog() {
       if (filters.sub && subName !== filters.sub) return false;
       if (filters.supplier && String(product.supplier_id) !== filters.supplier) return false;
       if (filters.status && product.status !== filters.status) return false;
+      if (filters.stock === 'out' && !isOutOfStock(product)) return false;
+      if (filters.stock === 'low' && !isLowStock(product)) return false;
+      if (filters.stock === 'in' && isOutOfStock(product)) return false;
       return true;
     });
 
@@ -335,7 +406,7 @@ export default function ProductCatalog() {
         </div>
 
         {showFilters && (
-          <div className="grid grid-cols-1 gap-3 rounded-lg border border-gray-200 bg-white p-4 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="grid grid-cols-1 gap-3 rounded-lg border border-gray-200 bg-white p-4 sm:grid-cols-2 lg:grid-cols-6">
             <label className="block">
               <span className="mb-1 block text-xs font-medium text-gray-600">Parent Category</span>
               <select value={filters.parent} onChange={(e) => setFilters({ ...filters, parent: e.target.value, sub: '' })} className={selectClass}>
@@ -363,6 +434,15 @@ export default function ProductCatalog() {
                 <option value="">All</option>
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
+              </select>
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-xs font-medium text-gray-600">Stock</span>
+              <select value={filters.stock} onChange={(e) => setFilter('stock', e.target.value)} className={selectClass}>
+                <option value="">All</option>
+                <option value="in">In stock</option>
+                <option value="low">Low stock (at/below reorder)</option>
+                <option value="out">Out of stock</option>
               </select>
             </label>
             <div className="flex items-end">
@@ -485,10 +565,7 @@ const renderCard = (product, { openModal, deleteItem, detailBasePath, canSeePric
           <dd className="font-semibold text-gray-900"><Money value={product.selling_price} /></dd>
         </div>
       )}
-      <div className="flex items-center justify-between">
-        <dt className="text-gray-500">Stock</dt>
-        <dd className="font-medium text-gray-900">{product.total_stock ?? 0}</dd>
-      </div>
+      <ProductStockSection product={product} />
       <div className="flex items-center justify-between">
         <dt className="text-gray-500">Opening Stock</dt>
         <dd className="font-medium text-gray-900">{product.opening_stock ?? 0}</dd>
