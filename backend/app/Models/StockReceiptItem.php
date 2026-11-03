@@ -19,7 +19,9 @@ class StockReceiptItem extends Model
         'stock_receipt_id',
         'voucher_item_id',
         'product_id',
+        'unit_id',
         'quantity',
+        'base_quantity',
         'quantity_before',
         'quantity_after',
         'transaction_ledger_id',
@@ -28,9 +30,11 @@ class StockReceiptItem extends Model
 
     protected $casts = [
         'quantity' => 'decimal:3',
+        'base_quantity' => 'decimal:3',
         'quantity_before' => 'decimal:3',
         'quantity_after' => 'decimal:3',
         'product_id' => 'integer',
+        'unit_id' => 'integer',
     ];
 
     public function receipt(): BelongsTo
@@ -46,6 +50,11 @@ class StockReceiptItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function unit(): BelongsTo
+    {
+        return $this->belongsTo(Unit::class);
     }
 
     public function transaction(): BelongsTo

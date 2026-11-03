@@ -8,6 +8,7 @@ import Money from '../../components/Shared/Money';
 import PermissionGate from '../../components/Guards/PermissionGate';
 import { usePriceVisibility } from '../../hooks/usePriceVisibility';
 import ProductSelect from '../../components/Shared/ProductSelect';
+import UnitSelect from '../../components/Shared/UnitSelect';
 import LegacyDocumentsNotice from '../../components/LegacyDocumentsNotice';
 import { LEGACY_DOCUMENTS_READONLY } from '../../config/legacyDocuments';
 
@@ -22,7 +23,7 @@ export default function SalesOrdersPage() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [sites, setSites] = useState([]);
-  const [newOrder, setNewOrder] = useState({ customer_id: '', site_id: '', gst_type: 'cgst', shipping_cost: 0, other_cost: 0, other_cost_note: '', terms_conditions: '', items: [{ parent_category_id: '', category_id: '', product_id: '', custom_product_name: '', quantity: 1, unit_price: 0, gst_rate: 18, hsn_code: '' }] });
+  const [newOrder, setNewOrder] = useState({ customer_id: '', site_id: '', gst_type: 'cgst', shipping_cost: 0, other_cost: 0, other_cost_note: '', terms_conditions: '', items: [{ parent_category_id: '', category_id: '', product_id: '', custom_product_name: '', quantity: 1, unit_id: '', base_quantity: 1, unit_price: 0, gst_rate: 18, hsn_code: '' }] });
   const [activeTab, setActiveTab] = useState('All Orders');
   const [currentPage, setCurrentPage] = useState(1);
   const [saving, setSaving] = useState(false);
@@ -736,6 +737,11 @@ export default function SalesOrdersPage() {
                                   }}
                                   required
                                 />
+                                <UnitSelect value={item.unit_id} onChange={(unitId) => {
+                                  const items = [...newOrder.items];
+                                  items[index].unit_id = unitId;
+                                  setNewOrder({...newOrder, items});
+                                }} />
                               </td>
                               <td className="p-4">
                                 <input

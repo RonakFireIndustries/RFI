@@ -14,10 +14,12 @@ class QuotationItem extends Model
         'quotation_id',
         'quotation_section_id',
         'product_id',
+        'unit_id',
         'description',
         'product_description',
         'unit',
         'qty',
+        'base_qty',
         'rate',
         'installment',
         'amount',
@@ -25,9 +27,11 @@ class QuotationItem extends Model
 
     protected $casts = [
         'qty' => 'decimal:2',
+        'base_qty' => 'decimal:3',
         'rate' => 'decimal:2',
         'installment' => 'decimal:2',
         'amount' => 'decimal:2',
+        'unit_id' => 'integer',
     ];
 
     public function quotation(): BelongsTo
@@ -43,6 +47,11 @@ class QuotationItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function unit(): BelongsTo
+    {
+        return $this->belongsTo(Unit::class);
     }
 
     /**

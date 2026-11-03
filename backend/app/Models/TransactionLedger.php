@@ -9,9 +9,9 @@ class TransactionLedger extends Model
     protected $table = 'transaction_ledger';
 
     protected $fillable = [
-        'transaction_number', 'product_id', 'location_type', 'location_id',
+        'transaction_number', 'product_id', 'unit_id', 'location_type', 'location_id',
         'to_location_type', 'to_location_id',
-        'transaction_type', 'quantity', 'unit_price', 'total_price',
+        'transaction_type', 'quantity', 'entered_quantity', 'unit_price', 'total_price',
         'quantity_before', 'quantity_after', 'reference_type', 'reference_id',
         'notes', 'created_by'
     ];
@@ -19,6 +19,11 @@ class TransactionLedger extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function unit()
+    {
+        return $this->belongsTo(Unit::class);
     }
 
     public function locationable()

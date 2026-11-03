@@ -8,6 +8,8 @@ use App\Models\Product;
 use App\Models\Quotation;
 use App\Models\QuotationItem;
 use App\Models\QuotationSection;
+use App\Models\Unit;
+use App\Services\UnitConversionService;
 use App\Traits\ApiResponse;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
@@ -22,7 +24,13 @@ class QuotationController extends Controller
     {
         $this->authorize('quotations.view');
 
-        $query = Quotation::with(['building:id,name', 'items', 'sections.items']);
+        $query = Quotation::with([
+            'building:id,name',
+            'items',
+            'sections.items',
+            'sections.items.unit:id,name,code',
+            'sections.items.product.unit:id,name,code',
+        ]);
 
         if ($request->filled('search')) {
             $s = $request->string('search')->toString();
@@ -54,7 +62,7 @@ class QuotationController extends Controller
     public function show(Quotation $quotation): JsonResponse
     {
         $this->authorize('quotations.view');
-        $quotation->load(['building:id,name', 'items.product:id,name', 'sections.items.product:id,name,sku,product_code,dimension', 'creator:id,name']);
+        $quotation->load(['building:id,name', 'items.product:id,name', 'sections.items.product:id,name,sku,product_code,dimension,unit_id', 'sections.items.product.unit:id,name,code', 'sections.items.unit:id,name,code', 'creator:id,name']);
         return $this->success('Quotation retrieved', ['quotation' => $this->present($quotation)]);
     }
 
@@ -77,6 +85,7 @@ class QuotationController extends Controller
             'sections.*.items.*.product_id' => ['nullable', 'exists:products,id'],
             'sections.*.items.*.description' => ['nullable', 'string', 'max:500'],
             'sections.*.items.*.product_description' => ['nullable', 'string', 'max:1000'],
+            'sections.*.items.*.unit_id' => ['nullable', 'exists:units,id'],
             'sections.*.items.*.unit' => ['nullable', 'string', 'max:100'],
             'sections.*.items.*.qty' => ['required', 'numeric', 'min:0.01'],
             'sections.*.items.*.rate' => ['required', 'numeric', 'min:0'],
@@ -99,7 +108,7 @@ class QuotationController extends Controller
 
             $this->storeSections($quotation, $validated['sections']);
 
-            return $quotation->fresh(['building:id,name', 'sections.items']);
+            return $quotation->fresh(['building:id,name', 'sections.items', 'sections.items.unit:id,name,code']);
         });
 
         return $this->success('Quotation created', ['quotation' => $this->present($quotation)], [], 201);
@@ -126,6 +135,7 @@ class QuotationController extends Controller
             'sections.*.items.*.product_id' => ['nullable', 'exists:products,id'],
             'sections.*.items.*.description' => ['nullable', 'string', 'max:500'],
             'sections.*.items.*.product_description' => ['nullable', 'string', 'max:1000'],
+            'sections.*.items.*.unit_id' => ['nullable', 'exists:units,id'],
             'sections.*.items.*.unit' => ['nullable', 'string', 'max:100'],
             'sections.*.items.*.qty' => ['required', 'numeric', 'min:0.01'],
             'sections.*.items.*.rate' => ['required', 'numeric', 'min:0'],
@@ -146,7 +156,7 @@ class QuotationController extends Controller
 
             $this->syncSections($quotation, $validated['sections']);
 
-            return $quotation->fresh(['building:id,name', 'sections.items']);
+            return $quotation->fresh(['building:id,name', 'sections.items', 'sections.items.unit:id,name,code']);
         });
 
         return $this->success('Quotation updated', ['quotation' => $this->present($quotation)]);
@@ -165,7 +175,7 @@ class QuotationController extends Controller
     public function pdf(Quotation $quotation)
     {
         $this->authorize('quotations.view');
-        $quotation->load(['building:id,name', 'items', 'sections.items.product:id,name,sku,product_code,dimension', 'creator:id,name']);
+        $quotation->load(['building:id,name', 'items', 'sections.items.product:id,name,sku,product_code,dimension,unit_id', 'sections.items.product.unit:id,name,code', 'sections.items.unit:id,name,code', 'creator:id,name']);
 
         $sectionSummary = $quotation->sections->map(fn ($section) => [
             'name' => $section->name,
@@ -256,19 +266,40 @@ class QuotationController extends Controller
 
     protected function itemData(array $row): array
     {
+        $product = !empty($row['product_id']) ? Product::find($row['product_id']) : null;
+
         $description = $row['description'] ?? null;
-        if (empty($description) && !empty($row['product_id'])) {
-            $description = optional(Product::find($row['product_id']))->name;
+        if (empty($description) && $product) {
+            $description = $product->name;
         }
+
+        // The line is quoted in whatever unit the user picked; default it to
+        // the product's own unit. `base_qty` is the same quantity in the
+        // product's unit, so BOQ totals stay comparable across lines.
+        $unitId = $row['unit_id'] ?? null;
+        if (!$unitId && $product) {
+            $unitId = $product->unit_id;
+        }
+
+        $unitName = $this->normaliseText($row['unit'] ?? null);
+        if ($unitName === null && $unitId) {
+            $unitName = Unit::whereKey($unitId)->value('name');
+        }
+
         $qty = (float) $row['qty'];
         $rate = (float) $row['rate'];
         $installment = (float) ($row['installment'] ?? 0);
+
+        $factor = app(UnitConversionService::class)->factor($unitId, $product?->unit_id);
+
         return [
             'product_id' => $row['product_id'] ?? null,
+            'unit_id' => $unitId,
             'description' => $description,
             'product_description' => $this->normaliseText($row['product_description'] ?? null),
-            'unit' => $row['unit'] ?? null,
+            'unit' => $unitName,
             'qty' => $qty,
+            'base_qty' => round($qty * $factor, 3),
             'rate' => $rate,
             'installment' => $installment,
             'amount' => round(($qty * $rate) + ($qty * $installment), 2),
@@ -341,13 +372,19 @@ class QuotationController extends Controller
     protected function itemBrief(QuotationItem $i): array
     {
         $product = $i->relationLoaded('product') ? $i->product : null;
+        $unit = $i->relationLoaded('unit') ? $i->unit : null;
         return [
             'id' => $i->id,
             'product_id' => $i->product_id,
             'description' => $i->description,
             'product_description' => $i->product_description,
-            'unit' => $i->unit,
+            'unit_id' => $i->unit_id,
+            'unit' => $unit?->name ?? ($i->getAttributes()['unit'] ?? null),
+            'unit_code' => $unit?->code,
+            'product_unit_id' => $product?->unit_id,
+            'product_unit' => $product?->unit?->name,
             'qty' => (float) $i->qty,
+            'base_qty' => $i->base_qty !== null ? (float) $i->base_qty : (float) $i->qty,
             'rate' => (float) $i->rate,
             'installment' => (float) ($i->installment ?? 0),
             'supply_amount' => $i->supply_amount,

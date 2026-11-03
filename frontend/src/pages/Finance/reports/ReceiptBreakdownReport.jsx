@@ -56,9 +56,9 @@ const ReceiptBreakdownReport = () => {
     if (!data) return;
     downloadCsv(
       `receipt-breakdown-${data.period.to || 'all'}.csv`,
-      ['Product', 'SKU', 'Received qty', 'Received value', 'Delivered qty', 'Delivered value', 'Receipts'],
+      ['Product', 'SKU', 'Unit', 'Received qty', 'Received value', 'Delivered qty', 'Delivered value', 'Receipts'],
       data.products.map((row) => [
-        row.product_name, row.sku || '',
+        row.product_name, row.sku || '', row.product_unit || '',
         qty(row.inbound_quantity), row.inbound_value,
         qty(row.outbound_quantity), row.outbound_value, row.receipt_count,
       ])
@@ -120,9 +120,9 @@ const ReceiptBreakdownReport = () => {
             <SummaryTiles
               tiles={[
                 { label: 'Receipts', value: data.totals.receipts },
-                { label: 'Received', value: `${qty(data.totals.inbound_quantity)} · ${formatMoney(data.totals.inbound_value)}`, tone: 'bg-green-50 text-green-900' },
-                { label: 'Delivered', value: `${qty(data.totals.outbound_quantity)} · ${formatMoney(data.totals.outbound_value)}`, tone: 'bg-blue-50 text-blue-900' },
-                { label: 'Net in hand', value: qty(data.totals.net_quantity), tone: 'bg-gray-50 text-gray-900' },
+                { label: 'Received (base)', value: `${qty(data.totals.inbound_quantity)} · ${formatMoney(data.totals.inbound_value)}`, tone: 'bg-green-50 text-green-900' },
+                { label: 'Delivered (base)', value: `${qty(data.totals.outbound_quantity)} · ${formatMoney(data.totals.outbound_value)}`, tone: 'bg-blue-50 text-blue-900' },
+                { label: 'Net in hand (base)', value: qty(data.totals.net_quantity), tone: 'bg-gray-50 text-gray-900' },
               ]}
             />
 
@@ -133,6 +133,7 @@ const ReceiptBreakdownReport = () => {
                   columns={[
                     { label: 'Product' },
                     { label: 'SKU' },
+                    { label: 'Unit' },
                     { label: 'Received', align: 'right' },
                     { label: 'Delivered', align: 'right' },
                     { label: 'Receipts', align: 'right' },
@@ -143,6 +144,7 @@ const ReceiptBreakdownReport = () => {
                     <tr key={row.product_id ?? 'unknown'}>
                       <td className="px-3 py-2 font-medium text-gray-800">{row.product_name}</td>
                       <td className="px-3 py-2 text-gray-500">{row.sku || '—'}</td>
+                      <td className="px-3 py-2 text-gray-500">{row.product_unit || '—'}</td>
                       <td className="px-3 py-2 text-right">
                         {Number(row.inbound_quantity) > 0 ? (
                           <div>
@@ -164,7 +166,7 @@ const ReceiptBreakdownReport = () => {
                   ))}
                   {data.products.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                      <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
                         No goods were received or delivered in this period.
                       </td>
                     </tr>

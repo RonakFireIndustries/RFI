@@ -11,10 +11,12 @@ class VoucherItem extends Model
         'voucher_id',
         'line_no',
         'product_id',
+        'unit_id',
         'item_description',
         'hsn_code',
         'unit',
         'quantity',
+        'base_quantity',
         'received_quantity',
         'delivered_quantity',
         'rate',
@@ -31,6 +33,7 @@ class VoucherItem extends Model
 
     protected $casts = [
         'quantity' => 'decimal:3',
+        'base_quantity' => 'decimal:3',
         'received_quantity' => 'decimal:3',
         'delivered_quantity' => 'decimal:3',
         'rate' => 'decimal:2',
@@ -44,11 +47,17 @@ class VoucherItem extends Model
         'tax_amount' => 'decimal:2',
         'total_amount' => 'decimal:2',
         'product_id' => 'integer',
+        'unit_id' => 'integer',
     ];
 
     public function voucher()
     {
         return $this->belongsTo(Voucher::class);
+    }
+
+    public function unit()
+    {
+        return $this->belongsTo(Unit::class);
     }
 
     public function product()

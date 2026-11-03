@@ -7,6 +7,7 @@ use App\Models\StockReceiptItem;
 use App\Models\Voucher;
 use App\Models\VoucherItem;
 use App\Services\InventoryService;
+use App\Services\UnitConversionService;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -31,8 +32,10 @@ use Illuminate\Support\Facades\DB;
  */
 class NoteStockService
 {
-    public function __construct(protected InventoryService $inventory)
-    {
+    public function __construct(
+        protected InventoryService $inventory,
+        protected UnitConversionService $unitConversion,
+    ) {
     }
 
     /**
@@ -63,7 +66,7 @@ class NoteStockService
             }
 
             $outbound = $direction === 'out';
-            $lines = $voucher->items()->whereNotNull('product_id')->get();
+            $lines = $voucher->items()->with('product')->whereNotNull('product_id')->get();
 
             if ($lines->isEmpty()) {
                 return;
@@ -113,6 +116,15 @@ class NoteStockService
                     continue;
                 }
 
+                $rate = (float) ($line->voucherItem()->value('rate') ?? 0);
+                $enteredQuantity = (float) $line->quantity;
+                // Rows written before unit tracking have no base_quantity; their
+                // quantity is already in the product's unit.
+                $baseQuantity = $line->base_quantity !== null ? (float) $line->base_quantity : $enteredQuantity;
+                $baseRate = $line->base_quantity !== null && $baseQuantity != 0.0
+                    ? $rate * $enteredQuantity / $baseQuantity
+                    : $rate;
+
                 $this->inventory->recordTransaction(
                     productId: $line->product_id,
                     locationType: $receipt->location_type,
@@ -121,11 +133,12 @@ class NoteStockService
                     // back with an adjustment, a goods-out comes back in as a
                     // sales return.
                     transactionType: $outbound ? 'sales_return' : 'adjustment',
-                    quantity: (float) $line->quantity,
-                    unitPrice: (float) ($line->voucherItem()->value('rate') ?? 0),
+                    quantity: $baseQuantity,
+                    unitPrice: $baseRate,
                     referenceType: 'receipt_reversal',
                     referenceId: $receipt->id,
                     notes: "{$voucher->voucher_no} re-posted or removed",
+                    unitId: $line->base_quantity !== null ? null : $line->unit_id,
                 );
 
                 $item = $line->voucherItem()->first();
@@ -162,6 +175,15 @@ class NoteStockService
             return;
         }
 
+        // The note is keyed in the voucher line's unit; stock is kept in the
+        // product's unit. A missing conversion is treated as 1:1.
+        $baseQuantity = $this->unitConversion->convertOrSame(
+            $quantity,
+            $item->unit_id,
+            $item->product?->unit_id
+        );
+        $baseRate = $baseQuantity != 0.0 ? (float) $item->rate * $quantity / $baseQuantity : (float) $item->rate;
+
         $movement = $this->inventory->recordTransaction(
             productId: (int) $item->product_id,
             locationType: $locationType,
@@ -172,13 +194,16 @@ class NoteStockService
             referenceType: $outbound ? 'debit_note' : 'credit_note',
             referenceId: $receipt->id,
             notes: "{$receipt->receipt_no} — {$item->item_description}",
+            unitId: $item->unit_id,
         );
 
         StockReceiptItem::create([
             'stock_receipt_id' => $receipt->id,
             'voucher_item_id' => $item->id,
             'product_id' => $item->product_id,
+            'unit_id' => $item->unit_id,
             'quantity' => $quantity,
+            'base_quantity' => $baseQuantity,
             'quantity_before' => 0,
             'quantity_after' => $quantity,
             'transaction_ledger_id' => $movement->id,

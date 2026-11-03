@@ -44,12 +44,20 @@ class UnitConversionController extends Controller
         return response()->noContent();
     }
 
+    /**
+     * Pure calculator behind the forms' live "≈ X product unit" hints.
+     *
+     * Deliberately open to any authenticated user: the same factor is applied
+     * to their save anyway, so hiding it behind unit-conversions.view would
+     * only make the hint silently disappear for ordinary data-entry roles.
+     * Creating and editing conversion rates still need the unit-conversions.*
+     * grants above.
+     */
     public function convert($from, $to, $quantity)
     {
-        $this->authorize('unit-conversions.view');
         $service = app(\App\Services\UnitConversionService::class);
-        $result = $service->convert($quantity, $from, $to);
-        $path = $service->getConversionPath($from, $to);
+        $result = $service->convert((float) $quantity, (int) $from, (int) $to);
+        $path = $service->getConversionPath((int) $from, (int) $to);
 
         if ($result === null) {
             return response()->json(['message' => 'No conversion path found'], 404);
@@ -58,6 +66,8 @@ class UnitConversionController extends Controller
         return response()->json([
             'from_unit_id' => (int) $from,
             'to_unit_id' => (int) $to,
+            'from_unit' => \App\Models\Unit::find($from)?->name,
+            'to_unit' => \App\Models\Unit::find($to)?->name,
             'quantity' => (float) $quantity,
             'result' => $result,
             'path' => $path,

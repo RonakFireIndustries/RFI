@@ -9,6 +9,7 @@ use App\Http\Resources\ProductResource;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use App\Services\InventoryService;
+use App\Services\UnitConversionService;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
@@ -35,7 +36,7 @@ class ProductController extends Controller
         return $ids;
     }
 
-    public function store(StoreProductRequest $request, InventoryService $inventoryService)
+    public function store(StoreProductRequest $request, InventoryService $inventoryService, UnitConversionService $unitConversion)
     {
         $this->authorize('products.create');
 
@@ -51,9 +52,20 @@ class ProductController extends Controller
         $data['cost_price'] = $data['cost_price'] ?? 0;
         $openingStock = (float) ($data['opening_stock'] ?? 0);
         $siteId = (int) ($data['site_id'] ?? 0);
-        unset($data['opening_stock'], $data['site_id']);
+        $openingStockUnitId = ! empty($data['opening_stock_unit_id']) ? (int) $data['opening_stock_unit_id'] : null;
+        // site_id only drives the stock seeding below, but opening_stock stays on
+        // the product row so the catalog card/detail can display it.
+        unset($data['site_id'], $data['opening_stock_unit_id']);
 
         $product = Product::create($data);
+
+        // Whatever unit the user keyed, the stored figure is the product's own
+        // unit — reports multiply it by the base-unit cost price. An unknown
+        // conversion stays 1:1 (the form flags it before the save).
+        $openingStockBase = $unitConversion->convertOrSame($openingStock, $openingStockUnitId, $product->unit_id);
+        if ($openingStockBase !== $openingStock) {
+            $product->update(['opening_stock' => $openingStockBase]);
+        }
 
         if ($openingStock > 0 && $siteId) {
             $inventoryService->addStock(
@@ -63,7 +75,8 @@ class ProductController extends Controller
                 quantity: $openingStock,
                 referenceType: 'opening_stock',
                 referenceId: $product->id,
-                notes: 'Opening stock on product creation'
+                notes: 'Opening stock on product creation',
+                unitId: $openingStockUnitId
             );
         }
 
@@ -101,7 +114,7 @@ class ProductController extends Controller
         abort(403, 'This action is unauthorized.');
     }
 
-    public function update(UpdateProductRequest $request, Product $product)
+    public function update(UpdateProductRequest $request, Product $product, UnitConversionService $unitConversion)
     {
         $this->authorize('products.update');
 
@@ -109,6 +122,18 @@ class ProductController extends Controller
         if (!ProductResource::canManageSalesPrice($request)) {
             unset($data['selling_price']);
         }
+
+        if (array_key_exists('opening_stock', $data)) {
+            $openingStockUnitId = ! empty($data['opening_stock_unit_id']) ? (int) $data['opening_stock_unit_id'] : null;
+            // Same rule as store(): the column holds the product's own unit.
+            $data['opening_stock'] = $unitConversion->convertOrSame(
+                (float) $data['opening_stock'],
+                $openingStockUnitId,
+                $product->unit_id
+            );
+        }
+        unset($data['opening_stock_unit_id']);
+
         $product->update($data);
         return new ProductResource($product->load(['category', 'supplier', 'unit', 'stock.locationable']));
     }

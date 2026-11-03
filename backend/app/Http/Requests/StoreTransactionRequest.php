@@ -16,6 +16,7 @@ class StoreTransactionRequest extends FormRequest
     {
         return [
             'product_id' => 'required|exists:products,id',
+            'unit_id' => 'nullable|exists:units,id',
             'location_type' => 'required|string|in:App\Models\Site',
             'location_id' => 'required|integer',
             'transaction_type' => 'required|in:opening_stock,purchase,purchase_return,issue,consumption,transfer_in,transfer_out,adjustment,damage,sales,sales_return',

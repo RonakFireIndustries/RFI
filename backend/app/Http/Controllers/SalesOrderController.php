@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\SalesOrder;
 use App\Models\SalesOrderItem;
 use App\Models\ProductStock;
+use App\Services\UnitConversionService;
 
 class SalesOrderController extends Controller
 {
@@ -18,7 +19,7 @@ class SalesOrderController extends Controller
         return SalesOrder::with('items')->get();
     }
 
-    public function store(Request $request)
+    public function store(Request $request, UnitConversionService $unitConversion)
     {
         $this->authorize('sales-orders.create');
 
@@ -32,6 +33,7 @@ class SalesOrderController extends Controller
             'items.*.unit_price' => 'required|numeric|min:0',
             'items.*.gst_rate' => 'nullable|numeric|min:0|max:100',
             'items.*.hsn_code' => 'nullable|string|max:20',
+            'items.*.unit_id' => 'nullable|exists:units,id',
             'gst_type' => 'nullable|string|in:cgst,sgst,igst',
             'shipping_cost' => 'nullable|numeric|min:0',
             'other_cost' => 'nullable|numeric|min:0',
@@ -39,11 +41,17 @@ class SalesOrderController extends Controller
             'terms_conditions' => 'nullable|string',
         ]);
 
-        $so = DB::transaction(function () use ($request) {
+        $so = DB::transaction(function () use ($request, $unitConversion) {
             $subtotal = 0;
             $taxAmount = 0;
             foreach ($request->items as $item) {
-                $lineTotal = $item['quantity'] * $item['unit_price'];
+                $qty = (int) $item['quantity'];
+                $unitId = ! empty($item['unit_id']) ? (int) $item['unit_id'] : null;
+                $product = $item['product_id'] ? Product::find($item['product_id']) : null;
+                $baseUnitId = $product?->unit_id;
+                $openingStockBase = $unitConversion->convertOrSame($qty, $unitId, $baseUnitId);
+                $baseQty = $openingStockBase ?: $qty;
+                $lineTotal = $baseQty * ($item['unit_price'] ?? 0);
                 $subtotal += $lineTotal;
                 $itemGstRate = $item['gst_rate'] ?? 0;
                 $taxAmount += $lineTotal * ($itemGstRate / 100);
@@ -66,15 +74,24 @@ class SalesOrderController extends Controller
             ]);
 
             foreach ($request->items as $item) {
+                $product = $item['product_id'] ? Product::find($item['product_id']) : null;
+                $qty = (int) $item['quantity'];
+                $unitId = ! empty($item['unit_id']) ? (int) $item['unit_id'] : null;
+                $baseUnitId = $product?->unit_id;
+                $openingStockBase = $unitConversion->convertOrSame($qty, $unitId, $baseUnitId);
+                $baseQty = $openingStockBase ?: $qty;
+
                 SalesOrderItem::create([
                     'sales_order_id' => $so->id,
                     'product_id' => $item['product_id'] ?: null,
                     'custom_product_name' => $item['custom_product_name'] ?? null,
-                    'quantity' => $item['quantity'],
+                    'quantity' => $baseQty,
+                    'unit_id' => $unitId,
+                    'base_quantity' => $baseQty,
                     'unit_price' => $item['unit_price'],
                     'gst_rate' => $item['gst_rate'] ?? 0,
                     'hsn_code' => $item['hsn_code'] ?? null,
-                    'total' => $item['quantity'] * $item['unit_price'],
+                    'total' => $baseQty * ($item['unit_price'] ?? 0),
                 ]);
             }
 
@@ -150,10 +167,12 @@ class SalesOrderController extends Controller
                     'product_id' => $item['product_id'] ?: null,
                     'custom_product_name' => $item['custom_product_name'] ?? null,
                     'quantity' => $item['quantity'],
+                    'unit_id' => $item['unit_id'],
+                    'base_quantity' => $item['base_quantity'],
                     'unit_price' => $item['unit_price'],
                     'gst_rate' => $item['gst_rate'] ?? 0,
                     'hsn_code' => $item['hsn_code'] ?? null,
-                    'total' => $item['quantity'] * $item['unit_price'],
+                    'total' => $item['base_quantity'] * ($item['unit_price'] ?? 0),
                 ]);
             }
         });

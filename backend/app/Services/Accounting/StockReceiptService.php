@@ -10,6 +10,7 @@ use App\Models\TransactionLedger;
 use App\Models\Voucher;
 use App\Models\VoucherItem;
 use App\Services\InventoryService;
+use App\Services\UnitConversionService;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -30,8 +31,10 @@ use Illuminate\Support\Facades\DB;
  */
 class StockReceiptService
 {
-    public function __construct(protected InventoryService $inventory)
-    {
+    public function __construct(
+        protected InventoryService $inventory,
+        protected UnitConversionService $unitConversion
+    ) {
     }
 
     /**
@@ -43,6 +46,8 @@ class StockReceiptService
     {
         return [
             'items.product:id,name,sku,unit_id',
+            'items.product.unit:id,name,code',
+            'items.unit:id,name,code',
             'party:id,name',
             'receiver:id,name',
             'reverser:id,name',
@@ -106,6 +111,15 @@ class StockReceiptService
                 /** @var VoucherItem $item */
                 $item = $line['item'];
 
+                // The receipt is keyed in the voucher line's unit; stock is
+                // kept in the product's unit. Convert once so the movement and
+                // the receipt's audit figures agree.
+                $baseQuantity = $this->unitConversion->convertOrSame(
+                    (float) $line['quantity'],
+                    $item->unit_id,
+                    $item->product?->unit_id
+                );
+
                 // The movement is recorded before the counter moves, so a stock
                 // failure (an outbound delivery that would go negative) rolls
                 // the whole receipt back and the counter can never overstate.
@@ -119,6 +133,7 @@ class StockReceiptService
                     referenceType: $outbound ? 'delivery_note' : 'goods_receipt',
                     referenceId: $receipt->id,
                     notes: $this->movementNote($receipt, $voucher, $item),
+                    unitId: $item->unit_id,
                 );
 
                 $column = $item->movementColumn();
@@ -127,7 +142,9 @@ class StockReceiptService
                     'stock_receipt_id' => $receipt->id,
                     'voucher_item_id' => $item->id,
                     'product_id' => $item->product_id,
+                    'unit_id' => $item->unit_id,
                     'quantity' => $line['quantity'],
+                    'base_quantity' => $baseQuantity,
                     'quantity_before' => $item->moved_quantity,
                     'quantity_after' => round($item->moved_quantity + $line['quantity'], 3),
                     'transaction_ledger_id' => $movement->id,
@@ -158,22 +175,41 @@ class StockReceiptService
                 $item = $line->voucherItem()->first();
 
                 if ($item && $line->product_id) {
+                    $rate = (float) $item->rate;
+                    $lineQuantity = (float) $line->quantity;
+
+                    // If the receipt recorded the converted figure, undo
+                    // exactly that base quantity. Older rows have no
+                    // base_quantity, so fall back to the line's own unit.
+                    if ($line->base_quantity !== null) {
+                        $baseQuantity = (float) $line->base_quantity;
+                        $baseRate = $lineQuantity != 0.0
+                            ? $rate * $lineQuantity / $baseQuantity
+                            : $rate;
+                        $reversalUnitId = null;
+                    } else {
+                        $baseQuantity = $lineQuantity;
+                        $baseRate = $rate;
+                        $reversalUnitId = $line->unit_id;
+                    }
+
                     $this->inventory->recordTransaction(
                         productId: $line->product_id,
                         locationType: $receipt->location_type,
                         locationId: (int) $receipt->location_id,
                         transactionType: $outbound ? 'sales_return' : 'adjustment',
-                        quantity: (float) $line->quantity,
-                        unitPrice: (float) $item->rate,
+                        quantity: $baseQuantity,
+                        unitPrice: $baseRate,
                         referenceType: 'receipt_reversal',
                         referenceId: $receipt->id,
                         notes: "Reversal of {$receipt->receipt_no}"
                             . ($outbound ? ' (goods returned)' : ' (receipt cancelled)'),
+                        unitId: $reversalUnitId,
                     );
 
                     $column = $item->movementColumn();
                     $item->update([
-                        $column => round(max(0, (float) $item->{$column} - (float) $line->quantity), 3),
+                        $column => round(max(0, (float) $item->{$column} - $lineQuantity), 3),
                     ]);
                 }
 
@@ -202,7 +238,8 @@ class StockReceiptService
     public function summary(Voucher $voucher): array
     {
         $voucher->loadMissing([
-            'items.product:id,name,sku',
+            'items.product:id,name,sku,unit_id',
+            'items.product.unit:id,name,code',
             'items.receivedLines.receipt:id,receipt_no,receipt_date,status,location_type,location_id',
             'party:id,name',
             'activeStockReceipts',
@@ -210,30 +247,43 @@ class StockReceiptService
 
         $outbound = $voucher->stockDirection() === 'out';
 
-        $lines = $voucher->items->map(fn (VoucherItem $item) => [
-            'voucher_item_id' => $item->id,
-            'line_no' => $item->line_no,
-            'product_id' => $item->product_id,
-            'product_name' => $item->product?->name,
-            'sku' => $item->product?->sku,
-            'item_description' => $item->item_description,
-            'unit' => $item->unit,
-            'quantity' => (float) $item->quantity,
-            'moved_quantity' => $item->moved_quantity,
-            'pending_quantity' => $item->pending_quantity,
-            'tracks_stock' => $item->product_id !== null,
-            'receipts' => $item->receivedLines
-                ->map(fn (StockReceiptItem $line) => [
-                    'stock_receipt_id' => $line->stock_receipt_id,
-                    'receipt_no' => $line->receipt?->receipt_no,
-                    'receipt_date' => $line->receipt?->receipt_date?->toDateString(),
-                    'status' => $line->receipt?->status,
-                    'quantity' => (float) $line->quantity,
-                    'quantity_before' => (float) $line->quantity_before,
-                    'quantity_after' => (float) $line->quantity_after,
-                    'batch_no' => $line->batch_no,
-                ])->values(),
-        ])->values();
+        $lines = $voucher->items->map(function (VoucherItem $item) {
+            $productUnitId = $item->product?->unit_id;
+            $factor = $this->unitConversion->factor($item->unit_id, $productUnitId);
+
+            return [
+                'voucher_item_id' => $item->id,
+                'line_no' => $item->line_no,
+                'product_id' => $item->product_id,
+                'product_name' => $item->product?->name,
+                'sku' => $item->product?->sku,
+                'item_description' => $item->item_description,
+                'unit_id' => $item->unit_id,
+                'unit' => $item->unit,
+                'product_unit_id' => $productUnitId,
+                'product_unit' => $item->product?->unit?->name,
+                'quantity' => (float) $item->quantity,
+                'base_quantity' => round((float) $item->quantity * $factor, 3),
+                'moved_quantity' => $item->moved_quantity,
+                'base_moved_quantity' => round($item->moved_quantity * $factor, 3),
+                'pending_quantity' => $item->pending_quantity,
+                'base_pending_quantity' => round($item->pending_quantity * $factor, 3),
+                'tracks_stock' => $item->product_id !== null,
+                'receipts' => $item->receivedLines
+                    ->map(fn (StockReceiptItem $line) => [
+                        'stock_receipt_id' => $line->stock_receipt_id,
+                        'receipt_no' => $line->receipt?->receipt_no,
+                        'receipt_date' => $line->receipt?->receipt_date?->toDateString(),
+                        'status' => $line->receipt?->status,
+                        'quantity' => (float) $line->quantity,
+                        'unit_id' => $line->unit_id,
+                        'base_quantity' => $line->base_quantity !== null ? (float) $line->base_quantity : null,
+                        'quantity_before' => (float) $line->quantity_before,
+                        'quantity_after' => (float) $line->quantity_after,
+                        'batch_no' => $line->batch_no,
+                    ])->values(),
+            ];
+        })->values();
 
         [$status, $ordered, $moved] = $this->deriveStatus($voucher);
 
@@ -245,6 +295,9 @@ class StockReceiptService
             'ordered_quantity' => $ordered,
             'moved_quantity' => $moved,
             'pending_quantity' => round(max(0, $ordered - $moved), 3),
+            'base_ordered_quantity' => round((float) $lines->sum('base_quantity'), 3),
+            'base_moved_quantity' => round((float) $lines->sum('base_moved_quantity'), 3),
+            'base_pending_quantity' => round((float) $lines->sum('base_pending_quantity'), 3),
             'readiness' => $this->readiness($voucher, $outbound),
             'lines' => $lines,
             'receipts' => $voucher->stockReceipts()
@@ -264,7 +317,7 @@ class StockReceiptService
      */
     public function availability(Voucher $voucher): array
     {
-        $voucher->loadMissing('items');
+        $voucher->loadMissing(['items.product.unit']);
 
         $productIds = $voucher->items->pluck('product_id')->filter()->unique()->values();
         $outbound = $voucher->stockDirection() === 'out';
@@ -288,19 +341,33 @@ class StockReceiptService
 
         $lines = $voucher->items->map(function (VoucherItem $item) use ($byProduct, $outbound) {
             $locations = $item->product_id ? ($byProduct[$item->product_id] ?? []) : [];
+            // Stock rows are in the product's base unit; the voucher line may
+            // be keyed in another one, so convert the requested figure before
+            // comparing the two.
             $onHand = round(array_sum(array_column($locations, 'available_quantity')), 3);
             $requested = (float) $item->quantity;
+            $factor = $this->unitConversion->factor($item->unit_id, $item->product?->unit_id);
+            $baseRequested = round($requested * $factor, 3);
 
             return [
                 'voucher_item_id' => $item->id,
                 'product_id' => $item->product_id,
                 'product_name' => $item->product?->name,
+                'unit_id' => $item->unit_id,
+                'unit' => $item->unit,
+                'product_unit_id' => $item->product?->unit_id,
+                'product_unit' => $item->product?->unit?->name,
                 'tracked' => $item->product_id !== null,
                 'requested_quantity' => $requested,
+                'base_requested_quantity' => $baseRequested,
                 'on_hand_quantity' => $item->product_id ? $onHand : null,
+                'base_on_hand_quantity' => $item->product_id ? $onHand : null,
                 // Only a sale can be short: a purchase is what creates stock.
-                'shortfall_quantity' => $outbound && $item->product_id && $onHand < $requested
-                    ? round($requested - $onHand, 3)
+                'shortfall_quantity' => $outbound && $item->product_id && $onHand < $baseRequested
+                    ? round(($baseRequested - $onHand) / ($factor ?: 1), 3)
+                    : 0,
+                'base_shortfall_quantity' => $outbound && $item->product_id && $onHand < $baseRequested
+                    ? round($baseRequested - $onHand, 3)
                     : 0,
                 'locations' => $locations,
             ];
@@ -320,7 +387,7 @@ class StockReceiptService
     {
         $query = StockReceipt::query()
             ->with($this->relations())
-            ->withSum('items as quantity_total', 'quantity');
+            ->withSum('items as quantity_total', 'base_quantity');
 
         if (! empty($filters['voucher_type'])) {
             $query->where('voucher_type', $filters['voucher_type']);
@@ -374,7 +441,15 @@ class StockReceiptService
 
         $query = StockReceipt::query()
             ->where('status', 'active')
-            ->with(['items.product:id,name,sku', 'items.voucherItem:id,rate', 'voucher:id,voucher_no,voucher_type', 'party:id,name', 'locationable:id,name']);
+            ->with([
+                'items.product:id,name,sku,unit_id',
+                'items.product.unit:id,name,code',
+                'items.unit:id,name,code',
+                'items.voucherItem:id,rate',
+                'voucher:id,voucher_no,voucher_type',
+                'party:id,name',
+                'locationable:id,name',
+            ]);
 
         if (! empty($filters['voucher_type'])) {
             $query->where('voucher_type', $filters['voucher_type']);
@@ -409,13 +484,22 @@ class StockReceiptService
         foreach ($receipts as $receipt) {
             $outbound = $receipt->voucher_type === 'sales';
             $totals['receipts']++;
-            $totals[$outbound ? 'outbound_quantity' : 'inbound_quantity'] += (float) $receipt->items->sum('quantity');
+
+            // Receipt lines keep the unit they were keyed in; aggregates are in
+            // the product's base unit so a report never adds grams to pieces.
+            $baseQuantities = $receipt->items->map(
+                fn (StockReceiptItem $line) => $line->base_quantity !== null ? (float) $line->base_quantity : (float) $line->quantity
+            );
+            $totals[$outbound ? 'outbound_quantity' : 'inbound_quantity'] += (float) $baseQuantities->sum();
 
             $lineSummary = [];
 
             foreach ($receipt->items as $line) {
-                $quantity = (float) $line->quantity;
-                $value = round($quantity * (float) ($line->voucherItem?->rate ?? 0), 2);
+                $enteredQuantity = (float) $line->quantity;
+                $quantity = $line->base_quantity !== null ? (float) $line->base_quantity : $enteredQuantity;
+                // The rate belongs to the line's unit, so value is entered
+                // quantity x rate — equal to base quantity x base rate.
+                $value = round($enteredQuantity * (float) ($line->voucherItem?->rate ?? 0), 2);
                 $productId = $line->product_id ?? 0;
                 $name = $line->product?->name ?? 'Unknown product';
 
@@ -423,6 +507,8 @@ class StockReceiptService
                     'product_id' => $line->product_id,
                     'product_name' => $name,
                     'sku' => $line->product?->sku,
+                    'product_unit_id' => $line->product?->unit_id,
+                    'product_unit' => $line->product?->unit?->name,
                     'inbound_quantity' => 0.0, 'outbound_quantity' => 0.0,
                     'inbound_value' => 0.0, 'outbound_value' => 0.0,
                     'receipt_count' => 0,
@@ -450,7 +536,12 @@ class StockReceiptService
                 $lineSummary[] = [
                     'product_id' => $line->product_id,
                     'product_name' => $name,
-                    'quantity' => $quantity,
+                    'unit_id' => $line->unit_id,
+                    'unit' => $line->unit?->name,
+                    'entered_quantity' => $enteredQuantity,
+                    'base_quantity' => $quantity,
+                    'product_unit_id' => $line->product?->unit_id,
+                    'product_unit' => $line->product?->unit?->name,
                     'value' => $value,
                 ];
             }
@@ -466,7 +557,10 @@ class StockReceiptService
                 'party_name' => $receipt->party?->name,
                 'location_name' => $receipt->locationable?->name,
                 'supplier_bill_no' => $receipt->supplier_bill_no,
-                'quantity_total' => (float) $receipt->items->sum('quantity'),
+                'quantity_total' => round((float) $receipt->items->sum(
+                    fn (StockReceiptItem $line) => $line->base_quantity !== null ? (float) $line->base_quantity : (float) $line->quantity
+                ), 3),
+                'entered_quantity_total' => (float) $receipt->items->sum('quantity'),
                 'lines' => $lineSummary,
             ];
         }
@@ -679,7 +773,7 @@ class StockReceiptService
      */
     protected function planLines(Voucher $voucher, array $requested, bool $outbound): array
     {
-        $voucher->loadMissing('items');
+        $voucher->loadMissing(['items.product']);
 
         $byId = $requested === [] ? collect() : collect($requested)
             ->keyBy(fn ($row) => (int) ($row['voucher_item_id'] ?? 0));
@@ -887,13 +981,21 @@ class StockReceiptService
             'received_by' => $receipt->received_by,
             'received_by_name' => $receipt->receiver?->name,
             'reversed_by_name' => $receipt->reverser?->name,
-            'quantity_total' => (float) ($receipt->quantity_total ?? $receipt->items->sum('quantity')),
+            'quantity_total' => (float) ($receipt->quantity_total ?? $receipt->items->sum(
+                fn (StockReceiptItem $line) => $line->base_quantity !== null ? (float) $line->base_quantity : (float) $line->quantity
+            )),
+            'entered_quantity_total' => (float) $receipt->items->sum('quantity'),
             'items' => $receipt->items->map(fn (StockReceiptItem $line) => [
                 'id' => $line->id,
                 'voucher_item_id' => $line->voucher_item_id,
                 'product_id' => $line->product_id,
                 'product_name' => $line->product?->name,
+                'unit_id' => $line->unit_id,
+                'unit' => $line->unit?->name,
+                'product_unit_id' => $line->product?->unit_id,
+                'product_unit' => $line->product?->unit?->name,
                 'quantity' => (float) $line->quantity,
+                'base_quantity' => $line->base_quantity !== null ? (float) $line->base_quantity : null,
                 'quantity_before' => (float) $line->quantity_before,
                 'quantity_after' => (float) $line->quantity_after,
                 'batch_no' => $line->batch_no,

@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Http\Resources\ProductResource;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreProductRequest extends FormRequest
 {
@@ -29,8 +30,12 @@ class StoreProductRequest extends FormRequest
             'max_stock' => 'nullable|numeric|min:0',
             'description' => 'nullable|string',
             'opening_stock' => 'nullable|numeric|min:0',
+            'opening_stock_unit_id' => 'nullable|exists:units,id',
             'status' => 'nullable|string|in:active,inactive',
-            'site_id' => 'required_if:opening_stock,gt:0|nullable|exists:sites,id',
+            // required_if only supports literal comparisons, so the old
+            // `required_if:opening_stock,gt:0` never fired and an opening stock
+            // could be saved without a site (silently dropping the quantity).
+            'site_id' => [Rule::requiredIf(fn () => (float) $this->input('opening_stock', 0) > 0), 'nullable', 'exists:sites,id'],
         ];
 
         if (ProductResource::canManageSalesPrice($this)) {

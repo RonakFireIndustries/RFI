@@ -14,6 +14,8 @@ class StockRequestResource extends JsonResource
             'request_number' => $this->request_number,
             'product_id' => $this->product_id,
             'product' => $this->whenLoaded('product'),
+            'unit_id' => $this->unit_id,
+            'unit' => $this->whenLoaded('unit'),
             'from_location_type' => $this->from_location_type,
             'from_location_id' => $this->from_location_id,
             'from_locationable' => $this->whenLoaded('from_locationable'),
@@ -21,6 +23,8 @@ class StockRequestResource extends JsonResource
             'to_location_id' => $this->to_location_id,
             'to_locationable' => $this->whenLoaded('to_locationable'),
             'quantity' => (float) $this->quantity,
+            'base_quantity' => (float) app(\App\Services\UnitConversionService::class)
+                ->convertOrSame((float) $this->quantity, $this->unit_id, $this->product?->unit_id),
             'approved_quantity' => (float) $this->approved_quantity,
             'issued_quantity' => (float) $this->issued_quantity,
             'received_quantity' => (float) $this->received_quantity,

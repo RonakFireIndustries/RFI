@@ -8,6 +8,9 @@ import { useStockReceiptStore } from '../../store/stockReceiptStore';
 import PermissionGate from '../../components/Guards/PermissionGate';
 import StockReceiptPanel from '../../components/Accounting/StockReceiptPanel';
 import StockReceiptModal from '../../components/Accounting/StockReceiptModal';
+import UnitSelect from '../../components/Shared/UnitSelect';
+import UnitConversionHint from '../../components/Shared/UnitConversionHint';
+import { formatQuantity } from '../../utils/units';
 import { VOUCHER_TYPES, partyTypeForVoucher, tracksStock, movesStockOnSave, billSidesForVoucher, BILL_TYPES_FOR_SIDE } from '../../config/vouchers';
 import { formatMoney } from '../../utils/finance';
 
@@ -186,6 +189,7 @@ const newLine = () => ({
   product_name: '',
   hsn_code: '',
   unit: '',
+  unit_id: '',
   quantity: 1,
   rate: 0,
 });
@@ -305,6 +309,7 @@ const ItemVoucherFormPage = () => {
             product_name: it.item_description || it.product?.name || '',
             hsn_code: it.hsn_code || '',
             unit: it.unit || '',
+            unit_id: it.unit_id ? String(it.unit_id) : '',
             quantity: String(it.quantity ?? '1'),
             rate: String(it.rate ?? '0'),
           }))
@@ -514,6 +519,7 @@ const ItemVoucherFormPage = () => {
             product_name: product ? (product.name || '') : l.product_name,
             hsn_code: product ? (product.hsn_code || '') : l.hsn_code,
             unit: product ? (product.unit || '') : l.unit,
+            unit_id: product?.unit_id ? String(product.unit_id) : l.unit_id,
           }
         : l
     )));
@@ -563,6 +569,7 @@ const ItemVoucherFormPage = () => {
         item_description: l.product_name,
         hsn_code: nullable(l.hsn_code),
         unit: nullable(l.unit),
+        unit_id: l.unit_id ? Number(l.unit_id) : null,
         quantity: round3(l.quantity),
         rate: round2(l.rate),
       })),
@@ -735,8 +742,25 @@ const ItemVoucherFormPage = () => {
                       )}
                     </td>
                     <td className="px-2 py-2 align-top"><input value={l.hsn_code} onChange={(e) => handleLineChange(l.id, 'hsn_code', e.target.value)} className={inputClass} /></td>
-                    <td className="px-2 py-2 align-top"><input value={l.unit} onChange={(e) => handleLineChange(l.id, 'unit', e.target.value)} className={inputClass} /></td>
-                    <td className="px-2 py-2 align-top"><input type="number" step="0.001" min="0" value={l.quantity} onChange={(e) => handleLineChange(l.id, 'quantity', e.target.value)} className={inputClass} required /></td>
+                    <td className="px-2 py-2 align-top">
+                      <UnitSelect
+                        value={l.unit_id}
+                        onChange={(unitId, unit) => {
+                          handleLineChange(l.id, 'unit_id', unitId);
+                          handleLineChange(l.id, 'unit', unit?.name || '');
+                        }}
+                        placeholder="—"
+                        className="w-full rounded border border-gray-200 px-1 py-1 text-xs"
+                      />
+                    </td>
+                    <td className="px-2 py-2 align-top">
+                      <input type="number" step="0.001" min="0" value={l.quantity} onChange={(e) => handleLineChange(l.id, 'quantity', e.target.value)} className={inputClass} required />
+                      <UnitConversionHint
+                        quantity={l.quantity}
+                        fromUnitId={l.unit_id}
+                        toUnitId={products.find((p) => String(p.id) === String(l.product_id))?.unit_id}
+                      />
+                    </td>
                     <td className="px-2 py-2 align-top"><input type="number" step="0.01" min="0" value={l.rate} onChange={(e) => handleLineChange(l.id, 'rate', e.target.value)} className={inputClass} required /></td>
                     {tracks && (
                       <td className="px-2 py-2 align-top">
@@ -747,12 +771,12 @@ const ItemVoucherFormPage = () => {
                         ) : (
                           <div className="text-xs">
                             <div className={`font-semibold ${Number(l.stock?.shortfall_quantity) > 0 ? 'text-amber-700' : 'text-gray-800'}`}>
-                              {round3(l.stock?.on_hand_quantity)}
+                              {formatQuantity(l.stock?.on_hand_quantity, l.stock?.product_unit)}
                             </div>
                             {Number(l.stock?.shortfall_quantity) > 0 && (
                               <div className="inline-flex items-center text-amber-700" title="Recording this sale will take stock negative">
                                 <AlertTriangle className="mr-0.5 h-3 w-3" />
-                                short {round3(l.stock?.shortfall_quantity)}
+                                short {formatQuantity(l.stock?.shortfall_quantity, l.stock?.product_unit)}
                               </div>
                             )}
                           </div>

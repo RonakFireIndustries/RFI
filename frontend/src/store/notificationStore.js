@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { notificationService } from '../services/notificationService';
-import { getEcho } from '../bootstrap';
+import { getEcho, hasAuthToken } from '../bootstrap';
 
 let echoChannel = null;
 
@@ -75,7 +75,10 @@ export const useNotificationStore = create((set, get) => ({
   },
 
   listenForNotifications: (userId) => {
-    if (!userId) return;
+    // Without a token the private channel can never be authorized, so skip
+    // the subscription rather than firing a request that is guaranteed to
+    // come back 401. Polling still keeps the unread count current.
+    if (!userId || !hasAuthToken()) return;
 
     try {
       const echo = getEcho();

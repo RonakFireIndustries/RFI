@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useProductStockStore } from '../../../store/productStockStore';
 import DataTable from '../../../components/Shared/DataTable';
+import { formatQuantity } from '../../../utils/units';
 import { Search, X } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 
@@ -73,12 +74,12 @@ export default function StockPage() {
       header: 'Location',
     },
     {
-      accessorFn: (row) => Number(row.quantity).toLocaleString(),
+      accessorFn: (row) => formatQuantity(row.quantity, row.product?.unit),
       id: 'quantity',
       header: 'Quantity',
     },
     {
-      accessorFn: (row) => Number(row.reserved_quantity).toLocaleString(),
+      accessorFn: (row) => formatQuantity(row.reserved_quantity, row.product?.unit),
       id: 'reserved',
       header: 'Reserved',
     },
@@ -90,7 +91,7 @@ export default function StockPage() {
         const reorder = Number(row.original.product?.reorder_level || 0);
         return (
           <span className={`font-medium ${available <= reorder && reorder > 0 ? 'text-red-600' : 'text-green-600'}`}>
-            {available.toLocaleString()}
+            {formatQuantity(available, row.original.product?.unit)}
           </span>
         );
       },

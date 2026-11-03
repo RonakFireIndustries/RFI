@@ -11,18 +11,25 @@ use Illuminate\Support\Facades\DB;
 class StockRequestService
 {
     public function __construct(
-        private InventoryService $inventoryService
+        private InventoryService $inventoryService,
+        private UnitConversionService $unitConversion
     ) {}
 
     public function approve(StockRequest $request): StockRequest
     {
         return DB::transaction(function () use ($request) {
+            $baseQuantity = $this->unitConversion->convertOrSame(
+                (float) $request->quantity,
+                $request->unit_id,
+                $request->product?->unit_id
+            );
+
             $sourceStock = ProductStock::where('product_id', $request->product_id)
                 ->where('location_type', $request->from_location_type)
                 ->where('location_id', $request->from_location_id)
                 ->first();
 
-            if (!$sourceStock || $sourceStock->quantity < $request->quantity) {
+            if (!$sourceStock || $sourceStock->quantity < $baseQuantity) {
                 throw new \Exception('Insufficient stock at source location');
             }
 
@@ -54,7 +61,8 @@ class StockRequestService
                 toLocationId: $request->to_location_id,
                 referenceType: 'stock_request',
                 referenceId: $request->id,
-                notes: "Stock request #{$request->request_number}"
+                notes: "Stock request #{$request->request_number}",
+                unitId: $request->unit_id
             );
 
             $request->update([

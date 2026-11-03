@@ -5,6 +5,19 @@ namespace App\Services;
 use App\Models\Unit;
 use App\Models\UnitConversion;
 
+/**
+ * Converts quantities between units.
+ *
+ * The conversion table is treated as a graph: a direct row gives both
+ * directions (the reverse is the reciprocal), and two or more rows can be
+ * chained (KG -> G -> ...). The product's own unit is the base every stock
+ * figure is kept in.
+ *
+ * `convert()` returns null when no path exists. Callers that must not fail a
+ * save use `convertOrSame()`, which treats an unknown path as 1:1 — the
+ * behaviour chosen for this app so a missing conversion row never blocks a
+ * stock movement.
+ */
 class UnitConversionService
 {
     public function convert(float $quantity, int $fromUnitId, int $toUnitId): ?float
@@ -13,84 +26,122 @@ class UnitConversionService
             return $quantity;
         }
 
-        $conversion = UnitConversion::where('from_unit_id', $fromUnitId)
-            ->where('to_unit_id', $toUnitId)
-            ->first();
+        $path = $this->getConversionPath($fromUnitId, $toUnitId);
 
-        if ($conversion) {
-            return $quantity * $conversion->conversion_factor;
+        if ($path === null) {
+            return null;
         }
 
-        $reverse = UnitConversion::where('from_unit_id', $toUnitId)
-            ->where('to_unit_id', $fromUnitId)
-            ->first();
-
-        if ($reverse) {
-            return $quantity / $reverse->conversion_factor;
-        }
-
-        return null;
+        return $quantity * array_product(array_column($path, 'factor'));
     }
 
+    /**
+     * The multiplier that turns a quantity in `$fromUnitId` into `$toUnitId`.
+     * Missing units or a missing path are treated as 1:1.
+     */
+    public function factor(?int $fromUnitId, ?int $toUnitId): float
+    {
+        if (! $fromUnitId || ! $toUnitId || $fromUnitId === $toUnitId) {
+            return 1.0;
+        }
+
+        $path = $this->getConversionPath($fromUnitId, $toUnitId);
+
+        if ($path === null) {
+            return 1.0;
+        }
+
+        return (float) array_product(array_column($path, 'factor'));
+    }
+
+    /**
+     * Convert, but never fail: a unit missing from the conversion table is
+     * assumed to be the same unit.
+     */
+    public function convertOrSame(float $quantity, ?int $fromUnitId, ?int $toUnitId): float
+    {
+        return $quantity * $this->factor($fromUnitId, $toUnitId);
+    }
+
+    /**
+     * The steps from one unit to another, or null when they cannot be reached.
+     *
+     * Breadth-first so the shortest chain wins; each step is
+     * `['from' => id, 'to' => id, 'factor' => multiplier]`.
+     *
+     * @return array<int, array{from: int, to: int, factor: float}>|null
+     */
     public function getConversionPath(int $fromUnitId, int $toUnitId): ?array
     {
         if ($fromUnitId === $toUnitId) {
-            return [['from' => $fromUnitId, 'to' => $toUnitId, 'factor' => 1]];
-        }
-
-        $direct = UnitConversion::where('from_unit_id', $fromUnitId)
-            ->where('to_unit_id', $toUnitId)
-            ->first();
-
-        if ($direct) {
-            return [['from' => $fromUnitId, 'to' => $toUnitId, 'factor' => $direct->conversion_factor]];
-        }
-
-        $reverse = UnitConversion::where('from_unit_id', $toUnitId)
-            ->where('to_unit_id', $fromUnitId)
-            ->first();
-
-        if ($reverse) {
-            return [['from' => $fromUnitId, 'to' => $toUnitId, 'factor' => 1 / $reverse->conversion_factor]];
+            return [['from' => $fromUnitId, 'to' => $toUnitId, 'factor' => 1.0]];
         }
 
         $fromUnit = Unit::find($fromUnitId);
         $toUnit = Unit::find($toUnitId);
-        if ($fromUnit && $toUnit && $fromUnit->type !== $toUnit->type) {
+
+        if (! $fromUnit || ! $toUnit) {
             return null;
         }
 
-        $intermediate1 = UnitConversion::where('from_unit_id', $fromUnitId)
-            ->orWhere('to_unit_id', $fromUnitId)
-            ->first();
+        // Different dimensions (weight vs length) never convert, even if a
+        // stray row links them.
+        if ($fromUnit->type && $toUnit->type && $fromUnit->type !== $toUnit->type) {
+            return null;
+        }
 
-        if ($intermediate1) {
-            $midId = $intermediate1->from_unit_id === $fromUnitId
-                ? $intermediate1->to_unit_id
-                : $intermediate1->from_unit_id;
+        $adjacency = [];
+        foreach (UnitConversion::query()->get(['from_unit_id', 'to_unit_id', 'conversion_factor']) as $row) {
+            $factor = (float) $row->conversion_factor;
 
-            $intermediate2 = UnitConversion::where(function ($q) use ($midId, $toUnitId) {
-                $q->where('from_unit_id', $midId)->where('to_unit_id', $toUnitId);
-            })->orWhere(function ($q) use ($midId, $toUnitId) {
-                $q->where('from_unit_id', $toUnitId)->where('to_unit_id', $midId);
-            })->first();
+            if ($factor == 0.0) {
+                continue;
+            }
 
-            if ($intermediate2) {
-                $factor1 = $intermediate1->from_unit_id === $fromUnitId
-                    ? $intermediate1->conversion_factor
-                    : 1 / $intermediate1->conversion_factor;
+            $adjacency[(int) $row->from_unit_id][(int) $row->to_unit_id] = $factor;
+            $adjacency[(int) $row->to_unit_id][(int) $row->from_unit_id] = 1 / $factor;
+        }
 
-                $factor2 = $intermediate2->from_unit_id === $midId
-                    ? $intermediate2->conversion_factor
-                    : 1 / $intermediate2->conversion_factor;
+        if (! isset($adjacency[$fromUnitId])) {
+            return null;
+        }
 
-                return [
-                    ['from' => $fromUnitId, 'to' => $midId, 'factor' => $factor1],
-                    ['from' => $midId, 'to' => $toUnitId, 'factor' => $factor2],
-                ];
+        $queue = [$fromUnitId];
+        $visited = [$fromUnitId => true];
+        // node => [previous node, factor from previous node]
+        $previous = [];
+
+        while ($queue !== []) {
+            $node = array_shift($queue);
+
+            if ($node === $toUnitId) {
+                break;
+            }
+
+            foreach ($adjacency[$node] ?? [] as $next => $factor) {
+                if (isset($visited[$next])) {
+                    continue;
+                }
+
+                $visited[$next] = true;
+                $previous[$next] = [$node, $factor];
+                $queue[] = $next;
             }
         }
 
-        return null;
+        if (! isset($visited[$toUnitId])) {
+            return null;
+        }
+
+        $steps = [];
+        $node = $toUnitId;
+
+        while ($node !== $fromUnitId) {
+            [$prev, $factor] = $previous[$node];
+            array_unshift($steps, ['from' => $prev, 'to' => $node, 'factor' => (float) $factor]);
+            $node = $prev;
+        }
+
+        return $steps;
     }
 }

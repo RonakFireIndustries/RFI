@@ -7,6 +7,7 @@ import api from '../../services/api';
 import { unwrapList } from '../../services/resourceHelpers';
 import { useProductsStore } from '../../store/productsStore';
 import Money from '../../components/Shared/Money';
+import UnitConversionHint from '../../components/Shared/UnitConversionHint';
 import { usePriceVisibility } from '../../hooks/usePriceVisibility';
 
 const MODULE = 'products';
@@ -170,6 +171,7 @@ export default function ProductCatalog() {
       purchase_price: item.purchase_price ?? '',
       selling_price: item.selling_price ?? '',
       opening_stock: item.opening_stock ?? 0,
+      opening_stock_unit_id: '',
       site_id: item.site_id ? String(item.site_id) : '',
       status: item.status ?? 'active',
     };
@@ -242,7 +244,23 @@ export default function ProductCatalog() {
       flds.push({ name: 'selling_price', label: 'Selling Price', type: 'number', step: '0.01', required: true });
     }
     flds.push(
-      { name: 'opening_stock', label: 'Opening Stock', type: 'number', step: '1', defaultValue: 0 },
+      {
+        name: 'opening_stock',
+        label: 'Opening Stock',
+        type: 'number',
+        step: '1',
+        defaultValue: 0,
+        // The keyed quantity is converted into the product's unit on save;
+        // show the result (or the missing-rate warning) as the user types.
+        hint: (formData) => (
+          <UnitConversionHint
+            quantity={formData.opening_stock}
+            fromUnitId={formData.opening_stock_unit_id}
+            toUnitId={formData.unit_id}
+          />
+        ),
+      },
+      { name: 'opening_stock_unit_id', label: 'Opening Stock Unit', type: 'select', optionsKey: 'units', emptyAsNull: true, placeholder: 'Product unit' },
       { name: 'site_id', label: 'Store At (Site)', type: 'select', optionsKey: 'sites', emptyAsNull: true, placeholder: 'Select site (required if opening stock > 0)' },
       { name: 'status', label: 'Status', type: 'select', defaultValue: 'active', options: [{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }] },
     );
@@ -470,6 +488,10 @@ const renderCard = (product, { openModal, deleteItem, detailBasePath, canSeePric
       <div className="flex items-center justify-between">
         <dt className="text-gray-500">Stock</dt>
         <dd className="font-medium text-gray-900">{product.total_stock ?? 0}</dd>
+      </div>
+      <div className="flex items-center justify-between">
+        <dt className="text-gray-500">Opening Stock</dt>
+        <dd className="font-medium text-gray-900">{product.opening_stock ?? 0}</dd>
       </div>
       {product.supplier?.name && (
         <div className="flex items-center justify-between gap-2">

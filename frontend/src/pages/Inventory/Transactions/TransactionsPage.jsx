@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTransactionLedgerStore } from '../../../store/transactionLedgerStore';
 import DataTable from '../../../components/Shared/DataTable';
+import { formatQuantity } from '../../../utils/units';
 import { Search, X } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 
@@ -75,7 +76,15 @@ export default function TransactionsPage() {
       cell: ({ row }) => {
         const qty = Number(row.original.quantity);
         const isInflow = ['opening_stock', 'purchase', 'purchase_return', 'transfer_in', 'sales_return'].includes(row.original.transaction_type);
-        return <span className={`font-medium ${isInflow ? 'text-green-600' : 'text-red-600'}`}>{qty > 0 ? '+' : ''}{qty}</span>;
+        const entered = row.original.entered_quantity;
+        const enteredNote = entered !== null && entered !== undefined && Math.abs(Number(entered) - Math.abs(qty)) > 0.0005
+          ? ` (entered ${formatQuantity(entered, row.original.unit)})`
+          : '';
+        return (
+          <span className={`font-medium ${isInflow ? 'text-green-600' : 'text-red-600'}`} title={enteredNote || undefined}>
+            {qty > 0 ? '+' : ''}{formatQuantity(qty, row.original.product?.unit, row.original.unit)}{enteredNote}
+          </span>
+        );
       },
     },
     { accessorFn: (row) => row.creator || '-', id: 'by', header: 'Created By' },

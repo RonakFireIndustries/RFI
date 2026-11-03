@@ -36,6 +36,7 @@ class VoucherProductPickingTest extends TestCase
         '2026_10_21_000002_add_bill_level_tax_discount_to_vouchers.php',
         '2026_10_19_000001_add_due_date_to_vouchers.php',
         '2026_10_19_000002_add_credit_days_to_parties.php',
+        '2026_11_03_000001_add_unit_tracking_to_stock_documents.php',
     ];
 
     protected function setUp(): void

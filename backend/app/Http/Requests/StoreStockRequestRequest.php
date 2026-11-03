@@ -15,6 +15,7 @@ class StoreStockRequestRequest extends FormRequest
     {
         return [
             'product_id' => 'required|exists:products,id',
+            'unit_id' => 'nullable|exists:units,id',
             'from_location_type' => 'required|string|in:App\Models\Site',
             'from_location_id' => 'required|integer',
             'to_location_type' => 'required|string|in:App\Models\Site',

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { Bell, CheckCheck, X, Loader2, Clock } from 'lucide-react';
@@ -20,7 +20,12 @@ export default function NotificationBell() {
   // element forms a stacking context, so a `z-50` panel inside it still
   // paints at z=10 relative to the page and ended up underneath page content
   // that sets its own z-index. Portalling puts it outside that context.
-  const [panelStyle, setPanelStyle] = useState({ top: 0, right: 0 });
+  //
+  // Position is expressed as `left`, not `right`: on a phone the fixed 320px
+  // width anchored to the bell's right edge pushed the panel off the left of
+  // the screen. Clamping to the viewport keeps it aligned to the bell on
+  // desktop and edge-to-edge (inset by one margin) on a narrow screen.
+  const [panelStyle, setPanelStyle] = useState({ left: 0, top: 0, width: 320, maxHeight: 0 });
   const dropdownRef = useRef(null);
   const buttonRef = useRef(null);
   const navigate = useNavigate();
@@ -58,23 +63,83 @@ export default function NotificationBell() {
     }
   }, [open, fetchNotifications]);
 
-  // Keep the panel's top-right corner pinned to the bell. The header does not
-  // move while the page scrolls - <main> is its own scroll container - so a
-  // resize is the only thing that needs re-measuring.
-  useEffect(() => {
+  // Keep the panel attached to the bell and inside the viewport.
+  //
+  // The header is sticky, so the bell does not move while the page scrolls;
+  // a resize (including the mobile browser hiding/showing its address bar) is
+  // the only thing that needs re-measuring.
+  //
+  // This is a layout effect on purpose: the panel is portalled with a position
+  // that is only known once the bell has been measured, and measuring after
+  // paint would flash it in the top-left corner for a frame.
+  useLayoutEffect(() => {
     if (!open) {
       return undefined;
     }
+
+    const MARGIN = 8;
+
     const place = () => {
-      const rect = buttonRef.current?.getBoundingClientRect();
-      if (!rect) {
+      const button = buttonRef.current;
+      if (!button) {
         return;
       }
-      setPanelStyle({ top: rect.bottom + 8, right: window.innerWidth - rect.right });
+
+      const rect = button.getBoundingClientRect();
+      const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
+      const viewportHeight = document.documentElement.clientHeight || window.innerHeight;
+
+      // On a phone the panel is edge-to-edge (inset by one margin), which is
+      // both wider and symmetrical; from `sm` up it is a fixed-width card
+      // hanging off the bell. Either way it never exceeds the screen.
+      const isNarrow = viewportWidth < 640;
+      const width = isNarrow
+        ? viewportWidth - MARGIN * 2
+        : Math.min(384, viewportWidth - MARGIN * 2);
+
+      // On a phone the inset margin is the anchor. On a wide screen, align the
+      // panel's right edge with the bell's, then pull it back inside the
+      // viewport if that would overflow the left edge.
+      const alignedLeft = rect.right - width;
+      const maxLeft = Math.max(MARGIN, viewportWidth - MARGIN - width);
+      const left = isNarrow
+        ? MARGIN
+        : Math.min(Math.max(alignedLeft, MARGIN), maxLeft);
+
+      // Prefer opening downwards. Fall upwards only when the space below is
+      // too short to be usable and there is more room above.
+      const spaceBelow = viewportHeight - (rect.bottom + MARGIN) - MARGIN;
+      const spaceAbove = rect.top - MARGIN * 2;
+      const openUpwards = spaceBelow < 220 && spaceAbove > spaceBelow;
+
+      const maxHeight = Math.max(120, openUpwards ? spaceAbove : spaceBelow);
+
+      setPanelStyle({
+        left,
+        width,
+        maxHeight,
+        ...(openUpwards
+          ? { bottom: viewportHeight - rect.top + MARGIN, top: 'auto' }
+          : { top: rect.bottom + MARGIN, bottom: 'auto' }),
+      });
     };
+
     place();
+
+    // Measure once more after the first paint: on a phone the browser chrome
+    // resizes the viewport a frame after the panel mounts.
+    const frame = requestAnimationFrame(place);
+
     window.addEventListener('resize', place);
-    return () => window.removeEventListener('resize', place);
+    window.addEventListener('orientationchange', place);
+    window.visualViewport?.addEventListener('resize', place);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener('resize', place);
+      window.removeEventListener('orientationchange', place);
+      window.visualViewport?.removeEventListener('resize', place);
+    };
   }, [open]);
 
   useEffect(() => {
@@ -134,10 +199,17 @@ export default function NotificationBell() {
         createPortal(
           <div
             ref={dropdownRef}
-            style={{ position: 'fixed', top: panelStyle.top, right: panelStyle.right }}
-            className="w-80 sm:w-96 bg-card rounded-xl shadow-2xl border border-border overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-150"
+            style={{
+              position: 'fixed',
+              left: panelStyle.left,
+              top: panelStyle.top,
+              bottom: panelStyle.bottom,
+              width: panelStyle.width,
+              maxHeight: panelStyle.maxHeight,
+            }}
+            className="flex flex-col bg-card rounded-xl shadow-2xl border border-border overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-150"
           >
-          <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+          <div className="shrink-0 px-4 py-3 border-b border-border flex items-center justify-between">
             <h3 className="font-semibold text-foreground text-sm">Notifications</h3>
             <div className="flex items-center gap-1">
               {unreadCount > 0 && (
@@ -158,7 +230,7 @@ export default function NotificationBell() {
             </div>
           </div>
 
-          <div className="max-h-[360px] overflow-y-auto">
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
             {loading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
@@ -222,7 +294,7 @@ export default function NotificationBell() {
           <Link
             to="/dashboard/notifications"
             onClick={() => setOpen(false)}
-            className="block px-4 py-3 text-center text-sm font-medium text-primary hover:bg-muted/50 border-t border-border transition-colors"
+            className="shrink-0 block px-4 py-3 text-center text-sm font-medium text-primary hover:bg-muted/50 border-t border-border transition-colors"
           >
             View all notifications
           </Link>

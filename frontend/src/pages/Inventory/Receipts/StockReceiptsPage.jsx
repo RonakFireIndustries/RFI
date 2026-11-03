@@ -111,7 +111,7 @@ const StockReceiptsPage = () => {
             {totals.outbound} delivered
           </span>
           <span className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 font-medium text-gray-600">
-            {qty(totals.quantity)} units moved
+            {qty(totals.quantity)} base units moved
           </span>
           <Link
             to="/dashboard/accounting/reports/receipt-breakdown"
@@ -189,7 +189,7 @@ const StockReceiptsPage = () => {
               <th className="px-4 py-3 text-left">Document</th>
               <th className="px-4 py-3 text-left">Party</th>
               <th className="px-4 py-3 text-left">Location</th>
-              <th className="px-4 py-3 text-right">Qty</th>
+              <th className="px-4 py-3 text-right" title="Quantity in each product's base unit">Qty (base)</th>
               <th className="px-4 py-3 text-left">Received by</th>
               <th className="px-4 py-3 text-left">Status</th>
               <th className="px-4 py-3 w-16"></th>

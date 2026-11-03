@@ -3,6 +3,8 @@ import api from '../../services/api';
 import { buildingService } from '../../services/buildingService';
 import { productsService } from '../../services/productsService';
 import PermissionGate from '../../components/Guards/PermissionGate';
+import UnitSelect from '../../components/Shared/UnitSelect';
+import UnitConversionHint from '../../components/Shared/UnitConversionHint';
 import { usePriceVisibility } from '../../hooks/usePriceVisibility';
 import {
   Plus, Search, Edit3, Trash2, FileDown, ArrowLeft, FileText, Building2, Loader2,
@@ -21,7 +23,7 @@ const fm = (n) =>
 
 const emptyItem = () => ({
   id: null, product_id: null, description: '', product_description: '',
-  unit: '', qty: '', rate: '', installment: '', sku: '', dimension: '',
+  unit: '', unit_id: '', qty: '', rate: '', installment: '', sku: '', dimension: '',
 });
 const emptySection = () => ({ key: Date.now() + Math.random(), id: null, name: 'Ground Floor', items: [emptyItem()] });
 
@@ -124,7 +126,7 @@ export default function QuotationsPage() {
         items: (s.items || []).map((i) => ({
           id: i.id, product_id: i.product_id || '', description: i.description || '',
           product_description: i.product_description || '',
-          unit: i.unit || '', qty: i.qty, rate: i.rate, installment: i.installment ?? '',
+          unit: i.unit || '', unit_id: i.unit_id ? String(i.unit_id) : '', qty: i.qty, rate: i.rate, installment: i.installment ?? '',
           sku: i.product_sku || '', dimension: i.product_dimension || '',
         })),
       })),
@@ -174,6 +176,7 @@ export default function QuotationsPage() {
     updateSectionItem(si, ii, 'description', p.name || '');
     updateSectionItem(si, ii, 'product_description', p.description || '');
     updateSectionItem(si, ii, 'unit', p.unit?.name || '');
+    updateSectionItem(si, ii, 'unit_id', p.unit?.id ? String(p.unit.id) : (p.unit_id ? String(p.unit_id) : ''));
     updateSectionItem(si, ii, 'sku', p.sku || '');
     updateSectionItem(si, ii, 'dimension', p.dimension || '');
     setActiveSearch(null);
@@ -234,6 +237,7 @@ export default function QuotationsPage() {
             description: r.description,
             product_description: r.product_description,
             unit: r.unit,
+            unit_id: r.unit_id ? Number(r.unit_id) : null,
             qty: Number(r.qty),
             rate: Number(r.rate),
             installment: Number(r.installment || 0),
@@ -454,7 +458,12 @@ export default function QuotationsPage() {
                               )}
                             </td>
                             <td className="py-3 px-4 text-gray-500">{it.unit || '—'}</td>
-                            <td className="py-3 px-4 text-right text-gray-700">{Number(it.qty)}</td>
+                            <td className="py-3 px-4 text-right text-gray-700">
+                              {Number(it.qty)}
+                              {it.base_qty != null && it.product_unit && Number(it.base_qty) !== Number(it.qty) && (
+                                <div className="text-[11px] font-normal text-gray-400">= {Number(it.base_qty)} {it.product_unit}</div>
+                              )}
+                            </td>
                             <td className="py-3 px-4 text-right text-gray-700">{money(it.rate)}</td>
                             <td className="py-3 px-4 text-right text-gray-700">{money(it.installment)}</td>
                             <td className="py-3 px-6 text-right font-medium text-gray-800">{money(it.amount)}</td>
@@ -702,11 +711,24 @@ export default function QuotationsPage() {
                           </div>
                           <div>
                             <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Unit</label>
-                            <input type="text" value={row.unit} onChange={(e) => updateSectionItem(si, ii, 'unit', e.target.value)} placeholder="Nos" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                            <UnitSelect
+                              value={row.unit_id}
+                              onChange={(unitId, unit) => {
+                                updateSectionItem(si, ii, 'unit_id', unitId);
+                                updateSectionItem(si, ii, 'unit', unit?.name || '');
+                              }}
+                              placeholder="Nos"
+                              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
                           </div>
                           <div>
                             <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Qty</label>
                             <input type="number" min="0" step="any" value={row.qty} onChange={(e) => updateSectionItem(si, ii, 'qty', e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                            <UnitConversionHint
+                              quantity={row.qty}
+                              fromUnitId={row.unit_id}
+                              toUnitId={products.find((p) => String(p.id) === String(row.product_id))?.unit_id}
+                            />
                           </div>
                           <div>
                             <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Rate</label>

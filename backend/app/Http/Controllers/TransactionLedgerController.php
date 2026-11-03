@@ -18,7 +18,7 @@ class TransactionLedgerController extends Controller
     {
         $this->authorize('stock-transactions.view');
 
-        $query = TransactionLedger::with(['product', 'locationable', 'toLocationable', 'creator']);
+        $query = TransactionLedger::with(['product', 'unit', 'locationable', 'toLocationable', 'creator']);
 
         if ($request->has('location_type') && $request->has('location_id')) {
             $query->where('location_type', $request->location_type)->where('location_id', $request->location_id);
@@ -63,11 +63,12 @@ class TransactionLedgerController extends Controller
                 toLocationId: $data['to_location_id'] ?? null,
                 referenceType: $data['reference_type'] ?? null,
                 referenceId: $data['reference_id'] ?? null,
-                notes: $data['notes'] ?? null
+                notes: $data['notes'] ?? null,
+                unitId: $data['unit_id'] ?? null
             );
 
             return new TransactionLedgerResource(
-                $transaction->load(['product', 'locationable', 'toLocationable', 'creator'])
+                $transaction->load(['product', 'unit', 'locationable', 'toLocationable', 'creator'])
             );
         } catch (\App\Exceptions\InsufficientStockException $e) {
             return response()->json(['message' => $e->getMessage()], 400);

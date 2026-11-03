@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class StockRequest extends Model
 {
     protected $fillable = [
-        'request_number', 'product_id',
+        'request_number', 'product_id', 'unit_id',
         'from_location_type', 'from_location_id',
         'to_location_type', 'to_location_id',
         'quantity', 'approved_quantity', 'issued_quantity', 'received_quantity',
@@ -17,6 +17,11 @@ class StockRequest extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function unit()
+    {
+        return $this->belongsTo(Unit::class);
     }
 
     public function fromLocationable()

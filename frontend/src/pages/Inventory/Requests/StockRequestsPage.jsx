@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import DataTable from '../../../components/Shared/DataTable';
+import UnitSelect from '../../../components/Shared/UnitSelect';
+import UnitConversionHint from '../../../components/Shared/UnitConversionHint';
+import { formatQuantity } from '../../../utils/units';
 import { Search, Plus, CheckCircle, Send, Download } from 'lucide-react';
 import { useStockRequestStore } from '../../../store/stockRequestStore';
 import { useProductsStore } from '../../../store/productsStore';
@@ -28,7 +31,7 @@ export default function StockRequestsPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [form, setForm] = useState({ product_id: '', from_location_type: 'App\\Models\\Site', from_location_id: '', to_location_type: 'App\\Models\\Site', to_location_id: '', quantity: '', approved_by: '', notes: '' });
+  const [form, setForm] = useState({ product_id: '', unit_id: '', from_location_type: 'App\\Models\\Site', from_location_id: '', to_location_type: 'App\\Models\\Site', to_location_id: '', quantity: '', approved_by: '', notes: '' });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -44,9 +47,9 @@ export default function StockRequestsPage() {
     e.preventDefault();
     if (saving) return;
     try {
-      await createItem(form);
+      await createItem({ ...form, unit_id: form.unit_id || null });
       setIsModalOpen(false);
-      setForm({ product_id: '', from_location_type: 'App\\Models\\Site', from_location_id: '', to_location_type: 'App\\Models\\Site', to_location_id: '', quantity: '', approved_by: '', notes: '' });
+      setForm({ product_id: '', unit_id: '', from_location_type: 'App\\Models\\Site', from_location_id: '', to_location_type: 'App\\Models\\Site', to_location_id: '', quantity: '', approved_by: '', notes: '' });
     } catch (err) {
       alert(err.response?.data?.message || err.message);
     }
@@ -57,7 +60,7 @@ export default function StockRequestsPage() {
     { accessorFn: (row) => row.product?.name || '-', id: 'product', header: 'Product' },
     { accessorFn: (row) => row.from_locationable?.name || '-', id: 'from', header: 'From' },
     { accessorFn: (row) => row.to_locationable?.name || '-', id: 'to', header: 'To' },
-    { accessorFn: (row) => Number(row.quantity).toLocaleString(), id: 'qty', header: 'Qty' },
+    { accessorFn: (row) => formatQuantity(row.quantity, row.unit, row.product?.unit), id: 'qty', header: 'Qty' },
     {
       id: 'status',
       header: 'Status',
@@ -139,7 +142,14 @@ export default function StockRequestsPage() {
             <form onSubmit={handleCreate} className="p-5 space-y-4">
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Product</label>
-                <select value={form.product_id} onChange={(e) => setForm({ ...form, product_id: e.target.value })} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" required>
+                <select value={form.product_id} onChange={(e) => {
+                  const product = products.find((p) => String(p.id) === String(e.target.value));
+                  setForm({
+                    ...form,
+                    product_id: e.target.value,
+                    unit_id: product?.unit_id ? String(product.unit_id) : '',
+                  });
+                }} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" required>
                   <option value="">Select Product</option>
                   {products.map((p) => <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>)}
                 </select>
@@ -160,10 +170,21 @@ export default function StockRequestsPage() {
                   ))}
                 </select>
               </div>
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Quantity</label>
-                <input type="number" step="0.01" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" required />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">Quantity</label>
+                  <input type="number" step="0.01" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" required />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">Unit</label>
+                  <UnitSelect value={form.unit_id} onChange={(unitId) => setForm({ ...form, unit_id: unitId })} placeholder="Product unit" />
+                </div>
               </div>
+              <UnitConversionHint
+                quantity={form.quantity}
+                fromUnitId={form.unit_id}
+                toUnitId={products.find((p) => String(p.id) === String(form.product_id))?.unit_id}
+              />
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Approver</label>
                 <select value={form.approved_by} onChange={(e) => setForm({ ...form, approved_by: e.target.value })} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm">

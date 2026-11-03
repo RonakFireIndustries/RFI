@@ -112,7 +112,14 @@ const ReceiptRow = ({ receipt, outbound, onReverse, saving }) => {
               {(receipt.items || []).map((line) => (
                 <tr key={line.id}>
                   <td className="py-1 text-gray-800">{line.product_name || `Product #${line.product_id}`}</td>
-                  <td className="py-1 text-right font-medium text-gray-900">{qty(line.quantity)}</td>
+                  <td className="py-1 text-right font-medium text-gray-900">
+                    {qty(line.quantity)} {line.unit || ''}
+                    {line.base_quantity != null && line.product_unit && line.unit && line.unit !== line.product_unit && (
+                      <div className="text-[10px] font-normal text-gray-500">
+                        = {qty(line.base_quantity)} {line.product_unit}
+                      </div>
+                    )}
+                  </td>
                   <td className="py-1 text-right text-gray-500">
                     {qty(line.quantity_before)} → {qty(line.quantity_after)}
                   </td>
@@ -200,11 +207,11 @@ const StockReceiptPanel = ({ summary, loading, saving, onReverse }) => {
                     <div className="font-medium text-gray-900">{line.product_name || line.item_description}</div>
                     {line.unit && <div className="text-xs text-gray-500">{line.unit}</div>}
                   </td>
-                  <td className="py-2 text-right text-gray-700">{qty(line.quantity)}</td>
-                  <td className="py-2 text-right text-gray-700">{qty(line.moved_quantity)}</td>
+                  <td className="py-2 text-right text-gray-700">{qty(line.quantity)} {line.unit || ''}</td>
+                  <td className="py-2 text-right text-gray-700">{qty(line.moved_quantity)} {line.unit || ''}</td>
                   <td className="py-2 text-right font-medium">
                     <span className={Number(line.pending_quantity) > 0 ? 'text-amber-700' : 'text-green-700'}>
-                      {qty(line.pending_quantity)}
+                      {qty(line.pending_quantity)} {line.unit || ''}
                     </span>
                   </td>
                   <td className="py-2 pl-4">
@@ -222,7 +229,7 @@ const StockReceiptPanel = ({ summary, loading, saving, onReverse }) => {
                                 : 'bg-blue-50 text-blue-700'
                             }`}
                           >
-                            {qty(entry.quantity)} · {formatDate(entry.receipt_date)}
+                            {qty(entry.quantity)} {entry.unit || line.unit || ''} · {formatDate(entry.receipt_date)}
                           </span>
                         ))}
                       </div>

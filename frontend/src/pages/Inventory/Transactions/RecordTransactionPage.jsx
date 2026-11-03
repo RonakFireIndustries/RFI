@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DataTable from '../../../components/Shared/DataTable';
+import UnitSelect from '../../../components/Shared/UnitSelect';
+import UnitConversionHint from '../../../components/Shared/UnitConversionHint';
+import { formatQuantity } from '../../../utils/units';
 import { Search, Plus } from 'lucide-react';
 import { useProductsStore } from '../../../store/productsStore';
 import { useInventoryLocationStore } from '../../../store/inventoryLocationStore';
@@ -9,7 +12,7 @@ import { transactionLedgerService } from '../../../services/transactionLedgerSer
 const parseLocationId = (compositeId) => {
   const match = compositeId.match(/^site_(\d+)$/);
   if (!match) return { location_type: '', location_id: '' };
-  return { location_type: 'App\\Models\\Site', location_id: parseInt(match[2], 10) };
+  return { location_type: 'App\\Models\\Site', location_id: parseInt(match[1], 10) };
 };
 
 export default function RecordTransactionPage() {
@@ -19,7 +22,7 @@ export default function RecordTransactionPage() {
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form, setForm] = useState({
-    product_id: '', location_type: 'App\\Models\\Site', location_id: '', transaction_type: 'adjustment',
+    product_id: '', unit_id: '', location_type: 'App\\Models\\Site', location_id: '', transaction_type: 'adjustment',
     quantity: '', unit_price: '', to_location_type: 'App\\Models\\Site', to_location_id: '', notes: '',
   });
   const [submitting, setSubmitting] = useState(false);
@@ -50,9 +53,9 @@ export default function RecordTransactionPage() {
     setSubmitting(true);
     setError(null);
     try {
-      await transactionLedgerService.create(form);
+      await transactionLedgerService.create({ ...form, unit_id: form.unit_id || null });
       setIsModalOpen(false);
-      setForm({ product_id: '', location_type: 'App\\Models\\Site', location_id: '', transaction_type: 'adjustment', quantity: '', unit_price: '', to_location_type: 'App\\Models\\Site', to_location_id: '', notes: '' });
+      setForm({ product_id: '', unit_id: '', location_type: 'App\\Models\\Site', location_id: '', transaction_type: 'adjustment', quantity: '', unit_price: '', to_location_type: 'App\\Models\\Site', to_location_id: '', notes: '' });
       loadTransactions();
     } catch (e) {
       setError(e.response?.data?.message || e.message);
@@ -70,7 +73,7 @@ export default function RecordTransactionPage() {
     { accessorFn: (row) => row.product?.name || '-', id: 'product', header: 'Product' },
     { accessorFn: (row) => row.locationable?.name || '-', id: 'location', header: 'Location' },
     { accessorFn: (row) => row.transaction_type?.replace(/_/g, ' '), id: 'type', header: 'Type' },
-    { accessorFn: (row) => Number(row.quantity).toLocaleString(), id: 'qty', header: 'Qty' },
+    { accessorFn: (row) => formatQuantity(row.quantity, row.unit, row.product?.unit), id: 'qty', header: 'Qty' },
     { accessorFn: (row) => row.created_at ? new Date(row.created_at).toLocaleString() : '-', id: 'date', header: 'Date' },
   ];
 
@@ -132,7 +135,14 @@ export default function RecordTransactionPage() {
 
                 <div>
                   <label className="mb-1 block text-sm font-medium text-gray-700">Product</label>
-                  <select value={form.product_id} onChange={(e) => setForm({ ...form, product_id: e.target.value })} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" required>
+                  <select value={form.product_id} onChange={(e) => {
+                    const product = products.find((p) => String(p.id) === String(e.target.value));
+                    setForm({
+                      ...form,
+                      product_id: e.target.value,
+                      unit_id: product?.unit_id ? String(product.unit_id) : '',
+                    });
+                  }} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" required>
                     <option value="">Select Product</option>
                     {products.map((p) => <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>)}
                   </select>
@@ -158,13 +168,28 @@ export default function RecordTransactionPage() {
                   </div>
                 )}
 
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">Quantity</label>
-                  <input type="number" step="0.01" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" required />
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700">Quantity</label>
+                    <input type="number" step="0.01" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" required />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700">Unit</label>
+                    <UnitSelect
+                      value={form.unit_id}
+                      onChange={(unitId) => setForm({ ...form, unit_id: unitId })}
+                      placeholder="Product unit"
+                    />
+                  </div>
                 </div>
+                <UnitConversionHint
+                  quantity={form.quantity}
+                  fromUnitId={form.unit_id}
+                  toUnitId={products.find((p) => String(p.id) === String(form.product_id))?.unit_id}
+                />
 
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">Unit Price</label>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">Unit Price <span className="font-normal text-gray-400">(per selected unit)</span></label>
                   <input type="number" step="0.01" value={form.unit_price} onChange={(e) => setForm({ ...form, unit_price: e.target.value })} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
                 </div>
 

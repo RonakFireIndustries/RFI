@@ -4,8 +4,11 @@ namespace App\Services\Accounting;
 
 use App\Models\Customer;
 use App\Models\LedgerAccount;
+use App\Models\Product;
 use App\Models\Supplier;
+use App\Models\Unit;
 use App\Models\Voucher;
+use App\Services\UnitConversionService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -16,6 +19,7 @@ class ItemVoucherService
     public function __construct(
         protected VoucherService $vouchers,
         protected NoteStockService $noteStock,
+        protected UnitConversionService $unitConversion,
     ) {
     }
 
@@ -224,12 +228,38 @@ class ItemVoucherService
             $qty = round((float)($i['quantity'] ?? 0), 3);
             $rate = round((float)($i['rate'] ?? 0), 2);
             $taxable = round($qty * $rate, 2);
+
+            // The line is billed in the unit the user picked. Default it to the
+            // product's own unit so existing callers (which send only
+            // `product_id`) keep working, and fill the display text from the
+            // unit when the caller sent an id but no name.
+            $unitId = $i['unit_id'] ?? null;
+            $productId = $i['product_id'] ?? null;
+            $productUnitId = $productId ? Product::whereKey($productId)->value('unit_id') : null;
+
+            if (! $unitId && $productId) {
+                $unitId = $productUnitId;
+            }
+
+            $unitName = $i['unit'] ?? null;
+            if (! $unitName && $unitId) {
+                $unitName = Unit::whereKey($unitId)->value('name');
+            }
+
+            // The line is billed in the keyed unit, but stock and reports read
+            // the product's unit — keep the converted figure beside it, the way
+            // quotation lines keep base_qty. A missing conversion stays 1:1;
+            // the form flags that while the user types.
+            $baseQuantity = round($qty * $this->unitConversion->factor($unitId, $productUnitId), 3);
+
             $out[] = [
-                'product_id' => $i['product_id'] ?? null,
+                'product_id' => $productId,
+                'unit_id' => $unitId,
                 'item_description' => $i['item_description'] ?? '',
                 'hsn_code' => $i['hsn_code'] ?? null,
-                'unit' => $i['unit'] ?? null,
+                'unit' => $unitName,
                 'quantity' => $qty,
+                'base_quantity' => $baseQuantity,
                 'rate' => $rate,
                 'discount_percent' => 0.0,
                 'discount_amount' => 0.0,

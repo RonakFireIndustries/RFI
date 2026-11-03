@@ -1,7 +1,14 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 
-export default function ProductSelect({ products, value, onChange, placeholder = 'Select Product...' }) {
+export default function ProductSelect({
+  products,
+  value,
+  onChange,
+  placeholder = 'Select Product...',
+  allowCustom = true,
+  inputClassName = 'w-full bg-transparent border-0 border-b border-border focus:ring-0 focus:border-primary font-semibold text-foreground p-0 pb-1',
+}) {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState({ top: 0, left: 0, width: 0 });
@@ -46,11 +53,13 @@ export default function ProductSelect({ products, value, onChange, placeholder =
     ? products.filter(p =>
         p.sku?.toLowerCase().includes(query.toLowerCase()) ||
         p.name?.toLowerCase().includes(query.toLowerCase()) ||
-        p.product_code?.toLowerCase().includes(query.toLowerCase())
+        p.product_code?.toLowerCase().includes(query.toLowerCase()) ||
+        p.dimension?.toLowerCase().includes(query.toLowerCase())
       )
     : products;
 
   const commitValue = useCallback((product) => {
+    if (blurTimeout.current) { clearTimeout(blurTimeout.current); blurTimeout.current = null; }
     onChange({ product_id: product.id, custom_product_name: null });
     setQuery(`${product.sku} - ${product.name}`);
     isCustom.current = false;
@@ -58,6 +67,7 @@ export default function ProductSelect({ products, value, onChange, placeholder =
   }, [onChange]);
 
   const commitCustom = useCallback((name) => {
+    if (blurTimeout.current) { clearTimeout(blurTimeout.current); blurTimeout.current = null; }
     if (!name.trim()) {
       onChange({ product_id: null, custom_product_name: null });
       return;
@@ -88,8 +98,12 @@ export default function ProductSelect({ products, value, onChange, placeholder =
 
   const handleBlur = () => {
     blurTimeout.current = setTimeout(() => {
-      if (!tryAutoSelect() && query.trim()) {
+      if (tryAutoSelect()) return;
+      if (allowCustom && query.trim()) {
         commitCustom(query);
+      } else if (!allowCustom) {
+        // Without custom names, a non-matching query simply reverts the text.
+        setQuery(selected ? `${selected.sku} - ${selected.name}` : '');
       }
     }, 200);
   };
@@ -109,7 +123,7 @@ export default function ProductSelect({ products, value, onChange, placeholder =
         onClick={() => updatePosition()}
         onBlur={handleBlur}
         placeholder={placeholder}
-        className="w-full bg-transparent border-0 border-b border-border focus:ring-0 focus:border-primary font-semibold text-foreground p-0 pb-1"
+        className={inputClassName}
         autoComplete="off"
       />
       {open && createPortal(

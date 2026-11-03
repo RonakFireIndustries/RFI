@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { resetEcho } from '../bootstrap';
 
 export const useAuthStore = create(
   persist(
@@ -39,6 +40,9 @@ export const useAuthStore = create(
         } catch (e) {
           console.error("Backend logout failed", e);
         }
+        // Drop the websocket connection and its cached token. The next
+        // session must not keep authorizing channels with this one.
+        resetEcho();
         set({ user: null, token: null, roles: [], permissions: [], isAuthenticated: false });
       },
     }),

@@ -261,6 +261,7 @@ class VoucherController extends Controller
                     'hsn_code' => $p->hsn_code,
                     'dimension' => $p->dimension,
                     'description' => $p->description,
+                    'unit_id' => $p->unit_id,
                     'unit' => $p->unit?->name,
                 ])
         );
@@ -373,6 +374,7 @@ class VoucherController extends Controller
             'items.*.product_id' => 'nullable|integer',
             'items.*.item_description' => 'required|string|max:255',
             'items.*.hsn_code' => 'nullable|string|max:32',
+            'items.*.unit_id' => 'nullable|integer|exists:units,id',
             'items.*.unit' => 'nullable|string|max:16',
             'items.*.quantity' => 'required|numeric|gt:0',
             'items.*.rate' => 'required|numeric|min:0',

@@ -10,6 +10,10 @@ use Illuminate\Support\Facades\DB;
 
 class InventoryService
 {
+    public function __construct(
+        private UnitConversionService $unitConversion
+    ) {}
+
     public function generateTransactionNumber(): string
     {
         $prefix = 'TXN-' . date('Ymd');
@@ -28,7 +32,7 @@ class InventoryService
         return $prefix . '-' . str_pad($last + 1, 4, '0', STR_PAD_LEFT);
     }
 
-    public function addStock($productId, $locationType, $locationId, $quantity, $referenceType, $referenceId, $notes = '')
+    public function addStock($productId, $locationType, $locationId, $quantity, $referenceType, $referenceId, $notes = '', ?int $unitId = null)
     {
         return $this->recordTransaction(
             productId: $productId,
@@ -40,11 +44,12 @@ class InventoryService
             toLocationId: null,
             referenceType: $referenceType,
             referenceId: $referenceId,
-            notes: $notes
+            notes: $notes,
+            unitId: $unitId
         );
     }
 
-    public function removeStock($productId, $locationType, $locationId, $quantity, $referenceType, $referenceId, $notes = '')
+    public function removeStock($productId, $locationType, $locationId, $quantity, $referenceType, $referenceId, $notes = '', ?int $unitId = null)
     {
         return $this->recordTransaction(
             productId: $productId,
@@ -56,7 +61,8 @@ class InventoryService
             toLocationId: null,
             referenceType: $referenceType,
             referenceId: $referenceId,
-            notes: $notes
+            notes: $notes,
+            unitId: $unitId
         );
     }
 
@@ -71,13 +77,26 @@ class InventoryService
         ?int $toLocationId = null,
         ?string $referenceType = null,
         ?int $referenceId = null,
-        ?string $notes = null
+        ?string $notes = null,
+        ?int $unitId = null
     ): TransactionLedger {
         return DB::transaction(function () use (
             $productId, $locationType, $locationId, $transactionType, $quantity,
-            $unitPrice, $toLocationType, $toLocationId, $referenceType, $referenceId, $notes
+            $unitPrice, $toLocationType, $toLocationId, $referenceType, $referenceId, $notes, $unitId
         ) {
             $product = Product::findOrFail($productId);
+            $baseUnitId = $product->unit_id ? (int) $product->unit_id : null;
+
+            // Stock is kept in the product's own unit. The quantity and price
+            // the caller supplied may be in another unit; convert them before
+            // anything touches product_stock. A missing conversion is treated
+            // as 1:1 by the service, so a document can never fail just because
+            // a conversion row was not maintained.
+            $enteredQuantity = $quantity;
+            $factor = $this->unitConversion->factor($unitId, $baseUnitId);
+            $quantity = $enteredQuantity * $factor;
+            $unitPrice = $factor != 0.0 ? $unitPrice / $factor : $unitPrice;
+            $auditUnitId = $unitId ?: $baseUnitId;
 
             $stock = ProductStock::firstOrCreate(
                 ['product_id' => $productId, 'location_type' => $locationType, 'location_id' => $locationId],
@@ -118,12 +137,14 @@ class InventoryService
                 TransactionLedger::create([
                     'transaction_number' => $this->generateTransactionNumber(),
                     'product_id' => $productId,
+                    'unit_id' => $auditUnitId,
                     'location_type' => $toLocationType,
                     'location_id' => $toLocationId,
                     'to_location_type' => null,
                     'to_location_id' => null,
                     'transaction_type' => 'transfer_in',
                     'quantity' => $absQty,
+                    'entered_quantity' => $enteredQuantity,
                     'unit_price' => $unitPrice,
                     'total_price' => $unitPrice * $absQty,
                     'quantity_before' => $destStock->quantity - $absQty,
@@ -154,12 +175,14 @@ class InventoryService
             return TransactionLedger::create([
                 'transaction_number' => $this->generateTransactionNumber(),
                 'product_id' => $productId,
+                'unit_id' => $auditUnitId,
                 'location_type' => $locationType,
                 'location_id' => $locationId,
                 'to_location_type' => $isTransfer ? $toLocationType : null,
                 'to_location_id' => $isTransfer ? $toLocationId : null,
                 'transaction_type' => $transactionType,
                 'quantity' => $isOutflow || $isTransfer ? -$absQty : $absQty,
+                'entered_quantity' => $enteredQuantity,
                 'unit_price' => $unitPrice,
                 'total_price' => $unitPrice * $absQty,
                 'quantity_before' => $quantityBefore,

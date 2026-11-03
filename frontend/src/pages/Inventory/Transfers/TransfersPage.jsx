@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DataTable from '../../../components/Shared/DataTable';
+import ProductSelect from '../../../components/Shared/ProductSelect';
+import UnitSelect from '../../../components/Shared/UnitSelect';
+import UnitConversionHint from '../../../components/Shared/UnitConversionHint';
+import { formatQuantity } from '../../../utils/units';
 import { Search, Plus } from 'lucide-react';
 import { useProductsStore } from '../../../store/productsStore';
 import { useInventoryLocationStore } from '../../../store/inventoryLocationStore';
@@ -19,7 +23,7 @@ export default function TransfersPage() {
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form, setForm] = useState({
-    product_id: '', location_type: 'App\\Models\\Site', location_id: '', to_location_type: 'App\\Models\\Site', to_location_id: '',
+    product_id: '', unit_id: '', location_type: 'App\\Models\\Site', location_id: '', to_location_type: 'App\\Models\\Site', to_location_id: '',
     quantity: '', notes: '',
   });
   const [submitting, setSubmitting] = useState(false);
@@ -45,16 +49,21 @@ export default function TransfersPage() {
 
   const handleTransfer = async (e) => {
     e.preventDefault();
+    if (!form.product_id) {
+      setError('Please select a product.');
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
       await transactionLedgerService.create({
         ...form,
+        unit_id: form.unit_id || null,
         transaction_type: 'transfer_out',
         unit_price: 0,
       });
       setIsModalOpen(false);
-      setForm({ product_id: '', location_type: 'App\\Models\\Site', location_id: '', to_location_type: 'App\\Models\\Site', to_location_id: '', quantity: '', notes: '' });
+      setForm({ product_id: '', unit_id: '', location_type: 'App\\Models\\Site', location_id: '', to_location_type: 'App\\Models\\Site', to_location_id: '', quantity: '', notes: '' });
       loadTransfers();
     } catch (e) {
       setError(e.response?.data?.message || e.message);
@@ -67,7 +76,7 @@ export default function TransfersPage() {
     { accessorFn: (row) => row.product?.name || '-', id: 'product', header: 'Product' },
     { accessorFn: (row) => row.locationable?.name || '-', id: 'from', header: 'From' },
     { accessorFn: (row) => row.to_locationable?.name || '-', id: 'to', header: 'To' },
-    { accessorFn: (row) => Math.abs(Number(row.quantity)).toLocaleString(), id: 'qty', header: 'Qty' },
+    { accessorFn: (row) => formatQuantity(Math.abs(Number(row.quantity)), row.unit, row.product?.unit), id: 'qty', header: 'Qty' },
     { accessorFn: (row) => row.created_at ? new Date(row.created_at).toLocaleString() : '-', id: 'date', header: 'Date' },
   ];
 
@@ -105,10 +114,21 @@ export default function TransfersPage() {
               {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Product</label>
-                <select value={form.product_id} onChange={(e) => setForm({ ...form, product_id: e.target.value })} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" required>
-                  <option value="">Select Product</option>
-                  {products.map((p) => <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>)}
-                </select>
+                <ProductSelect
+                  products={products}
+                  value={form.product_id}
+                  onChange={(val) => {
+                    const product = products.find((p) => String(p.id) === String(val.product_id));
+                    setForm({
+                      ...form,
+                      product_id: val.product_id || '',
+                      unit_id: product?.unit_id ? String(product.unit_id) : '',
+                    });
+                  }}
+                  placeholder="Search product by name, SKU or dimension..."
+                  allowCustom={false}
+                  inputClassName="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
+                />
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">From Location</label>
@@ -126,10 +146,25 @@ export default function TransfersPage() {
                   ))}
                 </select>
               </div>
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Quantity</label>
-                <input type="number" step="0.01" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" required />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">Quantity</label>
+                  <input type="number" step="0.01" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" required />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">Unit</label>
+                  <UnitSelect
+                    value={form.unit_id}
+                    onChange={(unitId) => setForm({ ...form, unit_id: unitId })}
+                    placeholder="Product unit"
+                  />
+                </div>
               </div>
+              <UnitConversionHint
+                quantity={form.quantity}
+                fromUnitId={form.unit_id}
+                toUnitId={products.find((p) => String(p.id) === String(form.product_id))?.unit_id}
+              />
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Notes</label>
                 <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" rows={2} />

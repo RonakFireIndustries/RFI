@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useStockRequestStore } from '../../../store/stockRequestStore';
+import { formatQuantity } from '../../../utils/units';
 
 const statusColors = {
   requested: 'bg-yellow-50 text-yellow-700',
@@ -27,10 +28,10 @@ export default function StockRequestDetail() {
     { label: 'Product', value: selected.product?.name },
     { label: 'From Location', value: selected.from_locationable?.name },
     { label: 'To Location', value: selected.to_locationable?.name },
-    { label: 'Quantity', value: Number(selected.quantity).toLocaleString() },
-    { label: 'Approved Qty', value: Number(selected.approved_quantity).toLocaleString() },
-    { label: 'Issued Qty', value: Number(selected.issued_quantity).toLocaleString() },
-    { label: 'Received Qty', value: Number(selected.received_quantity).toLocaleString() },
+    { label: 'Quantity', value: formatQuantity(selected.quantity, selected.unit, selected.product?.unit) },
+    { label: 'Approved Qty', value: formatQuantity(selected.approved_quantity, selected.unit, selected.product?.unit) },
+    { label: 'Issued Qty', value: formatQuantity(selected.issued_quantity, selected.unit, selected.product?.unit) },
+    { label: 'Received Qty', value: formatQuantity(selected.received_quantity, selected.unit, selected.product?.unit) },
     { label: 'Requested By', value: selected.requester || '-' },
     { label: 'Approved By', value: selected.approver || '-' },
     { label: 'Issued By', value: selected.issuer || '-' },

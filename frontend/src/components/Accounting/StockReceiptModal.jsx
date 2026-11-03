@@ -207,9 +207,14 @@ const StockReceiptModal = ({ open, summary, voucher, saving, onClose, onSubmit }
                         </div>
                       )}
                     </td>
-                    <td className="px-2 py-2 text-right text-gray-700">{qty(line.quantity)}</td>
+                    <td className="px-2 py-2 text-right text-gray-700">
+                      {qty(line.quantity)} {line.unit || ''}
+                      {line.base_quantity != null && line.product_unit && line.unit && line.unit !== line.product_unit && (
+                        <div className="text-[11px] text-gray-500">= {qty(line.base_quantity)} {line.product_unit}</div>
+                      )}
+                    </td>
                     <td className="px-2 py-2 text-right">
-                      <span className="font-medium text-gray-900">{qty(line.pending_quantity)}</span>
+                      <span className="font-medium text-gray-900">{qty(line.pending_quantity)} {line.unit || ''}</span>
                     </td>
                     <td className="px-2 py-2">
                       <input
@@ -222,6 +227,12 @@ const StockReceiptModal = ({ open, summary, voucher, saving, onClose, onSubmit }
                         onChange={(e) => setQuantity(line.voucher_item_id, e.target.value)}
                         className={`${inputClass} disabled:bg-gray-50 disabled:text-gray-400`}
                       />
+                      {line.unit && (
+                        <div className="mt-0.5 text-right text-[11px] text-gray-500">
+                          {line.unit}
+                          {line.product_unit && line.product_unit !== line.unit ? ` → ${line.product_unit}` : ''}
+                        </div>
+                      )}
                     </td>
                     <td className="px-2 py-2">
                       <input

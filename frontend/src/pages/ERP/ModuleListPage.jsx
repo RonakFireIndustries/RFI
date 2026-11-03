@@ -299,6 +299,7 @@ export default function ModuleListPage({
                       className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-ring focus:outline-none focus:ring-1 focus:ring-ring"
                     />
                   )}
+                  {typeof field.hint === 'function' && field.hint(formData)}
                 </label>
               ))}
                 </div>
