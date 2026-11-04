@@ -11,6 +11,7 @@ use App\Http\Requests\UpdateAttendanceRequest;
 use App\Http\Requests\CheckInRequest;
 use App\Http\Requests\CheckOutRequest;
 use App\Http\Resources\AttendanceResource;
+use App\Http\Resources\AttendanceLocationLogResource;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -186,6 +187,54 @@ class AttendanceController extends Controller
 
         return $this->success('Monthly attendance report retrieved successfully', [
             'report' => $report,
+        ]);
+    }
+
+    public function locationAudit(Request $request): JsonResponse
+    {
+        $this->authorize('attendance.location.audit');
+
+        $filters = $request->only([
+            'employee_id', 'site_id', 'checkout_site_id', 'date', 'start_date', 'end_date',
+            'location_verified', 'status'
+        ]);
+        $perPage = (int) $request->input('per_page', 15);
+
+        $query = Attendance::with(['employee.user', 'site', 'checkoutSite'])
+            ->whereNotNull('checkin_latitude');
+
+        if (!empty($filters['employee_id'])) {
+            $query->where('employee_id', $filters['employee_id']);
+        }
+
+        if (!empty($filters['site_id'])) {
+            $query->where('site_id', $filters['site_id']);
+        }
+
+        if (!empty($filters['checkout_site_id'])) {
+            $query->where('checkout_site_id', $filters['checkout_site_id']);
+        }
+
+        if (!empty($filters['date'])) {
+            $query->whereDate('date', $filters['date']);
+        }
+
+        if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
+            $query->whereBetween('date', [$filters['start_date'], $filters['end_date']]);
+        }
+
+        if (isset($filters['location_verified'])) {
+            $query->where('location_verified', filter_var($filters['location_verified'], FILTER_VALIDATE_BOOLEAN));
+        }
+
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        $logs = $query->orderBy('date', 'desc')->paginate($perPage);
+
+        return $this->success('Attendance location logs retrieved successfully', [
+            'logs' => AttendanceLocationLogResource::collection($logs)
         ]);
     }
 

@@ -404,7 +404,7 @@ class AttendanceService
         $end = $start->copy()->endOfMonth();
         $today = Carbon::today();
 
-        $records = Attendance::with('site')
+        $records = Attendance::with(['site', 'checkoutSite'])
             ->where('employee_id', $employee->id)
             ->whereBetween('date', [$start->toDateString(), $end->toDateString()])
             ->get()
@@ -473,6 +473,8 @@ class AttendanceService
                     'working_hours' => $record->working_hours !== null ? (float) $record->working_hours : null,
                     'overtime_hours' => $record->overtime_hours !== null ? (float) $record->overtime_hours : null,
                     'site' => $record->site?->name,
+                    'checkout_site' => $record->checkoutSite?->name,
+                    'checkout_distance' => $record->checkout_distance,
                     'location_verified' => (bool) $record->location_verified,
                 ];
             } elseif ($isHoliday) {

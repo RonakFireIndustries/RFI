@@ -52,7 +52,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'daily-report.submit', 'daily-report.approve', 'daily-report.reject', 'daily-report.rework', 'daily-report.report.view',
             'leave.view', 'leave.create', 'leave.edit', 'leave.delete', 'leave.approve', 'leave.reject', 'leave.cancel', 'leave.balance.view',
             'leave-type.view', 'leave-type.create', 'leave-type.edit', 'leave-type.delete',
-            'attendance.geo.checkin', 'attendance.geo.checkout', 'attendance.location.view',
+            'attendance.geo.checkin', 'attendance.geo.checkout', 'attendance.location.view', 'attendance.location.audit',
             'inventory.locations.view', 'inventory.locations.create', 'inventory.locations.edit', 'inventory.locations.delete',
             'inventory.units.view', 'inventory.units.create', 'inventory.units.edit', 'inventory.units.delete',
             'inventory.conversions.view', 'inventory.conversions.create', 'inventory.conversions.edit', 'inventory.conversions.delete',

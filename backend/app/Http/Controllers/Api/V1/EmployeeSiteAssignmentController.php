@@ -87,8 +87,10 @@ class EmployeeSiteAssignmentController extends Controller
             $validated['remarks'] ?? null
         );
 
+        $assignments->each->load('site');
+
         return $this->success('Employee assigned to selected sites successfully', [
-            'assignments' => $assignments->load('site'),
+            'assignments' => $assignments,
             'assigned_count' => $assignments->count(),
         ], [], 201);
     }

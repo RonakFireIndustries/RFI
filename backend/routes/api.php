@@ -135,6 +135,7 @@ Route::prefix('v1')->group(function () {
     Route::post('/attendance/check-out', [\App\Http\Controllers\Api\V1\AttendanceController::class, 'checkOut']);
     Route::get('/my-attendance', [\App\Http\Controllers\Api\V1\AttendanceController::class, 'myAttendance']);
     Route::get('/my-attendance/monthly', [\App\Http\Controllers\Api\V1\AttendanceController::class, 'myMonthlyReport']);
+    Route::get('/attendance/location-audit', [\App\Http\Controllers\Api\V1\AttendanceController::class, 'locationAudit']);
 
     // Sites / Construction
     Route::apiResource('sites', \App\Http\Controllers\Api\V1\SiteController::class);
