@@ -27,6 +27,16 @@ const isLowStock = (product) => {
 
 const isOutOfStock = (product) => stockTotals(product).total <= 0;
 
+// The product row itself has no site: stock lives in product_stock rows, one
+// per location. When the edit form opens, reuse the site that already holds
+// this product's stock so saving does not silently drop it.
+const getStockSiteId = (product) => {
+  const rows = Array.isArray(product.stock) ? product.stock : [];
+  const siteRow = rows.find((row) => String(row.location_type || '').endsWith('Site'));
+  if (siteRow?.location_id) return String(siteRow.location_id);
+  return product.site_id ? String(product.site_id) : '';
+};
+
 function ProductStockSection({ product }) {
   const [expanded, setExpanded] = useState(false);
   const { total, available, rows } = stockTotals(product);
@@ -240,7 +250,7 @@ export default function ProductCatalog() {
       selling_price: item.selling_price ?? '',
       opening_stock: item.opening_stock ?? 0,
       opening_stock_unit_id: '',
-      site_id: item.site_id ? String(item.site_id) : '',
+      site_id: getStockSiteId(item),
       status: item.status ?? 'active',
     };
   }, [lookups.categories]);
@@ -329,7 +339,14 @@ export default function ProductCatalog() {
         ),
       },
       { name: 'opening_stock_unit_id', label: 'Opening Stock Unit', type: 'select', optionsKey: 'units', emptyAsNull: true, placeholder: 'Product unit' },
-      { name: 'site_id', label: 'Store At (Site)', type: 'select', optionsKey: 'sites', emptyAsNull: true, placeholder: 'Select site (required if opening stock > 0)' },
+      { name: 'site_id', label: 'Store At (Site)', type: 'select', optionsKey: 'sites', emptyAsNull: true, placeholder: 'Select site (required if opening stock > 0)', hint: (formData) => {
+        if (Number(formData.opening_stock) <= 0) return null;
+        return (
+          <p className="text-xs text-gray-500">
+            Required while this product has no stock yet. &ldquo;Stock&rdquo; is tracked per site and starts from this quantity.
+          </p>
+        );
+      } },
       { name: 'status', label: 'Status', type: 'select', defaultValue: 'active', options: [{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }] },
     );
     return flds;

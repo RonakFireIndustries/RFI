@@ -188,6 +188,18 @@ export default function EmployeeAttendanceHistory() {
                     </span>
                   </td>
                   <td className="p-4">
+                    {record.checkout_site && (
+                      <div className="mb-1">
+                        <p className="text-xs font-semibold text-gray-800 truncate max-w-[160px]">
+                          {record.checkout_site.name}
+                        </p>
+                        <p className="text-[10px] text-gray-500">
+                          {record.checkout_distance != null
+                            ? `${Number(record.checkout_distance).toFixed(1)}m away`
+                            : 'distance unavailable'}
+                        </p>
+                      </div>
+                    )}
                     {record.location_verified ? (
                       <span className="text-xs font-bold text-green-600 flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-green-500" />

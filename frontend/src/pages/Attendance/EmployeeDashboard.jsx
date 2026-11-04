@@ -224,7 +224,6 @@ export default function EmployeeDashboard() {
   }, [position, currentSite, checkIn, loadTodayAttendance]);
 
   const handleCheckOut = useCallback(async () => {
-    if (!currentSite) return;
     if (!position) return;
     setActionLoading(true);
     setActionError(null);
@@ -237,7 +236,12 @@ export default function EmployeeDashboard() {
         device_info: navigator.userAgent,
       };
       const result = await checkOut(payload);
-      setActionSuccess('Checked out successfully!');
+      const nearestSite = result?.checkout_site;
+      setActionSuccess(
+        nearestSite
+          ? `Checked out near ${nearestSite.name}${result.checkout_distance != null ? ` (${Number(result.checkout_distance).toFixed(1)}m away)` : ''}.`
+          : 'Checked out successfully!'
+      );
       await loadTodayAttendance();
     } catch (e) {
       const data = e?.response?.data;
@@ -248,7 +252,7 @@ export default function EmployeeDashboard() {
     } finally {
       setActionLoading(false);
     }
-  }, [position, currentSite, checkOut, loadTodayAttendance]);
+  }, [position, checkOut, loadTodayAttendance]);
 
   const handleInstall = useCallback(async () => {
     const deferred = deferredPromptRef.current;
@@ -417,6 +421,26 @@ export default function EmployeeDashboard() {
               {todayAttendance?.is_late ? `Late (${todayAttendance?.late_minutes}m)` : 'On Time'}
             </p>
           </div>
+          {todayAttendance?.checkout_site && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 col-span-2">
+              <p className="text-xs text-blue-600 font-semibold uppercase tracking-wider">Checked Out Near</p>
+              <div className="flex items-center justify-between gap-3 mt-1">
+                <p className="text-sm font-bold text-gray-900 truncate">
+                  {todayAttendance.checkout_site.name}
+                </p>
+                <p className="text-sm font-bold text-blue-700 whitespace-nowrap">
+                  {todayAttendance.checkout_distance != null
+                    ? `${Number(todayAttendance.checkout_distance).toFixed(1)}m away`
+                    : '--'}
+                </p>
+              </div>
+              <p className="text-xs text-blue-600 mt-1">
+                {todayAttendance.location_verified
+                  ? 'Inside the site radius'
+                  : 'Outside the site radius'}
+              </p>
+            </div>
+          )}
         </div>
 
         {todayAttendance && (

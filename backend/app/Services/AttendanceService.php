@@ -22,7 +22,7 @@ class AttendanceService
 
     public function getAttendances(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        $query = Attendance::with(['employee', 'site', 'shift']);
+        $query = Attendance::with(['employee', 'site', 'checkoutSite', 'shift']);
 
         if (!empty($filters['employee_id'])) {
             $query->where('employee_id', $filters['employee_id']);
@@ -90,7 +90,7 @@ class AttendanceService
         }
 
         $attendance->update($data);
-        return $attendance->fresh(['employee', 'site', 'shift']);
+        return $attendance->fresh(['employee', 'site', 'checkoutSite', 'shift']);
     }
 
     /**
@@ -239,7 +239,15 @@ class AttendanceService
         ];
     }
 
-    public function processCheckOut(array $data, Employee $employee, Site $site): array
+    /**
+     * Check out from wherever the employee currently is.
+     *
+     * Unlike check-in, checkout is not restricted to an assigned site. The
+     * nearest active site is resolved from the submitted coordinates, its
+     * distance is stored on the attendance record, and checkout is never
+     * blocked because the employee is outside a radius.
+     */
+    public function processCheckOut(array $data, Employee $employee): array
     {
         $today = Carbon::today()->toDateString();
         $now = Carbon::now();
@@ -264,46 +272,16 @@ class AttendanceService
             ];
         }
 
-        $distance = $this->geoLocation->calculateDistance(
-            $site->latitude,
-            $site->longitude,
-            $data['latitude'],
-            $data['longitude']
+        $nearest = $this->findNearestActiveSite(
+            (float) $data['latitude'],
+            (float) $data['longitude']
         );
 
-        $allowedRadius = $site->allowed_radius ?? 100;
-
-        if ($site->geo_fencing_enabled) {
-            if ($distance > $allowedRadius) {
-                return [
-                    'success' => false,
-                    'message' => "You are " . round($distance) . "m away from the assigned site. Move within {$allowedRadius}m radius to check out.",
-                    'data' => [
-                        'distance' => round($distance, 2),
-                        'allowed_radius' => $allowedRadius,
-                    ],
-                    'status' => 403,
-                ];
-            }
-
-            $accuracy = $data['accuracy'] ?? null;
-            $maxAccuracy = max($allowedRadius, 100);
-            if ($accuracy === null || $accuracy > $maxAccuracy) {
-                return [
-                    'success' => false,
-                    'message' => 'GPS accuracy is too low (' . round($accuracy ?? 0) . 'm). Move to an open area with better GPS signal.',
-                    'data' => [
-                        'accuracy' => $accuracy,
-                        'max_accuracy' => $maxAccuracy,
-                    ],
-                    'status' => 403,
-                ];
-            }
-        } else {
-            $accuracy = $data['accuracy'] ?? null;
-        }
-
-        $locationVerified = $this->geoLocation->isWithinRadius($distance, $allowedRadius);
+        $site = $nearest['site'] ?? null;
+        $distance = $nearest['distance'] ?? null;
+        $allowedRadius = $site?->allowed_radius ?? 100;
+        $locationVerified = $distance !== null
+            && $this->geoLocation->isWithinRadius($distance, $allowedRadius);
 
         $remarks = $attendance->is_auto_checkout
             ? $this->withoutAutoCheckoutRemark($attendance->remarks)
@@ -313,9 +291,10 @@ class AttendanceService
             'check_out' => $now,
             'is_auto_checkout' => false,
             'remarks' => $remarks,
+            'checkout_site_id' => $site?->id,
             'checkout_latitude' => $data['latitude'],
             'checkout_longitude' => $data['longitude'],
-            'checkout_distance' => round($distance, 2),
+            'checkout_distance' => $distance !== null ? round($distance, 2) : null,
             'location_verified' => $locationVerified,
             'device_info' => $data['device_info'] ?? request()->userAgent(),
             'browser_info' => request()->header('User-Agent'),
@@ -323,17 +302,64 @@ class AttendanceService
 
         $this->updateAttendance($attendance, $updateData);
 
+        $message = 'Checked out successfully';
+        if ($site) {
+            $message .= ' near ' . $site->name . ' (' . round($distance) . 'm away).';
+        } else {
+            $message .= '. No active site has GPS coordinates to measure distance.';
+        }
+
         return [
             'success' => true,
-            'message' => 'Checked out successfully',
+            'message' => $message,
             'data' => [
-                'attendance' => $attendance->fresh(),
-                'distance' => round($distance, 2),
+                'attendance' => $attendance->fresh(['site', 'checkoutSite']),
+                'checkout_site' => $site ? [
+                    'id' => $site->id,
+                    'name' => $site->name,
+                    'code' => $site->code,
+                    'address' => $site->address,
+                    'allowed_radius' => $site->allowed_radius,
+                ] : null,
+                'checkout_distance' => $distance !== null ? round($distance, 2) : null,
                 'allowed_radius' => $allowedRadius,
                 'location_verified' => $locationVerified,
             ],
             'status' => 200,
         ];
+    }
+
+    /**
+     * Resolve the closest active site for the supplied coordinates.
+     *
+     * @return array{site: Site, distance: float}|null
+     */
+    public function findNearestActiveSite(float $latitude, float $longitude): ?array
+    {
+        $sites = Site::query()
+            ->where('status', 'Active')
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->get();
+
+        return $this->geoLocation->nearestSite($latitude, $longitude, $sites);
+    }
+
+    /**
+     * Checkout only needs an active employee account; site assignment is not
+     * required because the nearest site is resolved from GPS coordinates.
+     */
+    public function validateCheckOutPrerequisites(Employee $employee): array
+    {
+        if (!$employee->user) {
+            return [
+                'success' => false,
+                'message' => 'Your account is not active. Contact your administrator.',
+                'status' => 403,
+            ];
+        }
+
+        return ['success' => true];
     }
 
     public function validateCheckInPrerequisites(Employee $employee): array

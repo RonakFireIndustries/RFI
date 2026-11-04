@@ -76,7 +76,8 @@ class ProductController extends Controller
                 referenceType: 'opening_stock',
                 referenceId: $product->id,
                 notes: 'Opening stock on product creation',
-                unitId: $openingStockUnitId
+                unitId: $openingStockUnitId,
+                transactionType: 'opening_stock'
             );
         }
 
@@ -140,11 +141,14 @@ class ProductController extends Controller
 
         $product->update($data);
 
-        // Opening stock normally seeds product_stocks at creation time. If the
-        // product was saved without one (e.g. opening stock entered later via
-        // the edit form), seed it now — but only when the product has no
-        // stock rows at all, so we never double-count after transactions.
-        if ($siteId && $enteredOpeningStock > 0 && ! $product->stock()->exists()) {
+        // Opening stock normally seeds product_stock at creation time. When it
+        // is entered later through the edit form, seed it now - but only for a
+        // product that has never moved, so it can never double-count. A stock
+        // row or a ledger entry means the movement history already owns the
+        // on-hand figure, and opening stock becomes a record of the baseline.
+        $hasStockHistory = $product->stock()->exists() || $product->transactions()->exists();
+
+        if ($siteId && $enteredOpeningStock > 0 && ! $hasStockHistory) {
             $inventoryService->addStock(
                 productId: $product->id,
                 locationType: 'App\Models\Site',
@@ -153,7 +157,8 @@ class ProductController extends Controller
                 referenceType: 'opening_stock',
                 referenceId: $product->id,
                 notes: 'Opening stock on product update',
-                unitId: $openingStockUnitId
+                unitId: $openingStockUnitId,
+                transactionType: 'opening_stock'
             );
         }
 

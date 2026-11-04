@@ -75,6 +75,24 @@ export const useEmployeeSiteStore = create((set, get) => ({
     }
   },
 
+  bulkAssignEmployees: async (employeeId, payload) => {
+    set({ loading: true, error: null });
+    try {
+      const newAssignments = await employeeSiteService.bulkAssign(employeeId, payload);
+      set({
+        assignments: [...get().assignments, ...newAssignments],
+        loading: false
+      });
+      // Refresh history & current site
+      get().fetchHistory(employeeId);
+      get().fetchCurrentSite(employeeId);
+      return newAssignments;
+    } catch (error) {
+      set({ error, loading: false });
+      throw error;
+    }
+  },
+
   transferEmployee: async (employeeId, payload) => {
     set({ loading: true, error: null });
     try {

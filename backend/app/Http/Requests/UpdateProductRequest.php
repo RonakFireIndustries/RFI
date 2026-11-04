@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Http\Resources\ProductResource;
+use App\Models\Product;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -32,7 +33,27 @@ class UpdateProductRequest extends FormRequest
             'description' => 'nullable|string',
             'opening_stock' => 'nullable|numeric|min:0',
             'opening_stock_unit_id' => 'nullable|exists:units,id',
-            'site_id' => ['nullable', 'exists:sites,id'],
+            // A product's real stock lives in product_stock rows, one per
+            // site. When opening stock is entered for a product that has never
+            // moved, the site is what turns that figure into an actual stock
+            // row; without it the number was saved and "Stock" still read 0.
+            'site_id' => [
+                Rule::requiredIf(function () {
+                    if ((float) $this->input('opening_stock', 0) <= 0) {
+                        return false;
+                    }
+
+                    $product = $this->route('product');
+
+                    if (! $product instanceof Product) {
+                        return false;
+                    }
+
+                    return ! $product->stock()->exists() && ! $product->transactions()->exists();
+                }),
+                'nullable',
+                'exists:sites,id',
+            ],
             'status' => 'nullable|string|in:active,inactive',
         ];
 
@@ -41,5 +62,12 @@ class UpdateProductRequest extends FormRequest
         }
 
         return $rules;
+    }
+
+    public function messages(): array
+    {
+        return [
+            'site_id.required' => 'Select the site that will hold this opening stock, otherwise no stock is recorded.',
+        ];
     }
 }

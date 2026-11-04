@@ -69,6 +69,31 @@ class EmployeeSiteAssignmentController extends Controller
     }
 
     /**
+     * Assign an employee to several sites at once.
+     */
+    public function bulkAssign(Request $request, Employee $employee): JsonResponse
+    {
+        $validated = $request->validate([
+            'site_ids' => 'required|array|min:1',
+            'site_ids.*' => 'required|integer|exists:sites,id',
+            'role' => 'nullable|string|max:255',
+            'remarks' => 'nullable|string',
+        ]);
+
+        $assignments = $this->assignmentService->assignEmployeeToSites(
+            $employee,
+            $validated['site_ids'],
+            $validated['role'] ?? null,
+            $validated['remarks'] ?? null
+        );
+
+        return $this->success('Employee assigned to selected sites successfully', [
+            'assignments' => $assignments->load('site'),
+            'assigned_count' => $assignments->count(),
+        ], [], 201);
+    }
+
+    /**
      * Transfer employee from one site to another.
      */
     public function transfer(Request $request, Employee $employee): JsonResponse

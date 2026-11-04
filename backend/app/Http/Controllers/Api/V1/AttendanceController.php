@@ -11,7 +11,6 @@ use App\Http\Requests\UpdateAttendanceRequest;
 use App\Http\Requests\CheckInRequest;
 use App\Http\Requests\CheckOutRequest;
 use App\Http\Resources\AttendanceResource;
-use App\Http\Resources\AttendanceLocationLogResource;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -62,7 +61,7 @@ class AttendanceController extends Controller
     {
         $this->authorize('attendance.view');
 
-        $attendance->load(['employee', 'site', 'shift']);
+        $attendance->load(['employee', 'site', 'checkoutSite', 'shift']);
 
         return $this->success('Attendance retrieved successfully', [
             'attendance' => new AttendanceResource($attendance)
@@ -91,10 +90,7 @@ class AttendanceController extends Controller
 
     public function checkIn(CheckInRequest $request): JsonResponse
     {
-        $user = $request->user();
-
-        $user = $request->user();
-        $employee = $user->employee;
+        $employee = $request->user()->employee;
 
         if (!$employee) {
             return $this->error('Only employees can check in', [], 403);
@@ -123,27 +119,21 @@ class AttendanceController extends Controller
 
     public function checkOut(CheckOutRequest $request): JsonResponse
     {
-        $user = $request->user();
-
-        $user = $request->user();
-        $employee = $user->employee;
+        $employee = $request->user()->employee;
 
         if (!$employee) {
             return $this->error('Only employees can check out', [], 403);
         }
 
-        $prerequisites = $this->attendanceService->validateCheckInPrerequisites($employee);
+        $prerequisites = $this->attendanceService->validateCheckOutPrerequisites($employee);
 
         if (!$prerequisites['success']) {
             return $this->error($prerequisites['message'], [], $prerequisites['status']);
         }
 
-        $site = $prerequisites['site'];
-
         $result = $this->attendanceService->processCheckOut(
             $request->validated(),
-            $employee,
-            $site
+            $employee
         );
 
         if (!$result['success']) {
@@ -199,47 +189,4 @@ class AttendanceController extends Controller
         ]);
     }
 
-    public function locationAudit(Request $request): JsonResponse
-    {
-        $this->authorize('attendance.location.audit');
-
-        $filters = $request->only([
-            'employee_id', 'site_id', 'date', 'start_date', 'end_date',
-            'location_verified', 'status'
-        ]);
-        $perPage = (int) $request->input('per_page', 15);
-
-        $query = Attendance::with(['employee.user', 'site'])
-            ->whereNotNull('checkin_latitude');
-
-        if (!empty($filters['employee_id'])) {
-            $query->where('employee_id', $filters['employee_id']);
-        }
-
-        if (!empty($filters['site_id'])) {
-            $query->where('site_id', $filters['site_id']);
-        }
-
-        if (!empty($filters['date'])) {
-            $query->whereDate('date', $filters['date']);
-        }
-
-        if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
-            $query->whereBetween('date', [$filters['start_date'], $filters['end_date']]);
-        }
-
-        if (isset($filters['location_verified'])) {
-            $query->where('location_verified', filter_var($filters['location_verified'], FILTER_VALIDATE_BOOLEAN));
-        }
-
-        if (!empty($filters['status'])) {
-            $query->where('status', $filters['status']);
-        }
-
-        $logs = $query->orderBy('date', 'desc')->paginate($perPage);
-
-        return $this->success('Attendance location logs retrieved successfully', [
-            'logs' => AttendanceLocationLogResource::collection($logs)
-        ]);
-    }
 }

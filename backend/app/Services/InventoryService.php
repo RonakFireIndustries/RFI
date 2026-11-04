@@ -32,13 +32,13 @@ class InventoryService
         return $prefix . '-' . str_pad($last + 1, 4, '0', STR_PAD_LEFT);
     }
 
-    public function addStock($productId, $locationType, $locationId, $quantity, $referenceType, $referenceId, $notes = '', ?int $unitId = null)
+    public function addStock($productId, $locationType, $locationId, $quantity, $referenceType, $referenceId, $notes = '', ?int $unitId = null, string $transactionType = 'purchase')
     {
         return $this->recordTransaction(
             productId: $productId,
             locationType: $locationType,
             locationId: $locationId,
-            transactionType: 'purchase',
+            transactionType: $transactionType,
             quantity: $quantity,
             toLocationType: null,
             toLocationId: null,

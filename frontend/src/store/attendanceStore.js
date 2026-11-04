@@ -105,16 +105,4 @@ export const useAttendanceStore = create((set, get) => ({
       throw error;
     }
   },
-
-  locationAudit: async (params = {}) => {
-    set({ loading: true, error: null });
-    try {
-      const items = await attendancesService.locationAudit(params);
-      set({ logs: items || [], loading: false });
-      return items;
-    } catch (error) {
-      set({ error, loading: false });
-      throw error;
-    }
-  },
 }));

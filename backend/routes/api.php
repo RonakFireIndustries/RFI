@@ -135,7 +135,6 @@ Route::prefix('v1')->group(function () {
     Route::post('/attendance/check-out', [\App\Http\Controllers\Api\V1\AttendanceController::class, 'checkOut']);
     Route::get('/my-attendance', [\App\Http\Controllers\Api\V1\AttendanceController::class, 'myAttendance']);
     Route::get('/my-attendance/monthly', [\App\Http\Controllers\Api\V1\AttendanceController::class, 'myMonthlyReport']);
-    Route::get('/attendance/location-audit', [\App\Http\Controllers\Api\V1\AttendanceController::class, 'locationAudit']);
 
     // Sites / Construction
     Route::apiResource('sites', \App\Http\Controllers\Api\V1\SiteController::class);
@@ -144,6 +143,7 @@ Route::prefix('v1')->group(function () {
     Route::get('employees/{employee}/sites', [\App\Http\Controllers\Api\V1\EmployeeSiteAssignmentController::class, 'index']);
     Route::get('employees/{employee}/sites/history', [\App\Http\Controllers\Api\V1\EmployeeSiteAssignmentController::class, 'history']);
     Route::post('employees/{employee}/sites', [\App\Http\Controllers\Api\V1\EmployeeSiteAssignmentController::class, 'assign']);
+    Route::post('employees/{employee}/sites/bulk', [\App\Http\Controllers\Api\V1\EmployeeSiteAssignmentController::class, 'bulkAssign']);
     Route::post('employees/{employee}/sites/transfer', [\App\Http\Controllers\Api\V1\EmployeeSiteAssignmentController::class, 'transfer']);
     Route::delete('employees/{employee}/sites/{site}', [\App\Http\Controllers\Api\V1\EmployeeSiteAssignmentController::class, 'remove']);
     Route::get('employees/{employee}/current-site', [\App\Http\Controllers\Api\V1\EmployeeSiteAssignmentController::class, 'currentSite']);

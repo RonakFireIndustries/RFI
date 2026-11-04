@@ -511,6 +511,12 @@ export default function Attendance() {
                             </span>
                           )}
                         </span>
+                        {log.checkout_site && (
+                          <div className="text-[10px] font-medium text-muted-foreground mt-0.5">
+                            near {log.checkout_site.name}
+                            {log.checkout_distance != null ? ` · ${Number(log.checkout_distance).toFixed(1)}m` : ''}
+                          </div>
+                        )}
                       </td>
                       <td className="p-4 text-sm font-bold text-foreground">{hours}</td>
                       <td className="p-4 text-right pr-6">
@@ -541,7 +547,7 @@ export default function Attendance() {
                                     <th className="p-2">Check Out</th>
                                     <th className="p-2">Hours</th>
                                     <th className="p-2">Status</th>
-                                    <th className="p-2 text-right pr-0">Location</th>
+                                    <th className="p-2 text-right pr-0">Checkout Location</th>
                                   </tr>
                                 </thead>
                                 <tbody>
@@ -588,7 +594,19 @@ export default function Attendance() {
                                             </span>
                                           </td>
                                           <td className="p-2 text-right pr-0 text-xs text-muted-foreground">
-                                            {locVerified ? 'Verified' : 'Not Verified'}
+                                            {rec.checkout_site ? (
+                                              <div>
+                                                <div className="font-semibold text-foreground truncate max-w-[140px]">
+                                                  {rec.checkout_site.name}
+                                                </div>
+                                                <div className="text-[10px]">
+                                                  {rec.checkout_distance != null ? `${Number(rec.checkout_distance).toFixed(1)}m · ` : ''}
+                                                  {locVerified ? 'Verified' : 'Not Verified'}
+                                                </div>
+                                              </div>
+                                            ) : (
+                                              locVerified ? 'Verified' : 'Not Verified'
+                                            )}
                                           </td>
                                         </tr>
                                       );

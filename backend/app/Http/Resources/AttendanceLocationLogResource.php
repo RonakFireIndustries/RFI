@@ -23,6 +23,19 @@ class AttendanceLocationLogResource extends JsonResource
                 'longitude' => $this->site->longitude,
                 'allowed_radius' => $this->site->allowed_radius,
             ]),
+            'checkout_site_id' => $this->checkout_site_id,
+            'checkout_site' => $this->when(
+                $this->relationLoaded('checkoutSite'),
+                fn () => $this->checkoutSite ? [
+                    'id' => $this->checkoutSite->id,
+                    'name' => $this->checkoutSite->name,
+                    'code' => $this->checkoutSite->code,
+                    'address' => $this->checkoutSite->address,
+                    'latitude' => $this->checkoutSite->latitude,
+                    'longitude' => $this->checkoutSite->longitude,
+                    'allowed_radius' => $this->checkoutSite->allowed_radius,
+                ] : null
+            ),
             'date' => $this->date,
             'check_in' => $this->check_in,
             'check_out' => $this->check_out,

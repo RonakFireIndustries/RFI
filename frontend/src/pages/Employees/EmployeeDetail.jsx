@@ -41,7 +41,7 @@ export default function EmployeeDetail() {
     loading: sitesLoading, 
     fetchAssignments, 
     fetchHistory, 
-    assignEmployee, 
+    bulkAssignEmployees,
     transferEmployee, 
     removeEmployee 
   } = useEmployeeSiteStore();
@@ -89,7 +89,7 @@ export default function EmployeeDetail() {
   const [isRemoveShiftModalOpen, setIsRemoveShiftModalOpen] = useState(false);
 
   // Form states
-  const [selectedSiteId, setSelectedSiteId] = useState('');
+  const [selectedSiteIds, setSelectedSiteIds] = useState([]);
   const [selectedNewSiteId, setSelectedNewSiteId] = useState('');
   const [selectedCurrentSiteId, setSelectedCurrentSiteId] = useState('');
   const [role, setRole] = useState('');
@@ -204,29 +204,42 @@ export default function EmployeeDetail() {
 
   const title = selected.full_name || selected.user?.name || `Employee #${selected.id}`;
 
+  const assignedSiteIds = new Set((assignments || []).map((assignment) => Number(assignment.site_id)));
+  const availableSites = (allSites || []).filter(
+    (site) => site.status === 'Active' && !assignedSiteIds.has(Number(site.id))
+  );
+
   // Action Handlers
+  const toggleSiteSelection = (siteId) => {
+    setSelectedSiteIds((current) => (
+      current.includes(siteId)
+        ? current.filter((id) => id !== siteId)
+        : [...current, siteId]
+    ));
+  };
+
   const handleAssign = async (e) => {
     e.preventDefault();
     setErrors({});
-    if (!selectedSiteId) {
-      setErrors({ site_id: 'Please select a site' });
+    if (selectedSiteIds.length === 0) {
+      setErrors({ site_ids: 'Please select at least one site' });
       return;
     }
 
     return guard(async () => {
     try {
-      await assignEmployee(selected.id, {
-        site_id: parseInt(selectedSiteId),
+      await bulkAssignEmployees(selected.id, {
+        site_ids: selectedSiteIds,
         role,
         remarks
       });
       setIsAssignModalOpen(false);
       // Reset form
-      setSelectedSiteId('');
+      setSelectedSiteIds([]);
       setRole('');
       setRemarks('');
     } catch (err) {
-      setErrors({ general: err.message || 'Failed to assign site.' });
+      setErrors({ general: err.message || 'Failed to assign sites.' });
     }
     });
   };
@@ -462,7 +475,7 @@ export default function EmployeeDetail() {
               <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wider">Current Site Allocation</h3>
               <button 
                 onClick={() => {
-                  setSelectedSiteId('');
+                  setSelectedSiteIds([]);
                   setRole('');
                   setRemarks('');
                   setErrors({});
@@ -471,7 +484,7 @@ export default function EmployeeDetail() {
                 className="flex items-center text-xs font-bold bg-primary text-white px-3 py-1.5 rounded-lg hover:bg-primary/90 transition-colors"
               >
                 <Plus className="w-3.5 h-3.5 mr-1" />
-                Assign to Site
+                Assign Sites
               </button>
             </div>
             
@@ -978,7 +991,7 @@ export default function EmployeeDetail() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden">
             <div className="flex justify-between items-center px-6 py-4 border-b border-gray-150">
-              <h2 className="text-lg font-bold text-gray-900">Assign to Site</h2>
+              <h2 className="text-lg font-bold text-gray-900">Assign Sites</h2>
               <button onClick={() => setIsAssignModalOpen(false)} className="text-gray-400 hover:text-gray-600">
                 <X className="w-5 h-5" />
               </button>
@@ -993,19 +1006,36 @@ export default function EmployeeDetail() {
               )}
 
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Select Site *</label>
-                <select
-                  value={selectedSiteId}
-                  onChange={(e) => setSelectedSiteId(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-250 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                >
-                  <option value="">Choose an active site...</option>
-                  {allSites?.filter(s => s.status === 'Active').map(s => (
-                    <option key={s.id} value={s.id}>{s.name} ({s.code || 'No Code'})</option>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold text-gray-700 uppercase">Select Sites *</label>
+                  <span className="text-[11px] text-gray-400">{selectedSiteIds.length} selected</span>
+                </div>
+                <div className="max-h-56 overflow-y-auto border border-gray-200 rounded-lg divide-y divide-gray-100">
+                  {availableSites.length === 0 ? (
+                    <p className="p-3 text-xs text-gray-500">
+                      This employee is already assigned to every active site.
+                    </p>
+                  ) : availableSites.map((site) => (
+                    <label
+                      key={site.id}
+                      className="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-gray-50"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedSiteIds.includes(site.id)}
+                        onChange={() => toggleSiteSelection(site.id)}
+                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                      />
+                      <span className="min-w-0">
+                        <span className="block text-sm font-semibold text-gray-800 truncate">{site.name}</span>
+                        <span className="block text-xs text-gray-500">
+                          {site.code || 'No Code'}{site.city ? ` · ${site.city}` : ''}
+                        </span>
+                      </span>
+                    </label>
                   ))}
-                </select>
-                {errors.site_id && <p className="text-red-500 text-xs mt-1">{errors.site_id}</p>}
+                </div>
+                {errors.site_ids && <p className="text-red-500 text-xs mt-1">{errors.site_ids}</p>}
               </div>
 
               <div>
@@ -1043,7 +1073,7 @@ export default function EmployeeDetail() {
                   disabled={submitting}
                   className="px-4 py-2 bg-primary text-white rounded-lg text-xs hover:bg-primary/90 font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
-                  {submitting ? 'Saving...' : 'Assign Site'}
+                  {submitting ? 'Saving...' : 'Assign Selected'}
                 </button>
               </div>
             </form>

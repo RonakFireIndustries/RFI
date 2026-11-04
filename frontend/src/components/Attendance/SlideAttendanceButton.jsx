@@ -88,14 +88,17 @@ export default function SlideAttendanceButton({
   // An auto-closed record still lets the employee record their real check-out.
   const canSlideOut = isCheckedIn || isAutoClosed;
 
+  // Check-out is allowed from anywhere: once the employee is checked in, being
+  // outside the assigned radius must not disable the slider. GPS itself is
+  // still required because the nearest site is resolved from the coordinates.
   const stateKey = transitioning
     ? 'loading_action'
     : status === 'gps_loading' ? 'gps_loading'
-    : status === 'outside_radius' ? 'outside_radius'
     : status === 'permission_denied' ? 'permission_denied'
     : status === 'gps_error' ? 'gps_error'
     : isCheckedOut ? 'checked_out'
     : canSlideOut ? 'checked_in'
+    : status === 'outside_radius' ? 'outside_radius'
     : 'ready_checkin';
 
   const state = STATES[stateKey];

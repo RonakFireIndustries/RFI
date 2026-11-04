@@ -27,6 +27,12 @@ export const employeeSiteService = {
     return unwrapItem(response.data);
   },
 
+  bulkAssign: async (employeeId, payload) => {
+    const response = await api.post(`/employees/${employeeId}/sites/bulk`, payload);
+    const data = unwrapItem(response.data);
+    return data?.assignments ?? [];
+  },
+
   transfer: async (employeeId, payload) => {
     const response = await api.post(`/employees/${employeeId}/sites/transfer`, payload);
     return unwrapItem(response.data);

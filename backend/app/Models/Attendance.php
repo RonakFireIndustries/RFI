@@ -19,6 +19,7 @@ class Attendance extends Model
     protected $fillable = [
         'employee_id',
         'site_id',
+        'checkout_site_id',
         'shift_id',
         'date',
         'check_in',
@@ -88,6 +89,17 @@ class Attendance extends Model
     public function site(): BelongsTo
     {
         return $this->belongsTo(Site::class);
+    }
+
+    /**
+     * The nearest active site at the moment the employee checked out.
+     *
+     * Kept separate from site() so the check-in site is not lost when an
+     * employee moves between assigned locations during the day.
+     */
+    public function checkoutSite(): BelongsTo
+    {
+        return $this->belongsTo(Site::class, 'checkout_site_id');
     }
 
     public function shift(): BelongsTo

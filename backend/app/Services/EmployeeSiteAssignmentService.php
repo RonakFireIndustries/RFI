@@ -68,6 +68,50 @@ class EmployeeSiteAssignmentService
     }
 
     /**
+     * Assign an employee to several sites in one action.
+     *
+     * Existing assignments are left untouched, so re-submitting a site the
+     * employee already has is a no-op rather than an error.
+     */
+    public function assignEmployeeToSites(Employee $employee, array $siteIds, ?string $role = null, ?string $remarks = null)
+    {
+        return DB::transaction(function () use ($employee, $siteIds, $role, $remarks) {
+            $siteIds = array_values(array_unique(array_map('intval', $siteIds)));
+
+            $existingIds = EmployeeSite::where('employee_id', $employee->id)
+                ->whereIn('site_id', $siteIds)
+                ->pluck('site_id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+
+            $newIds = array_values(array_diff($siteIds, $existingIds));
+            $assignments = collect();
+
+            foreach ($newIds as $siteId) {
+                $assignment = EmployeeSite::create([
+                    'employee_id' => $employee->id,
+                    'site_id' => $siteId,
+                    'assigned_at' => now(),
+                    'role' => $role,
+                ]);
+
+                EmployeeSiteHistory::create([
+                    'employee_id' => $employee->id,
+                    'assigned_by_id' => Auth::id(),
+                    'previous_site_id' => null,
+                    'new_site_id' => $siteId,
+                    'assigned_at' => now(),
+                    'remarks' => $remarks ?? 'Assigned to site',
+                ]);
+
+                $assignments->push($assignment);
+            }
+
+            return $assignments;
+        });
+    }
+
+    /**
      * Transfer employee from one site to another.
      */
     public function transferEmployee(Employee $employee, int $currentSiteId, int $newSiteId, ?string $role = null, ?string $remarks = null): EmployeeSite

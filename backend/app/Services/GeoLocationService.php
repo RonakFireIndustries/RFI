@@ -37,6 +37,42 @@ class GeoLocationService
         return round($distance, 2);
     }
 
+    /**
+     * Pick the closest site to the given coordinates.
+     *
+     * Sites without coordinates are ignored. Returns null when there is no
+     * usable site to compare against.
+     *
+     * @param  iterable<int, \App\Models\Site>  $sites
+     * @return array{site: \App\Models\Site, distance: float}|null
+     */
+    public function nearestSite($latitude, $longitude, iterable $sites): ?array
+    {
+        $nearest = null;
+
+        foreach ($sites as $site) {
+            if ($site->latitude === null || $site->longitude === null) {
+                continue;
+            }
+
+            $distance = $this->calculateDistance(
+                $site->latitude,
+                $site->longitude,
+                $latitude,
+                $longitude
+            );
+
+            if ($nearest === null || $distance < $nearest['distance']) {
+                $nearest = [
+                    'site' => $site,
+                    'distance' => $distance,
+                ];
+            }
+        }
+
+        return $nearest;
+    }
+
     public function isAccuracyAcceptable($accuracy)
     {
         if ($accuracy === null) return false;
