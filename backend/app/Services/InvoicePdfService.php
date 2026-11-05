@@ -10,12 +10,12 @@ class InvoicePdfService
 {
     public function generate(Invoice $invoice)
     {
-        $invoice->load(['customer', 'items.product', 'creator']);
+        $invoice->load(['customerLedger', 'items.product', 'creator']);
         $company = CompanySetting::first();
 
         $data = [
             'invoice' => $invoice,
-            'customer' => $invoice->customer,
+            'customer' => $invoice->customerLedger,
             'items' => $invoice->items,
             'company' => $company,
             'bank_details' => $company && $company->bank_name ? [

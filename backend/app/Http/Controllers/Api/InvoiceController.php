@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
-use App\Models\Customer;
+use App\Models\LedgerAccount;
 use App\Models\SalesOrder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,7 +15,7 @@ class InvoiceController extends Controller
     public function index(Request $request)
     {
         $this->authorize('invoices.view');
-        $invoices = Invoice::with(['customer', 'creator'])->orderBy('created_at', 'desc')->get();
+        $invoices = Invoice::with(['customerLedger', 'creator'])->orderBy('created_at', 'desc')->get();
         return response()->json($invoices);
     }
 
@@ -23,7 +23,7 @@ class InvoiceController extends Controller
     {
         $this->authorize('invoices.create');
         $validated = $request->validate([
-            'customer_id' => 'required|exists:customers,id',
+            'customer_ledger_id' => 'required|exists:ledger_accounts,id',
             'sales_order_id' => 'nullable|exists:sales_orders,id',
             'status' => 'required|string',
             'due_date' => 'nullable|date',
@@ -43,12 +43,12 @@ class InvoiceController extends Controller
 
         try {
             // Generate Invoice Number
-            $customer = Customer::find($validated['customer_id']);
-            
-            $customerInitials = strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $customer->name), 0, 2));
-            
+            $customerLedger = LedgerAccount::find($validated['customer_ledger_id']);
+
+            $customerInitials = strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $customerLedger->name), 0, 2));
+
             // Get max sequence for this customer
-            $lastInvoice = Invoice::where('customer_id', $customer->id)
+            $lastInvoice = Invoice::where('customer_ledger_id', $customerLedger->id)
                                   ->orderBy('id', 'desc')
                                   ->first();
             
@@ -83,7 +83,7 @@ class InvoiceController extends Controller
 
             $invoice = Invoice::create([
                 'invoice_number' => $invoiceNumber,
-                'customer_id' => $validated['customer_id'],
+                'customer_ledger_id' => $validated['customer_ledger_id'],
                 'sales_order_id' => $validated['sales_order_id'] ?? null,
                 'status' => $validated['status'],
                 'due_date' => $validated['due_date'] ?? null,
@@ -115,7 +115,7 @@ class InvoiceController extends Controller
 
             DB::commit();
 
-            return response()->json($invoice->load('items'), 201);
+            return response()->json($invoice->load(['items', 'customerLedger:id,name']), 201);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => 'Error creating invoice: ' . $e->getMessage()], 500);
@@ -125,7 +125,7 @@ class InvoiceController extends Controller
     public function show(Invoice $invoice)
     {
         $this->authorize('invoices.view');
-        $invoice->load(['customer', 'items.product', 'creator']);
+        $invoice->load(['customerLedger', 'items.product', 'creator']);
         return response()->json($invoice);
     }
 

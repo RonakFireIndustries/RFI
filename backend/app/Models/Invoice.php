@@ -10,16 +10,16 @@ class Invoice extends Model
     use HasFactory;
 
     protected $fillable = [
-        'invoice_number', 'customer_id', 'sales_order_id',
+        'invoice_number', 'customer_ledger_id', 'sales_order_id',
         'subtotal', 'cgst_total', 'sgst_total', 'igst_total', 'grand_total',
         'status', 'due_date', 'payment_date', 'paid_amount', 'notes', 'terms', 'created_by',
         'gst_type', 'gst_rate',
         'issue_date', 'total_amount',
     ];
 
-    public function customer()
+    public function customerLedger()
     {
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo(LedgerAccount::class, 'customer_ledger_id');
     }
 
     public function salesOrder()

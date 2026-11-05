@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Category;
-use App\Models\Supplier;
 use App\Http\Resources\ProductResource;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
@@ -18,7 +17,7 @@ class ProductController extends Controller
     {
         $this->authorizeProductRead($request);
 
-        $query = Product::with(['category', 'supplier', 'unit', 'stock.locationable']);
+        $query = Product::with(['category', 'supplierLedger', 'unit', 'stock.locationable']);
 
         if ($categoryId = (int) $request->query('category_id')) {
             $query->whereIn('category_id', $this->categoryAndDescendants($categoryId));
@@ -81,14 +80,14 @@ class ProductController extends Controller
             );
         }
 
-        return new ProductResource($product->load(['category', 'supplier', 'unit', 'stock.locationable']));
+        return new ProductResource($product->load(['category', 'supplierLedger', 'unit', 'stock.locationable']));
     }
 
     public function show(Product $product)
     {
         $this->authorizeProductRead(request());
 
-        return new ProductResource($product->load(['category', 'supplier', 'unit', 'stock.locationable']));
+        return new ProductResource($product->load(['category', 'supplierLedger', 'unit', 'stock.locationable']));
     }
 
     /**
@@ -162,7 +161,7 @@ class ProductController extends Controller
             );
         }
 
-        return new ProductResource($product->load(['category', 'supplier', 'unit', 'stock.locationable']));
+        return new ProductResource($product->load(['category', 'supplierLedger', 'unit', 'stock.locationable']));
     }
 
     public function destroy(Product $product)

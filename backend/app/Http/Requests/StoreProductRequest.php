@@ -23,7 +23,7 @@ class StoreProductRequest extends FormRequest
             'dimension' => 'nullable|string|max:255',
             'category_id' => 'nullable|exists:categories,id',
             'unit_id' => 'required|exists:units,id',
-            'supplier_id' => 'nullable|exists:suppliers,id',
+            'supplier_ledger_id' => 'nullable|exists:ledger_accounts,id',
             'cost_price' => 'nullable|numeric|min:0',
             'reorder_level' => 'nullable|numeric|min:0',
             'min_stock' => 'nullable|numeric|min:0',

@@ -4,8 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Customer;
-use App\Models\Supplier;
+use App\Models\LedgerAccount;
 use App\Models\Product;
 use App\Models\Invoice;
 use App\Models\SalesOrder;
@@ -33,13 +32,14 @@ class SearchController extends Controller
         $safe = $this->escapeLike($query);
         $results = [];
 
-        // 1. Customers
-        $customersQuery = Customer::where(function($q) use ($safe) {
-            $q->where('name', 'like', "%{$safe}%")
-              ->orWhere('email', 'like', "%{$safe}%")
-              ->orWhere('phone', 'like', "%{$safe}%");
-        });
-        
+        // 1. Customers (party ledgers under Sundry Debtors)
+        $customersQuery = LedgerAccount::where('party_type', 'customer')
+            ->where(function($q) use ($safe) {
+                $q->where('name', 'like', "%{$safe}%")
+                  ->orWhere('email', 'like', "%{$safe}%")
+                  ->orWhere('phone', 'like', "%{$safe}%");
+            });
+
         $customers = $customersQuery->limit(5)->get();
         foreach ($customers as $c) {
             $results[] = [
@@ -47,17 +47,18 @@ class SearchController extends Controller
                 'id' => $c->id,
                 'title' => $c->name,
                 'subtitle' => $c->email ?? $c->phone ?? 'No contact info',
-                'url' => "/dashboard/customers/{$c->id}"
+                'url' => "/dashboard/finance/chart-of-accounts"
             ];
         }
 
-        // 2. Suppliers
-        $suppliersQuery = Supplier::where(function($q) use ($safe) {
-            $q->where('name', 'like', "%{$safe}%")
-              ->orWhere('email', 'like', "%{$safe}%")
-              ->orWhere('phone', 'like', "%{$safe}%");
-        });
-        
+        // 2. Suppliers (party ledgers under Sundry Creditors)
+        $suppliersQuery = LedgerAccount::where('party_type', 'supplier')
+            ->where(function($q) use ($safe) {
+                $q->where('name', 'like', "%{$safe}%")
+                  ->orWhere('email', 'like', "%{$safe}%")
+                  ->orWhere('phone', 'like', "%{$safe}%");
+            });
+
         $suppliers = $suppliersQuery->limit(5)->get();
         foreach ($suppliers as $s) {
             $results[] = [
@@ -65,7 +66,7 @@ class SearchController extends Controller
                 'id' => $s->id,
                 'title' => $s->name,
                 'subtitle' => $s->email ?? $s->phone ?? 'No contact info',
-                'url' => "/dashboard/suppliers/{$s->id}"
+                'url' => "/dashboard/finance/chart-of-accounts"
             ];
         }
 

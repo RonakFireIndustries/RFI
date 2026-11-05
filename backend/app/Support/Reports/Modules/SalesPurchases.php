@@ -47,22 +47,25 @@ class SalesPurchases
                 'master' => [
                     'label' => 'Customer Master',
                     'description' => 'Every customer on the books.',
-                    'base' => 'customers',
+                    'base' => 'ledger_accounts',
+                    'constraints' => [
+                        ['column' => 'ledger_accounts.party_type', 'operator' => '=', 'value' => 'customer'],
+                    ],
                     'columns' => [
-                        Spec::col('name', 'Customer', 'customers.name', ['primary' => true]),
-                        Spec::col('email', 'Email', 'customers.email'),
-                        Spec::col('phone', 'Phone', 'customers.phone'),
-                        Spec::col('gst_number', 'GST number', 'customers.gst_number'),
-                        Spec::num('credit_days', 'Credit days', 'customers.credit_days'),
-                        Spec::col('address', 'Address', 'customers.address'),
-                        Spec::date('added_on', 'Added on', 'customers.created_at'),
+                        Spec::col('name', 'Customer', 'ledger_accounts.name', ['primary' => true]),
+                        Spec::col('email', 'Email', 'ledger_accounts.email'),
+                        Spec::col('phone', 'Phone', 'ledger_accounts.phone'),
+                        Spec::col('gst_number', 'GST number', 'ledger_accounts.gst_number'),
+                        Spec::num('credit_days', 'Credit days', 'ledger_accounts.credit_days'),
+                        Spec::col('address', 'Address', 'ledger_accounts.address'),
+                        Spec::date('added_on', 'Added on', 'ledger_accounts.created_at'),
                     ],
                     'filters' => [
-                        Spec::textFilter('q', 'Search', ['customers.name', 'customers.email', 'customers.phone', 'customers.gst_number']),
+                        Spec::textFilter('q', 'Search', ['ledger_accounts.name', 'ledger_accounts.email', 'ledger_accounts.phone', 'ledger_accounts.gst_number']),
                     ],
                     'summary' => [
                         Spec::summary('total', 'Customers', 'count(*)'),
-                        Spec::summary('gst_registered', 'GST registered', "sum(case when customers.gst_number is not null and customers.gst_number <> '' then 1 else 0 end)"),
+                        Spec::summary('gst_registered', 'GST registered', "sum(case when ledger_accounts.gst_number is not null and ledger_accounts.gst_number <> '' then 1 else 0 end)"),
                     ],
                     'order' => [Spec::order('name')],
                 ],
@@ -70,16 +73,19 @@ class SalesPurchases
                 'directory' => [
                     'label' => 'Customer Contact Directory',
                     'description' => 'Who to call, and where they are.',
-                    'base' => 'customers',
+                    'base' => 'ledger_accounts',
+                    'constraints' => [
+                        ['column' => 'ledger_accounts.party_type', 'operator' => '=', 'value' => 'customer'],
+                    ],
                     'columns' => [
-                        Spec::col('name', 'Customer', 'customers.name', ['primary' => true]),
-                        Spec::col('contact', 'Phone', 'customers.phone'),
-                        Spec::col('email', 'Email', 'customers.email'),
-                        Spec::col('address', 'Address', 'customers.address'),
-                        Spec::num('credit_days', 'Credit days', 'customers.credit_days'),
+                        Spec::col('name', 'Customer', 'ledger_accounts.name', ['primary' => true]),
+                        Spec::col('contact', 'Phone', 'ledger_accounts.phone'),
+                        Spec::col('email', 'Email', 'ledger_accounts.email'),
+                        Spec::col('address', 'Address', 'ledger_accounts.address'),
+                        Spec::num('credit_days', 'Credit days', 'ledger_accounts.credit_days'),
                     ],
                     'filters' => [
-                        Spec::textFilter('q', 'Search', ['customers.name', 'customers.phone', 'customers.email']),
+                        Spec::textFilter('q', 'Search', ['ledger_accounts.name', 'ledger_accounts.phone', 'ledger_accounts.email']),
                     ],
                     'summary' => [Spec::summary('total', 'Customers', 'count(*)')],
                     'order' => [Spec::order('name')],
@@ -88,18 +94,21 @@ class SalesPurchases
                 'credit-terms' => [
                     'label' => 'Customers by Credit Terms',
                     'description' => 'How long credit each customer is given.',
-                    'base' => 'customers',
-                    'group_by' => ['customers.credit_days'],
+                    'base' => 'ledger_accounts',
+                    'constraints' => [
+                        ['column' => 'ledger_accounts.party_type', 'operator' => '=', 'value' => 'customer'],
+                    ],
+                    'group_by' => ['ledger_accounts.credit_days'],
                     'columns' => [
-                        Spec::num('credit_days', 'Credit days', 'customers.credit_days', ['primary' => true]),
+                        Spec::num('credit_days', 'Credit days', 'ledger_accounts.credit_days', ['primary' => true]),
                         Spec::num('customers', 'Customers', 'count(*)'),
                     ],
                     'filters' => [
-                        Spec::textFilter('q', 'Search', ['customers.name']),
+                        Spec::textFilter('q', 'Search', ['ledger_accounts.name']),
                     ],
                     'summary' => [
                         Spec::summary('customers', 'Customers', 'count(*)'),
-                        Spec::summary('terms', 'Credit bands', 'count(distinct customers.credit_days)'),
+                        Spec::summary('terms', 'Credit bands', 'count(distinct ledger_accounts.credit_days)'),
                     ],
                     'order' => [Spec::order('credit_days')],
                     'chart' => Spec::chart('bar', 'credit_days', 'customers'),
@@ -108,19 +117,22 @@ class SalesPurchases
                 'gst-register' => [
                     'label' => 'Customer GST Register',
                     'description' => 'The GST numbers the company bills against.',
-                    'base' => 'customers',
+                    'base' => 'ledger_accounts',
+                    'constraints' => [
+                        ['column' => 'ledger_accounts.party_type', 'operator' => '=', 'value' => 'customer'],
+                    ],
                     'columns' => [
-                        Spec::col('name', 'Customer', 'customers.name', ['primary' => true]),
-                        Spec::col('gst_number', 'GST number', 'customers.gst_number'),
-                        Spec::col('phone', 'Phone', 'customers.phone'),
-                        Spec::col('email', 'Email', 'customers.email'),
+                        Spec::col('name', 'Customer', 'ledger_accounts.name', ['primary' => true]),
+                        Spec::col('gst_number', 'GST number', 'ledger_accounts.gst_number'),
+                        Spec::col('phone', 'Phone', 'ledger_accounts.phone'),
+                        Spec::col('email', 'Email', 'ledger_accounts.email'),
                     ],
                     'filters' => [
-                        Spec::textFilter('q', 'Search', ['customers.name', 'customers.gst_number']),
+                        Spec::textFilter('q', 'Search', ['ledger_accounts.name', 'ledger_accounts.gst_number']),
                     ],
                     'summary' => [
                         Spec::summary('total', 'Customers', 'count(*)'),
-                        Spec::summary('registered', 'With a GST number', "sum(case when customers.gst_number is not null and customers.gst_number <> '' then 1 else 0 end)"),
+                        Spec::summary('registered', 'With a GST number', "sum(case when ledger_accounts.gst_number is not null and ledger_accounts.gst_number <> '' then 1 else 0 end)"),
                     ],
                     'order' => [Spec::order('name')],
                 ],
@@ -129,10 +141,10 @@ class SalesPurchases
                     'label' => 'Billing by Customer',
                     'description' => 'What each customer has been invoiced, and what is still outstanding.',
                     'base' => 'invoices',
-                    'joins' => [Spec::join('customers', 'invoices.customer_id', 'customers.id')],
-                    'group_by' => ['customers.id', 'customers.name'],
+                    'joins' => [Spec::join('ledger_accounts', 'invoices.customer_ledger_id', 'ledger_accounts.id')],
+                    'group_by' => ['ledger_accounts.id', 'ledger_accounts.name'],
                     'columns' => [
-                        Spec::col('customer', 'Customer', 'customers.name', ['primary' => true]),
+                        Spec::col('customer', 'Customer', 'ledger_accounts.name', ['primary' => true]),
                         Spec::num('invoices', 'Invoices', 'count(*)'),
                         Spec::money('billed', 'Billed', 'sum(invoices.grand_total)'),
                         Spec::money('paid', 'Paid', 'sum(invoices.paid_amount)'),
@@ -143,7 +155,7 @@ class SalesPurchases
                         Spec::dateFilter('to', 'Issued to', 'invoices.issue_date', '<='),
                     ],
                     'summary' => [
-                        Spec::summary('customers', 'Customers', 'count(distinct customers.id)'),
+                        Spec::summary('customers', 'Customers', 'count(distinct ledger_accounts.id)'),
                         Spec::summary('billed', 'Total billed', 'sum(invoices.grand_total)', 'money'),
                         Spec::summary('outstanding', 'Total outstanding', 'sum(coalesce(invoices.grand_total, 0) - coalesce(invoices.paid_amount, 0))', 'money'),
                     ],
@@ -155,10 +167,10 @@ class SalesPurchases
                     'label' => 'Customer Payment History',
                     'description' => 'Every payment received, and who made it.',
                     'base' => 'payments',
-                    'joins' => [Spec::join('customers', 'payments.customer_id', 'customers.id')],
+                    'joins' => [Spec::join('ledger_accounts', 'payments.customer_ledger_id', 'ledger_accounts.id')],
                     'columns' => [
                         Spec::date('payment_date', 'Date', 'payments.payment_date', ['primary' => true]),
-                        Spec::col('customer', 'Customer', 'customers.name'),
+                        Spec::col('customer', 'Customer', 'ledger_accounts.name'),
                         Spec::money('amount', 'Amount', 'payments.amount'),
                         Spec::col('method', 'Method', 'payments.payment_method'),
                         Spec::col('reference', 'Reference', 'payments.reference_number'),
@@ -167,7 +179,7 @@ class SalesPurchases
                     'filters' => [
                         Spec::dateFilter('from', 'From', 'payments.payment_date', '>='),
                         Spec::dateFilter('to', 'To', 'payments.payment_date', '<='),
-                        Spec::sourceFilter('customer_id', 'Customer', 'customers', 'id', 'payments.customer_id'),
+                        Spec::sourceFilter('customer_ledger_id', 'Customer', 'ledger_accounts', 'id', 'payments.customer_ledger_id'),
                         Spec::sourceFilter('method', 'Method', 'payments', 'payment_method', 'payments.payment_method'),
                     ],
                     'summary' => [
@@ -180,10 +192,13 @@ class SalesPurchases
                 'onboarding' => [
                     'label' => 'Customer Onboarding Trend',
                     'description' => 'How the customer list grew month by month.',
-                    'base' => 'customers',
-                    'group_by' => ["concat(year(customers.created_at), '-', lpad(month(customers.created_at), 2, '0'))"],
+                    'base' => 'ledger_accounts',
+                    'constraints' => [
+                        ['column' => 'ledger_accounts.party_type', 'operator' => '=', 'value' => 'customer'],
+                    ],
+                    'group_by' => ["concat(year(ledger_accounts.created_at), '-', lpad(month(ledger_accounts.created_at), 2, '0'))"],
                     'columns' => [
-                        Spec::col('period', 'Period', "concat(year(customers.created_at), '-', lpad(month(customers.created_at), 2, '0'))", ['primary' => true]),
+                        Spec::col('period', 'Period', "concat(year(ledger_accounts.created_at), '-', lpad(month(ledger_accounts.created_at), 2, '0'))", ['primary' => true]),
                         Spec::num('added', 'Customers added', 'count(*)'),
                     ],
                     'summary' => [
@@ -212,18 +227,21 @@ class SalesPurchases
                 'master' => [
                     'label' => 'Supplier Master',
                     'description' => 'Every supplier the company buys from.',
-                    'base' => 'suppliers',
+                    'base' => 'ledger_accounts',
+                    'constraints' => [
+                        ['column' => 'ledger_accounts.party_type', 'operator' => '=', 'value' => 'supplier'],
+                    ],
                     'columns' => [
-                        Spec::col('name', 'Supplier', 'suppliers.name', ['primary' => true]),
-                        Spec::col('email', 'Email', 'suppliers.email'),
-                        Spec::col('phone', 'Phone', 'suppliers.phone'),
-                        Spec::col('gst_number', 'GST number', 'suppliers.gst_number'),
-                        Spec::num('credit_days', 'Credit days', 'suppliers.credit_days'),
-                        Spec::col('address', 'Address', 'suppliers.address'),
-                        Spec::date('added_on', 'Added on', 'suppliers.created_at'),
+                        Spec::col('name', 'Supplier', 'ledger_accounts.name', ['primary' => true]),
+                        Spec::col('email', 'Email', 'ledger_accounts.email'),
+                        Spec::col('phone', 'Phone', 'ledger_accounts.phone'),
+                        Spec::col('gst_number', 'GST number', 'ledger_accounts.gst_number'),
+                        Spec::num('credit_days', 'Credit days', 'ledger_accounts.credit_days'),
+                        Spec::col('address', 'Address', 'ledger_accounts.address'),
+                        Spec::date('added_on', 'Added on', 'ledger_accounts.created_at'),
                     ],
                     'filters' => [
-                        Spec::textFilter('q', 'Search', ['suppliers.name', 'suppliers.email', 'suppliers.phone', 'suppliers.gst_number']),
+                        Spec::textFilter('q', 'Search', ['ledger_accounts.name', 'ledger_accounts.email', 'ledger_accounts.phone', 'ledger_accounts.gst_number']),
                     ],
                     'summary' => [Spec::summary('total', 'Suppliers', 'count(*)')],
                     'order' => [Spec::order('name')],
@@ -232,16 +250,19 @@ class SalesPurchases
                 'directory' => [
                     'label' => 'Supplier Contact Directory',
                     'description' => 'Who to call at each supplier.',
-                    'base' => 'suppliers',
+                    'base' => 'ledger_accounts',
+                    'constraints' => [
+                        ['column' => 'ledger_accounts.party_type', 'operator' => '=', 'value' => 'supplier'],
+                    ],
                     'columns' => [
-                        Spec::col('name', 'Supplier', 'suppliers.name', ['primary' => true]),
-                        Spec::col('contact', 'Phone', 'suppliers.phone'),
-                        Spec::col('email', 'Email', 'suppliers.email'),
-                        Spec::col('address', 'Address', 'suppliers.address'),
-                        Spec::num('credit_days', 'Credit days', 'suppliers.credit_days'),
+                        Spec::col('name', 'Supplier', 'ledger_accounts.name', ['primary' => true]),
+                        Spec::col('contact', 'Phone', 'ledger_accounts.phone'),
+                        Spec::col('email', 'Email', 'ledger_accounts.email'),
+                        Spec::col('address', 'Address', 'ledger_accounts.address'),
+                        Spec::num('credit_days', 'Credit days', 'ledger_accounts.credit_days'),
                     ],
                     'filters' => [
-                        Spec::textFilter('q', 'Search', ['suppliers.name', 'suppliers.phone', 'suppliers.email']),
+                        Spec::textFilter('q', 'Search', ['ledger_accounts.name', 'ledger_accounts.phone', 'ledger_accounts.email']),
                     ],
                     'summary' => [Spec::summary('total', 'Suppliers', 'count(*)')],
                     'order' => [Spec::order('name')],
@@ -250,15 +271,18 @@ class SalesPurchases
                 'credit-terms' => [
                     'label' => 'Suppliers by Credit Terms',
                     'description' => 'How long credit each supplier allows.',
-                    'base' => 'suppliers',
-                    'group_by' => ['suppliers.credit_days'],
+                    'base' => 'ledger_accounts',
+                    'constraints' => [
+                        ['column' => 'ledger_accounts.party_type', 'operator' => '=', 'value' => 'supplier'],
+                    ],
+                    'group_by' => ['ledger_accounts.credit_days'],
                     'columns' => [
-                        Spec::num('credit_days', 'Credit days', 'suppliers.credit_days', ['primary' => true]),
+                        Spec::num('credit_days', 'Credit days', 'ledger_accounts.credit_days', ['primary' => true]),
                         Spec::num('suppliers', 'Suppliers', 'count(*)'),
                     ],
                     'summary' => [
                         Spec::summary('suppliers', 'Suppliers', 'count(*)'),
-                        Spec::summary('terms', 'Credit bands', 'count(distinct suppliers.credit_days)'),
+                        Spec::summary('terms', 'Credit bands', 'count(distinct ledger_accounts.credit_days)'),
                     ],
                     'order' => [Spec::order('credit_days')],
                     'chart' => Spec::chart('bar', 'credit_days', 'suppliers'),
@@ -267,19 +291,22 @@ class SalesPurchases
                 'gst-register' => [
                     'label' => 'Supplier GST Register',
                     'description' => 'The GST numbers the company purchases against.',
-                    'base' => 'suppliers',
+                    'base' => 'ledger_accounts',
+                    'constraints' => [
+                        ['column' => 'ledger_accounts.party_type', 'operator' => '=', 'value' => 'supplier'],
+                    ],
                     'columns' => [
-                        Spec::col('name', 'Supplier', 'suppliers.name', ['primary' => true]),
-                        Spec::col('gst_number', 'GST number', 'suppliers.gst_number'),
-                        Spec::col('phone', 'Phone', 'suppliers.phone'),
-                        Spec::col('email', 'Email', 'suppliers.email'),
+                        Spec::col('name', 'Supplier', 'ledger_accounts.name', ['primary' => true]),
+                        Spec::col('gst_number', 'GST number', 'ledger_accounts.gst_number'),
+                        Spec::col('phone', 'Phone', 'ledger_accounts.phone'),
+                        Spec::col('email', 'Email', 'ledger_accounts.email'),
                     ],
                     'filters' => [
-                        Spec::textFilter('q', 'Search', ['suppliers.name', 'suppliers.gst_number']),
+                        Spec::textFilter('q', 'Search', ['ledger_accounts.name', 'ledger_accounts.gst_number']),
                     ],
                     'summary' => [
                         Spec::summary('total', 'Suppliers', 'count(*)'),
-                        Spec::summary('registered', 'With a GST number', "sum(case when suppliers.gst_number is not null and suppliers.gst_number <> '' then 1 else 0 end)"),
+                        Spec::summary('registered', 'With a GST number', "sum(case when ledger_accounts.gst_number is not null and ledger_accounts.gst_number <> '' then 1 else 0 end)"),
                     ],
                     'order' => [Spec::order('name')],
                 ],
@@ -288,10 +315,10 @@ class SalesPurchases
                     'label' => 'Purchase Spend by Supplier',
                     'description' => 'How much the company buys from each supplier.',
                     'base' => 'purchase_orders',
-                    'joins' => [Spec::join('suppliers', 'purchase_orders.supplier_id', 'suppliers.id')],
-                    'group_by' => ['suppliers.id', 'suppliers.name'],
+                    'joins' => [Spec::join('ledger_accounts', 'purchase_orders.supplier_ledger_id', 'ledger_accounts.id')],
+                    'group_by' => ['ledger_accounts.id', 'ledger_accounts.name'],
                     'columns' => [
-                        Spec::col('supplier', 'Supplier', 'suppliers.name', ['primary' => true]),
+                        Spec::col('supplier', 'Supplier', 'ledger_accounts.name', ['primary' => true]),
                         Spec::num('orders', 'Orders', 'count(*)'),
                         Spec::money('total', 'Purchased', 'sum(purchase_orders.total_amount)'),
                         Spec::money('tax', 'Tax', 'sum(purchase_orders.tax_amount)'),
@@ -302,7 +329,7 @@ class SalesPurchases
                         Spec::dateFilter('to', 'To', 'purchase_orders.created_at', '<='),
                     ],
                     'summary' => [
-                        Spec::summary('suppliers', 'Suppliers', 'count(distinct suppliers.id)'),
+                        Spec::summary('suppliers', 'Suppliers', 'count(distinct ledger_accounts.id)'),
                         Spec::summary('total', 'Total purchased', 'sum(purchase_orders.total_amount)', 'money'),
                     ],
                     'order' => [Spec::order('total', 'desc')],
@@ -313,10 +340,10 @@ class SalesPurchases
                     'label' => 'Supplier Payment History',
                     'description' => 'Every payment made out to a supplier.',
                     'base' => 'payments',
-                    'joins' => [Spec::join('suppliers', 'payments.supplier_id', 'suppliers.id')],
+                    'joins' => [Spec::join('ledger_accounts', 'payments.supplier_ledger_id', 'ledger_accounts.id')],
                     'columns' => [
                         Spec::date('payment_date', 'Date', 'payments.payment_date', ['primary' => true]),
-                        Spec::col('supplier', 'Supplier', 'suppliers.name'),
+                        Spec::col('supplier', 'Supplier', 'ledger_accounts.name'),
                         Spec::money('amount', 'Amount', 'payments.amount'),
                         Spec::col('method', 'Method', 'payments.payment_method'),
                         Spec::col('reference', 'Reference', 'payments.reference_number'),
@@ -324,7 +351,7 @@ class SalesPurchases
                     'filters' => [
                         Spec::dateFilter('from', 'From', 'payments.payment_date', '>='),
                         Spec::dateFilter('to', 'To', 'payments.payment_date', '<='),
-                        Spec::sourceFilter('supplier_id', 'Supplier', 'suppliers', 'id', 'payments.supplier_id'),
+                        Spec::sourceFilter('supplier_ledger_id', 'Supplier', 'ledger_accounts', 'id', 'payments.supplier_ledger_id'),
                     ],
                     'summary' => [
                         Spec::summary('payments', 'Payments', 'count(*)'),
@@ -336,20 +363,23 @@ class SalesPurchases
                 'system-suppliers' => [
                     'label' => 'System Suppliers',
                     'description' => 'The internal vendor records kept alongside the real ones.',
-                    'base' => 'suppliers',
+                    'base' => 'ledger_accounts',
+                    'constraints' => [
+                        ['column' => 'ledger_accounts.party_type', 'operator' => '=', 'value' => 'supplier'],
+                    ],
                     'columns' => [
-                        Spec::col('name', 'Supplier', 'suppliers.name', ['primary' => true]),
-                        Spec::badge('is_system', 'System', 'suppliers.is_system'),
-                        Spec::col('phone', 'Phone', 'suppliers.phone'),
-                        Spec::col('gst_number', 'GST number', 'suppliers.gst_number'),
+                        Spec::col('name', 'Supplier', 'ledger_accounts.name', ['primary' => true]),
+                        Spec::badge('is_system', 'System', 'ledger_accounts.is_system'),
+                        Spec::col('phone', 'Phone', 'ledger_accounts.phone'),
+                        Spec::col('gst_number', 'GST number', 'ledger_accounts.gst_number'),
                     ],
                     'filters' => [
-                        Spec::sourceMultiFilter('is_system', 'System', 'suppliers', 'is_system', 'suppliers.is_system'),
-                        Spec::textFilter('q', 'Search', ['suppliers.name']),
+                        Spec::sourceMultiFilter('is_system', 'System', 'ledger_accounts', 'is_system', 'ledger_accounts.is_system'),
+                        Spec::textFilter('q', 'Search', ['ledger_accounts.name']),
                     ],
                     'summary' => [
                         Spec::summary('total', 'Suppliers', 'count(*)'),
-                        Spec::summary('system', 'System suppliers', 'sum(case when suppliers.is_system = 1 then 1 else 0 end)'),
+                        Spec::summary('system', 'System suppliers', 'sum(case when ledger_accounts.is_system = 1 then 1 else 0 end)'),
                     ],
                     'order' => [Spec::order('name')],
                 ],
@@ -374,13 +404,13 @@ class SalesPurchases
                     'description' => 'Every purchase order, and the supplier it sits with.',
                     'base' => 'purchase_orders',
                     'joins' => [
-                        Spec::join('suppliers', 'purchase_orders.supplier_id', 'suppliers.id'),
+                        Spec::join('ledger_accounts', 'purchase_orders.supplier_ledger_id', 'ledger_accounts.id'),
                         Spec::join('sites', 'purchase_orders.site_id', 'sites.id', 'left', 'site'),
                     ],
                     'columns' => [
                         Spec::col('po_number', 'PO number', 'purchase_orders.po_number', ['primary' => true]),
                         Spec::date('created', 'Raised on', 'purchase_orders.created_at'),
-                        Spec::col('supplier', 'Supplier', 'suppliers.name'),
+                        Spec::col('supplier', 'Supplier', 'ledger_accounts.name'),
                         Spec::col('site', 'Site', 'site.name'),
                         Spec::badge('status', 'Status', 'purchase_orders.status'),
                         Spec::money('total', 'Total', 'purchase_orders.total_amount'),
@@ -390,9 +420,9 @@ class SalesPurchases
                         Spec::dateFilter('from', 'From', 'purchase_orders.created_at', '>='),
                         Spec::dateFilter('to', 'To', 'purchase_orders.created_at', '<='),
                         Spec::sourceMultiFilter('status', 'Status', 'purchase_orders', 'status', 'purchase_orders.status'),
-                        Spec::sourceFilter('supplier_id', 'Supplier', 'suppliers', 'id', 'purchase_orders.supplier_id'),
+                        Spec::sourceFilter('supplier_ledger_id', 'Supplier', 'ledger_accounts', 'id', 'purchase_orders.supplier_ledger_id'),
                         Spec::sourceFilter('site_id', 'Site', 'sites', 'id', 'purchase_orders.site_id'),
-                        Spec::textFilter('q', 'Search', ['purchase_orders.po_number', 'suppliers.name']),
+                        Spec::textFilter('q', 'Search', ['purchase_orders.po_number', 'ledger_accounts.name']),
                     ],
                     'summary' => [
                         Spec::summary('orders', 'Orders', 'count(*)'),
@@ -406,10 +436,10 @@ class SalesPurchases
                     'label' => 'Purchase Orders by Supplier',
                     'description' => 'How much is bought from each supplier.',
                     'base' => 'purchase_orders',
-                    'joins' => [Spec::join('suppliers', 'purchase_orders.supplier_id', 'suppliers.id')],
-                    'group_by' => ['suppliers.id', 'suppliers.name'],
+                    'joins' => [Spec::join('ledger_accounts', 'purchase_orders.supplier_ledger_id', 'ledger_accounts.id')],
+                    'group_by' => ['ledger_accounts.id', 'ledger_accounts.name'],
                     'columns' => [
-                        Spec::col('supplier', 'Supplier', 'suppliers.name', ['primary' => true]),
+                        Spec::col('supplier', 'Supplier', 'ledger_accounts.name', ['primary' => true]),
                         Spec::num('orders', 'Orders', 'count(*)'),
                         Spec::money('total', 'Value', 'sum(purchase_orders.total_amount)'),
                         Spec::money('tax', 'Tax', 'sum(purchase_orders.tax_amount)'),
@@ -420,7 +450,7 @@ class SalesPurchases
                         Spec::dateFilter('to', 'To', 'purchase_orders.created_at', '<='),
                     ],
                     'summary' => [
-                        Spec::summary('suppliers', 'Suppliers', 'count(distinct suppliers.id)'),
+                        Spec::summary('suppliers', 'Suppliers', 'count(distinct ledger_accounts.id)'),
                         Spec::summary('total', 'Total value', 'sum(purchase_orders.total_amount)', 'money'),
                     ],
                     'order' => [Spec::order('total', 'desc')],
@@ -477,7 +507,7 @@ class SalesPurchases
                     'base' => 'purchase_order_items',
                     'joins' => [
                         Spec::join('purchase_orders', 'purchase_order_items.purchase_order_id', 'purchase_orders.id'),
-                        Spec::join('suppliers', 'purchase_orders.supplier_id', 'suppliers.id', 'left', 'supplier'),
+                        Spec::join('ledger_accounts', 'purchase_orders.supplier_ledger_id', 'ledger_accounts.id', 'left', 'supplier'),
                         Spec::join('products', 'purchase_order_items.product_id', 'products.id', 'left', 'product'),
                     ],
                     'columns' => [
@@ -495,7 +525,7 @@ class SalesPurchases
                     'filters' => [
                         Spec::dateFilter('from', 'From', 'purchase_orders.created_at', '>='),
                         Spec::dateFilter('to', 'To', 'purchase_orders.created_at', '<='),
-                        Spec::sourceFilter('supplier_id', 'Supplier', 'suppliers', 'id', 'purchase_orders.supplier_id'),
+                        Spec::sourceFilter('supplier_ledger_id', 'Supplier', 'ledger_accounts', 'id', 'purchase_orders.supplier_ledger_id'),
                         Spec::sourceFilter('product_id', 'Product', 'products', 'id', 'purchase_order_items.product_id'),
                         Spec::textFilter('q', 'Search', ['purchase_orders.po_number', 'products.name', 'purchase_order_items.custom_product_name']),
                     ],
@@ -590,7 +620,7 @@ class SalesPurchases
                     'label' => 'Purchase Quotation Register',
                     'description' => 'Every supplier quotation on the table.',
                     'base' => 'supplier_quotations',
-                    'joins' => [Spec::join('suppliers', 'supplier_quotations.supplier_id', 'suppliers.id', 'left', 'supplier')],
+                    'joins' => [Spec::join('ledger_accounts', 'supplier_quotations.supplier_ledger_id', 'ledger_accounts.id', 'left', 'supplier')],
                     'columns' => [
                         Spec::col('quotation_number', 'Quotation', 'supplier_quotations.quotation_number', ['primary' => true]),
                         Spec::date('created', 'Raised on', 'supplier_quotations.created_at'),
@@ -603,8 +633,8 @@ class SalesPurchases
                         Spec::dateFilter('from', 'From', 'supplier_quotations.created_at', '>='),
                         Spec::dateFilter('to', 'To', 'supplier_quotations.created_at', '<='),
                         Spec::sourceMultiFilter('status', 'Status', 'supplier_quotations', 'status', 'supplier_quotations.status'),
-                        Spec::sourceFilter('supplier_id', 'Supplier', 'suppliers', 'id', 'supplier_quotations.supplier_id'),
-                        Spec::textFilter('q', 'Search', ['supplier_quotations.quotation_number', 'suppliers.name']),
+                        Spec::sourceFilter('supplier_ledger_id', 'Supplier', 'ledger_accounts', 'id', 'supplier_quotations.supplier_ledger_id'),
+                        Spec::textFilter('q', 'Search', ['supplier_quotations.quotation_number', 'ledger_accounts.name']),
                     ],
                     'summary' => [
                         Spec::summary('quotations', 'Quotations', 'count(*)'),
@@ -617,7 +647,7 @@ class SalesPurchases
                     'label' => 'Purchase Quotations by Supplier',
                     'description' => 'Who is quoting, and for how much.',
                     'base' => 'supplier_quotations',
-                    'joins' => [Spec::join('suppliers', 'supplier_quotations.supplier_id', 'suppliers.id', 'left', 'supplier')],
+                    'joins' => [Spec::join('ledger_accounts', 'supplier_quotations.supplier_ledger_id', 'ledger_accounts.id', 'left', 'supplier')],
                     'group_by' => ['supplier.id', 'supplier.name'],
                     'columns' => [
                         Spec::col('supplier', 'Supplier', 'supplier.name', ['primary' => true]),
@@ -712,7 +742,7 @@ class SalesPurchases
                     'label' => 'Purchase Return Register',
                     'description' => 'Everything sent back to a supplier.',
                     'base' => 'purchase_returns',
-                    'joins' => [Spec::join('suppliers', 'purchase_returns.supplier_id', 'suppliers.id', 'left', 'supplier')],
+                    'joins' => [Spec::join('ledger_accounts', 'purchase_returns.supplier_ledger_id', 'ledger_accounts.id', 'left', 'supplier')],
                     'columns' => [
                         Spec::col('return_number', 'Return', 'purchase_returns.return_number', ['primary' => true]),
                         Spec::date('return_date', 'Return date', 'purchase_returns.return_date'),
@@ -725,8 +755,8 @@ class SalesPurchases
                         Spec::dateFilter('from', 'From', 'purchase_returns.return_date', '>='),
                         Spec::dateFilter('to', 'To', 'purchase_returns.return_date', '<='),
                         Spec::sourceMultiFilter('status', 'Status', 'purchase_returns', 'status', 'purchase_returns.status'),
-                        Spec::sourceFilter('supplier_id', 'Supplier', 'suppliers', 'id', 'purchase_returns.supplier_id'),
-                        Spec::textFilter('q', 'Search', ['purchase_returns.return_number', 'suppliers.name']),
+                        Spec::sourceFilter('supplier_ledger_id', 'Supplier', 'ledger_accounts', 'id', 'purchase_returns.supplier_ledger_id'),
+                        Spec::textFilter('q', 'Search', ['purchase_returns.return_number', 'ledger_accounts.name']),
                     ],
                     'summary' => [Spec::summary('returns', 'Returns', 'count(*)')],
                     'order' => [Spec::order('return_date', 'desc')],
@@ -736,7 +766,7 @@ class SalesPurchases
                     'label' => 'Purchase Returns by Supplier',
                     'description' => 'Who gets goods sent back.',
                     'base' => 'purchase_returns',
-                    'joins' => [Spec::join('suppliers', 'purchase_returns.supplier_id', 'suppliers.id', 'left', 'supplier')],
+                    'joins' => [Spec::join('ledger_accounts', 'purchase_returns.supplier_ledger_id', 'ledger_accounts.id', 'left', 'supplier')],
                     'group_by' => ['supplier.id', 'supplier.name'],
                     'columns' => [
                         Spec::col('supplier', 'Supplier', 'supplier.name', ['primary' => true]),
@@ -828,7 +858,7 @@ class SalesPurchases
                     'base' => 'goods_receipt_notes',
                     'joins' => [
                         Spec::join('purchase_orders', 'goods_receipt_notes.purchase_order_id', 'purchase_orders.id', 'left', 'po'),
-                        Spec::join('suppliers', 'purchase_orders.supplier_id', 'suppliers.id', 'left', 'supplier'),
+                        Spec::join('ledger_accounts', 'purchase_orders.supplier_ledger_id', 'ledger_accounts.id', 'left', 'supplier'),
                     ],
                     'columns' => [
                         Spec::col('grn_number', 'GRN', 'goods_receipt_notes.grn_number', ['primary' => true]),
@@ -840,7 +870,7 @@ class SalesPurchases
                     'filters' => [
                         Spec::dateFilter('from', 'From', 'goods_receipt_notes.receipt_date', '>='),
                         Spec::dateFilter('to', 'To', 'goods_receipt_notes.receipt_date', '<='),
-                        Spec::sourceFilter('supplier_id', 'Supplier', 'suppliers', 'id', 'purchase_orders.supplier_id'),
+                        Spec::sourceFilter('supplier_ledger_id', 'Supplier', 'ledger_accounts', 'id', 'purchase_orders.supplier_ledger_id'),
                         Spec::textFilter('q', 'Search', ['goods_receipt_notes.grn_number', 'po.po_number']),
                     ],
                     'summary' => [Spec::summary('receipts', 'Receipts', 'count(*)')],
@@ -881,7 +911,7 @@ class SalesPurchases
                     'joins' => [
                         Spec::join('goods_receipt_notes', 'grn_items.goods_receipt_note_id', 'goods_receipt_notes.id'),
                         Spec::join('purchase_orders', 'goods_receipt_notes.purchase_order_id', 'purchase_orders.id', 'left', 'po'),
-                        Spec::join('suppliers', 'purchase_orders.supplier_id', 'suppliers.id', 'left', 'supplier'),
+                        Spec::join('ledger_accounts', 'purchase_orders.supplier_ledger_id', 'ledger_accounts.id', 'left', 'supplier'),
                     ],
                     'group_by' => ['supplier.id', 'supplier.name'],
                     'columns' => [
@@ -925,7 +955,7 @@ class SalesPurchases
                     'base' => 'purchase_order_items',
                     'joins' => [
                         Spec::join('purchase_orders', 'purchase_order_items.purchase_order_id', 'purchase_orders.id'),
-                        Spec::join('suppliers', 'purchase_orders.supplier_id', 'suppliers.id', 'left', 'supplier'),
+                        Spec::join('ledger_accounts', 'purchase_orders.supplier_ledger_id', 'ledger_accounts.id', 'left', 'supplier'),
                     ],
                     'group_by' => ['purchase_orders.id', 'purchase_orders.po_number'],
                     'columns' => [
@@ -937,7 +967,7 @@ class SalesPurchases
                         Spec::badge('status', 'Status', 'purchase_orders.status'),
                     ],
                     'filters' => [
-                        Spec::sourceFilter('supplier_id', 'Supplier', 'suppliers', 'id', 'purchase_orders.supplier_id'),
+                        Spec::sourceFilter('supplier_ledger_id', 'Supplier', 'ledger_accounts', 'id', 'purchase_orders.supplier_ledger_id'),
                     ],
                     'summary' => [
                         Spec::summary('orders', 'Orders', 'count(distinct purchase_orders.id)'),
@@ -1015,7 +1045,7 @@ class SalesPurchases
                     'joins' => [
                         Spec::join('delivery_notes', 'delivery_note_items.delivery_note_id', 'delivery_notes.id'),
                         Spec::join('sales_orders', 'delivery_notes.sales_order_id', 'sales_orders.id', 'left', 'so'),
-                        Spec::join('customers', 'sales_orders.customer_id', 'customers.id', 'left', 'customer'),
+                        Spec::join('ledger_accounts', 'sales_orders.customer_ledger_id', 'ledger_accounts.id', 'left', 'customer'),
                     ],
                     'group_by' => ['customer.id', 'customer.name'],
                     'columns' => [
@@ -1058,7 +1088,7 @@ class SalesPurchases
                     'base' => 'sales_order_items',
                     'joins' => [
                         Spec::join('sales_orders', 'sales_order_items.sales_order_id', 'sales_orders.id'),
-                        Spec::join('customers', 'sales_orders.customer_id', 'customers.id', 'left', 'customer'),
+                        Spec::join('ledger_accounts', 'sales_orders.customer_ledger_id', 'ledger_accounts.id', 'left', 'customer'),
                     ],
                     'group_by' => ['sales_orders.id', 'sales_orders.so_number'],
                     'columns' => [
@@ -1070,7 +1100,7 @@ class SalesPurchases
                         Spec::badge('status', 'Status', 'sales_orders.status'),
                     ],
                     'filters' => [
-                        Spec::sourceFilter('customer_id', 'Customer', 'customers', 'id', 'sales_orders.customer_id'),
+                        Spec::sourceFilter('customer_ledger_id', 'Customer', 'ledger_accounts', 'id', 'sales_orders.customer_ledger_id'),
                     ],
                     'summary' => [
                         Spec::summary('orders', 'Orders', 'count(distinct sales_orders.id)'),
@@ -1099,13 +1129,13 @@ class SalesPurchases
                     'description' => 'Every sales order, and the customer it sits with.',
                     'base' => 'sales_orders',
                     'joins' => [
-                        Spec::join('customers', 'sales_orders.customer_id', 'customers.id'),
+                        Spec::join('ledger_accounts', 'sales_orders.customer_ledger_id', 'ledger_accounts.id'),
                         Spec::join('sites', 'sales_orders.site_id', 'sites.id', 'left', 'site'),
                     ],
                     'columns' => [
                         Spec::col('so_number', 'SO number', 'sales_orders.so_number', ['primary' => true]),
                         Spec::date('created', 'Raised on', 'sales_orders.created_at'),
-                        Spec::col('customer', 'Customer', 'customers.name'),
+                        Spec::col('customer', 'Customer', 'ledger_accounts.name'),
                         Spec::col('site', 'Site', 'site.name'),
                         Spec::badge('status', 'Status', 'sales_orders.status'),
                         Spec::money('total', 'Total', 'sales_orders.total_amount'),
@@ -1116,9 +1146,9 @@ class SalesPurchases
                         Spec::dateFilter('from', 'From', 'sales_orders.created_at', '>='),
                         Spec::dateFilter('to', 'To', 'sales_orders.created_at', '<='),
                         Spec::sourceMultiFilter('status', 'Status', 'sales_orders', 'status', 'sales_orders.status'),
-                        Spec::sourceFilter('customer_id', 'Customer', 'customers', 'id', 'sales_orders.customer_id'),
+                        Spec::sourceFilter('customer_ledger_id', 'Customer', 'ledger_accounts', 'id', 'sales_orders.customer_ledger_id'),
                         Spec::sourceFilter('site_id', 'Site', 'sites', 'id', 'sales_orders.site_id'),
-                        Spec::textFilter('q', 'Search', ['sales_orders.so_number', 'customers.name']),
+                        Spec::textFilter('q', 'Search', ['sales_orders.so_number', 'ledger_accounts.name']),
                     ],
                     'summary' => [
                         Spec::summary('orders', 'Orders', 'count(*)'),
@@ -1132,10 +1162,10 @@ class SalesPurchases
                     'label' => 'Sales Orders by Customer',
                     'description' => 'Who is buying, and for how much.',
                     'base' => 'sales_orders',
-                    'joins' => [Spec::join('customers', 'sales_orders.customer_id', 'customers.id')],
-                    'group_by' => ['customers.id', 'customers.name'],
+                    'joins' => [Spec::join('ledger_accounts', 'sales_orders.customer_ledger_id', 'ledger_accounts.id')],
+                    'group_by' => ['ledger_accounts.id', 'ledger_accounts.name'],
                     'columns' => [
-                        Spec::col('customer', 'Customer', 'customers.name', ['primary' => true]),
+                        Spec::col('customer', 'Customer', 'ledger_accounts.name', ['primary' => true]),
                         Spec::num('orders', 'Orders', 'count(*)'),
                         Spec::money('total', 'Value', 'sum(sales_orders.total_amount)'),
                         Spec::money('tax', 'Tax', 'sum(sales_orders.tax_amount)'),
@@ -1146,7 +1176,7 @@ class SalesPurchases
                         Spec::dateFilter('to', 'To', 'sales_orders.created_at', '<='),
                     ],
                     'summary' => [
-                        Spec::summary('customers', 'Customers', 'count(distinct customers.id)'),
+                        Spec::summary('customers', 'Customers', 'count(distinct ledger_accounts.id)'),
                         Spec::summary('total', 'Total value', 'sum(sales_orders.total_amount)', 'money'),
                     ],
                     'order' => [Spec::order('total', 'desc')],
@@ -1203,7 +1233,7 @@ class SalesPurchases
                     'base' => 'sales_order_items',
                     'joins' => [
                         Spec::join('sales_orders', 'sales_order_items.sales_order_id', 'sales_orders.id'),
-                        Spec::join('customers', 'sales_orders.customer_id', 'customers.id', 'left', 'customer'),
+                        Spec::join('ledger_accounts', 'sales_orders.customer_ledger_id', 'ledger_accounts.id', 'left', 'customer'),
                         Spec::join('products', 'sales_order_items.product_id', 'products.id', 'left', 'product'),
                     ],
                     'columns' => [
@@ -1221,7 +1251,7 @@ class SalesPurchases
                     'filters' => [
                         Spec::dateFilter('from', 'From', 'sales_orders.created_at', '>='),
                         Spec::dateFilter('to', 'To', 'sales_orders.created_at', '<='),
-                        Spec::sourceFilter('customer_id', 'Customer', 'customers', 'id', 'sales_orders.customer_id'),
+                        Spec::sourceFilter('customer_ledger_id', 'Customer', 'ledger_accounts', 'id', 'sales_orders.customer_ledger_id'),
                         Spec::sourceFilter('product_id', 'Product', 'products', 'id', 'sales_order_items.product_id'),
                         Spec::textFilter('q', 'Search', ['sales_orders.so_number', 'products.name', 'sales_order_items.custom_product_name']),
                     ],
@@ -1316,7 +1346,7 @@ class SalesPurchases
                     'label' => 'Sales Quotation Register',
                     'description' => 'Every quotation sent out.',
                     'base' => 'customer_quotations',
-                    'joins' => [Spec::join('customers', 'customer_quotations.customer_id', 'customers.id', 'left', 'customer')],
+                    'joins' => [Spec::join('ledger_accounts', 'customer_quotations.customer_ledger_id', 'ledger_accounts.id', 'left', 'customer')],
                     'columns' => [
                         Spec::col('quotation_number', 'Quotation', 'customer_quotations.quotation_number', ['primary' => true]),
                         Spec::date('created', 'Raised on', 'customer_quotations.created_at'),
@@ -1330,8 +1360,8 @@ class SalesPurchases
                         Spec::dateFilter('from', 'From', 'customer_quotations.created_at', '>='),
                         Spec::dateFilter('to', 'To', 'customer_quotations.created_at', '<='),
                         Spec::sourceMultiFilter('status', 'Status', 'customer_quotations', 'status', 'customer_quotations.status'),
-                        Spec::sourceFilter('customer_id', 'Customer', 'customers', 'id', 'customer_quotations.customer_id'),
-                        Spec::textFilter('q', 'Search', ['customer_quotations.quotation_number', 'customers.name']),
+                        Spec::sourceFilter('customer_ledger_id', 'Customer', 'ledger_accounts', 'id', 'customer_quotations.customer_ledger_id'),
+                        Spec::textFilter('q', 'Search', ['customer_quotations.quotation_number', 'ledger_accounts.name']),
                     ],
                     'summary' => [
                         Spec::summary('quotations', 'Quotations', 'count(*)'),
@@ -1344,7 +1374,7 @@ class SalesPurchases
                     'label' => 'Sales Quotations by Customer',
                     'description' => 'Who has been quoted, and for how much.',
                     'base' => 'customer_quotations',
-                    'joins' => [Spec::join('customers', 'customer_quotations.customer_id', 'customers.id', 'left', 'customer')],
+                    'joins' => [Spec::join('ledger_accounts', 'customer_quotations.customer_ledger_id', 'ledger_accounts.id', 'left', 'customer')],
                     'group_by' => ['customer.id', 'customer.name'],
                     'columns' => [
                         Spec::col('customer', 'Customer', 'customer.name', ['primary' => true]),
@@ -1440,7 +1470,7 @@ class SalesPurchases
                     'label' => 'Sales Return Register',
                     'description' => 'Everything that came back from a customer.',
                     'base' => 'sales_returns',
-                    'joins' => [Spec::join('customers', 'sales_returns.customer_id', 'customers.id', 'left', 'customer')],
+                    'joins' => [Spec::join('ledger_accounts', 'sales_returns.customer_ledger_id', 'ledger_accounts.id', 'left', 'customer')],
                     'columns' => [
                         Spec::col('return_number', 'Return', 'sales_returns.return_number', ['primary' => true]),
                         Spec::date('return_date', 'Return date', 'sales_returns.return_date'),
@@ -1453,8 +1483,8 @@ class SalesPurchases
                         Spec::dateFilter('from', 'From', 'sales_returns.return_date', '>='),
                         Spec::dateFilter('to', 'To', 'sales_returns.return_date', '<='),
                         Spec::sourceMultiFilter('status', 'Status', 'sales_returns', 'status', 'sales_returns.status'),
-                        Spec::sourceFilter('customer_id', 'Customer', 'customers', 'id', 'sales_returns.customer_id'),
-                        Spec::textFilter('q', 'Search', ['sales_returns.return_number', 'customers.name']),
+                        Spec::sourceFilter('customer_ledger_id', 'Customer', 'ledger_accounts', 'id', 'sales_returns.customer_ledger_id'),
+                        Spec::textFilter('q', 'Search', ['sales_returns.return_number', 'ledger_accounts.name']),
                     ],
                     'summary' => [Spec::summary('returns', 'Returns', 'count(*)')],
                     'order' => [Spec::order('return_date', 'desc')],
@@ -1464,7 +1494,7 @@ class SalesPurchases
                     'label' => 'Sales Returns by Customer',
                     'description' => 'Which customers send goods back.',
                     'base' => 'sales_returns',
-                    'joins' => [Spec::join('customers', 'sales_returns.customer_id', 'customers.id', 'left', 'customer')],
+                    'joins' => [Spec::join('ledger_accounts', 'sales_returns.customer_ledger_id', 'ledger_accounts.id', 'left', 'customer')],
                     'group_by' => ['customer.id', 'customer.name'],
                     'columns' => [
                         Spec::col('customer', 'Customer', 'customer.name', ['primary' => true]),
@@ -1554,7 +1584,7 @@ class SalesPurchases
                     'label' => 'Invoice Register',
                     'description' => 'Every invoice raised, and how it stands.',
                     'base' => 'invoices',
-                    'joins' => [Spec::join('customers', 'invoices.customer_id', 'customers.id', 'left', 'customer')],
+                    'joins' => [Spec::join('ledger_accounts', 'invoices.customer_ledger_id', 'ledger_accounts.id', 'left', 'customer')],
                     'columns' => [
                         Spec::col('invoice_number', 'Invoice', 'invoices.invoice_number', ['primary' => true]),
                         Spec::date('issue_date', 'Issued on', 'invoices.issue_date'),
@@ -1570,8 +1600,8 @@ class SalesPurchases
                         Spec::dateFilter('from', 'Issued from', 'invoices.issue_date', '>='),
                         Spec::dateFilter('to', 'Issued to', 'invoices.issue_date', '<='),
                         Spec::sourceMultiFilter('status', 'Status', 'invoices', 'status', 'invoices.status'),
-                        Spec::sourceFilter('customer_id', 'Customer', 'customers', 'id', 'invoices.customer_id'),
-                        Spec::textFilter('q', 'Search', ['invoices.invoice_number', 'customers.name']),
+                        Spec::sourceFilter('customer_ledger_id', 'Customer', 'ledger_accounts', 'id', 'invoices.customer_ledger_id'),
+                        Spec::textFilter('q', 'Search', ['invoices.invoice_number', 'ledger_accounts.name']),
                     ],
                     'summary' => [
                         Spec::summary('invoices', 'Invoices', 'count(*)'),
@@ -1585,7 +1615,7 @@ class SalesPurchases
                     'label' => 'Invoices by Customer',
                     'description' => 'What each customer has been billed.',
                     'base' => 'invoices',
-                    'joins' => [Spec::join('customers', 'invoices.customer_id', 'customers.id', 'left', 'customer')],
+                    'joins' => [Spec::join('ledger_accounts', 'invoices.customer_ledger_id', 'ledger_accounts.id', 'left', 'customer')],
                     'group_by' => ['customer.id', 'customer.name'],
                     'columns' => [
                         Spec::col('customer', 'Customer', 'customer.name', ['primary' => true]),
@@ -1629,7 +1659,7 @@ class SalesPurchases
                     'label' => 'Invoice Ageing',
                     'description' => 'Who owes what, and for how long it has been outstanding.',
                     'base' => 'invoices',
-                    'joins' => [Spec::join('customers', 'invoices.customer_id', 'customers.id', 'left', 'customer')],
+                    'joins' => [Spec::join('ledger_accounts', 'invoices.customer_ledger_id', 'ledger_accounts.id', 'left', 'customer')],
                     'group_by' => ['customer.id', 'customer.name'],
                     'columns' => [
                         Spec::col('customer', 'Customer', 'customer.name', ['primary' => true]),
@@ -1702,7 +1732,7 @@ class SalesPurchases
                     'base' => 'invoice_items',
                     'joins' => [
                         Spec::join('invoices', 'invoice_items.invoice_id', 'invoices.id'),
-                        Spec::join('customers', 'invoices.customer_id', 'customers.id', 'left', 'customer'),
+                        Spec::join('ledger_accounts', 'invoices.customer_ledger_id', 'ledger_accounts.id', 'left', 'customer'),
                         Spec::join('products', 'invoice_items.product_id', 'products.id', 'left', 'product'),
                     ],
                     'columns' => [
@@ -1719,7 +1749,7 @@ class SalesPurchases
                     'filters' => [
                         Spec::dateFilter('from', 'Issued from', 'invoices.issue_date', '>='),
                         Spec::dateFilter('to', 'Issued to', 'invoices.issue_date', '<='),
-                        Spec::sourceFilter('customer_id', 'Customer', 'customers', 'id', 'invoices.customer_id'),
+                        Spec::sourceFilter('customer_ledger_id', 'Customer', 'ledger_accounts', 'id', 'invoices.customer_ledger_id'),
                         Spec::sourceFilter('product_id', 'Product', 'products', 'id', 'invoice_items.product_id'),
                         Spec::textFilter('q', 'Search', ['invoices.invoice_number', 'products.name', 'invoice_items.item_description']),
                     ],
@@ -1735,7 +1765,7 @@ class SalesPurchases
                     'label' => 'Outstanding Invoices',
                     'description' => 'The invoices that have not been paid in full.',
                     'base' => 'invoices',
-                    'joins' => [Spec::join('customers', 'invoices.customer_id', 'customers.id', 'left', 'customer')],
+                    'joins' => [Spec::join('ledger_accounts', 'invoices.customer_ledger_id', 'ledger_accounts.id', 'left', 'customer')],
                     'constraints' => [
                         ['column' => 'coalesce(invoices.grand_total, 0) - coalesce(invoices.paid_amount, 0)', 'operator' => '>', 'value' => 0],
                     ],
@@ -1752,7 +1782,7 @@ class SalesPurchases
                     'filters' => [
                         Spec::dateFilter('from', 'Issued from', 'invoices.issue_date', '>='),
                         Spec::dateFilter('to', 'Issued to', 'invoices.issue_date', '<='),
-                        Spec::sourceFilter('customer_id', 'Customer', 'customers', 'id', 'invoices.customer_id'),
+                        Spec::sourceFilter('customer_ledger_id', 'Customer', 'ledger_accounts', 'id', 'invoices.customer_ledger_id'),
                     ],
                     'summary' => [
                         Spec::summary('invoices', 'Invoices', 'count(*)'),
@@ -1872,7 +1902,7 @@ class SalesPurchases
                     'label' => 'Payments by Customer',
                     'description' => 'Who paid, and how much.',
                     'base' => 'payments',
-                    'joins' => [Spec::join('customers', 'payments.customer_id', 'customers.id', 'left', 'customer')],
+                    'joins' => [Spec::join('ledger_accounts', 'payments.customer_ledger_id', 'ledger_accounts.id', 'left', 'customer')],
                     'group_by' => ['customer.id', 'customer.name'],
                     'columns' => [
                         Spec::col('customer', 'Customer', 'customer.name', ['primary' => true]),
@@ -1895,7 +1925,7 @@ class SalesPurchases
                     'label' => 'Payments by Supplier',
                     'description' => 'Who was paid, and how much.',
                     'base' => 'payments',
-                    'joins' => [Spec::join('suppliers', 'payments.supplier_id', 'suppliers.id', 'left', 'supplier')],
+                    'joins' => [Spec::join('ledger_accounts', 'payments.supplier_ledger_id', 'ledger_accounts.id', 'left', 'supplier')],
                     'group_by' => ['supplier.id', 'supplier.name'],
                     'columns' => [
                         Spec::col('supplier', 'Supplier', 'supplier.name', ['primary' => true]),

@@ -374,7 +374,7 @@ class VoucherTest extends TestCase
         // A stand-in for the legacy invoice register this slice still reads from.
         Schema::create('invoices', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('customer_id')->nullable();
+            $table->unsignedBigInteger('customer_ledger_id')->nullable();
             $table->string('invoice_number');
             $table->string('status')->default('Unpaid');
             $table->date('issue_date')->nullable();
@@ -393,9 +393,9 @@ class VoucherTest extends TestCase
         ]);
 
         DB::table('invoices')->insert([
-            ['customer_id' => 7, 'invoice_number' => 'INV-1', 'status' => 'Unpaid', 'grand_total' => 1000, 'paid_amount' => 0],
-            ['customer_id' => 99, 'invoice_number' => 'INV-OTHER', 'status' => 'Unpaid', 'grand_total' => 500, 'paid_amount' => 0],
-            ['customer_id' => 7, 'invoice_number' => 'INV-CANCELLED', 'status' => 'Cancelled', 'grand_total' => 300, 'paid_amount' => 0],
+            ['customer_ledger_id' => $ledger->id, 'invoice_number' => 'INV-1', 'status' => 'Unpaid', 'grand_total' => 1000, 'paid_amount' => 0],
+            ['customer_ledger_id' => 99, 'invoice_number' => 'INV-OTHER', 'status' => 'Unpaid', 'grand_total' => 500, 'paid_amount' => 0],
+            ['customer_ledger_id' => $ledger->id, 'invoice_number' => 'INV-CANCELLED', 'status' => 'Cancelled', 'grand_total' => 300, 'paid_amount' => 0],
         ]);
 
         // Only the party's own, non-cancelled invoice counts.

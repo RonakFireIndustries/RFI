@@ -48,6 +48,8 @@ class LedgerAccountController extends Controller
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
                     ->orWhere('gst_number', 'like', "%{$search}%")
                     ->orWhere('bank_account_number', 'like', "%{$search}%");
             });
@@ -133,6 +135,10 @@ class LedgerAccountController extends Controller
                 'required', 'string', 'max:255',
                 Rule::unique('ledger_accounts', 'name')->ignore($ignoreId),
             ],
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:50',
+            'address' => 'nullable|string',
+            'credit_days' => 'nullable|integer|min:0|max:365',
             'group_id' => 'required|integer|exists:account_groups,id',
             'opening_balance' => 'nullable|numeric|min:0',
             'opening_type' => ['nullable', Rule::in(['Dr', 'Cr'])],

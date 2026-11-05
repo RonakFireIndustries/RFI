@@ -665,7 +665,7 @@ class Finance
     private static function cashVouchers(): array
     {
         $employee = Spec::join('employees', 'cash_vouchers.employee_id', 'employees.id');
-        $supplier = Spec::join('suppliers', 'cash_vouchers.supplier_id', 'suppliers.id');
+        $supplier = Spec::join('ledger_accounts', 'cash_vouchers.supplier_ledger_id', 'ledger_accounts.id');
         $site = Spec::join('sites', 'cash_vouchers.site_id', 'sites.id');
 
         return [
@@ -815,13 +815,13 @@ class Finance
 
                 'supplier-payments' => [
                     'label' => 'Cash Payments to Suppliers',
-                    'description' => 'Petty-cash payments made out to suppliers.',
+                    'description' => 'Petty-cash payments made out to ledger_accounts.',
                     'base' => 'cash_vouchers',
                     'joins' => [$supplier],
                     'columns' => [
                         Spec::col('voucher_no', 'Voucher', 'cash_vouchers.voucher_no'),
                         Spec::date('voucher_date', 'Date', 'cash_vouchers.voucher_date'),
-                        Spec::col('supplier', 'Supplier', 'suppliers.name', ['primary' => true]),
+                        Spec::col('supplier', 'Supplier', 'ledger_accounts.name', ['primary' => true]),
                         Spec::col('purpose', 'Purpose', 'cash_vouchers.purpose'),
                         Spec::money('amount', 'Amount', 'cash_vouchers.amount'),
                         Spec::col('reference_no', 'Reference', 'cash_vouchers.reference_no'),
@@ -829,7 +829,7 @@ class Finance
                     'filters' => [
                         Spec::dateFilter('from', 'From', 'cash_vouchers.voucher_date', '>='),
                         Spec::dateFilter('to', 'To', 'cash_vouchers.voucher_date', '<='),
-                        Spec::textFilter('q', 'Search', ['suppliers.name', 'cash_vouchers.paid_to']),
+                        Spec::textFilter('q', 'Search', ['ledger_accounts.name', 'cash_vouchers.paid_to']),
                     ],
                     'summary' => [
                         Spec::summary('payments', 'Payments', 'count(*)'),
@@ -1107,7 +1107,7 @@ class Finance
 
                 'payables' => [
                     'label' => 'Payables by Party',
-                    'description' => 'What the company owes its suppliers.',
+                    'description' => 'What the company owes its ledger_accounts.',
                     'base' => 'ledger_accounts',
                     'joins' => [$group = Spec::join('account_groups', 'ledger_accounts.group_id', 'account_groups.id')],
                     'constraints' => [

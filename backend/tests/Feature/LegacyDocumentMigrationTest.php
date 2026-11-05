@@ -2,13 +2,11 @@
 
 namespace Tests\Feature;
 
-use App\Models\Customer;
+use App\Models\AccountGroup;
 use App\Models\LedgerAccount;
-use App\Models\Supplier;
 use App\Models\User;
 use App\Models\Voucher;
 use App\Services\Accounting\LegacyDocumentMigrator;
-use App\Services\Accounting\PartyLedgerService;
 use App\Services\Accounting\PartyOutstandingService;
 use App\Services\Accounting\VoucherService;
 use Database\Seeders\ChartOfAccountsSeeder;
@@ -45,8 +43,8 @@ class LegacyDocumentMigrationTest extends TestCase
         '2026_10_17_000008_add_document_totals_to_vouchers_table.php',
         '2026_10_21_000002_add_bill_level_tax_discount_to_vouchers.php',
         '2026_10_19_000001_add_due_date_to_vouchers.php',
-        '2026_10_19_000002_add_credit_days_to_parties.php',
         '2026_11_03_000001_add_unit_tracking_to_stock_documents.php',
+        '2026_11_03_000002_add_base_quantity_to_voucher_items.php',
     ];
 
     private const LINK_MIGRATION = '2026_10_18_000001_add_accounting_voucher_to_legacy_documents.php';
@@ -75,31 +73,11 @@ class LegacyDocumentMigrationTest extends TestCase
 
     private function legacySchema(): void
     {
-        Schema::create('customers', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('email')->nullable();
-            $table->string('phone')->nullable();
-            $table->string('gst_number')->nullable();
-            $table->text('address')->nullable();
-            $table->timestamps();
-        });
-
-        Schema::create('suppliers', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('email')->nullable();
-            $table->string('phone')->nullable();
-            $table->string('gst_number')->nullable();
-            $table->text('address')->nullable();
-            $table->timestamps();
-        });
-
         Schema::create('invoices', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('sales_order_id')->nullable();
             $table->string('invoice_number')->unique();
-            $table->unsignedBigInteger('customer_id')->nullable();
+            $table->unsignedBigInteger('customer_ledger_id')->nullable();
             $table->date('issue_date')->nullable();
             $table->date('due_date')->nullable();
             $table->decimal('total_amount', 15, 2)->default(0);
@@ -132,7 +110,7 @@ class LegacyDocumentMigrationTest extends TestCase
 
         Schema::create('purchase_orders', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('supplier_id')->nullable();
+            $table->unsignedBigInteger('supplier_ledger_id')->nullable();
             $table->string('po_number')->nullable();
             $table->decimal('total_amount', 15, 2)->default(0);
             $table->decimal('tax_amount', 15, 2)->default(0);
@@ -171,22 +149,30 @@ class LegacyDocumentMigrationTest extends TestCase
 
     /* -------------------------------- fixtures ---------------------------- */
 
+    /**
+     * A party ledger, the only representation of a customer now. The chart
+     * seeder has already created the Sundry Debtors / Creditors groups.
+     */
     private function customer(string $name = 'Acme Corp'): int
     {
-        return DB::table('customers')->insertGetId([
-            'name' => $name,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        return $this->partyLedger($name, 'customer', 'Sundry Debtors');
     }
 
     private function supplier(string $name = 'Gamma Mills'): int
     {
-        return DB::table('suppliers')->insertGetId([
+        return $this->partyLedger($name, 'supplier', 'Sundry Creditors');
+    }
+
+    private function partyLedger(string $name, string $partyType, string $groupName): int
+    {
+        $group = AccountGroup::where('name', $groupName)->firstOrFail();
+
+        return LedgerAccount::create([
             'name' => $name,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+            'group_id' => $group->id,
+            'party_type' => $partyType,
+            'status' => 'active',
+        ])->id;
     }
 
     /**
@@ -197,7 +183,7 @@ class LegacyDocumentMigrationTest extends TestCase
     {
         $id = DB::table('invoices')->insertGetId(array_merge([
             'invoice_number' => 'INV-' . str_pad((string) random_int(1, 99999), 5, '0', STR_PAD_LEFT),
-            'customer_id' => null,
+            'customer_ledger_id' => null,
             'issue_date' => '2026-05-01',
             'due_date' => '2026-05-31',
             'total_amount' => 0,
@@ -235,7 +221,7 @@ class LegacyDocumentMigrationTest extends TestCase
     private function purchaseOrder(array $attributes = [], array $items = []): int
     {
         $id = DB::table('purchase_orders')->insertGetId(array_merge([
-            'supplier_id' => null,
+            'supplier_ledger_id' => null,
             'po_number' => 'PO-' . str_pad((string) random_int(1, 99999), 5, '0', STR_PAD_LEFT),
             'total_amount' => 0,
             'tax_amount' => 0,
@@ -268,12 +254,12 @@ class LegacyDocumentMigrationTest extends TestCase
 
     private function linkCustomer(int $id): LedgerAccount
     {
-        return app(PartyLedgerService::class)->ensure(Customer::findOrFail($id));
+        return LedgerAccount::findOrFail($id);
     }
 
     private function linkSupplier(int $id): LedgerAccount
     {
-        return app(PartyLedgerService::class)->ensure(Supplier::findOrFail($id));
+        return LedgerAccount::findOrFail($id);
     }
 
     private function outstanding(LedgerAccount $ledger): array
@@ -308,7 +294,7 @@ class LegacyDocumentMigrationTest extends TestCase
         $customerId = $this->customer();
         $invoiceId = $this->invoice([
             'invoice_number' => 'INV-001',
-            'customer_id' => $customerId,
+            'customer_ledger_id' => $customerId,
             'subtotal' => 200,
             'cgst_total' => 18,
             'sgst_total' => 18,
@@ -356,7 +342,7 @@ class LegacyDocumentMigrationTest extends TestCase
     {
         $customerId = $this->customer();
         $this->invoice([
-            'customer_id' => $customerId,
+            'customer_ledger_id' => $customerId,
             'subtotal' => 1000,
             'igst_total' => 180,
             'grand_total' => 1180,
@@ -381,7 +367,7 @@ class LegacyDocumentMigrationTest extends TestCase
     {
         $customerId = $this->customer();
         $this->invoice([
-            'customer_id' => $customerId,
+            'customer_ledger_id' => $customerId,
             'subtotal' => 180,
             'cgst_total' => 16.2,
             'sgst_total' => 16.2,
@@ -406,7 +392,7 @@ class LegacyDocumentMigrationTest extends TestCase
         // what the customer was billed, so the voucher is worth 120.
         $customerId = $this->customer();
         $this->invoice([
-            'customer_id' => $customerId,
+            'customer_ledger_id' => $customerId,
             'subtotal' => 100,
             'cgst_total' => 9,
             'sgst_total' => 9,
@@ -428,7 +414,7 @@ class LegacyDocumentMigrationTest extends TestCase
     {
         $customerId = $this->customer();
         $this->invoice([
-            'customer_id' => $customerId,
+            'customer_ledger_id' => $customerId,
             'subtotal' => 500,
             'cgst_total' => 45,
             'sgst_total' => 45,
@@ -448,7 +434,7 @@ class LegacyDocumentMigrationTest extends TestCase
     {
         $customerId = $this->customer();
         $invoiceId = $this->invoice([
-            'customer_id' => $customerId,
+            'customer_ledger_id' => $customerId,
             'status' => 'Cancelled',
             'subtotal' => 100,
             'grand_total' => 100,
@@ -466,9 +452,9 @@ class LegacyDocumentMigrationTest extends TestCase
 
     public function test_an_invoice_with_no_customer_is_reported_not_fatal(): void
     {
-        $this->invoice(['customer_id' => null, 'subtotal' => 100, 'grand_total' => 100]);
+        $this->invoice(['customer_ledger_id' => null, 'subtotal' => 100, 'grand_total' => 100]);
         $customerId = $this->customer();
-        $this->invoice(['customer_id' => $customerId, 'subtotal' => 50, 'grand_total' => 50]);
+        $this->invoice(['customer_ledger_id' => $customerId, 'subtotal' => 50, 'grand_total' => 50]);
 
         $summary = $this->migrate();
 
@@ -484,7 +470,7 @@ class LegacyDocumentMigrationTest extends TestCase
         $supplierId = $this->supplier();
         $this->purchaseOrder([
             'po_number' => 'PO-9',
-            'supplier_id' => $supplierId,
+            'supplier_ledger_id' => $supplierId,
             'total_amount' => 200,
             'tax_amount' => 36,
             'gst_type' => 'cgst',
@@ -510,11 +496,11 @@ class LegacyDocumentMigrationTest extends TestCase
         $this->assertSame(['type' => 'Dr', 'amount' => 18.0], $entries['SGST']);
     }
 
-    public function test_a_purchase_order_migrates_a_per_line_gst_rate(): void
+    public function test_a_purchase_order_migrates_mixed_rated_lines_at_their_effective_gst_rate(): void
     {
         $supplierId = $this->supplier();
         $this->purchaseOrder([
-            'supplier_id' => $supplierId,
+            'supplier_ledger_id' => $supplierId,
             'total_amount' => 300,
             'tax_amount' => 18,
         ], [
@@ -526,9 +512,12 @@ class LegacyDocumentMigrationTest extends TestCase
 
         $voucher = Voucher::where('voucher_type', 'purchase')->firstOrFail();
         $this->assertEquals(318.0, round((float) $voucher->amount, 2));
+        $this->assertEquals(18.0, round((float) $voucher->tax_total, 2));
 
+        // The engine carries one bill-level rate (18 / 300 = 6%), stamped on
+        // every line so the line columns add up to the document total.
         $rates = $voucher->items()->orderBy('line_no')->pluck('tax_rate')->map(fn ($r) => round((float) $r, 2))->all();
-        $this->assertSame([18.0, 0.0], $rates);
+        $this->assertSame([6.0, 6.0], $rates);
     }
 
     /**
@@ -541,14 +530,14 @@ class LegacyDocumentMigrationTest extends TestCase
     {
         $supplierId = $this->supplier();
         $this->purchaseOrder([
-            'supplier_id' => $supplierId,
+            'supplier_ledger_id' => $supplierId,
             'total_amount' => 200,
             'tax_amount' => 36,
         ], [
             ['quantity' => 2, 'unit_cost' => 100, 'gst_rate' => 18],
         ]);
         $this->purchaseOrder([
-            'supplier_id' => $supplierId,
+            'supplier_ledger_id' => $supplierId,
             'total_amount' => 300,
             'tax_amount' => 0,
         ], [
@@ -569,7 +558,7 @@ class LegacyDocumentMigrationTest extends TestCase
     {
         $supplierId = $this->supplier();
         $this->purchaseOrder([
-            'supplier_id' => $supplierId,
+            'supplier_ledger_id' => $supplierId,
             'total_amount' => 400,
             'tax_amount' => 72,
         ]);
@@ -585,7 +574,7 @@ class LegacyDocumentMigrationTest extends TestCase
     {
         $supplierId = $this->supplier();
         $this->purchaseOrder([
-            'supplier_id' => $supplierId,
+            'supplier_ledger_id' => $supplierId,
             'total_amount' => 100,
             'tax_amount' => 0,
             'shipping_cost' => 50,
@@ -607,7 +596,7 @@ class LegacyDocumentMigrationTest extends TestCase
     {
         $customerId = $this->customer();
         $this->invoice([
-            'customer_id' => $customerId,
+            'customer_ledger_id' => $customerId,
             'subtotal' => 1000,
             'cgst_total' => 90,
             'sgst_total' => 90,
@@ -637,7 +626,7 @@ class LegacyDocumentMigrationTest extends TestCase
     {
         $supplierId = $this->supplier();
         $poId = $this->purchaseOrder([
-            'supplier_id' => $supplierId,
+            'supplier_ledger_id' => $supplierId,
             'total_amount' => 500,
             'tax_amount' => 0,
         ], [
@@ -668,7 +657,7 @@ class LegacyDocumentMigrationTest extends TestCase
     {
         $customerId = $this->customer();
         $this->invoice([
-            'customer_id' => $customerId,
+            'customer_ledger_id' => $customerId,
             'subtotal' => 1000,
             'cgst_total' => 90,
             'sgst_total' => 90,
@@ -679,7 +668,7 @@ class LegacyDocumentMigrationTest extends TestCase
             ['quantity' => 1, 'unit_price' => 1000],
         ]);
         $this->invoice([
-            'customer_id' => $customerId,
+            'customer_ledger_id' => $customerId,
             'subtotal' => 500,
             'grand_total' => 500,
             'paid_amount' => 100,
@@ -714,7 +703,7 @@ class LegacyDocumentMigrationTest extends TestCase
     {
         $supplierId = $this->supplier();
         $poId = $this->purchaseOrder([
-            'supplier_id' => $supplierId,
+            'supplier_ledger_id' => $supplierId,
             'total_amount' => 500,
             'tax_amount' => 0,
         ], [
@@ -748,7 +737,7 @@ class LegacyDocumentMigrationTest extends TestCase
     {
         $customerId = $this->customer();
         $invoiceId = $this->invoice([
-            'customer_id' => $customerId,
+            'customer_ledger_id' => $customerId,
             'subtotal' => 1000,
             'cgst_total' => 90,
             'sgst_total' => 90,
@@ -792,7 +781,7 @@ class LegacyDocumentMigrationTest extends TestCase
     {
         $customerId = $this->customer();
         $this->invoice([
-            'customer_id' => $customerId,
+            'customer_ledger_id' => $customerId,
             'subtotal' => 1000,
             'grand_total' => 1000,
             'paid_amount' => 250,
@@ -815,8 +804,9 @@ class LegacyDocumentMigrationTest extends TestCase
     public function test_a_dry_run_writes_nothing(): void
     {
         $customerId = $this->customer();
+        $ledgerCount = LedgerAccount::count();
         $this->invoice([
-            'customer_id' => $customerId,
+            'customer_ledger_id' => $customerId,
             'subtotal' => 1000,
             'grand_total' => 1000,
             'paid_amount' => 250,
@@ -831,7 +821,8 @@ class LegacyDocumentMigrationTest extends TestCase
 
         $this->assertSame(0, Voucher::count());
         $this->assertNull(LedgerAccount::findByName('Migration Suspense'));
-        $this->assertSame(0, LedgerAccount::where('party_type', 'customer')->count());
+        // The party ledger already existed; a dry run must not add another.
+        $this->assertSame($ledgerCount, LedgerAccount::count());
         $this->assertNull(DB::table('invoices')->value('accounting_voucher_id'));
     }
 
@@ -839,7 +830,7 @@ class LegacyDocumentMigrationTest extends TestCase
     {
         $customerId = $this->customer();
         $this->invoice([
-            'customer_id' => $customerId,
+            'customer_ledger_id' => $customerId,
             'invoice_number' => 'INV-ROLL',
             'subtotal' => 1000,
             'grand_total' => 1000,
@@ -870,7 +861,7 @@ class LegacyDocumentMigrationTest extends TestCase
     public function test_a_missing_chart_of_accounts_is_a_clear_failure(): void
     {
         $customerId = $this->customer();
-        $this->invoice(['customer_id' => $customerId, 'subtotal' => 100, 'grand_total' => 100]);
+        $this->invoice(['customer_ledger_id' => $customerId, 'subtotal' => 100, 'grand_total' => 100]);
 
         // Wipe the seeded chart, leaving the party masters behind.
         DB::table('ledger_accounts')->delete();
@@ -888,7 +879,7 @@ class LegacyDocumentMigrationTest extends TestCase
     {
         $customerId = $this->customer();
         $this->invoice([
-            'customer_id' => $customerId,
+            'customer_ledger_id' => $customerId,
             'subtotal' => 100,
             'grand_total' => 100,
         ], [

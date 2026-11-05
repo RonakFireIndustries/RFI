@@ -5,8 +5,6 @@ import {
 import { useAccountGroupStore, useLedgerStore } from '../../store/accountingStore';
 import PermissionGate from '../../components/Guards/PermissionGate';
 import { formatMoney } from '../../utils/finance';
-import { customersService } from '../../services/customersService';
-import { suppliersService } from '../../services/suppliersService';
 
 const NATURES = ['Assets', 'Liabilities', 'Income', 'Expenses'];
 
@@ -44,7 +42,10 @@ const EMPTY_LEDGER = {
   gst_type: '',
   pan_number: '',
   party_type: '',
-  party_id: '',
+  email: '',
+  phone: '',
+  address: '',
+  credit_days: '',
   status: 'active',
   notes: '',
 };
@@ -85,7 +86,6 @@ const ChartOfAccountsPage = ({ defaultTab = 'groups' }) => {
   const [editingLedgerId, setEditingLedgerId] = useState(null);
   const [ledgerForm, setLedgerForm] = useState({ ...EMPTY_LEDGER });
   const [ledgerError, setLedgerError] = useState(null);
-  const [partyOptions, setPartyOptions] = useState({ customer: [], supplier: [] });
 
   const loadGroups = () => groups.fetchItems({}).catch(() => {});
   const loadLedgers = () => ledgers.fetchItems({}).catch(() => {});
@@ -196,23 +196,11 @@ const ChartOfAccountsPage = ({ defaultTab = 'groups' }) => {
 
   /* ---------------------------- Ledger actions ---------------------------- */
 
-  const loadPartyOptions = async () => {
-    const [customers, suppliers] = await Promise.allSettled([
-      customersService.list({}),
-      suppliersService.list({}),
-    ]);
-    setPartyOptions({
-      customer: customers.status === 'fulfilled' ? customers.value : [],
-      supplier: suppliers.status === 'fulfilled' ? suppliers.value : [],
-    });
-  };
-
   const openCreateLedger = () => {
     setEditingLedgerId(null);
     setLedgerForm({ ...EMPTY_LEDGER });
     setLedgerError(null);
     setShowLedgerModal(true);
-    loadPartyOptions();
   };
 
   const openEditLedger = (ledger) => {
@@ -232,13 +220,15 @@ const ChartOfAccountsPage = ({ defaultTab = 'groups' }) => {
       gst_type: ledger.gst_type ?? '',
       pan_number: ledger.pan_number ?? '',
       party_type: ledger.party_type ?? '',
-      party_id: ledger.party_id ?? '',
+      email: ledger.email ?? '',
+      phone: ledger.phone ?? '',
+      address: ledger.address ?? '',
+      credit_days: ledger.credit_days ?? '',
       status: ledger.status ?? 'active',
       notes: ledger.notes ?? '',
     });
     setLedgerError(null);
     setShowLedgerModal(true);
-    loadPartyOptions();
   };
 
   const submitLedger = async (e) => {
@@ -265,7 +255,10 @@ const ChartOfAccountsPage = ({ defaultTab = 'groups' }) => {
       gst_type: nullable(ledgerForm.gst_type),
       pan_number: nullable(ledgerForm.pan_number),
       party_type: partyType,
-      party_id: partyType ? nullable(ledgerForm.party_id) : null,
+      email: nullable(ledgerForm.email),
+      phone: nullable(ledgerForm.phone),
+      address: nullable(ledgerForm.address),
+      credit_days: ledgerForm.credit_days ? Number(ledgerForm.credit_days) : null,
       status: ledgerForm.status || 'active',
       notes: nullable(ledgerForm.notes),
     };
@@ -652,17 +645,26 @@ const ChartOfAccountsPage = ({ defaultTab = 'groups' }) => {
                 </div>
               </div>
 
-              {ledgerIsPartyGroup && (
+              <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className={labelClass}>Link to {selectedLedgerGroup.party_type}</label>
-                  <select value={ledgerForm.party_id} onChange={(e) => setLedgerForm({ ...ledgerForm, party_id: e.target.value })} className={inputClass}>
-                    <option value="">— Not linked —</option>
-                    {(partyOptions[selectedLedgerGroup.party_type] || []).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-                  </select>
+                  <label className={labelClass}>Email</label>
+                  <input type="email" value={ledgerForm.email} onChange={(e) => setLedgerForm({ ...ledgerForm, email: e.target.value })} className={inputClass} />
                 </div>
-              )}
+                <div>
+                  <label className={labelClass}>Phone</label>
+                  <input value={ledgerForm.phone} onChange={(e) => setLedgerForm({ ...ledgerForm, phone: e.target.value })} className={inputClass} />
+                </div>
+                <div>
+                  <label className={labelClass}>Credit days</label>
+                  <input type="number" min="0" value={ledgerForm.credit_days} onChange={(e) => setLedgerForm({ ...ledgerForm, credit_days: e.target.value })} className={inputClass} />
+                </div>
+              </div>
 
               <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={labelClass}>Address</label>
+                  <textarea value={ledgerForm.address} onChange={(e) => setLedgerForm({ ...ledgerForm, address: e.target.value })} className={inputClass} rows="2" />
+                </div>
                 <div>
                   <label className={labelClass}>Status</label>
                   <select value={ledgerForm.status} onChange={(e) => setLedgerForm({ ...ledgerForm, status: e.target.value })} className={inputClass}>

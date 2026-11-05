@@ -93,7 +93,7 @@ return new class extends Migration
                     'gst_number' => $s->gst_number,
                     'party_type' => 'supplier',
                     'party_id' => $s->id,
-                    'is_system' => false,
+                    'is_system' => (bool) ($s->is_system ?? false),
                     'status' => 'active',
                     'notes' => 'Converted from suppliers table.',
                     'created_at' => $now,

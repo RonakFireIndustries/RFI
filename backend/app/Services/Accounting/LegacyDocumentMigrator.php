@@ -3,9 +3,7 @@
 namespace App\Services\Accounting;
 
 use App\Models\AccountGroup;
-use App\Models\Customer;
 use App\Models\LedgerAccount;
-use App\Models\Supplier;
 use App\Models\Voucher;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -55,7 +53,6 @@ class LegacyDocumentMigrator
     public function __construct(
         protected ItemVoucherService $itemVouchers,
         protected VoucherService $vouchers,
-        protected PartyLedgerService $partyLedgers,
     ) {
     }
 
@@ -220,13 +217,13 @@ class LegacyDocumentMigrator
     {
         $reference = (string) (($invoice->invoice_number ?? '') !== '' ? $invoice->invoice_number : ('#' . $invoice->id));
 
-        if (! $invoice->customer_id) {
+        if (! $invoice->customer_ledger_id) {
             throw new RuntimeException('the invoice has no customer to post against.');
         }
 
-        $customer = Customer::find($invoice->customer_id);
-        if (! $customer) {
-            throw new RuntimeException('customer #' . $invoice->customer_id . ' no longer exists.');
+        $ledger = LedgerAccount::find($invoice->customer_ledger_id);
+        if (! $ledger) {
+            throw new RuntimeException('customer ledger #' . $invoice->customer_ledger_id . ' no longer exists.');
         }
 
         $subtotal = round((float) ($invoice->subtotal ?? 0), 2);
@@ -254,11 +251,9 @@ class LegacyDocumentMigrator
         $roundOff = round($total - $projected['taxable_total'] - $projected['tax_total'], 2);
         $paid = round((float) ($invoice->paid_amount ?? 0), 2);
 
-        $ledger = $dryRun ? $this->partyLedgers->for($customer) : $this->partyLedgers->ensure($customer);
-
         return [
-            'party_key' => 'customer:' . $customer->getKey(),
-            'ledger_id' => $ledger?->id,
+            'party_key' => 'customer:' . $ledger->id,
+            'ledger_id' => $ledger->id,
             'date' => $date,
             'reference_no' => $reference,
             'settled' => round(min($paid, $total), 2),
@@ -274,8 +269,16 @@ class LegacyDocumentMigrator
                 'due_date' => $invoice->due_date ?? null,
                 'reference_no' => $reference,
                 'narration' => 'Migrated from invoice ' . $reference . '.',
-                'party_ledger_id' => $ledger?->id ?? 0,
+                'party_ledger_id' => $ledger->id,
                 'gst_type' => $gstType,
+                // Tax and discount are bill-level on the voucher engine. The
+                // effective rate is derived from the legacy tax totals, and the
+                // legacy per-line discounts are folded into one bill discount,
+                // so the migrated voucher carries the same tax and taxable
+                // value as the document it came from.
+                'tax_rate' => $taxRate,
+                'discount_type' => 'amount',
+                'discount_value' => $projected['discount_total'],
                 'items' => $items,
                 'round_off' => $roundOff,
             ],
@@ -387,13 +390,13 @@ class LegacyDocumentMigrator
     {
         $reference = (string) ((($order->po_number ?? '') !== '') ? $order->po_number : ('#' . $order->id));
 
-        if (! $order->supplier_id) {
+        if (! $order->supplier_ledger_id) {
             throw new RuntimeException('the purchase order has no supplier to post against.');
         }
 
-        $supplier = Supplier::find($order->supplier_id);
-        if (! $supplier) {
-            throw new RuntimeException('supplier #' . $order->supplier_id . ' no longer exists.');
+        $ledger = LedgerAccount::find($order->supplier_ledger_id);
+        if (! $ledger) {
+            throw new RuntimeException('supplier ledger #' . $order->supplier_ledger_id . ' no longer exists.');
         }
 
         // `total_amount` holds the pre-tax subtotal and `tax_amount` the input
@@ -418,11 +421,9 @@ class LegacyDocumentMigrator
         $shipping = round((float) ($order->shipping_cost ?? 0) + (float) ($order->other_cost ?? 0), 2);
         $paid = round((float) ($payments[$order->id] ?? 0), 2);
 
-        $ledger = $dryRun ? $this->partyLedgers->for($supplier) : $this->partyLedgers->ensure($supplier);
-
         return [
-            'party_key' => 'supplier:' . $supplier->getKey(),
-            'ledger_id' => $ledger?->id,
+            'party_key' => 'supplier:' . $ledger->id,
+            'ledger_id' => $ledger->id,
             'date' => $date,
             'reference_no' => $reference,
             'settled' => round(min($paid, $total), 2),
@@ -435,8 +436,12 @@ class LegacyDocumentMigrator
                 'voucher_date' => $date,
                 'reference_no' => $reference,
                 'narration' => 'Migrated from purchase order ' . $reference . '.',
-                'party_ledger_id' => $ledger?->id ?? 0,
+                'party_ledger_id' => $ledger->id,
                 'gst_type' => $gstType,
+                // The voucher engine charges a single bill-level rate; the
+                // effective rate keeps the legacy tax total exact even when the
+                // PO mixed rated and exempt lines.
+                'tax_rate' => $taxRate,
                 'items' => $items,
                 'round_off' => $roundOff,
             ],
@@ -459,19 +464,12 @@ class LegacyDocumentMigrator
 
         $names = $this->productNames($rows->pluck('product_id')->all());
 
-        // The legacy tax is the sum of the per-line rates, so a line keeps its
-        // own rate. Only when no line carries one is the header's effective
-        // rate used, otherwise the tax would be dropped entirely.
-        $anyRated = $rows->contains(static fn ($row): bool => (float) ($row->gst_rate ?? 0) > 0);
-
+        // The voucher charges one effective bill-level rate; stamping it on
+        // every line keeps the line columns consistent with the document
+        // totals even when the legacy PO mixed rated and exempt lines.
         $items = [];
         foreach ($rows as $row) {
             $rate = round((float) $row->unit_cost, 2);
-            $lineRate = round((float) ($row->gst_rate ?? 0), 2);
-
-            if (! $anyRated) {
-                $lineRate = $fallbackTaxRate;
-            }
 
             $items[] = [
                 'product_id' => $row->product_id ?: null,
@@ -482,7 +480,7 @@ class LegacyDocumentMigrator
                 'quantity' => (float) $row->quantity,
                 'rate' => $rate,
                 'discount_percent' => 0.0,
-                'tax_rate' => $lineRate,
+                'tax_rate' => $fallbackTaxRate,
             ];
         }
 

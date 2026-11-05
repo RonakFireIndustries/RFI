@@ -12,10 +12,20 @@ class Payment extends Model
         'payment_method',
         'reference_number',
         'notes',
-        'supplier_id',
-        'customer_id',
+        'supplier_ledger_id',
+        'customer_ledger_id',
         'purchase_order_id',
         'sales_order_id',
         'created_by',
     ];
+
+    public function supplierLedger()
+    {
+        return $this->belongsTo(LedgerAccount::class, 'supplier_ledger_id');
+    }
+
+    public function customerLedger()
+    {
+        return $this->belongsTo(LedgerAccount::class, 'customer_ledger_id');
+    }
 }

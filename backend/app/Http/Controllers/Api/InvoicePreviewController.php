@@ -13,7 +13,7 @@ class InvoicePreviewController extends Controller
 {
     public function preview(Invoice $invoice)
     {
-        $invoice->load(['customer', 'items.product', 'creator']);
+        $invoice->load(['customerLedger', 'items.product', 'creator']);
         $company = CompanySetting::first();
 
         return response()->json([
@@ -52,7 +52,7 @@ class InvoicePreviewController extends Controller
         $validations = [];
         $allPass = true;
 
-        $gstNumber = $invoice->customer?->gst_number;
+        $gstNumber = $invoice->customerLedger?->gst_number;
         $gstValid = false;
         $gstMessage = 'No GST number on record for this customer';
         if ($gstNumber) {
@@ -128,10 +128,10 @@ class InvoicePreviewController extends Controller
             'message' => 'nullable|string',
         ]);
 
-        $invoice->load(['customer', 'items.product', 'creator']);
+        $invoice->load(['customerLedger', 'items.product', 'creator']);
         $company = CompanySetting::first();
 
-        $recipient = $request->recipient_email ?? $invoice->customer?->email;
+        $recipient = $request->recipient_email ?? $invoice->customerLedger?->email;
         if (!$recipient) {
             return response()->json([
                 'success' => false,
@@ -161,7 +161,7 @@ class InvoicePreviewController extends Controller
                     $message->setBody($request->message, 'text/plain');
                 } else {
                     $message->setBody(
-                        'Dear ' . ($invoice->customer?->name ?? 'Customer') . ",\n\nPlease find attached invoice " . $invoice->invoice_number . " for your reference.\n\nThank you for your business.\n\nBest regards,\n" . $companyName,
+                        'Dear ' . ($invoice->customerLedger?->name ?? 'Customer') . ",\n\nPlease find attached invoice " . $invoice->invoice_number . " for your reference.\n\nThank you for your business.\n\nBest regards,\n" . $companyName,
                         'text/plain'
                     );
                 }

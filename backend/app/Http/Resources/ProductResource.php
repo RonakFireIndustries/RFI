@@ -26,8 +26,8 @@ class ProductResource extends JsonResource
             'category' => $this->whenLoaded('category'),
             'unit_id' => $this->unit_id,
             'unit' => $this->whenLoaded('unit'),
-            'supplier_id' => $this->supplier_id,
-            'supplier' => $this->whenLoaded('supplier'),
+            'supplier_ledger_id' => $this->supplier_ledger_id,
+            'supplier_ledger' => $this->whenLoaded('supplierLedger'),
             $this->mergeWhen(static::canManageSalesPrice($request), [
                 'purchase_price' => (float) $this->purchase_price,
                 'selling_price' => (float) $this->selling_price,

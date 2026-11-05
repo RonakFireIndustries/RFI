@@ -174,7 +174,7 @@ class Inventory
     private static function products(): array
     {
         $category = Spec::join('categories', 'products.category_id', 'categories.id', 'left', 'product_category');
-        $supplier = Spec::join('suppliers', 'products.supplier_id', 'suppliers.id', 'left', 'product_supplier');
+        $supplier = Spec::join('ledger_accounts', 'products.supplier_ledger_id', 'ledger_accounts.id', 'left', 'product_supplier');
         $unit = Spec::join('units', 'products.unit_id', 'units.id', 'left', 'product_unit');
 
         return [

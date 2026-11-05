@@ -145,7 +145,7 @@ export default function PurchaseOrderDetail() {
         payment_method: payMethod,
         reference_number: payRef || null,
         notes: payNotes || null,
-        supplier_id: order.supplier_id,
+        supplier_ledger_id: order.supplier_ledger_id,
         purchase_order_id: order.id,
       });
       await fetchOrder();
@@ -249,7 +249,7 @@ export default function PurchaseOrderDetail() {
           <div className="flex flex-col sm:flex-row justify-between gap-6 mb-8 pb-6 border-b border-gray-200">
             <div>
               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Supplier</p>
-              <h3 className="text-lg font-bold text-gray-900">{order.supplier?.name || `Supplier #${order.supplier_id}`}</h3>
+              <h3 className="text-lg font-bold text-gray-900">{order.supplier?.name || `Supplier #${order.supplier_ledger_id}`}</h3>
               {order.supplier?.email && <p className="text-sm text-gray-500 mt-1">{order.supplier.email}</p>}
               {order.supplier?.phone && <p className="text-sm text-gray-500">{order.supplier.phone}</p>}
               {order.supplier?.gst_number && <span className="inline-block mt-2 text-xs font-medium bg-gray-100 text-gray-700 px-2 py-1 rounded">GSTIN: {order.supplier.gst_number}</span>}
@@ -451,7 +451,7 @@ export default function PurchaseOrderDetail() {
             <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
               <div>
                 <h2 className="text-lg font-bold text-gray-900">Record Payment — {order.po_number}</h2>
-                <p className="text-sm text-gray-500 mt-0.5">Payable to {order.supplier?.name || `Supplier #${order.supplier_id}`}</p>
+                <p className="text-sm text-gray-500 mt-0.5">Payable to {order.supplier?.name || `Supplier #${order.supplier_ledger_id}`}</p>
               </div>
               <button onClick={() => setPayOpen(false)} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100">
                 <X className="w-5 h-5" />

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Models\Product;
 use App\Models\SalesOrder;
 use App\Models\SalesOrderItem;
 use App\Models\ProductStock;
@@ -16,7 +17,7 @@ class SalesOrderController extends Controller
     {
         $this->authorize('sales-orders.view');
 
-        return SalesOrder::with('items')->get();
+        return SalesOrder::with(['items', 'customerLedger:id,name'])->get();
     }
 
     public function store(Request $request, UnitConversionService $unitConversion)
@@ -24,7 +25,7 @@ class SalesOrderController extends Controller
         $this->authorize('sales-orders.create');
 
         $request->validate([
-            'customer_id' => 'required|exists:customers,id',
+            'customer_ledger_id' => 'required|exists:ledger_accounts,id',
             'site_id' => 'nullable|exists:sites,id',
             'items' => 'required|array',
             'items.*.product_id' => 'nullable|exists:products,id',
@@ -59,7 +60,7 @@ class SalesOrderController extends Controller
 
             $so = SalesOrder::create([
                 'so_number' => 'SO-' . time(),
-                'customer_id' => $request->customer_id,
+                'customer_ledger_id' => $request->customer_ledger_id,
                 'site_id' => $request->site_id ?: null,
                 'status' => 'Pending',
                 'created_by' => Auth::id(),
@@ -98,14 +99,14 @@ class SalesOrderController extends Controller
             return $so;
         });
 
-        return response()->json($so->load('items'), 201);
+        return response()->json($so->load(['items', 'customerLedger:id,name']), 201);
     }
 
     public function show($id)
     {
         $this->authorize('sales-orders.view');
 
-        return SalesOrder::with(['items.product', 'customer', 'site', 'payments'])
+        return SalesOrder::with(['items.product', 'customerLedger', 'site', 'payments'])
             ->withSum('payments as paid_amount', 'amount')
             ->findOrFail($id);
     }
@@ -121,7 +122,7 @@ class SalesOrderController extends Controller
         }
 
         $request->validate([
-            'customer_id' => 'required|exists:customers,id',
+            'customer_ledger_id' => 'required|exists:ledger_accounts,id',
             'site_id' => 'nullable|exists:sites,id',
             'items' => 'required|array',
             'items.*.product_id' => 'nullable|exists:products,id',
@@ -148,7 +149,7 @@ class SalesOrderController extends Controller
             }
 
             $so->update([
-                'customer_id' => $request->customer_id,
+                'customer_ledger_id' => $request->customer_ledger_id,
                 'site_id' => $request->site_id ?: null,
                 'notes' => $request->notes,
                 'terms_conditions' => $request->terms_conditions,
@@ -177,7 +178,7 @@ class SalesOrderController extends Controller
             }
         });
 
-        return response()->json($so->load('items'));
+        return response()->json($so->load(['items', 'customerLedger:id,name']));
     }
 
     public function approve(Request $request, $id)

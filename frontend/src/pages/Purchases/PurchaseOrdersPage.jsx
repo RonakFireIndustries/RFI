@@ -23,7 +23,7 @@ export default function PurchaseOrdersPage() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [sites, setSites] = useState([]);
-  const [newOrder, setNewOrder] = useState({ supplier_id: '', site_id: '', gst_type: 'cgst', shipping_cost: 0, other_cost: 0, other_cost_note: '', terms_conditions: '', items: [{ parent_category_id: '', category_id: '', product_id: '', custom_product_name: '', quantity: 1, unit_id: '', base_quantity: 1, unit_cost: 0, gst_rate: 18, hsn_code: '' }] });
+  const [newOrder, setNewOrder] = useState({ supplier_ledger_id: '', site_id: '', gst_type: 'cgst', shipping_cost: 0, other_cost: 0, other_cost_note: '', terms_conditions: '', items: [{ parent_category_id: '', category_id: '', product_id: '', custom_product_name: '', quantity: 1, unit_id: '', base_quantity: 1, unit_cost: 0, gst_rate: 18, hsn_code: '' }] });
   const [activeTab, setActiveTab] = useState('All Orders');
   const [currentPage, setCurrentPage] = useState(1);
   const [saving, setSaving] = useState(false);
@@ -49,7 +49,7 @@ export default function PurchaseOrdersPage() {
   const fetchData = async () => {
     try {
       const [suppRes, prodRes, catRes, siteRes] = await Promise.all([
-        api.get('/suppliers'),
+        api.get('/ledgers?party_type=supplier'),
         api.get('/products'),
         api.get('/categories'),
         api.get('/sites?per_page=1000')
@@ -80,7 +80,7 @@ export default function PurchaseOrdersPage() {
     if (e) e.preventDefault();
 
     // Frontend Validation
-    if (!newOrder.supplier_id) return alert("Please select a Supplier.");
+    if (!newOrder.supplier_ledger_id) return alert("Please select a Supplier.");
     if (newOrder.items.length === 0) return alert("Please add at least one line item.");
     for (const item of newOrder.items) {
       if (!item.product_id && !item.custom_product_name) return alert("Please select a product for all line items.");
@@ -94,7 +94,7 @@ export default function PurchaseOrdersPage() {
       await api.post('/purchases/orders', { ...newOrder, status });
       setIsModalOpen(false);
       fetchOrders();
-      setNewOrder({ supplier_id: '', site_id: '', gst_type: 'cgst', shipping_cost: 0, other_cost: 0, other_cost_note: '', terms_conditions: '', items: [{ parent_category_id: '', category_id: '', product_id: '', custom_product_name: '', quantity: 1, unit_cost: 0, gst_rate: 18, hsn_code: '' }] });
+      setNewOrder({ supplier_ledger_id: '', site_id: '', gst_type: 'cgst', shipping_cost: 0, other_cost: 0, other_cost_note: '', terms_conditions: '', items: [{ parent_category_id: '', category_id: '', product_id: '', custom_product_name: '', quantity: 1, unit_cost: 0, gst_rate: 18, hsn_code: '' }] });
     } catch (error) {
       console.error("Error creating PO:", error);
       const msg = error.response?.data?.message || "Failed to create Purchase Order.";
@@ -219,10 +219,10 @@ export default function PurchaseOrdersPage() {
   const handleExport = () => {
     const headers = ['PO #', 'Supplier', 'Date', 'Total Amount', 'Tax Amount', 'Shipping Cost', 'Status'];
     const rows = filteredOrders.map(o => {
-      const supplier = suppliers.find(s => s.id === o.supplier_id);
+      const supplier = suppliers.find(s => s.id === o.supplier_ledger_id);
       return [
         o.po_number,
-        supplier?.name || `Supplier #${o.supplier_id}`,
+        supplier?.name || `Supplier #${o.supplier_ledger_id}`,
         new Date(o.created_at).toLocaleDateString(),
         o.total_amount,
         o.tax_amount,
@@ -382,8 +382,8 @@ export default function PurchaseOrdersPage() {
                 </tr>
               ) : (
                 paginatedOrders.map((order) => {
-                  const supplier = suppliers.find(s => s.id === order.supplier_id);
-                  const supplierName = supplier ? supplier.name : `Supplier #${order.supplier_id}`;
+                  const supplier = suppliers.find(s => s.id === order.supplier_ledger_id);
+                  const supplierName = supplier ? supplier.name : `Supplier #${order.supplier_ledger_id}`;
                   const supplierInitials = supplierName.substring(0, 2).toUpperCase();
 
                   return (
@@ -540,8 +540,8 @@ export default function PurchaseOrdersPage() {
                         <label className="block text-sm font-medium text-gray-600 mb-1">Select Supplier</label>
                         <select
                           className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
-                          value={newOrder.supplier_id}
-                          onChange={(e) => setNewOrder({ ...newOrder, supplier_id: e.target.value })}
+                          value={newOrder.supplier_ledger_id}
+                          onChange={(e) => setNewOrder({ ...newOrder, supplier_ledger_id: e.target.value })}
                           required
                         >
                           <option value="" hidden>Select Supplier</option>

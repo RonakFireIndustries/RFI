@@ -22,6 +22,15 @@ return new class extends Migration
         Schema::create('ledger_accounts', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
+
+            // Party contact details and payment terms. They used to live on the
+            // customer / supplier masters, which no longer exist; a party is a
+            // ledger now.
+            $table->string('email')->nullable();
+            $table->string('phone')->nullable();
+            $table->text('address')->nullable();
+            $table->unsignedSmallInteger('credit_days')->nullable();
+
             $table->foreignId('group_id')->constrained('account_groups')->restrictOnDelete();
 
             $table->decimal('opening_balance', 15, 2)->default(0);

@@ -2,16 +2,13 @@
 
 namespace App\Services\Accounting;
 
-use App\Models\Customer;
 use App\Models\LedgerAccount;
 use App\Models\Product;
-use App\Models\Supplier;
 use App\Models\Unit;
 use App\Models\Voucher;
 use App\Services\UnitConversionService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 
 class ItemVoucherService
@@ -193,25 +190,15 @@ class ItemVoucherService
     }
 
     /**
-     * Default due date for a bill: the party's `credit_days` after the voucher
-     * date.
+     * Default due date for a bill: the party ledger's `credit_days` after the
+     * voucher date.
      *
-     * A party with no terms (or a master row predating the column) returns
-     * null, so nothing becomes overdue by accident — the bill then ages from
-     * its document date, exactly as it did before credit days existed.
+     * A party with no terms returns null, so nothing becomes overdue by
+     * accident — the bill then ages from its own document date.
      */
     protected function defaultDueDate(LedgerAccount $party, string $date): ?string
     {
-        $table = ['customer' => 'customers', 'supplier' => 'suppliers'][$party->party_type] ?? null;
-        if ($table === null || $party->party_id === null || ! Schema::hasTable($table)) {
-            return null;
-        }
-
-        $record = $party->party_type === 'customer'
-            ? Customer::find($party->party_id)
-            : Supplier::find($party->party_id);
-
-        $days = (int) ($record?->credit_days ?? 0);
+        $days = (int) ($party->credit_days ?? 0);
 
         return $days > 0
             ? Carbon::parse($date)->addDays($days)->toDateString()

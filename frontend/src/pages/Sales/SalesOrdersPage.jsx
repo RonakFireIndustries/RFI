@@ -23,7 +23,7 @@ export default function SalesOrdersPage() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [sites, setSites] = useState([]);
-  const [newOrder, setNewOrder] = useState({ customer_id: '', site_id: '', gst_type: 'cgst', shipping_cost: 0, other_cost: 0, other_cost_note: '', terms_conditions: '', items: [{ parent_category_id: '', category_id: '', product_id: '', custom_product_name: '', quantity: 1, unit_id: '', base_quantity: 1, unit_price: 0, gst_rate: 18, hsn_code: '' }] });
+  const [newOrder, setNewOrder] = useState({ customer_ledger_id: '', site_id: '', gst_type: 'cgst', shipping_cost: 0, other_cost: 0, other_cost_note: '', terms_conditions: '', items: [{ parent_category_id: '', category_id: '', product_id: '', custom_product_name: '', quantity: 1, unit_id: '', base_quantity: 1, unit_price: 0, gst_rate: 18, hsn_code: '' }] });
   const [activeTab, setActiveTab] = useState('All Orders');
   const [currentPage, setCurrentPage] = useState(1);
   const [saving, setSaving] = useState(false);
@@ -49,7 +49,7 @@ export default function SalesOrdersPage() {
   const fetchData = async () => {
     try {
       const [custRes, prodRes, catRes, siteRes] = await Promise.all([
-        api.get('/customers'),
+        api.get('/ledgers?party_type=customer'),
         api.get('/products'),
         api.get('/categories'),
         api.get('/sites?per_page=1000')
@@ -80,7 +80,7 @@ export default function SalesOrdersPage() {
     if (e) e.preventDefault();
 
     // Frontend Validation
-    if (!newOrder.customer_id) return alert("Please select a Customer.");
+    if (!newOrder.customer_ledger_id) return alert("Please select a Customer.");
     if (newOrder.items.length === 0) return alert("Please add at least one line item.");
     for (const item of newOrder.items) {
       if (!item.product_id && !item.custom_product_name) return alert("Please select a product for all line items.");
@@ -94,7 +94,7 @@ export default function SalesOrdersPage() {
       await api.post('/sales/orders', { ...newOrder, status });
       setIsModalOpen(false);
       fetchOrders();
-      setNewOrder({ customer_id: '', site_id: '', gst_type: 'cgst', shipping_cost: '0', other_cost: 0, other_cost_note: '', terms_conditions: '', items: [{ parent_category_id: '', category_id: '', product_id: '', custom_product_name: '', quantity: 1, unit_price: 0, gst_rate: 18, hsn_code: '' }] });
+      setNewOrder({ customer_ledger_id: '', site_id: '', gst_type: 'cgst', shipping_cost: '0', other_cost: 0, other_cost_note: '', terms_conditions: '', items: [{ parent_category_id: '', category_id: '', product_id: '', custom_product_name: '', quantity: 1, unit_price: 0, gst_rate: 18, hsn_code: '' }] });
     } catch (error) {
       console.error("Error creating SO:", error);
       const msg = error.response?.data?.message || "Failed to create Sales Order.";
@@ -222,10 +222,10 @@ export default function SalesOrdersPage() {
   const handleExport = () => {
     const headers = ['SO #', 'Customer', 'Date', 'Total Amount', 'Status'];
     const rows = filteredOrders.map(o => {
-      const customer = customers.find(c => c.id === o.customer_id);
+      const customer = customers.find(c => c.id === o.customer_ledger_id);
       return [
         o.so_number,
-        customer?.name || `Customer #${o.customer_id}`,
+        customer?.name || `Customer #${o.customer_ledger_id}`,
         new Date(o.created_at).toLocaleDateString(),
         o.total_amount,
         o.status,
@@ -387,8 +387,8 @@ export default function SalesOrdersPage() {
                 </tr>
               ) : (
                 paginatedOrders.map((order) => {
-                  const customer = customers.find(c => c.id === order.customer_id);
-                  const customerName = customer ? customer.name : `Customer #${order.customer_id}`;
+                  const customer = customers.find(c => c.id === order.customer_ledger_id);
+                  const customerName = customer ? customer.name : `Customer #${order.customer_ledger_id}`;
                   const customerInitials = customerName.substring(0, 2).toUpperCase();
                   
                   return (
@@ -549,8 +549,8 @@ export default function SalesOrdersPage() {
                         <label className="block text-sm font-medium text-gray-600 mb-1">Select Customer</label>
                         <select 
                           className="w-full border border-gray-200 rounded-lg p-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
-                          value={newOrder.customer_id}
-                          onChange={(e) => setNewOrder({...newOrder, customer_id: e.target.value})}
+                          value={newOrder.customer_ledger_id}
+                          onChange={(e) => setNewOrder({...newOrder, customer_ledger_id: e.target.value})}
                           required
                         >
                           <option value="">Select Customer...</option>

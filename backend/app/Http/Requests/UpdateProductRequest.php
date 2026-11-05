@@ -24,7 +24,7 @@ class UpdateProductRequest extends FormRequest
             'dimension' => 'nullable|string|max:255',
             'category_id' => 'nullable|exists:categories,id',
             'unit_id' => ['sometimes', 'required', 'exists:units,id'],
-            'supplier_id' => 'nullable|exists:suppliers,id',
+            'supplier_ledger_id' => 'nullable|exists:ledger_accounts,id',
             'purchase_price' => 'sometimes|numeric|min:0',
             'cost_price' => 'nullable|numeric|min:0',
             'reorder_level' => 'nullable|numeric|min:0',

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Models\Product;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
 use App\Models\ProductStock;
@@ -16,7 +17,7 @@ class PurchaseOrderController extends Controller
     {
         $this->authorize('purchase-orders.view');
 
-        return PurchaseOrder::with('items')->get();
+        return PurchaseOrder::with(['items', 'supplierLedger:id,name'])->get();
     }
 
     public function store(Request $request, UnitConversionService $unitConversion)
@@ -24,7 +25,7 @@ class PurchaseOrderController extends Controller
         $this->authorize('purchase-orders.create');
 
         $request->validate([
-            'supplier_id' => 'required|exists:suppliers,id',
+            'supplier_ledger_id' => 'required|exists:ledger_accounts,id',
             'site_id' => 'nullable|exists:sites,id',
             'items' => 'required|array',
             'items.*.product_id' => 'nullable|exists:products,id',
@@ -57,7 +58,7 @@ class PurchaseOrderController extends Controller
 
             $po = PurchaseOrder::create([
                 'po_number' => 'PO-' . time(),
-                'supplier_id' => $request->supplier_id,
+                'supplier_ledger_id' => $request->supplier_ledger_id,
                 'site_id' => $request->site_id ?: null,
                 'status' => 'Pending',
                 'requested_by' => Auth::id(),
@@ -95,7 +96,7 @@ class PurchaseOrderController extends Controller
             return $po;
         });
 
-        return response()->json($po->load('items'), 201);
+        return response()->json($po->load(['items', 'supplierLedger:id,name']), 201);
     }
 
     public function approve(Request $request, $id)
@@ -201,7 +202,7 @@ class PurchaseOrderController extends Controller
     {
         $this->authorize('purchase-orders.view');
 
-        return PurchaseOrder::with(['items.product', 'supplier', 'site', 'payments'])
+        return PurchaseOrder::with(['items.product', 'supplierLedger', 'site', 'payments'])
             ->withSum('payments as paid_amount', 'amount')
             ->findOrFail($id);
     }
@@ -217,7 +218,7 @@ class PurchaseOrderController extends Controller
         }
 
         $request->validate([
-            'supplier_id' => 'required|exists:suppliers,id',
+            'supplier_ledger_id' => 'required|exists:ledger_accounts,id',
             'site_id' => 'nullable|exists:sites,id',
             'items' => 'required|array',
             'items.*.product_id' => 'nullable|exists:products,id',
@@ -244,7 +245,7 @@ class PurchaseOrderController extends Controller
             }
 
             $po->update([
-                'supplier_id' => $request->supplier_id,
+                'supplier_ledger_id' => $request->supplier_ledger_id,
                 'site_id' => $request->site_id ?: null,
                 'notes' => $request->notes,
                 'terms_conditions' => $request->terms_conditions,
@@ -273,7 +274,7 @@ class PurchaseOrderController extends Controller
             }
         });
 
-        return response()->json($po->load('items'));
+        return response()->json($po->load(['items', 'supplierLedger:id,name']));
     }
 
     public function destroy($id)

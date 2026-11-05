@@ -44,10 +44,6 @@ import PurchaseOrdersPage from '../../pages/Purchases/PurchaseOrdersPage';
 import PurchaseOrderDetail from '../../pages/Purchases/PurchaseOrderDetail';
 import SalesOrdersPage from '../../pages/Sales/SalesOrdersPage';
 import SalesOrderDetail from '../../pages/Sales/SalesOrderDetail';
-import SupplierDirectory from '../../pages/Suppliers/SupplierDirectory';
-import SupplierProfile from '../../pages/Suppliers/SupplierProfile';
-import CustomerDirectory from '../../pages/Customers/CustomerDirectory';
-import CustomerProfile from '../../pages/Customers/CustomerProfile';
 import CategoryDirectory from '../../pages/Categories/CategoryDirectory';
 import InvoiceList from '../../pages/Sales/InvoiceList';
 import InvoiceBuilder from '../../pages/Sales/InvoiceBuilder';
@@ -584,10 +580,6 @@ export default function DashboardLayout() {
                   generated. */}
               <Route path="payroll-report/:id" element={<PayslipPage />} />
               <Route path="categories" element={<CategoryDirectory />} />
-              <Route path="customers" element={<CustomerDirectory />} />
-              <Route path="customers/:id" element={<CustomerProfile />} />
-              <Route path="suppliers" element={<SupplierDirectory />} />
-              <Route path="suppliers/:id" element={<SupplierProfile />} />
               <Route path="purchases" element={<PurchaseOrdersPage />} />
               <Route path="purchases/:id" element={<PurchaseOrderDetail />} />
               <Route path="sales" element={<SalesOrdersPage />} />

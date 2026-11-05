@@ -12,7 +12,7 @@ class PaymentController extends Controller
     {
         $this->authorize('payments.view');
 
-        return Payment::all();
+        return Payment::with(['supplierLedger:id,name', 'customerLedger:id,name'])->get();
     }
 
     public function store(Request $request)
@@ -26,8 +26,8 @@ class PaymentController extends Controller
             'payment_method' => 'nullable|string',
             'reference_number' => 'nullable|string',
             'notes' => 'nullable|string',
-            'supplier_id' => 'nullable|exists:suppliers,id',
-            'customer_id' => 'nullable|exists:customers,id',
+            'supplier_ledger_id' => 'nullable|exists:ledger_accounts,id',
+            'customer_ledger_id' => 'nullable|exists:ledger_accounts,id',
             'purchase_order_id' => 'nullable|exists:purchase_orders,id',
             'sales_order_id' => 'nullable|exists:sales_orders,id',
         ]);
@@ -42,7 +42,7 @@ class PaymentController extends Controller
     {
         $this->authorize('payments.view');
 
-        return $payment;
+        return $payment->load(['supplierLedger:id,name', 'customerLedger:id,name']);
     }
 
     public function update(Request $request, Payment $payment)
@@ -56,14 +56,14 @@ class PaymentController extends Controller
             'payment_method' => 'nullable|string',
             'reference_number' => 'nullable|string',
             'notes' => 'nullable|string',
-            'supplier_id' => 'nullable|exists:suppliers,id',
-            'customer_id' => 'nullable|exists:customers,id',
+            'supplier_ledger_id' => 'nullable|exists:ledger_accounts,id',
+            'customer_ledger_id' => 'nullable|exists:ledger_accounts,id',
             'purchase_order_id' => 'nullable|exists:purchase_orders,id',
             'sales_order_id' => 'nullable|exists:sales_orders,id',
         ]);
 
         $payment->update($validated);
-        return $payment;
+        return $payment->load(['supplierLedger:id,name', 'customerLedger:id,name']);
     }
 
     public function destroy(Payment $payment)

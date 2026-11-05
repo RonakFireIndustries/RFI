@@ -21,7 +21,7 @@ class CashVoucher extends Model
         'reference_no',
         'site_id',
         'employee_id',
-        'supplier_id',
+        'supplier_ledger_id',
         'attachment_path',
         'status',
         'created_by',
@@ -48,9 +48,9 @@ class CashVoucher extends Model
         return $this->belongsTo(Employee::class);
     }
 
-    public function supplier()
+    public function supplierLedger()
     {
-        return $this->belongsTo(Supplier::class);
+        return $this->belongsTo(LedgerAccount::class, 'supplier_ledger_id');
     }
 
     public function creator()

@@ -151,7 +151,7 @@ export default function ProductCatalog() {
     const fetchLookups = async () => {
       const results = await Promise.allSettled([
         api.get('/categories'),
-        api.get('/suppliers'),
+        api.get('/ledgers?party_type=supplier'),
         api.get('/sites?per_page=1000'),
         api.get('/units'),
       ]);
@@ -245,7 +245,7 @@ export default function ProductCatalog() {
       unit_id: item.unit_id ? String(item.unit_id) : '',
       parent_category_id: parentId,
       subcategory_id: subId,
-      supplier_id: item.supplier_id ? String(item.supplier_id) : '',
+      supplier_ledger_id: item.supplier_ledger_id ? String(item.supplier_ledger_id) : '',
       purchase_price: item.purchase_price ?? '',
       selling_price: item.selling_price ?? '',
       opening_stock: item.opening_stock ?? 0,
@@ -315,7 +315,7 @@ export default function ProductCatalog() {
       { name: 'unit_id', label: 'Unit', type: 'select', optionsKey: 'units', required: true },
       { name: 'parent_category_id', label: 'Category', type: 'select', optionsKey: 'parentCategories', emptyAsNull: true },
       { name: 'subcategory_id', label: 'Sub Category', type: 'select', optionsKey: 'subCategories', emptyAsNull: true },
-      { name: 'supplier_id', label: 'Supplier', type: 'select', optionsKey: 'suppliers', emptyAsNull: true },
+      { name: 'supplier_ledger_id', label: 'Supplier', type: 'select', optionsKey: 'suppliers', emptyAsNull: true },
     ];
     if (canSeePrices) {
       flds.push({ name: 'purchase_price', label: 'Purchase Price', type: 'number', step: '0.01', required: true });
@@ -359,7 +359,7 @@ export default function ProductCatalog() {
       const { parentBucket, subName } = getPlacement(product, categoryById);
       if (filters.parent && parentBucket !== filters.parent) return false;
       if (filters.sub && subName !== filters.sub) return false;
-      if (filters.supplier && String(product.supplier_id) !== filters.supplier) return false;
+      if (filters.supplier && String(product.supplier_ledger_id) !== filters.supplier) return false;
       if (filters.status && product.status !== filters.status) return false;
       if (filters.stock === 'out' && !isOutOfStock(product)) return false;
       if (filters.stock === 'low' && !isLowStock(product)) return false;

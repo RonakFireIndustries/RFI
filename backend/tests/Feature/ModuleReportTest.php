@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\User;
 use App\Services\Reports\ModuleReportService;
 use App\Support\Reports\Registry;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
@@ -35,10 +37,10 @@ class ModuleReportTest extends TestCase
         '2026_10_21_000002_add_bill_level_tax_discount_to_vouchers.php',
         '2026_10_17_000005_create_voucher_entries_table.php',
         '2026_10_17_000006_create_voucher_bill_allocations_table.php',
-        // cash_vouchers joins the party masters and the site register, so the
-        // engine can resolve every alias the report names.
+        // cash_vouchers joins the ledger book (the party was once a supplier
+        // master) and the site register, so the engine can resolve every alias
+        // the report names.
         '2026_05_30_083454_create_employees_table.php',
-        '2026_06_06_085506_create_suppliers_table.php',
         '2026_06_16_000001_create_sites_table.php',
         '2026_10_15_000003_create_cash_vouchers_table.php',
     ];
@@ -50,6 +52,14 @@ class ModuleReportTest extends TestCase
         foreach (self::MIGRATIONS as $file) {
             $migration = require __DIR__ . '/../../database/migrations/' . $file;
             $migration->up();
+        }
+
+        // The drop-suppliers migration renames this column on MySQL; the test
+        // suite does not run it, so align the column the same way here.
+        if (Schema::hasColumn('cash_vouchers', 'supplier_id')) {
+            Schema::table('cash_vouchers', function (Blueprint $table) {
+                $table->renameColumn('supplier_id', 'supplier_ledger_id');
+            });
         }
 
         // The registry is gated through App\Support\Access, which asks Spatie

@@ -9,8 +9,6 @@ use App\Http\Controllers\Api\V1\DailyReportController;
 use App\Http\Controllers\Api\V1\LeaveTypeController;
 use App\Http\Controllers\Api\V1\LeaveBalanceController;
 use App\Http\Controllers\Api\V1\LeaveController;
-use App\Http\Controllers\SupplierController;
-use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PermissionController;
@@ -263,8 +261,6 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('sales/returns', \App\Http\Controllers\SalesReturnController::class);
     });
 
-    Route::apiResource('suppliers', SupplierController::class);
-    Route::apiResource('customers', CustomerController::class);
     /*
      * Retired (slice 8) — invoices are sales vouchers now, so their write
      * endpoints are closed. `index` / `show` stay open, and so do the pdf /

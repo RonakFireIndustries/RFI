@@ -38,7 +38,7 @@ function InvoiceBuilderForm() {
   const [products, setProducts] = useState([]);
 
   const [formData, setFormData] = useState({
-    customer_id: '',
+    customer_ledger_id: '',
     sales_order_id: '',
     status: 'Draft',
     due_date: '',
@@ -66,7 +66,7 @@ function InvoiceBuilderForm() {
   const fetchInitialData = async () => {
     try {
       const [customersRes, productsRes] = await Promise.all([
-        api.get('/customers'),
+        api.get('/ledgers?party_type=customer'),
         api.get('/products')
       ]);
       setCustomers(customersRes.data.data || customersRes.data);
@@ -143,7 +143,7 @@ function InvoiceBuilderForm() {
 
     try {
       const payload = {
-        customer_id: formData.customer_id,
+        customer_ledger_id: formData.customer_ledger_id,
         sales_order_id: formData.sales_order_id || null,
         status: formData.status,
         due_date: formData.due_date || null,
@@ -186,7 +186,7 @@ function InvoiceBuilderForm() {
         </div>
         <button
           onClick={handleSubmit}
-          disabled={loading || !formData.customer_id}
+          disabled={loading || !formData.customer_ledger_id}
           className="inline-flex items-center px-6 py-2.5 bg-primary hover:bg-primary/90 text-white font-medium rounded-lg transition-colors disabled:opacity-70 disabled:cursor-not-allowed shadow-sm"
         >
           {loading ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Save className="w-5 h-5 mr-2" />}
@@ -207,8 +207,8 @@ function InvoiceBuilderForm() {
                 <select
                   required
                   className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-ring focus:border-ring transition-all outline-none bg-white"
-                  value={formData.customer_id}
-                  onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
+                  value={formData.customer_ledger_id}
+                  onChange={(e) => setFormData({ ...formData, customer_ledger_id: e.target.value })}
                 >
                   <option value="">Select a customer</option>
                   {customers.map(c => (

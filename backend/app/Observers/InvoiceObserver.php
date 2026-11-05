@@ -21,7 +21,7 @@ class InvoiceObserver extends NotificationObserver
         NotificationService::notify('invoice.created', [
             'id' => $invoice->id,
             'invoice_number' => $invoice->invoice_number,
-            'customer' => $this->relationAttribute($invoice, 'customer', 'name'),
+            'customer' => $this->relationAttribute($invoice, 'customerLedger', 'name'),
             'amount' => $this->money($invoice->total_amount ?? $invoice->grand_total),
             'due_date' => $this->formatDate($invoice->due_date),
         ], $this->currentActor());

@@ -3,10 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\AccountGroup;
-use App\Models\Customer;
 use App\Models\FinancialYear;
 use App\Models\LedgerAccount;
-use App\Models\Supplier;
 use App\Models\User;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
@@ -26,8 +24,6 @@ class PartyCreditDaysTest extends TestCase
         '0001_01_01_000000_create_users_table.php',
         '2026_05_30_083453_create_permission_tables.php',
         '2026_08_27_000000_add_is_super_admin_to_users_table.php',
-        '2026_06_06_085506_create_suppliers_table.php',
-        '2026_06_06_085507_create_customers_table.php',
         '2026_10_17_000001_create_account_groups_table.php',
         '2026_10_17_000002_create_ledger_accounts_table.php',
         '2026_10_17_000003_create_financial_years_table.php',
@@ -38,8 +34,8 @@ class PartyCreditDaysTest extends TestCase
         '2026_10_17_000008_add_document_totals_to_vouchers_table.php',
         '2026_10_21_000002_add_bill_level_tax_discount_to_vouchers.php',
         '2026_10_19_000001_add_due_date_to_vouchers.php',
-        '2026_10_19_000002_add_credit_days_to_parties.php',
         '2026_11_03_000001_add_unit_tracking_to_stock_documents.php',
+        '2026_11_03_000002_add_base_quantity_to_voucher_items.php',
     ];
 
     protected function setUp(): void
@@ -92,32 +88,25 @@ class PartyCreditDaysTest extends TestCase
     }
 
     /**
-     * A customer master with its terms, plus the ledger `accounting:link-parties`
-     * would hang off it (party_type + party_id pointing at the master row).
+     * A party ledger carrying its payment terms. Credit days now live on the
+     * ledger itself, so there is no master row to link back to.
      */
     private function customerWithTerms(?int $creditDays): LedgerAccount
     {
-        $customer = Customer::create(['name' => 'Acme Corp', 'credit_days' => $creditDays]);
-
         return $this->ledger('Acme Corp', 'Assets', [
             'is_party_group' => true,
             'party_type' => 'customer',
-            'party_id' => $customer->id,
+            'credit_days' => $creditDays,
         ]);
     }
 
-    /** @return array{0: Supplier, 1: LedgerAccount} */
-    private function supplierWithTerms(int $creditDays): array
+    private function supplierWithTerms(int $creditDays): LedgerAccount
     {
-        $supplier = Supplier::create(['name' => 'Vendor Ltd', 'credit_days' => $creditDays]);
-
-        $ledger = $this->ledger('Vendor Ltd', 'Liabilities', [
+        return $this->ledger('Vendor Ltd', 'Liabilities', [
             'is_party_group' => true,
             'party_type' => 'supplier',
-            'party_id' => $supplier->id,
+            'credit_days' => $creditDays,
         ]);
-
-        return [$supplier, $ledger];
     }
 
     /** @return array<string, mixed> the voucher payload an item voucher needs */
@@ -166,7 +155,7 @@ class PartyCreditDaysTest extends TestCase
     {
         $this->actingAs($this->superAdmin());
         $this->seedDefaults();
-        [, $party] = $this->supplierWithTerms(15);
+        $party = $this->supplierWithTerms(15);
 
         $due = $this->postedDueDate($this->postJson('/api/v1/vouchers', array_merge(
             $this->salesPayload($party),

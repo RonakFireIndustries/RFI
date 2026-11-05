@@ -44,7 +44,7 @@ class SalesOrderObserver extends NotificationObserver
         return array_merge([
             'id' => $order->id,
             'so_number' => $order->so_number,
-            'customer' => $this->relationAttribute($order, 'customer', 'name'),
+            'customer' => $this->relationAttribute($order, 'customerLedger', 'name'),
             'employee' => $this->relationAttribute($order, 'creator', 'name', 'A user'),
             'amount' => $this->money($order->total_amount),
         ], $extra);

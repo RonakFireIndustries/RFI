@@ -10,7 +10,7 @@ class Product extends Model
     use HasFactory;
 
     protected $fillable = [
-        'sku', 'product_code', 'name', 'hsn_code', 'dimension', 'category_id', 'unit_id', 'supplier_id',
+        'sku', 'product_code', 'name', 'hsn_code', 'dimension', 'category_id', 'unit_id', 'supplier_ledger_id',
         'purchase_price', 'selling_price', 'cost_price',
         'reorder_level', 'min_stock', 'max_stock', 'description', 'status',
         'opening_stock',
@@ -55,9 +55,9 @@ class Product extends Model
         return $this->belongsTo(Category::class);
     }
 
-    public function supplier()
+    public function supplierLedger()
     {
-        return $this->belongsTo(Supplier::class);
+        return $this->belongsTo(LedgerAccount::class, 'supplier_ledger_id');
     }
 
     public function unit()

@@ -37,6 +37,7 @@ class VoucherProductPickingTest extends TestCase
         '2026_10_19_000001_add_due_date_to_vouchers.php',
         '2026_10_19_000002_add_credit_days_to_parties.php',
         '2026_11_03_000001_add_unit_tracking_to_stock_documents.php',
+        '2026_11_03_000002_add_base_quantity_to_voucher_items.php',
     ];
 
     protected function setUp(): void
@@ -92,7 +93,7 @@ class VoucherProductPickingTest extends TestCase
         $response->assertJsonPath('data.0.hsn_code', '7788');
         $response->assertJsonPath('data.1.name', 'Widget');
         $this->assertSame(
-            ['id', 'name', 'sku', 'hsn_code', 'dimension', 'description', 'unit'],
+            ['id', 'name', 'sku', 'hsn_code', 'dimension', 'description', 'unit_id', 'unit'],
             array_keys($response->json('data.0'))
         );
     }

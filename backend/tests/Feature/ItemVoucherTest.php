@@ -36,7 +36,9 @@ class ItemVoucherTest extends TestCase
         '2026_10_21_000002_add_bill_level_tax_discount_to_vouchers.php',
         '2026_10_19_000001_add_due_date_to_vouchers.php',
         '2026_10_19_000002_add_credit_days_to_parties.php',
+        '2026_10_21_000001_create_stock_receipts_tables.php',
         '2026_11_03_000001_add_unit_tracking_to_stock_documents.php',
+        '2026_11_03_000002_add_base_quantity_to_voucher_items.php',
     ];
 
     protected function setUp(): void
@@ -142,8 +144,9 @@ class ItemVoucherTest extends TestCase
             'voucher_date' => '2026-05-01',
             'party_ledger_id' => $customer->id,
             'gst_type' => 'intra',
+            'tax_rate' => 18,
             'items' => [
-                ['item_description' => 'Item A', 'quantity' => 1, 'rate' => 1000, 'tax_rate' => 18],
+                ['item_description' => 'Item A', 'quantity' => 1, 'rate' => 1000],
             ],
         ]);
 
@@ -190,8 +193,9 @@ class ItemVoucherTest extends TestCase
             'voucher_date' => '2026-05-01',
             'party_ledger_id' => $customer->id,
             'gst_type' => 'inter',
+            'tax_rate' => 18,
             'items' => [
-                ['item_description' => 'Item A', 'quantity' => 1, 'rate' => 1000, 'tax_rate' => 18],
+                ['item_description' => 'Item A', 'quantity' => 1, 'rate' => 1000],
             ],
         ]);
 
@@ -215,13 +219,14 @@ class ItemVoucherTest extends TestCase
             'voucher_type' => 'sales',
             'voucher_date' => '2026-05-01',
             'party_ledger_id' => $customer->id,
+            'tax_rate' => 18,
+            'discount_type' => 'percent',
+            'discount_value' => 10,
             'items' => [
                 [
                     'item_description' => 'Bulk',
                     'quantity' => 10,
                     'rate' => 100,
-                    'discount_percent' => 10,
-                    'tax_rate' => 18,
                 ],
             ],
         ]);
@@ -229,7 +234,9 @@ class ItemVoucherTest extends TestCase
         $response->assertStatus(201);
         $voucher = $response->json('data');
         $this->assertSame('100.00', (string) $voucher['discount_total']);
-        $this->assertSame('900.00', (string) $voucher['taxable_total']);
+        // `taxable_total` is the gross value lines add up to; the discount is
+        // shown beside it, exactly as the voucher form presents it.
+        $this->assertSame('1000.00', (string) $voucher['taxable_total']);
         $this->assertSame('162.00', (string) $voucher['tax_total']);
         $this->assertSame('1062.00', (string) $voucher['amount']);
     }
@@ -271,8 +278,9 @@ class ItemVoucherTest extends TestCase
             'voucher_type' => 'purchase',
             'voucher_date' => '2026-05-02',
             'party_ledger_id' => $supplier->id,
+            'tax_rate' => 5,
             'items' => [
-                ['item_description' => 'Raw', 'quantity' => 2, 'rate' => 500, 'tax_rate' => 5],
+                ['item_description' => 'Raw', 'quantity' => 2, 'rate' => 500],
             ],
         ]);
 
@@ -299,8 +307,9 @@ class ItemVoucherTest extends TestCase
             'voucher_type' => 'credit-note',
             'voucher_date' => '2026-05-03',
             'party_ledger_id' => $customer->id,
+            'tax_rate' => 18,
             'items' => [
-                ['item_description' => 'Returned', 'quantity' => 1, 'rate' => 1000, 'tax_rate' => 18],
+                ['item_description' => 'Returned', 'quantity' => 1, 'rate' => 1000],
             ],
         ]);
 
@@ -324,8 +333,9 @@ class ItemVoucherTest extends TestCase
             'voucher_type' => 'debit-note',
             'voucher_date' => '2026-05-04',
             'party_ledger_id' => $supplier->id,
+            'tax_rate' => 18,
             'items' => [
-                ['item_description' => 'Returned', 'quantity' => 1, 'rate' => 1000, 'tax_rate' => 18],
+                ['item_description' => 'Returned', 'quantity' => 1, 'rate' => 1000],
             ],
         ]);
 
@@ -414,8 +424,9 @@ class ItemVoucherTest extends TestCase
             'voucher_type' => 'sales',
             'voucher_date' => '2026-05-01',
             'party_ledger_id' => $customer->id,
+            'tax_rate' => 18,
             'items' => [
-                ['item_description' => 'Item A', 'quantity' => 1, 'rate' => 1000, 'tax_rate' => 18],
+                ['item_description' => 'Item A', 'quantity' => 1, 'rate' => 1000],
             ],
         ])->json('data');
 
@@ -423,9 +434,10 @@ class ItemVoucherTest extends TestCase
             'voucher_type' => 'sales',
             'voucher_date' => '2026-05-01',
             'party_ledger_id' => $customer->id,
+            'tax_rate' => 18,
             'items' => [
-                ['item_description' => 'Item B', 'quantity' => 2, 'rate' => 500, 'tax_rate' => 18],
-                ['item_description' => 'Item C', 'quantity' => 1, 'rate' => 100, 'tax_rate' => 18],
+                ['item_description' => 'Item B', 'quantity' => 2, 'rate' => 500],
+                ['item_description' => 'Item C', 'quantity' => 1, 'rate' => 100],
             ],
         ]);
 
@@ -487,8 +499,9 @@ class ItemVoucherTest extends TestCase
             'voucher_type' => 'sales',
             'voucher_date' => '2026-05-01',
             'party_ledger_id' => $customer->id,
+            'tax_rate' => 18,
             'items' => [
-                ['item_description' => 'Item A', 'quantity' => 1, 'rate' => 1000, 'tax_rate' => 18],
+                ['item_description' => 'Item A', 'quantity' => 1, 'rate' => 1000],
             ],
         ])->json('data');
 

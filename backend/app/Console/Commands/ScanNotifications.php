@@ -99,7 +99,7 @@ class ScanNotifications extends Command
 
         $invoices = Invoice::query()
             ->whereDate('due_date', '<', Carbon::today())
-            ->with('customer')
+            ->with('customerLedger')
             ->get()
             ->reject(fn ($invoice) => in_array(strtolower((string) $invoice->status), $settled, true));
 
@@ -107,7 +107,7 @@ class ScanNotifications extends Command
             $sent += NotificationService::notify('invoice.overdue', [
                 'id' => $invoice->id,
                 'invoice_number' => $invoice->invoice_number,
-                'customer' => $invoice->customer?->name,
+                'customer' => $invoice->customerLedger?->name,
                 'amount' => number_format((float) ($invoice->total_amount ?? $invoice->grand_total ?? 0), 2),
                 'due_date' => Carbon::parse($invoice->due_date)->format('d M Y'),
             ])->count();

@@ -263,7 +263,7 @@ class ReportsModuleController extends Controller
 
     private function dataSalesOverview($startDate, $endDate, $branchId): array
     {
-        $query = \App\Models\SalesOrder::with('customer');
+        $query = \App\Models\SalesOrder::with('customerLedger');
         if ($startDate) $query->whereDate('order_date', '>=', $startDate);
         if ($endDate) $query->whereDate('order_date', '<=', $endDate);
 
@@ -276,11 +276,11 @@ class ReportsModuleController extends Controller
 
     private function dataSalesByCustomer($startDate, $endDate, $branchId): array
     {
-        $query = \App\Models\SalesOrder::with('customer');
+        $query = \App\Models\SalesOrder::with('customerLedger');
         if ($startDate) $query->whereDate('order_date', '>=', $startDate);
         if ($endDate) $query->whereDate('order_date', '<=', $endDate);
 
-        $grouped = $query->get()->groupBy(fn($o) => $o->customer->name ?? 'Unknown');
+        $grouped = $query->get()->groupBy(fn($o) => $o->customerLedger->name ?? 'Unknown');
         $customerData = $grouped->map(fn($orders, $name) => [
             'customer' => $name,
             'count' => $orders->count(),
@@ -292,7 +292,7 @@ class ReportsModuleController extends Controller
 
     private function dataRevenueReport($startDate, $endDate, $branchId): array
     {
-        $query = \App\Models\Invoice::with('customer');
+        $query = \App\Models\Invoice::with('customerLedger');
         if ($startDate) $query->whereDate('created_at', '>=', $startDate);
         if ($endDate) $query->whereDate('created_at', '<=', $endDate);
 
@@ -358,7 +358,7 @@ class ReportsModuleController extends Controller
 
     private function dataInvoiceSummary($startDate, $endDate): array
     {
-        $query = \App\Models\Invoice::with('customer');
+        $query = \App\Models\Invoice::with('customerLedger');
         if ($startDate) $query->whereDate('created_at', '>=', $startDate);
         if ($endDate) $query->whereDate('created_at', '<=', $endDate);
 
@@ -461,7 +461,7 @@ class ReportsModuleController extends Controller
 
     private function dataPurchaseOrders($startDate, $endDate): array
     {
-        $query = \App\Models\PurchaseOrder::with('supplier');
+        $query = \App\Models\PurchaseOrder::with('supplierLedger');
         if ($startDate) $query->whereDate('created_at', '>=', $startDate);
         if ($endDate) $query->whereDate('created_at', '<=', $endDate);
 
@@ -474,9 +474,12 @@ class ReportsModuleController extends Controller
 
     private function dataSupplierReport(): array
     {
-        $suppliers = \App\Models\Supplier::withCount('purchaseOrders')
+        $suppliers = \App\Models\LedgerAccount::where('party_type', 'supplier')
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->each(function ($supplier) {
+                $supplier->purchase_orders_count = \App\Models\PurchaseOrder::where('supplier_ledger_id', $supplier->id)->count();
+            });
 
         $totalSuppliers = $suppliers->count();
 

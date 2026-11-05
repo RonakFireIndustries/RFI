@@ -189,7 +189,7 @@ class DashboardService
         'expenses'                 => '/dashboard/purchases',
         'outstanding_payments'     => '/dashboard/invoices',
         'pending_payments'         => '/dashboard/invoices',
-        'customers_count'          => '/dashboard/customers',
+        'customers_count'          => '/dashboard/finance/chart-of-accounts',
         'sales_trend'              => '/dashboard/invoices',
         'payroll_cost'             => '/dashboard/payroll',
         'salary_processed'         => '/dashboard/payroll',
@@ -1151,7 +1151,7 @@ private const DESIGNATION_MAP = [
 
     protected function widgetCustomersCount(): array
     {
-        $count = \App\Models\Customer::count();
+        $count = \App\Models\LedgerAccount::where('party_type', 'customer')->count();
         return ['value' => $count, 'subtitle' => 'Total customers'];
     }
 

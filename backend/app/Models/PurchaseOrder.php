@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class PurchaseOrder extends Model
 {
     protected $fillable = [
-        'po_number', 'supplier_id', 'site_id', 'total_amount', 'status', 'requested_by',
+        'po_number', 'supplier_ledger_id', 'site_id', 'total_amount', 'status', 'requested_by',
         'approved_by', 'notes', 'tax_amount', 'shipping_cost', 'other_cost',
         'other_cost_note', 'gst_type', 'gst_rate', 'received_by', 'received_at',
         'terms_conditions',
@@ -18,9 +18,9 @@ class PurchaseOrder extends Model
         return $this->hasMany(PurchaseOrderItem::class);
     }
 
-    public function supplier()
+    public function supplierLedger()
     {
-        return $this->belongsTo(Supplier::class);
+        return $this->belongsTo(LedgerAccount::class, 'supplier_ledger_id');
     }
 
     public function site()

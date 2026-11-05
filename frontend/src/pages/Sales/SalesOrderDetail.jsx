@@ -145,7 +145,7 @@ export default function SalesOrderDetail() {
         payment_method: payMethod,
         reference_number: payRef || null,
         notes: payNotes || null,
-        customer_id: order.customer_id,
+        customer_ledger_id: order.customer_ledger_id,
         sales_order_id: order.id,
       });
       await fetchOrder();
@@ -249,7 +249,7 @@ export default function SalesOrderDetail() {
           <div className="flex flex-col sm:flex-row justify-between gap-6 mb-8 pb-6 border-b border-gray-200">
             <div>
               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Customer</p>
-              <h3 className="text-lg font-bold text-gray-900">{order.customer?.name || `Customer #${order.customer_id}`}</h3>
+              <h3 className="text-lg font-bold text-gray-900">{order.customer?.name || `Customer #${order.customer_ledger_id}`}</h3>
               {order.customer?.email && <p className="text-sm text-gray-500 mt-1">{order.customer.email}</p>}
               {order.customer?.phone && <p className="text-sm text-gray-500">{order.customer.phone}</p>}
               {order.customer?.gst_number && <span className="inline-block mt-2 text-xs font-medium bg-gray-100 text-gray-700 px-2 py-1 rounded">GSTIN: {order.customer.gst_number}</span>}
@@ -451,7 +451,7 @@ export default function SalesOrderDetail() {
             <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
               <div>
                 <h2 className="text-lg font-bold text-gray-900">Record Payment — {order.so_number}</h2>
-                <p className="text-sm text-gray-500 mt-0.5">Receivable from {order.customer?.name || `Customer #${order.customer_id}`}</p>
+                <p className="text-sm text-gray-500 mt-0.5">Receivable from {order.customer?.name || `Customer #${order.customer_ledger_id}`}</p>
               </div>
               <button onClick={() => setPayOpen(false)} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100">
                 <X className="w-5 h-5" />

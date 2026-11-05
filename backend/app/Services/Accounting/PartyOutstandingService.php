@@ -119,10 +119,10 @@ class PartyOutstandingService
 
     protected function appendInvoiceBills(LedgerAccount $ledger, array $allocations, array &$bills): void
     {
-        if ($ledger->party_type !== 'customer' || ! $ledger->party_id) {
+        if ($ledger->party_type !== 'customer') {
             return;
         }
-        if (! Schema::hasTable('invoices') || ! Schema::hasColumn('invoices', 'customer_id')) {
+        if (! Schema::hasTable('invoices') || ! Schema::hasColumn('invoices', 'customer_ledger_id')) {
             return;
         }
 
@@ -134,7 +134,7 @@ class PartyOutstandingService
         }
 
         $invoices = \Illuminate\Support\Facades\DB::table('invoices')
-            ->where('customer_id', $ledger->party_id)
+            ->where('customer_ledger_id', $ledger->id)
             ->whereNotIn('status', ['Cancelled', 'cancelled'])
             ->when(
                 Schema::hasColumn('invoices', 'accounting_voucher_id'),
@@ -165,10 +165,10 @@ class PartyOutstandingService
 
     protected function appendPurchaseOrderBills(LedgerAccount $ledger, array $allocations, array &$bills): void
     {
-        if ($ledger->party_type !== 'supplier' || ! $ledger->party_id) {
+        if ($ledger->party_type !== 'supplier') {
             return;
         }
-        if (! Schema::hasTable('purchase_orders') || ! Schema::hasColumn('purchase_orders', 'supplier_id')) {
+        if (! Schema::hasTable('purchase_orders') || ! Schema::hasColumn('purchase_orders', 'supplier_ledger_id')) {
             return;
         }
 
@@ -180,7 +180,7 @@ class PartyOutstandingService
         }
 
         $orders = \Illuminate\Support\Facades\DB::table('purchase_orders')
-            ->where('supplier_id', $ledger->party_id)
+            ->where('supplier_ledger_id', $ledger->id)
             ->whereNotIn('status', ['Cancelled', 'cancelled'])
             ->when(
                 Schema::hasColumn('purchase_orders', 'accounting_voucher_id'),

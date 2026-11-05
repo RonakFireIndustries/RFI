@@ -43,7 +43,7 @@ class PurchaseOrderObserver extends NotificationObserver
         return array_merge([
             'id' => $order->id,
             'po_number' => $order->po_number,
-            'supplier' => $this->relationAttribute($order, 'supplier', 'name'),
+            'supplier' => $this->relationAttribute($order, 'supplierLedger', 'name'),
             'employee' => $this->relationAttribute($order, 'requester', 'name', 'A user'),
             'amount' => $this->money($order->total_amount),
         ], $extra);

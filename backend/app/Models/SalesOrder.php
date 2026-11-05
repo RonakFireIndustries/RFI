@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 class SalesOrder extends Model
 {
     protected $fillable = [
-        'so_number', 'customer_id', 'site_id', 'total_amount', 'status', 'created_by',
+        'so_number', 'customer_ledger_id', 'site_id', 'total_amount', 'status', 'created_by',
         'approved_by', 'notes', 'tax_amount', 'discount_amount',
         'shipping_cost', 'other_cost', 'other_cost_note',
         'gst_type', 'gst_rate', 'delivered_by', 'delivered_at',
@@ -18,9 +18,9 @@ class SalesOrder extends Model
         return $this->hasMany(SalesOrderItem::class);
     }
 
-    public function customer()
+    public function customerLedger()
     {
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo(LedgerAccount::class, 'customer_ledger_id');
     }
 
     public function site()
