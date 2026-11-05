@@ -372,7 +372,7 @@ class QuotationController extends Controller
     protected function itemBrief(QuotationItem $i): array
     {
         $product = $i->relationLoaded('product') ? $i->product : null;
-        $unit = $i->relationLoaded('unit') ? $i->unit : null;
+        $unit = $i->relationLoaded('unit') ? $i->getRelation('unit') : null;
         return [
             'id' => $i->id,
             'product_id' => $i->product_id,
