@@ -173,7 +173,10 @@ const VoucherFormPage = () => {
   const ledgers = ledgersStore.items;
   const partyOptionType = partyTypeForVoucher(type);
   const partyLedgers = useMemo(
-    () => ledgers.filter((l) => l.party_type === partyOptionType),
+    () =>
+      ledgers.filter(
+        (l) => l.party_type === partyOptionType || l.group?.party_type === partyOptionType
+      ),
     [ledgers, partyOptionType]
   );
   const bankCashLedgers = useMemo(

@@ -324,7 +324,13 @@ const ItemVoucherFormPage = () => {
   }, [id, isEdit, type]);
 
   const ledgers = ledgersStore.items;
-  const partyLedgers = useMemo(() => ledgers.filter((l) => l.party_type === partyOptionType), [ledgers, partyOptionType]);
+  const partyLedgers = useMemo(
+    () =>
+      ledgers.filter(
+        (l) => l.party_type === partyOptionType || l.group?.party_type === partyOptionType
+      ),
+    [ledgers, partyOptionType]
+  );
 
   /** Enough of the document for the receipt modal's header line. */
   const voucherForModal = useMemo(() => {
