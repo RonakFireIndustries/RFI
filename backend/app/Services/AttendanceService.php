@@ -14,10 +14,12 @@ use Illuminate\Support\Facades\DB;
 class AttendanceService
 {
     protected GeoLocationService $geoLocation;
+    protected EmployeeSiteAssignmentService $assignmentService;
 
-    public function __construct(GeoLocationService $geoLocation)
+    public function __construct(GeoLocationService $geoLocation, EmployeeSiteAssignmentService $assignmentService)
     {
         $this->geoLocation = $geoLocation;
+        $this->assignmentService = $assignmentService;
     }
 
     public function getAttendances(array $filters = [], int $perPage = 15): LengthAwarePaginator
@@ -362,8 +364,18 @@ class AttendanceService
         return ['success' => true];
     }
 
-    public function validateCheckInPrerequisites(Employee $employee): array
-    {
+    /**
+     * Resolve the site used for a check-in.
+     *
+     * When coordinates are supplied, the closest of the employee's assigned
+     * active sites is used. This is what makes multi-site assignments work:
+     * an employee at site A is measured against A, and at site B against B.
+     */
+    public function validateCheckInPrerequisites(
+        Employee $employee,
+        ?float $latitude = null,
+        ?float $longitude = null
+    ): array {
         if (!$employee->user) {
             return [
                 'success' => false,
@@ -372,29 +384,46 @@ class AttendanceService
             ];
         }
 
-        $activeSite = $employee->employeeSites()->with('site')->first();
+        if ($latitude !== null && $longitude !== null) {
+            $nearest = $this->assignmentService->getNearestAssignedSite($employee, $latitude, $longitude);
 
-        if (!$activeSite || !$activeSite->site) {
+            if (!$nearest) {
+                $hasAssignments = $employee->employeeSites()->exists();
+
+                return [
+                    'success' => false,
+                    'message' => $hasAssignments
+                        ? 'None of your assigned sites are active or have GPS coordinates configured. Contact your administrator.'
+                        : 'You are not assigned to any site. Contact your administrator.',
+                    'status' => $hasAssignments ? 500 : 403,
+                ];
+            }
+
             return [
-                'success' => false,
-                'message' => 'You are not assigned to any site. Contact your administrator.',
-                'status' => 403,
+                'success' => true,
+                'site' => $nearest['site'],
+                'distance' => $nearest['distance'],
             ];
         }
 
-        $site = $activeSite->site;
+        // Fallback for callers that have no GPS coordinates yet.
+        $assignment = $this->assignmentService->getAssignmentsWithUsableSites($employee)->first();
 
-        if (!$site->latitude || !$site->longitude) {
+        if (!$assignment || !$assignment->site) {
+            $hasAssignments = $employee->employeeSites()->exists();
+
             return [
                 'success' => false,
-                'message' => 'The assigned site does not have GPS coordinates configured. Contact your administrator.',
-                'status' => 500,
+                'message' => $hasAssignments
+                    ? 'None of your assigned sites are active or have GPS coordinates configured. Contact your administrator.'
+                    : 'You are not assigned to any site. Contact your administrator.',
+                'status' => $hasAssignments ? 500 : 403,
             ];
         }
 
         return [
             'success' => true,
-            'site' => $site,
+            'site' => $assignment->site,
         ];
     }
 

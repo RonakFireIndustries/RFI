@@ -97,7 +97,13 @@ class AttendanceController extends Controller
             return $this->error('Only employees can check in', [], 403);
         }
 
-        $prerequisites = $this->attendanceService->validateCheckInPrerequisites($employee);
+        $data = $request->validated();
+
+        $prerequisites = $this->attendanceService->validateCheckInPrerequisites(
+            $employee,
+            (float) $data['latitude'],
+            (float) $data['longitude']
+        );
 
         if (!$prerequisites['success']) {
             return $this->error($prerequisites['message'], [], $prerequisites['status']);
@@ -106,7 +112,7 @@ class AttendanceController extends Controller
         $site = $prerequisites['site'];
 
         $result = $this->attendanceService->processCheckIn(
-            $request->validated(),
+            $data,
             $employee,
             $site
         );

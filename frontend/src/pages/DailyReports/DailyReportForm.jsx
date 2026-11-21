@@ -40,6 +40,7 @@ export default function DailyReportForm() {
   const [loadingReport, setLoadingReport] = useState(isEdit);
   const [editReport, setEditReport] = useState(null);
   const [assignedSite, setAssignedSite] = useState(null);
+  const [assignedSites, setAssignedSites] = useState([]);
   const [siteLoading, setSiteLoading] = useState(false);
   const [formErrors, setFormErrors] = useState({});
 
@@ -115,6 +116,8 @@ export default function DailyReportForm() {
       .then((data) => {
         if (cancelled) return;
         const site = data?.site || (data?.id ? data : null);
+        const sites = Array.isArray(data?.sites) ? data.sites : (site ? [site] : []);
+        setAssignedSites(sites);
         setAssignedSite(site || null);
         if (site?.id) setFormData((prev) => ({ ...prev, site_id: String(site.id) }));
       })
@@ -192,7 +195,7 @@ export default function DailyReportForm() {
   const handleSiteChange = (e) => {
     setFormData({ ...formData, site_id: e.target.value });
     if (!canViewAllSites) {
-      const site = sites.find((s) => String(s.id) === e.target.value);
+      const site = [...assignedSites, ...sites].find((s) => String(s.id) === e.target.value);
       setAssignedSite(site || null);
     }
   };
@@ -352,6 +355,16 @@ export default function DailyReportForm() {
                 </select>
               ) : siteLoading ? (
                 <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500">Loading assigned site...</div>
+              ) : !isEdit && assignedSites.length > 1 ? (
+                <select
+                  required
+                  value={formData.site_id}
+                  onChange={handleSiteChange}
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="">Select a Site</option>
+                  {assignedSites.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
               ) : displaySite ? (
                 <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800">
                   {displaySite.name}
@@ -362,7 +375,9 @@ export default function DailyReportForm() {
                 </div>
               )}
               {!canViewAllSites && displaySite && (
-                <p className="mt-1 text-xs text-gray-500">Reports can only be filed for your currently assigned site.</p>
+                <p className="mt-1 text-xs text-gray-500">
+                  Reports can only be filed for a site assigned to you.
+                </p>
               )}
             </div>
             <div>

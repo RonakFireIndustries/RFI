@@ -12,8 +12,8 @@ export const employeeSiteService = {
     return unwrapList(response.data);
   },
 
-  getCurrentSite: async (employeeId) => {
-    const response = await api.get(`/employees/${employeeId}/current-site`);
+  getCurrentSite: async (employeeId, params = {}) => {
+    const response = await api.get(`/employees/${employeeId}/current-site`, { params });
     return unwrapItem(response.data);
   },
 

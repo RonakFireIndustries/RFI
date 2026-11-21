@@ -1105,8 +1105,29 @@ private const DESIGNATION_MAP = [
     protected function widgetCurrentSite(): array
     {
         if (!$this->employee) return null;
-        $assignment = EmployeeSite::where('employee_id', $this->employee->id)->latest()->first();
-        return ['value' => $assignment?->site?->name ?? 'Not Assigned', 'subtitle' => $assignment?->site?->city ?? ''];
+
+        // Today's check-in records the site resolved from the employee's actual
+        // location, so it is the most accurate "current site" when available.
+        $attendance = Attendance::with('site')
+            ->where('employee_id', $this->employee->id)
+            ->whereDate('date', Carbon::today())
+            ->first();
+
+        $site = $attendance?->check_in ? $attendance->site : null;
+
+        if (!$site) {
+            $assignment = EmployeeSite::where('employee_id', $this->employee->id)
+                ->whereHas('site', function ($query) {
+                    $query->where('status', 'Active')
+                        ->whereNotNull('latitude')
+                        ->whereNotNull('longitude');
+                })
+                ->orderBy('id')
+                ->first();
+            $site = $assignment?->site;
+        }
+
+        return ['value' => $site?->name ?? 'Not Assigned', 'subtitle' => $site?->city ?? ''];
     }
 
     protected function widgetLeaveBalance(): array

@@ -92,7 +92,8 @@ export default function EmployeeDashboard() {
   const { logs, fetchLogs, myAttendance, checkIn, checkOut } = useAttendanceStore();
   const { items: sites } = useSiteStore();
 
-  const [currentSite, setCurrentSite] = useState(null);
+  const [assignedSites, setAssignedSites] = useState([]);
+  const [fallbackSite, setFallbackSite] = useState(null);
   const [todayAttendance, setTodayAttendance] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState(null);
@@ -123,21 +124,26 @@ export default function EmployeeDashboard() {
 
   useEffect(() => {
     if (!employeeId) return;
+    let cancelled = false;
     const loadSite = async () => {
       try {
         const data = await employeeSiteService.getCurrentSite(employeeId);
-        console.log(data);
-        
-        if (data?.site) {
-          setCurrentSite(data.site);
-        } else if (data?.id) {
-          setCurrentSite(data);
-        }
+        if (cancelled) return;
+
+        // The API returns every usable assigned site plus a default one. The
+        // nearest site is picked below from the employee's live position so a
+        // multi-site employee is measured against the site they are actually at.
+        const sites = Array.isArray(data?.sites)
+          ? data.sites
+          : (data?.site ? [data.site] : []);
+        setAssignedSites(sites);
+        setFallbackSite(data?.site ?? (data?.id ? data : null));
       } catch (e) {
         console.error('Failed to load current site:', e);
       }
     };
     loadSite();
+    return () => { cancelled = true; };
   }, [employeeId]);
 
   const loadTodayAttendance = useCallback(async () => {
@@ -171,6 +177,27 @@ export default function EmployeeDashboard() {
       window.removeEventListener('focus', handleFocus);
     };
   }, [loadTodayAttendance]);
+
+  const currentSite = useMemo(() => {
+    if (!position || !assignedSites.length) return fallbackSite;
+
+    const measured = assignedSites
+      .filter((site) => site?.latitude != null && site?.longitude != null)
+      .map((site) => ({
+        site,
+        distance: calculateDistance(
+          parseFloat(site.latitude),
+          parseFloat(site.longitude)
+        ),
+      }))
+      .filter((item) => item.distance !== null);
+
+    if (!measured.length) return fallbackSite;
+
+    return measured.reduce((closest, item) =>
+      item.distance < closest.distance ? item : closest
+    ).site;
+  }, [assignedSites, fallbackSite, position, calculateDistance]);
 
   const distance = useMemo(() => {
     if (!position || !currentSite) return null;

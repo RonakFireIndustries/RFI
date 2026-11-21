@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\DailyReport;
 use App\Services\DailyReportService;
+use App\Services\EmployeeSiteAssignmentService;
 use App\Http\Requests\StoreDailyReportRequest;
 use App\Http\Requests\UpdateDailyReportRequest;
 use App\Http\Resources\DailyReportResource;
@@ -20,10 +21,12 @@ class DailyReportController extends Controller
     use ApiResponse;
 
     protected DailyReportService $dprService;
+    protected EmployeeSiteAssignmentService $assignmentService;
 
-    public function __construct(DailyReportService $dprService)
+    public function __construct(DailyReportService $dprService, EmployeeSiteAssignmentService $assignmentService)
     {
         $this->dprService = $dprService;
+        $this->assignmentService = $assignmentService;
     }
 
     public function index(Request $request): JsonResponse
@@ -74,27 +77,25 @@ class DailyReportController extends Controller
             $data = $request->validated();
             $data['employee_id'] = $employee->id;
 
-            // Employees may only file a report against the site currently
-            // assigned to them. Global managers (super admins / sites.view)
-            // may pick any site when back-filling.
-            $assignedSiteId = $employee->employeeSites()
-                ->orderBy('id')
-                ->first()
-                ?->site_id;
+            // Employees may file a report against any of their assigned
+            // sites. Global managers (super admins / sites.view) may pick any
+            // site when back-filling.
+            $assignedSiteIds = $this->assignmentService->getAssignedSiteIds($employee);
+            $defaultSiteId = $assignedSiteIds[0] ?? null;
 
             $isGlobalManager = Access::isSuperAdmin($request->user())
                 || $request->user()->can('sites.view');
 
             if (!$isGlobalManager) {
-                if (!$assignedSiteId) {
+                if (!$assignedSiteIds) {
                     throw new Exception('No site is currently assigned to you. Please contact your administrator before submitting a daily report.');
                 }
-                if (!empty($data['site_id']) && (int) $data['site_id'] !== (int) $assignedSiteId) {
-                    throw new Exception('Daily reports can only be submitted for the site currently assigned to you.');
+                if (!empty($data['site_id']) && !in_array((int) $data['site_id'], $assignedSiteIds, true)) {
+                    throw new Exception('Daily reports can only be submitted for a site assigned to you.');
                 }
-                $data['site_id'] = $assignedSiteId;
+                $data['site_id'] = !empty($data['site_id']) ? (int) $data['site_id'] : $defaultSiteId;
             } elseif (!$data['site_id']) {
-                $data['site_id'] = $assignedSiteId;
+                $data['site_id'] = $defaultSiteId;
             }
 
             $report = $this->dprService->createReport($data);

@@ -11,12 +11,81 @@ use Illuminate\Support\Facades\Auth;
 
 class EmployeeSiteAssignmentService
 {
+    protected GeoLocationService $geoLocation;
+
+    public function __construct(GeoLocationService $geoLocation)
+    {
+        $this->geoLocation = $geoLocation;
+    }
+
     /**
      * Get active site assignments for an employee.
      */
     public function getEmployeeSites(Employee $employee)
     {
         return $employee->employeeSites()->with('site')->get();
+    }
+
+    /**
+     * Get the employee's assignments whose site is active and has GPS
+     * coordinates. These are the only assignments that can be used when
+     * resolving a physical location (check-in, dashboard radius, etc.).
+     */
+    public function getAssignmentsWithUsableSites(Employee $employee)
+    {
+        return $employee->employeeSites()
+            ->with('site')
+            ->whereHas('site', function ($query) {
+                $query->where('status', 'Active')
+                    ->whereNotNull('latitude')
+                    ->whereNotNull('longitude');
+            })
+            ->orderBy('employee_sites.id')
+            ->get();
+    }
+
+    /**
+     * Resolve the closest of the employee's assigned sites to the supplied
+     * coordinates. An employee assigned to several sites can therefore check
+     in from any of them instead of being measured against an arbitrary one.
+     *
+     * @return array{site: Site, assignment: EmployeeSite, distance: float}|null
+     */
+    public function getNearestAssignedSite(Employee $employee, float $latitude, float $longitude): ?array
+    {
+        $assignments = $this->getAssignmentsWithUsableSites($employee);
+
+        $nearest = $this->geoLocation->nearestSite(
+            $latitude,
+            $longitude,
+            $assignments->map(fn ($assignment) => $assignment->site)->filter()->values()
+        );
+
+        if (!$nearest) {
+            return null;
+        }
+
+        return [
+            'site' => $nearest['site'],
+            'assignment' => $assignments->first(
+                fn ($assignment) => (int) $assignment->site_id === (int) $nearest['site']->id
+            ),
+            'distance' => $nearest['distance'],
+        ];
+    }
+
+    /**
+     * IDs of the active sites the employee is assigned to.
+     *
+     * @return array<int, int>
+     */
+    public function getAssignedSiteIds(Employee $employee): array
+    {
+        return $employee->employeeSites()
+            ->whereHas('site', fn ($query) => $query->where('status', 'Active'))
+            ->pluck('site_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
     }
 
     /**

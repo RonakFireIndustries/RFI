@@ -133,15 +133,38 @@ class EmployeeSiteAssignmentController extends Controller
     }
 
     /**
-     * Get current site of the employee.
+     * Get the employee's usable assigned sites and the site relevant to the
+     * supplied coordinates.
+     *
+     * Clients without a GPS fix still receive a deterministic default site;
+     * clients that send latitude/longitude get the nearest assigned site,
+     * using the same rule as attendance check-in.
      */
-    public function currentSite(Employee $employee): JsonResponse
+    public function currentSite(Request $request, Employee $employee): JsonResponse
     {
-        $assignment = $employee->employeeSites()->with('site')->first();
+        $coordinates = $request->validate([
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
+        ]);
+
+        $assignments = $this->assignmentService->getAssignmentsWithUsableSites($employee);
+
+        $nearest = null;
+        if (isset($coordinates['latitude'], $coordinates['longitude'])) {
+            $nearest = $this->assignmentService->getNearestAssignedSite(
+                $employee,
+                (float) $coordinates['latitude'],
+                (float) $coordinates['longitude']
+            );
+        }
+
+        $assignment = $nearest['assignment'] ?? $assignments->first();
 
         return $this->success('Current site retrieved successfully', [
-            'site' => $assignment ? $assignment->site : null,
-            'assignment' => $assignment
+            'site' => $assignment?->site,
+            'assignment' => $assignment,
+            'sites' => $assignments->map(fn ($item) => $item->site)->filter()->values(),
+            'nearest_distance' => $nearest['distance'] ?? null,
         ]);
     }
 
